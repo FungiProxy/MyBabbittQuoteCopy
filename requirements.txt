@@ -1,0 +1,18 @@
+# Core dependencies
+PySide6>=6.4.0  # Qt for Python
+SQLAlchemy>=2.0.0  # ORM for database
+alembic>=1.10.0  # Database migrations
+
+# PDF generation
+reportlab>=3.6.12  # PDF generation library
+pillow>=9.4.0  # Required for image handling in PDFs
+
+# Development tools
+pytest>=7.3.1  # Testing framework
+black>=23.1.0  # Code formatting
+pylint>=2.16.0  # Linting
+
+# Utilities
+python-dateutil>=2.8.2  # Date handling utilities
+tqdm>=4.64.1  # Progress bars for long operations
+pyinstaller>=5.8.0  # For creating standalone executables

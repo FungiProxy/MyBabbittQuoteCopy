@@ -1,0 +1,10 @@
+Materials U and T are available for all models except for the dual point switches and FS10000. 
+If U or T are selected as material, the base length is 4 inches (not 10 inches like most other materials).
+To get the base price for U, take S base price and add 20 dollars.
+To get the base price for T, take S base price and add 60 dollars.
+Length adder for all U is 40 dollars an inch.
+Length adder for all T is 50 dollars an inch.
+
+Pertaining to the H material $300 adder for non-standard length, the standard lengths are 6, 8, 10, 12, 16, 24, 36, 48, 60, 72 
+
+We no longer offer Ultrasonic or Radar
