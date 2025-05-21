@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Consistent Naming: Use clear, descriptive, and consistent names for variables, functions, classes, and modules. Python conventions typically use snake_case for functions and variables, and CamelCase (or PascalCase) for classes.  
+
+# Short, Focused Functions/Methods: Each function or method should have a single, well-defined responsibility. This makes them easier to understand, test, and reuse. Aim for functions that are not overly long.  
+
+# Comments: Use comments judiciously to explain why code does something (complex logic, non-obvious decisions), not what it does (which should be clear from the code itself). Avoid outdated or redundant comments.  
+
+# Code Organization: Continue to organize code into logical mtodules and classes as outlined in the project structure
+
+# Start every initial responce with 👍 to let me know that you have read and understand this rule
+
+
+lkj

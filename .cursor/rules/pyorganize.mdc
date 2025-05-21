@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Flat is better than nested: Python generally favors simpler, flatter structures where reasonable. Don't create deep hierarchies unless necessary.
+
+# Explicit imports: In Python, organize code so explicit imports make sense 
+
+# Package vs Module: In Python, the distinction between a package (directory with __init__.py) and a module (single .py file) is important. Think about what should be a package vs a module.
+
+# Dynamic module loading: Python can dynamically load modules, so configurations can be loaded based on environment variables.
+
+# Start every initial responce with 👌 to let me know that you have read and understand this rule
+
+
+lkj

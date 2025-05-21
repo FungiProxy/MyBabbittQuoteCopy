@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QDateEdit, QFormLayout, QSizePolicy
 )
 from PySide6.QtCore import Qt, QDate
+from src.ui.product_selection_dialog import ProductSelectionDialog
 
 class QuoteCreationPage(QWidget):
     """
@@ -163,6 +164,7 @@ class QuoteCreationPage(QWidget):
         self._update_step()
         self.next_step_btn.clicked.connect(self._go_to_product_selection)
         self.back_btn.clicked.connect(self._go_to_customer_info)
+        self.add_product_btn.clicked.connect(self._open_product_dialog)
 
     def _add_step_label(self, layout, number, text, active=False):
         step = QLabel(f"{number}")
@@ -216,4 +218,11 @@ class QuoteCreationPage(QWidget):
 
     def _go_to_customer_info(self):
         self.current_step = 0
-        self._update_step() 
+        self._update_step()
+
+    def _open_product_dialog(self):
+        dialog = ProductSelectionDialog(self)
+        if dialog.exec():
+            product_data = dialog.product_added.args[0] if dialog.product_added.args else None
+            # For now, just print the result. Later, add to quote items list.
+            print("Product added to quote:", product_data) 
