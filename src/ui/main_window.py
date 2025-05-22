@@ -88,10 +88,7 @@ class MainWindow(QMainWindow):
         
         nav_items = [
             ("Dashboard", "dashboard_icon.png"), # Placeholder icon names
-            ("Quote Creation", "quote_icon.png"),
-            ("Product Catalog", "catalog_icon.png"),
-            ("Customer Management", "customer_icon.png"),
-            ("Reports", "reports_icon.png")
+            ("Quote Creation", "quote_icon.png")
         ]
 
         for item_text, icon_path in nav_items:
@@ -131,22 +128,8 @@ class MainWindow(QMainWindow):
         # Create and add pages to stacked_widget (initially just dashboard placeholder)
         self.dashboard_page = QWidget() # This will be fleshed out
         self.stacked_widget.addWidget(self.dashboard_page)
-        
         self.quote_creation_page = QuoteCreationPage()
         self.stacked_widget.addWidget(self.quote_creation_page)
-
-        self.product_catalog_page = QLabel("Product Catalog Content (Placeholder)")
-        self.product_catalog_page.setAlignment(Qt.AlignCenter)
-        self.stacked_widget.addWidget(self.product_catalog_page)
-
-        self.customer_management_page = QLabel("Customer Management Content (Placeholder)")
-        self.customer_management_page.setAlignment(Qt.AlignCenter)
-        self.stacked_widget.addWidget(self.customer_management_page)
-
-        self.reports_page = QLabel("Reports Content (Placeholder)")
-        self.reports_page.setAlignment(Qt.AlignCenter)
-        self.stacked_widget.addWidget(self.reports_page)
-
         self.settings_page = QLabel("Settings Content (Placeholder)") # For settings button
         self.settings_page.setAlignment(Qt.AlignCenter)
         self.stacked_widget.addWidget(self.settings_page)
@@ -339,7 +322,7 @@ class MainWindow(QMainWindow):
     def on_nav_item_selected(self, index):
         """Handle sidebar navigation item selection."""
         # Titles correspond to the order in nav_items
-        view_titles = ["Dashboard", "Quote Creation", "Product Catalog", "Customer Management", "Reports"]
+        view_titles = ["Dashboard", "Quote Creation"]
         if 0 <= index < len(view_titles):
             self.current_view_title.setText(view_titles[index])
             self.stacked_widget.setCurrentIndex(index)
@@ -352,7 +335,7 @@ class MainWindow(QMainWindow):
     def on_settings_selected(self):
         """Handle settings button click."""
         self.current_view_title.setText("Settings")
-        self.stacked_widget.setCurrentWidget(self.settings_page) # Assuming settings_page is at index 5
+        self.stacked_widget.setCurrentWidget(self.settings_page) # Assuming settings_page is at index 3
         print("Settings selected")
 
     def showEvent(self, event):
