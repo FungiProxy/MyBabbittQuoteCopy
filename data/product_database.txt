@@ -1,0 +1,516 @@
+BABBITT INTERNATIONAL INC. PRODUCT DATABASE
+Effective: April 1, 2024
+Last Updated: [Current Date]
+
+==============================================================================
+LEVEL SWITCHES
+==============================================================================
+
+------------------------------------------------------------------------------
+LS 2000 LEVEL SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- LS 2000-115VAC-S-10": $425.00
+  * Longer 316SS Probes: add $45/foot
+- LS 2000-115VAC-H-10": $535.00
+  * Longer Halar Coated Probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+- LS2000-115VAC-U-4": $445.00
+  * Longer Blind-end probes: add $40/inch
+- LS2000-115VAC-T-4": $485.00
+  * Longer Blind end probes: add $50/inch
+
+Notes:
+- 24 VDC OPTION AT NO EXTRA CHARGE
+- 12VDC and 240VAC not available for LS2000
+- S=316 Stainless Steel Probe
+- H=Halar Coated Probe
+- TS=Teflon Sleeve
+- U=UHMWPE Blind End Probe
+- T=Teflon Blind End Probe
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- TEFLON INSULATOR (Instead of UHMWPE): ADD $40.00
+- FLANGED MOUNTING & TRI-CLAMP MOUNTING: See Flanges section
+- EXTRA STATIC PROTECTION: ADD $30.00
+- CABLE PROBE: ADD $80.00
+- BENT PROBE: ADD $50.00
+- STAINLESS STEEL TAG: ADD $30.00
+
+Spare Parts:
+- LS 2000 ELECTRONICS (Specify Voltage): $265.00
+- LS 2000-U-PROBE ASSEMBLY-4": $210.00
+- LS 2000-T-PROBE ASSEMBLY-4": $250.00
+- LS 2000-S-PROBE ASSEMBLY-10": $195.00
+- LS 2000-H-PROBE ASSEMBLY-10": $320.00
+- LS 2000-HOUSING: $100.00
+
+Application Notes:
+1. LS 2000 has limited static protection, not recommended for plastic pellets or resins with static charges unless extra static option is specified.
+2. LONGEST PROBE WITH HALAR COATING IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+
+------------------------------------------------------------------------------
+LS 2100 LOOP POWERED LEVEL SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- LS 2100-24VDC-S-10": $460.00
+  * Longer 316SS Probes: add $45/foot
+- LS 2100-24VDC-H-10": $570.00
+  * Longer Halar Coated Probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+- LS 2100-24VDC-U-4": $480.00 (Base S price + $20)
+  * Longer Blind-end probes: add $40/inch
+- LS 2100-24VDC-T-4": $520.00 (Base S price + $60)
+  * Longer Blind end probes: add $50/inch
+
+Notes:
+- 24VDC units work on 16 to 32 VDC
+- S=316 Stainless Steel Probe
+- H=Halar Coated Probe
+- T=Teflon Blind End Probe
+- TS=Teflon Sleeve
+- U=UHMWPE blind end probe
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- FLANGED MOUNTING & TRI-CLAMP MOUNTING: See Flanges section
+- CABLE PROBE: ADD $80.00
+- BENT PROBE: ADD $50.00
+- STAINLESS STEEL TAG: ADD $30.00
+
+Spare Parts:
+- LS 2100 ELECTRONICS: $290.00
+- LS 2100-S-PROBE ASSEMBLY-10": $230.00
+- LS 2100-H-PROBE ASSEMBLY-10": $360.00
+- LS 2100-HOUSING: $100.00
+
+Application Notes:
+1. The LS2100 is a loop powered switch that operates between 8mA and 16mA.
+2. LONGEST PROBE WITH HALAR COATING IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+
+------------------------------------------------------------------------------
+LS 6000 LEVEL SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- LS 6000-115VAC-S-10": $550.00
+  * Longer 316 SS Probes: add $45/foot
+- LS6000-115VAC-H-10": $660.00
+  * Longer Halar Coated Probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+- LS 6000-115VAC-U-4": $570.00 (Base S price + $20)
+  * Longer Blind-end probes: add $40/inch
+- LS 6000-115VAC-T-4": $610.00 (Base S price + $60)
+  * Longer Blind end probes: add $50/inch
+- LS6000-115VAC-S-10" w/ ¾" diameter probe: $725.00
+  * Longer probes add: $175/ft.
+
+Notes:
+- 12VDC, 24VDC, AND 240VAC AVAILABLE AT NO EXTRA CHARGE
+- S=316 Stainless Steel Probe
+- H=Halar Coated Probe
+- TS=Teflon Sleeve
+- CPVC=CPVC Blind End Probe with Integrated NPT Nipple – 4" Standard
+- U=UHMWPE Blind End Probe
+- T=Teflon Blind End Probe
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- TEFLON INSULATOR (Instead of DELRIN): ADD $40.00
+- ¾" DIAMETER PROBE x 10": ADD $175.00
+- CPVC Blind End Probe w/ Integrated Nipple: ADDER $400.00 plus $50 per additional inch
+- FLANGE CONNECTIONS & TRI-CLAMP MOUNTINGS: See Flanges section
+- CABLE PROBE: ADD $80.00
+- BENT PROBE: ADD $50.00
+- STAINLESS STEEL TAG: ADD $30.00
+
+Spare Parts:
+- LS 6000-ELECTRONICS: $295.00
+- LS 6000-S-PROBE ASSEMBLY-10": $240.00
+- LS 6000-H-PROBE ASSEMBLY-10": $370.00
+- LS6000-HOUSING: $140.00
+- LS6000-S-10" (3/4" diameter) Probe Assembly Only: $370.00
+  * Longer probes add: $175/ft.
+- LS6000-115VAC-Electronics only: $295.00
+
+Application Notes:
+1. Delrin insulators are standard for SS probes. Teflon insulators are standard for Halar and Teflon Sleeve probes as well as other baked coatings.
+2. Max Temperatures: Delrin insulator 250F; Teflon insulator 450F; PEEK insulator 550F
+3. Do not use Delrin in applications with STEAM.
+4. Cable probes and special materials of construction available.
+5. ¾" NPT process connection is optional at no extra charge (¾" NPT Max 300 psi @ 75 F)
+6. LONGEST PROBE WITH HALAR COATING IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+
+------------------------------------------------------------------------------
+LS 7000 LEVEL SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- LS 7000-115VAC-S-10": $680.00
+  * Longer 316 SS Probes: add $45/foot
+- LS 7000-115VAC-H-10": $790.00
+  * Longer Halar Coated Probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+- LS 7000-115VAC-U-4": $700.00 (Base S price + $20)
+  * Longer Blind-end probes: add $40/inch
+- LS 7000-115VAC-T-4": $740.00 (Base S price + $60)
+  * Longer Blind end probes: add $50/inch
+- LS7000-115VAC-S-10" w/ 3/4" diameter probe: $855.00
+  * Longer probes add: $175/ft.
+
+Notes:
+- 12VDC, 24VDC, AND 240VAC AVAILABLE AT NO EXTRA CHARGE
+- S=316 Stainless Steel Probe
+- H=Halar Coated Probe
+- TS=Teflon Sleeve
+- CPVC=CPVC Blind End Probe with Integrated NPT Nipple – 4" Standard
+- U=UHMWPE Blind End Probe
+- T=Teflon Blind End Probe
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- ¾" DIAMETER PROBE X 10": ADD $175.00
+- STAINLESS STEEL HOUSING (NEMA 4X ENCLOSURE): ADD $285.00
+- CPVC Blind End Probe w/ Integrated Nipple: ADDER $400.00 plus $50 per additional inch
+- FLANGE CONNECTIONS & TRI-CLAMP MOUNTINGS: See Flanges section
+- CABLE PROBE: ADD $80.00
+- BENT PROBE: ADD $50.00
+- STAINLESS STEEL TAG: ADD $30.00
+- 1"NPT PROCESS CONNECTION & BIG HOUSING FOR HIGH VIBRATION APPLICATIONS: NO EXTRA CHARGE
+
+Spare Parts:
+- LS 7000-PS-POWER SUPPLY (Specify voltage): $230.00
+- LS 7000-SC-SENSING CARD: $235.00
+- LS 7000-S-PROBE ASSEMBLY-10": $280.00
+- LS 7000-H-PROBE ASSEMBLY-10": $370.00
+- LS 7000-HOUSING: $140.00
+- FUSE (1/2 AMP): $10.00
+- LS7000-S-10" (3/4" diameter) Probe Assembly Only: $435.00
+  * Longer probes add: $175/ft.
+- LS7000-115VAC-POWER SUPPLY: $230.00
+- LS7000-SENSING CARD: $235.00
+
+Application Notes:
+1. Cable probes and special materials of construction available.
+2. ¾" NPT process connection is optional at no extra charge (¾" NPT Max 300 psi @ 75 F)
+3. Max Temp for Teflon Insulator 450F, PEEK Insulator 550F
+4. On board timer often used to pump down sumps or avoid nuisance alarms due to splashing.
+5. LONGEST PROBE WITH HALAR COATING IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+
+------------------------------------------------------------------------------
+LS 7000/2 DUAL POINT LEVEL SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- LS 7000/2-115VAC-H-10": $770.00
+  * Longer Halar Coated Probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+
+Notes:
+- 12 VDC, 24VDC, AND 240VAC AVAILABLE AT NO EXTRA CHARGE
+- H=Halar Coated Probe
+- TS=Teflon Sleeve
+- Materials U and T are NOT available for dual point switches
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- FLANGE CONNECTIONS & TRI-CLAMP MOUNTINGS: See Flanges section
+- STAINLESS STEEL TAG: ADD $30.00
+
+Spare Parts:
+- LS 7000-PS-POWER SUPPLY (Specify Voltage): $230.00
+- LS 7000/2-DP DUAL POINT CARD: $255.00
+- LS 7000-H-PROBE ASSEMBLY-10": $370.00
+- LS 7000-HOUSING: $140.00
+- FUSE (1/2 AMP): $10.00
+
+Application Notes:
+1. LS 7000/2 IS DESIGNED TO AUTOMATICALLY FILL OR AUTOMATICALLY EMPTY A VESSEL. Has only one relay dedicated to auto fill or auto emptying.
+2. Designed to work in homogeneous liquids. Not for liquids that change in conductivity.
+3. Must have a Halar coated probe in electrically conductive liquids.
+4. Must be grounded to the liquid for best repeatability.
+5. Material sticking on probe will affect setpoint repeatability.
+6. For critical filling applications, a separate independent high level switch is recommended.
+7. Does not work well in dry materials.
+8. LONGEST PROBE WITH HALAR COATING IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+
+------------------------------------------------------------------------------
+LS 8000 REMOTE MOUNTED LEVEL SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- LS 8000-115VAC-S-10": $715.00
+  * Longer 316 SS Probes: add $45/foot
+- LS 8000-115VAC-H-10": $825.00
+  * Longer Halar Coated Probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+- LS 8000-115VAC-U-4": $735.00 (Base S price + $20)
+  * Longer Blind-end probes: add $40/inch
+- LS 8000-115VAC-T-4": $775.00 (Base S price + $60)
+  * Longer Blind end probes: add $50/inch
+- LS8000-115VAC-S-10" w/3/4" diameter probe: $890.00
+  * Longer probes add: $175/ft.
+
+Notes:
+- 12 VDC, 24VDC, AND 240VAC AVAILABLE AT NO EXTRA CHARGE
+- S=316 Stainless Steel Probe
+- H=Halar Coated Probe
+- TS=Teflon Sleeve
+- U=UHMWPE Blind End Probe
+- T=Teflon Blind End Probe
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- 22 AWG, TWISTED SHIELDED PAIR: $.70/foot
+- 8" X 6" X 3.5" NEMA 4 METAL ENCLOSURE FOR RECEIVER: $245.00
+- GRE EXP PROOF HOUSING FOR RECEIVER (2 each, ¾" NPT conduit entries): $590.00
+- FLANGE CONNECTIONS & TRI-CLAMP MOUNTINGS: See Flanges section
+- CABLE PROBE: ADD $80.00
+- BENT PROBE: ADD $50.00
+- STAINLESS STEEL TAG: ADD $30.00
+- 1"NPT PROCESS CONNECTION & BIG HOUSING FOR HIGH VIBRATION APPLICATIONS: NO EXTRA CHARGE
+
+Spare Parts:
+- LS 8000-R-RECEIVER CARD (Specify Voltage): $305.00
+- LS 8000-T-TRANSMITTER (Specify Size & Sensitivity): $285.00
+- LS 8000-S-PROBE ASSEMBLY-10": $230.00
+- LS 8000-H-PROBE ASSEMBLY-10": $320.00
+- LS 8000-HOUSING: $100.00
+- Fuse (½ AMP): $10.00
+- LS8000-S-10" Probe Assembly only 3/4" diameter: $445.00
+  * Longer probes add: $175/ft.
+- LS8000-115VAC-RECEIVER: $305.00
+- LS8000-TRANSMITTER: $285.00
+- CONTROL SYSTEMS WEST for ADHESIVES & PACKAGING:
+  * LS8000-T: $198
+  * LS8000-R: $210
+
+Application Notes:
+1. Remote mounted LS 8000 receiver is normally sold without an enclosure.
+2. Transmitters come in several sensitivities.
+3. Transmitter sensitivities: HI, M/H, MED, LO, LLLO, XLO
+4. Transmitters come in two sizes: "small" for standard LS 8000 housing, "big" for LS 7000 housing.
+5. Cable probes and special materials of construction available.
+6. LONGEST PROBE WITH HALAR COATING IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+
+------------------------------------------------------------------------------
+LS 8000/2 REMOTE MOUNTED DUAL POINT LEVEL SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- LS 8000/2-115VAC-H-10": $850.00
+  * Longer Halar Coated Probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+
+TRAN-EX PRICING:
+- LS 8000/2-TRAN-EX-S-10": $540.00
+  * Longer 316 SS Probes: add $45/foot
+- LS 8000/2-TRAN-EX-H-10": $650.00
+  * Longer Halar Coated Probes: add $110/foot
+- LS8000-TRAN-EX-S-10" w/3/4" diameter probe: $565.00
+  * Longer probes add: $175/ft.
+
+Notes:
+- 12 VDC, 24VDC, AND 240VAC AVAILABLE AT NO EXTRA CHARGE
+- H=Halar Coated Probe
+- TS=Teflon Sleeve
+- Materials U and T are NOT available for dual point switches
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- 22 AWG, TWISTED SHIELDED PAIR: $.70/foot
+- 10" X 8" X 4" NEMA 4 METAL ENCLOSURE FOR RECEIVER: $420.00
+- GRK EXP PROOF ENCLOSURE FOR RECEIVER (w/ 2-3/4" conduit entries): $1,030.00
+- FLANGE CONNECTIONS & TRI-CLAMP MOUNTINGS: See Flanges section
+- STAINLESS STEEL TAG: ADD $30.00
+
+Spare Parts:
+- LS 8000/2-R-RECEIVER CARD (Specify Voltage): $385.00
+- LS 8000-T-TRANSMITTER (Specify Size & Sensitivity): $285.00
+- LS 8000-H-PROBE ASSEMBLY-10": $320.00
+- LS 8000-HOUSING: $100.00
+- FUSE (½ AMP): $10.00
+
+Application Notes:
+1. With two receiver cards you can get 4 set points in an LS 8000/2 system on one probe.
+2. Systems with multiple set points on one probe are designed for homogeneous liquids.
+3. For multiple points on one probe, the fluid must be grounded to the mounting nipple.
+4. Applications with water based or electrically conductive liquids must have a Halar coated probe.
+5. Material sticking on the probe will affect the repeatability of set points.
+6. LONGEST PROBE WITH HALAR IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+
+------------------------------------------------------------------------------
+LT 9000 LEVEL TRANSMITTER
+------------------------------------------------------------------------------
+Base Models:
+- LT9000-115VAC-H-10": $855.00
+  * Longer halar coated probes: add $110/foot
+  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+- LT9000-115VAC-U-4": $875.00 (Base H price + $20)
+  * Longer Blind-end probes: add $40/inch
+- LT9000-115VAC-T-4": $915.00 (Base H price + $60)
+  * Longer Blind end probes: add $50/inch
+
+Notes:
+- 24VDC AND 230VAC AVAILABLE AT NO EXTRA CHARGE
+- H=Halar Coated Probe
+- TS=Teflon Sleeve
+- U=UHMWPE Blind End Probe
+- T=Teflon Blind End Probe
+- Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory
+
+Options:
+- FLANGE CONNECTIONS & TRI-CLAMP MOUNTINGS: See Flanges section
+- STAINLESS STEEL TAG: ADD $30.00
+
+Spare Parts:
+- LT 9000-MA (Plug-in card): $295.00
+- LT 9000-BB (Power Supply-specify voltage): $295.00
+- LT 9000-H-PROBE ASSEMBLY-10": $370.00
+- LT9000-HOUSING: $140.00
+- FUSE (1/2 AMP): $10.00
+
+Application Notes:
+1. It is always good engineering practice to provide a separate, independent high level alarm.
+2. Designed to be used in electrically conductive liquids that do not leave a residue on the probe.
+3. Will give a varying output if the conductivity of the material changes.
+4. Must be grounded to the fluid. In non-metallic tanks, extra grounding provisions may be necessary.
+5. LONGEST PROBE WITH HALAR IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE.
+6. For high temperatures or harsh acids, check with the factory for epoxy compatibility.
+
+------------------------------------------------------------------------------
+PRESENCE/ABSENCE SWITCHES
+------------------------------------------------------------------------------
+These units are replacement units for Princo P/N's L3515 and L3545.
+- LS7500 replaces L3515
+- LS8500 replaces L3545
+
+Flange sensors:
+- PR = Partial Ring (Conductive Media)
+- FR= Full Ring (Non-Conductive Media)
+
+Power Supply Options: 115VAC, 24VDC, 220VAC or 12VDC
+Example P/N: LS7500-24VDC-FP-3"-150-PR
+
+Pricing: Consult Factory
+$400 Adder for Teflon Insulators on flanges 6"-12"
+
+Application Notes:
+1. These units are replacement units for Princo P/N's L3515 and L3545.
+2. Standard flanges are 316SS Flat Face Flanges.
+
+------------------------------------------------------------------------------
+FS 10000 DRY MATERIAL FLOW SWITCH
+------------------------------------------------------------------------------
+Base Models:
+- FS 10000-115VAC-S-6": $1885.00
+  * 1.5", 3" AND 6" PROBES ARE THE SAME PRICE
+  * Longer 316SS probes: add $45/foot
+
+Notes:
+- 230VAC AVAILABLE AT NO EXTRA CHARGE
+- Materials U and T are NOT available for FS10000
+
+Options:
+- ADDITIONAL COAXIAL CABLE: ADD $6/foot (15 Feet comes with complete unit, 100 ft. max.)
+- GRK EXP PROOF ENCLOSURE FOR RECEIVER (w/ 2-3/4" conduit entries): $1,030.00
+
+Spare Parts:
+- FS 10000-ELECTRONICS (Specify Voltage): $1440.00
+- FS 10000-PROBE ASSEMBLY-6" (Specify length): $200.00
+- FS 10000-NEMA 4X WINDOWED ENCLOSURE: $300.00
+- FS 10000-REDDOT-GALB-2-OR (Alum. Probe Housing): $100.00
+- 15 FEET COAXIAL CABLE W/ CONNECTORS: $100.00
+
+Application Notes:
+- Max. probe length recommended is 24".
+- For detecting emissions before they are visible, recommend air velocities in excess of 2000 feet per minute.
+- VELOCITY IN FEET PER MINUTE = CFM / ((Duct Dia. In Feet)² × 0.78)
+
+==============================================================================
+LEVEL SWITCH OPTIONS
+==============================================================================
+
+------------------------------------------------------------------------------
+FLANGES
+------------------------------------------------------------------------------
+Socket welded flange mounting:
+- 1" 150# 316SS RF FLANGE: Consult Factory
+- 1 ½" 150# 316SS RF FLANGE: Consult Factory
+- 2" 150# 316SS RF FLANGE: Consult Factory
+- 3" 150# 316SS RF FLANGE: Consult Factory
+- 4" 150# 316SS RF FLANGE: Consult Factory
+- 1" 300# 316SS RF FLANGE: Consult Factory
+- 1 ½" 300# 316SS RF FLANGE: Consult Factory
+- 2" 300# 316SS RF FLANGE: Consult Factory
+- 3" 300# 316SS RF FLANGE: Consult Factory
+- 4" 300# 316SS RF FLANGE: Consult Factory
+
+------------------------------------------------------------------------------
+TRICLAMP MATING CONNECTIONS
+------------------------------------------------------------------------------
+Mates to 1 ½" Triclamp style fitting:
+- 1 ½" TRICLAMP PROCESS CONNECTION: ADD $280.00
+- 1 ½" TRICLAMP SPUD TO WELD TO TANK, CLAMP, & GASKET: ADD $170.00
+
+Mates to 2" Triclamp style fitting:
+- 2" TRICLAMP PROCESS CONNECTION: ADD $330.00
+- 2" TRICLAMP SPUD TO WELD TO TANK, CLAMP, & GASKET: ADD $220.00
+
+------------------------------------------------------------------------------
+EXOTIC METALS OF CONSTRUCTION
+------------------------------------------------------------------------------
+Probes & Nipples for both ¾" or 1" process connection:
+- ALLOY 20: Consult Factory
+- HASTELLOY-C-276: Consult Factory
+- HASTELLOY-B: Consult Factory
+- TITANIUM: Consult Factory
+
+------------------------------------------------------------------------------
+"O" RINGS
+------------------------------------------------------------------------------
+- Viton O rings are standard for all level switches
+- Other common materials available at no extra charge: Silicon, Buna-N, and EPDM
+- KALREZ "O" RINGS: ADD $295.00 PER PROBE
+
+------------------------------------------------------------------------------
+INSULATORS
+------------------------------------------------------------------------------
+- 6": ADD $150
+- 8": ADD $200
+- 10": ADD $250
+- 12": ADD $300
+- PEEK INSULATOR: ADD $340
+- CERAMIC INSULATOR (1400F-DRY MATERIALS ONLY): ADD $470
+
+==============================================================================
+SPECIAL PRICING
+==============================================================================
+
+------------------------------------------------------------------------------
+APPLIED FOR GYSON
+------------------------------------------------------------------------------
+- LS2000-24VDC-U-10": $485
+- LS2000-24VDC-U-8": $445
+- LS2000-24VDC-U-6": $425
+
+------------------------------------------------------------------------------
+AUTOMATION SUPPLY
+------------------------------------------------------------------------------
+- LS2000 10"-24" PROBES: $443.50 NET
+
+==============================================================================
+DISCONTINUED PRODUCTS
+==============================================================================
+- Ultrasonic Level Transmitters (BAB-400, BAB-300, BAB-200 series)
+- Radar Level Transmitters (BAB 200/300/400 series)
+
+==============================================================================
+GENERAL NOTES
+==============================================================================
+- All prices subject to change without notice
+- Materials U and T are available for all models except for the dual point switches and FS10000
+- If U or T are selected as material, the base length is 4 inches (not 10 inches like most other materials)
+- To get the base price for U, take S base price and add 20 dollars
+- To get the base price for T, take S base price and add 60 dollars
+- Length adder for all U is 40 dollars an inch
+- Length adder for all T is 50 dollars an inch
+- For H material, standard lengths are: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72
+- $300 adder applies for non-standard H material lengths
+- LONGEST PROBE WITH HALAR COATING IS 72" (6 FEET). FOR PROBES OVER 72", USE TEFLON SLEEVE 

@@ -9,7 +9,7 @@ Supports:
 - Material compatibility and filtering for products
 - Material-specific pricing adders
 """
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from src.core.database import Base
 
 class MaterialOption(Base):
@@ -21,21 +21,21 @@ class MaterialOption(Base):
     
     Attributes:
         id (int): Primary key
-        product_family (str): Product family identifier
+        product_family_id (int): Foreign key to product family
         material_code (str): Material code (e.g., "S", "H")
         display_name (str): Human-readable material name
         base_price (float): Additional cost for this material
         is_available (int): 1 if available, 0 if not
     
     Example:
-        >>> mo = MaterialOption(product_family="LS2000", material_code="S", display_name="S - 316 Stainless Steel", base_price=0.0)
+        >>> mo = MaterialOption(product_family_id=1, material_code="S", display_name="S - 316 Stainless Steel", base_price=0.0)
         >>> print(mo)
     """
     
     __tablename__ = "material_options"
     
     id = Column(Integer, primary_key=True)
-    product_family = Column(String, nullable=False)  # e.g., "LS2000", "LS6000"
+    product_family_id = Column(Integer, ForeignKey("product_families.id"), nullable=False)
     material_code = Column(String, nullable=False)  # e.g., "S", "H", "A"
     display_name = Column(String, nullable=False)  # e.g., "S - 316 Stainless Steel"
     base_price = Column(Float, default=0.0)  # Additional cost for this material
@@ -47,4 +47,4 @@ class MaterialOption(Base):
         Returns:
             str: A string showing the product family, material code, and display name
         """
-        return f"<MaterialOption(product_family='{self.product_family}', material='{self.material_code}', display_name='{self.display_name}')>" 
+        return f"<MaterialOption(product_family_id='{self.product_family_id}', material='{self.material_code}', display_name='{self.display_name}')>" 

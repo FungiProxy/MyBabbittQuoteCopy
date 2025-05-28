@@ -7,7 +7,7 @@ It stores which voltage configurations are available for each product family.
 Supports:
 - Voltage compatibility and filtering for products
 """
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from src.core.database import Base
 
 class VoltageOption(Base):
@@ -19,19 +19,19 @@ class VoltageOption(Base):
     
     Attributes:
         id (int): Primary key
-        product_family (str): Product family identifier
+        product_family_id (int): Foreign key to product family
         voltage (str): Voltage option (e.g., "24VDC")
         is_available (int): 1 if available, 0 if not
     
     Example:
-        >>> vo = VoltageOption(product_family="LS2000", voltage="24VDC", is_available=1)
+        >>> vo = VoltageOption(product_family_id=1, voltage="24VDC", is_available=1)
         >>> print(vo)
     """
     
     __tablename__ = "voltage_options"
     
     id = Column(Integer, primary_key=True)
-    product_family = Column(String, nullable=False)  # e.g., "LS2000", "LS6000"
+    product_family_id = Column(Integer, ForeignKey("product_families.id"), nullable=False)
     voltage = Column(String, nullable=False)  # e.g., "24VDC", "115VAC"
     is_available = Column(Integer, default=1)  # 1 for available, 0 for not available
     
@@ -41,4 +41,4 @@ class VoltageOption(Base):
         Returns:
             str: A string showing the product family and voltage
         """
-        return f"<VoltageOption(product_family='{self.product_family}', voltage='{self.voltage}')>" 
+        return f"<VoltageOption(product_family_id='{self.product_family_id}', voltage='{self.voltage}')>" 

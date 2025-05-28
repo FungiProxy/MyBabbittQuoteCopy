@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QDate
 from src.ui.product_selection_dialog import ProductSelectionDialog
+from src.core.services.product_service import ProductService
 
 class QuoteCreationPage(QWidget):
     """
@@ -167,7 +168,7 @@ class QuoteCreationPage(QWidget):
         self.add_product_btn.clicked.connect(self.open_product_dialog)
 
     def open_product_dialog(self):
-        dialog = ProductSelectionDialog(self)
+        dialog = ProductSelectionDialog(product_service=ProductService(), parent=self)
         if dialog.exec():
             product = dialog.selected_product
             if product:

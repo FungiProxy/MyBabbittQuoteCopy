@@ -387,29 +387,18 @@ class SpecificationsTab(QWidget):
         """Add additional options section."""
         group = QGroupBox("Additional Options")
         layout = QVBoxLayout()
-        
-        # Common options for most products
-        high_temp = QCheckBox("High Temperature Version")
-        layout.addWidget(high_temp)
-        self.specs_widgets["high_temp"] = high_temp
-        
-        # Product-specific options
-        if "Level Switch" in self.current_product.get("category", ""):
-            extended_probe = QCheckBox("Extended Probe")
-            layout.addWidget(extended_probe)
-            self.specs_widgets["extended_probe"] = extended_probe
-        
-        if "Transmitter" in self.current_product.get("category", ""):
-            remote_display = QCheckBox("Remote Display Option")
-            layout.addWidget(remote_display)
-            self.specs_widgets["remote_display"] = remote_display
-            
-            output_type = QComboBox()
-            output_type.addItems(["4-20mA", "0-10V", "Modbus RTU", "HART"])
-            layout.addWidget(QLabel("Output Type:"))
-            layout.addWidget(output_type)
-            self.specs_widgets["output_type"] = output_type
-        
+        db = SessionLocal()
+        try:
+            options = self.product_service.get_all_additional_options(db)
+            for opt in options:
+                label = f"{opt.name} (+${opt.price:.2f})" if opt.price else opt.name
+                checkbox = QCheckBox(label)
+                if opt.description:
+                    checkbox.setToolTip(opt.description)
+                layout.addWidget(checkbox)
+                self.specs_widgets[opt.name] = checkbox
+        finally:
+            db.close()
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
     

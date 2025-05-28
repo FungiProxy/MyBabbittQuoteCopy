@@ -22,6 +22,8 @@ from sqlalchemy.orm import Session
 from src.core.models import Product, Material, Option, MaterialAvailability, VoltageOption, MaterialOption
 from src.core.pricing import calculate_product_price
 from src.utils.db_utils import get_by_id, get_all
+from src.core.models.product_variant import ProductFamily, ProductVariant
+from src.core.models.connection_option import ConnectionOption
 
 
 class ProductService:
@@ -300,4 +302,216 @@ class ProductService:
         return db.query(Product).filter(
             (Product.description.ilike(search_pattern)) |
             (Product.model_number.ilike(search_pattern))
-        ).all() 
+        ).all()
+
+    def get_product_families(self, db: Session) -> List[Dict]:
+        """
+        Fetch all product families with basic info.
+        Returns: List of dicts with id, name, description, category.
+        """
+        families = db.query(ProductFamily).all()
+        return [
+            {
+                "id": f.id,
+                "name": f.name,
+                "description": f.description,
+                "category": f.category
+            }
+            for f in families
+        ]
+
+    def get_variants_for_family(self, db: Session, family_id: int) -> List[Dict]:
+        """
+        Fetch all product variants for a given family.
+        Returns: List of dicts with id, model_number, description, base_price, etc.
+        """
+        variants = db.query(ProductVariant).filter(ProductVariant.product_family_id == family_id).all()
+        return [
+            {
+                "id": v.id,
+                "model_number": v.model_number,
+                "description": v.description,
+                "base_price": v.base_price,
+                "base_length": v.base_length,
+                "voltage": v.voltage,
+                "material": v.material
+            }
+            for v in variants
+        ]
+
+    def get_material_options(self, db: Session, family_name: str) -> List[Dict]:
+        """
+        Fetch available material options for a product family.
+        Returns: List of dicts with material_code, display_name, base_price.
+        """
+        materials = db.query(MaterialOption).filter(
+            MaterialOption.product_family == family_name,
+            MaterialOption.is_available == 1
+        ).all()
+        return [
+            {
+                "material_code": m.material_code,
+                "display_name": m.display_name,
+                "base_price": m.base_price
+            }
+            for m in materials
+        ]
+
+    def get_voltage_options(self, db: Session, family_name: str) -> List[Dict]:
+        """
+        Fetch available voltage options for a product family.
+        Returns: List of dicts with voltage.
+        """
+        voltages = db.query(VoltageOption).filter(
+            VoltageOption.product_family == family_name,
+            VoltageOption.is_available == 1
+        ).all()
+        return [
+            {"voltage": v.voltage} for v in voltages
+        ]
+
+    def get_connection_options(self, db: Session, family_name: str) -> List[Dict]:
+        """
+        Fetch available connection options for a product family.
+        Returns: List of dicts with type, rating, size, price.
+        """
+        connections = db.query(ConnectionOption).filter(
+            ConnectionOption.product_families.like(f"%{family_name}%")
+        ).all()
+        return [
+            {
+                "type": c.type,
+                "rating": c.rating,
+                "size": c.size,
+                "price": c.price
+            }
+            for c in connections
+        ]
+
+    def get_additional_options(self, db: Session, family_name: str) -> List[Dict]:
+        """
+        Fetch additional configurable options (add-ons) for a product family.
+        Returns: List of dicts with name, description, price, price_type, category.
+        """
+        options = db.query(Option).filter(
+            Option.product_families.like(f"%{family_name}%")
+        ).all()
+        # Exclude options where family_name is in excluded_products
+        filtered = [
+            o for o in options
+            if not o.excluded_products or family_name not in o.excluded_products.split(",")
+        ]
+        return [
+            {
+                "name": o.name,
+                "description": o.description,
+                "price": o.price,
+                "price_type": o.price_type,
+                "category": o.category
+            }
+            for o in filtered
+        ]
+
+    def search_products(self, db: Session, query: str) -> List[Dict]:
+        """
+        Search product families and variants by name or description.
+        Returns: List of matching product families/variants.
+        """
+        # Search families
+        families = db.query(ProductFamily).filter(
+            (ProductFamily.name.ilike(f"%{query}%")) |
+            (ProductFamily.description.ilike(f"%{query}%"))
+        ).all()
+        # Search variants
+        variants = db.query(ProductVariant).filter(
+            (ProductVariant.model_number.ilike(f"%{query}%")) |
+            (ProductVariant.description.ilike(f"%{query}%"))
+        ).all()
+        results = [
+            {
+                "type": "family",
+                "id": f.id,
+                "name": f.name,
+                "description": f.description,
+                "category": f.category
+            } for f in families
+        ] + [
+            {
+                "type": "variant",
+                "id": v.id,
+                "model_number": v.model_number,
+                "description": v.description,
+                "base_price": v.base_price,
+                "base_length": v.base_length,
+                "voltage": v.voltage,
+                "material": v.material,
+                "family_id": v.product_family_id
+            } for v in variants
+        ]
+        return results
+
+    def get_variant_by_id(self, db: Session, variant_id: int) -> Optional[Dict]:
+        """
+        Fetch a single product variant by its ID.
+        Returns: Dict with all variant details, or None if not found.
+        """
+        variant = db.query(ProductVariant).filter(ProductVariant.id == variant_id).first()
+        if not variant:
+            return None
+        return {
+            "id": variant.id,
+            "model_number": variant.model_number,
+            "description": variant.description,
+            "base_price": variant.base_price,
+            "base_length": variant.base_length,
+            "voltage": variant.voltage,
+            "material": variant.material,
+            "family_id": variant.product_family_id
+        }
+
+    @staticmethod
+    def get_product_variants(db: Session) -> list:
+        """Fetch all product variants (actual sellable products)."""
+        from src.core.models.product_variant import ProductVariant
+        return db.query(ProductVariant).all()
+
+    @staticmethod
+    def get_all_additional_options(db: Session) -> list:
+        """
+        Retrieve all additional options (category == 'additional').
+        Returns a list of Option objects.
+        """
+        return db.query(Option).filter(Option.category == "additional").all()
+
+    def get_valid_options_for_selection(self, db, family_id: int, selected_options: dict) -> dict:
+        """
+        Given a product family and a dict of selected options, return valid values for each remaining option.
+        This supports dynamic option filtering in the UI as the user makes selections.
+
+        Args:
+            db: SQLAlchemy database session
+            family_id: ID of the product family
+            selected_options: Dict of currently selected options (e.g., {'material': 'S', 'voltage': '115VAC'})
+
+        Returns:
+            Dict mapping option names to lists of valid values for each remaining option.
+            Example: {'material': ['S', 'H'], 'voltage': ['115VAC', '24VDC']}
+        """
+        # Fetch all variants for the family
+        variants = self.get_variants_for_family(db, family_id)
+        # Filter variants by selected options
+        for opt, val in selected_options.items():
+            variants = [v for v in variants if v.get(opt) == val]
+        # Determine all option keys present in variants
+        option_keys = set()
+        for v in variants:
+            option_keys.update(v.keys())
+        # Exclude keys that are not configuration options
+        exclude_keys = {'id', 'model_number', 'description', 'base_price', 'base_length', 'family_id', 'category'}
+        option_keys = option_keys - exclude_keys
+        # For each remaining option, get unique valid values from filtered variants
+        valid_options = {}
+        for opt in option_keys:
+            if opt not in selected_options:
+                valid_options[opt] = sorted({v[opt] for v in variants if v.get(opt) is not None})
+        return valid_options 

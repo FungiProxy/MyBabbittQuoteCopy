@@ -11,7 +11,7 @@ Supports:
 - Size-specific pricing
 - Product family compatibility
 """
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from src.core.database import Base
 
 class ConnectionOption(Base):
@@ -28,7 +28,7 @@ class ConnectionOption(Base):
         rating (str): Pressure rating for flanges ("150#", "300#"), None for Tri-Clamp
         size (str): Connection size (e.g., '1"', '1.5"', '2"', '3"', '4"')
         price (float): Additional cost for this connection option
-        product_families (str): Comma-separated list of compatible product families
+        product_family_id (int): Foreign key to product family
     
     Example:
         >>> conn = ConnectionOption(type="Flange", rating="150#", size='2"', price=75.0)
@@ -42,7 +42,7 @@ class ConnectionOption(Base):
     rating = Column(String, nullable=True)  # "150#", "300#", or None for Tri-Clamp
     size = Column(String, nullable=False)   # e.g., '1"', '1.5"', '2"', '3"', '4"'
     price = Column(Float, default=0.0)
-    product_families = Column(String)  # Comma-separated, e.g., "LS2000,LS6000"
+    product_family_id = Column(Integer, ForeignKey("product_families.id"), nullable=False)
     
     def __repr__(self):
         """

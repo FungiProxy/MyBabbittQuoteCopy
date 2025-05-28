@@ -11,6 +11,9 @@ from src.core.models.spare_part import SparePart
 from src.core.models.connection_option import ConnectionOption
 from src.core.models.voltage_option import VoltageOption
 from src.core.models.material_option import MaterialOption
+from src.core.models.o_ring_material_option import O_RingMaterialOption
+from src.core.models.cable_length_option import CableLengthOption
+from src.core.models.housing_type_option import HousingTypeOption
 
 __all__ = [
     "Customer",
@@ -27,5 +30,8 @@ __all__ = [
     "SparePart",
     "ConnectionOption",
     "VoltageOption",
-    "MaterialOption"
+    "MaterialOption",
+    "O_RingMaterialOption",
+    "CableLengthOption",
+    "HousingTypeOption"
 ]

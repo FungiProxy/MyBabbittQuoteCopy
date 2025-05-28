@@ -12,6 +12,8 @@ from PySide6.QtWidgets import (
     QFrame, QButtonGroup, QRadioButton, QSpinBox, QSizePolicy, QWidget, QScrollArea
 )
 from PySide6.QtCore import Qt, Signal
+from src.core.services.product_service import ProductService
+from src.core.database import SessionLocal
 
 class ProductSelectionDialog(QDialog):
     """
@@ -20,68 +22,44 @@ class ProductSelectionDialog(QDialog):
     """
     product_added = Signal(dict)
 
-    def __init__(self, parent=None):
+    def __init__(self, product_service: ProductService, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Product to Quote")
         self.resize(900, 600)
         self.selected_product = None
         self.selected_options = {}
         self.quantity = 1
-        self._init_mock_data()
+        self.product_service = product_service
+        self.products = []
+        self._fetch_products()
         self._init_ui()
 
-    def _init_mock_data(self):
-        """Initialize mock product data (replace with DB integration later)."""
-        self.products = [
-            {
-                "id": 1,
-                "name": "LS-1000 Level Switch",
-                "description": "Standard level switch for liquid level detection",
-                "category": "Level Switches",
-                "base_price": 450,
-                "options": [
-                    {"name": "Voltage", "required": True, "choices": [
-                        {"label": "110V AC", "price": 0},
-                        {"label": "220V AC", "price": 50},
-                        {"label": "24V DC", "price": 0},
-                    ]},
-                    {"name": "Material", "required": True, "choices": [
-                        {"label": "Stainless Steel 316", "price": 100},
-                        {"label": "Brass", "price": 75},
-                        {"label": "PVC", "price": 25},
-                    ]},
-                    {"name": "Probe Length", "required": True, "choices": [
-                        {"label": '6" (Standard)', "price": 0},
-                        {"label": '12"', "price": 30},
-                        {"label": '18"', "price": 60},
-                    ]},
-                ]
-            },
-            {
-                "id": 2,
-                "name": "LS-2000 Level Switch",
-                "description": "Advanced level switch with digital display",
-                "category": "Level Switches",
-                "base_price": 650,
-                "options": []
-            },
-            {
-                "id": 3,
-                "name": "FS-500 Flow Switch",
-                "description": "Basic flow switch for industrial applications",
-                "category": "Flow Switches",
-                "base_price": 550,
-                "options": []
-            },
-            {
-                "id": 4,
-                "name": "FS-750 Flow Switch",
-                "description": "High-precision flow switch with temperature",
-                "category": "Flow Switches",
-                "base_price": 750,
-                "options": []
-            },
-        ]
+    def _fetch_products(self):
+        """Fetch product families (models) from the database using ProductService."""
+        db = SessionLocal()
+        try:
+            # Fetch all product families (models)
+            family_objs = self.product_service.get_product_families(db)
+            # Each family is a dict with keys: id, name, description, category
+            self.products = family_objs
+        except Exception as e:
+            self.products = []
+            print(f"Error fetching product families: {e}")
+        finally:
+            db.close()
+
+    def _product_to_dict(self, product):
+        """Convert a ProductVariant SQLAlchemy object to a dictionary for UI use."""
+        return {
+            "id": getattr(product, "id", None),
+            "name": getattr(product, "model_number", ""),
+            "description": getattr(product, "description", ""),
+            "category": getattr(product.product_family, "category", ""),
+            "base_price": getattr(product, "base_price", 0),
+            "voltage": getattr(product, "voltage", ""),
+            "material": getattr(product, "material", ""),
+            # Add more fields/options as needed
+        }
 
     def _init_ui(self):
         """Set up the dialog UI layout and widgets."""
@@ -120,22 +98,25 @@ class ProductSelectionDialog(QDialog):
     def _populate_product_list(self, filter_text=""):
         """Populate the product list, optionally filtering by search text."""
         self.product_list.clear()
-        for product in self.products:
-            if filter_text.lower() in product["name"].lower() or filter_text.lower() in product["description"].lower():
-                item = QListWidgetItem()
-                item.setText(f"{product['name']}\n{product['description']}\n{product['category']}   ${product['base_price']}")
-                item.setData(Qt.UserRole, product)
-                self.product_list.addItem(item)
+        filtered_products = [product for product in self.products if filter_text.lower() in product["name"].lower()]
+        for product in filtered_products:
+            item = QListWidgetItem()
+            item.setText(f"{product['name']}")
+            item.setData(Qt.UserRole, product)
+            self.product_list.addItem(item)
 
     def _filter_products(self, text):
         self._populate_product_list(text)
 
     def _on_product_selected(self):
         items = self.product_list.selectedItems()
+        print(f"DEBUG: _on_product_selected called. Items: {items}")
         if not items:
+            print("DEBUG: No items selected. Showing select product prompt.")
             self._show_select_product()
             return
         product = items[0].data(Qt.UserRole)
+        print(f"DEBUG: Product selected: {product}")
         self.selected_product = product
         self.selected_options = {}
         self.quantity = 1
@@ -149,27 +130,17 @@ class ProductSelectionDialog(QDialog):
         self.config_layout.addWidget(prompt)
 
     def _show_product_config(self, product):
+        print(f"DEBUG: _show_product_config called with product: {product}")
         self._clear_config_panel()
+        self.selected_options = {}
+        self.option_widgets = {}  # Track widgets for each option
+        self.family_id = product["id"]
         # Product details
         details = QLabel(f"<b>{product['name']}</b><br><span style='color:#888;'>{product['description']}</span><br><span style='background:#e3e8f7; color:#2563eb; border-radius:4px; padding:2px 8px; font-size:12px;'>{product['category']}</span>  <b>Base Price: ${product['base_price']}</b>")
         details.setWordWrap(True)
         self.config_layout.addWidget(details)
-        # Dynamic options
-        self.option_groups = {}
-        for option in product.get("options", []):
-            group_label = QLabel(f"<b>{option['name']} {'*' if option['required'] else ''}</b>")
-            self.config_layout.addWidget(group_label)
-            btn_group = QButtonGroup(self)
-            btn_group.setExclusive(True)
-            self.option_groups[option["name"]] = btn_group
-            for choice in option["choices"]:
-                radio = QRadioButton(f"{choice['label']} {'(+${})'.format(choice['price']) if choice['price'] else ''}")
-                radio.toggled.connect(self._update_total_price)
-                btn_group.addButton(radio)
-                self.config_layout.addWidget(radio)
-            # Select first by default
-            if btn_group.buttons():
-                btn_group.buttons()[0].setChecked(True)
+        # Fetch and show dynamic options
+        self._build_dynamic_options()
         # Quantity
         qty_label = QLabel("<b>Quantity</b>")
         self.config_layout.addWidget(qty_label)
@@ -189,6 +160,69 @@ class ProductSelectionDialog(QDialog):
         self.config_layout.addWidget(self.add_btn)
         self._update_total_price()
 
+    def _build_dynamic_options(self):
+        """
+        Build option widgets dynamically based on current selected options and valid choices.
+        """
+        db = SessionLocal()
+        try:
+            valid_options = self.product_service.get_valid_options_for_selection(db, self.family_id, self.selected_options)
+            print(f"DEBUG: valid_options for family_id={self.family_id}, selected_options={self.selected_options}: {valid_options}")
+        except Exception as e:
+            print(f"Error fetching valid options: {e}")
+            valid_options = {}
+        finally:
+            db.close()
+        # Remove old option widgets
+        for widget in getattr(self, 'option_widgets', {}).values():
+            widget.deleteLater()
+        self.option_widgets = {}
+        # For each option, create a group of radio buttons for valid values
+        for opt_name, values in valid_options.items():
+            group_label = QLabel(f"<b>{opt_name.capitalize()}</b>")
+            self.config_layout.addWidget(group_label)
+            btn_group = QButtonGroup(self)
+            btn_group.setExclusive(True)
+            self.option_widgets[opt_name] = btn_group
+            for val in values:
+                radio = QRadioButton(str(val))
+                # Set checked if this value is selected
+                if self.selected_options.get(opt_name) == val:
+                    radio.setChecked(True)
+                radio.toggled.connect(lambda checked, o=opt_name, v=val: self._on_option_selected(o, v, checked))
+                btn_group.addButton(radio)
+                self.config_layout.addWidget(radio)
+            # If nothing selected, select the first by default
+            if btn_group.buttons() and opt_name not in self.selected_options:
+                btn_group.buttons()[0].setChecked(True)
+
+    def _on_option_selected(self, option_name, value, checked):
+        if checked:
+            self.selected_options[option_name] = value
+            # Rebuild options to reflect new valid choices
+            self._rebuild_options_panel()
+            self._update_total_price()
+
+    def _rebuild_options_panel(self):
+        # Remove all option widgets (but not details, qty, price, add button)
+        # We'll keep the first widget (details label), then remove until qty_label
+        count = self.config_layout.count()
+        # Find the index of the qty_label
+        qty_label_idx = None
+        for i in range(count):
+            widget = self.config_layout.itemAt(i).widget()
+            if isinstance(widget, QSpinBox):
+                qty_label_idx = i - 1  # The label is just before the spinbox
+                break
+        # Remove widgets between details and qty_label
+        if qty_label_idx is not None:
+            for i in range(qty_label_idx, 0, -1):
+                widget = self.config_layout.itemAt(i).widget()
+                if widget:
+                    widget.deleteLater()
+        # Rebuild dynamic options
+        self._build_dynamic_options()
+
     def _clear_config_panel(self):
         # Remove all widgets from config_layout
         while self.config_layout.count():
@@ -205,7 +239,7 @@ class ProductSelectionDialog(QDialog):
         base = self.selected_product["base_price"]
         total = base
         # Add option prices
-        for opt_name, btn_group in self.option_groups.items():
+        for opt_name, btn_group in self.option_widgets.items():
             for btn in btn_group.buttons():
                 if btn.isChecked():
                     label = btn.text()
@@ -223,7 +257,7 @@ class ProductSelectionDialog(QDialog):
     def _on_add_to_quote(self):
         # Gather selected options
         options = {}
-        for opt_name, btn_group in self.option_groups.items():
+        for opt_name, btn_group in self.option_widgets.items():
             for btn in btn_group.buttons():
                 if btn.isChecked():
                     options[opt_name] = btn.text()
