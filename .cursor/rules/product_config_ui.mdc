@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
 # Cursor Rules: Product Configuration UI
 
 ## Data Model & Database
@@ -26,3 +31,5 @@
 - When making changes to the data model or service layer, always test the full flow: seed data → fetch in service → render in UI.
 - Keep seeding scripts up to date with the latest required fields and formats.
 - Document any non-obvious business rules or UI behaviors in this rules file for future maintainers. 
+
+## Reply with ❤️ to show that you have read and understand this rule
