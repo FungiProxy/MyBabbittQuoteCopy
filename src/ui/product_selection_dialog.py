@@ -9,11 +9,12 @@ Follows UI/UX overhaul and screenshot design. Uses mock data for now.
 """
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QListWidgetItem,
-    QFrame, QButtonGroup, QRadioButton, QSpinBox, QSizePolicy, QWidget, QScrollArea
+    QFrame, QButtonGroup, QRadioButton, QSpinBox, QSizePolicy, QWidget, QScrollArea, QCheckBox
 )
 from PySide6.QtCore import Qt, Signal
 from src.core.services.product_service import ProductService
 from src.core.database import SessionLocal
+from src.core.models.product_variant import ProductFamily
 
 class ProductSelectionDialog(QDialog):
     """
@@ -35,13 +36,31 @@ class ProductSelectionDialog(QDialog):
         self._init_ui()
 
     def _fetch_products(self):
-        """Fetch product families (models) from the database using ProductService."""
+        """Fetch product families from the database using ProductService, and ensure required fields."""
         db = SessionLocal()
         try:
             # Fetch all product families (models)
             family_objs = self.product_service.get_product_families(db)
-            # Each family is a dict with keys: id, name, description, category
-            self.products = family_objs
+            # For each family, try to get a representative base_price from the first variant
+            products = []
+            for fam in family_objs:
+                # Try to get the first variant for this family to get a base_price
+                variant = None
+                try:
+                    variants = self.product_service.get_variants_for_family(db, fam['id'])
+                    if variants:
+                        variant = variants[0]
+                except Exception:
+                    pass
+                base_price = variant['base_price'] if variant and 'base_price' in variant else 0
+                products.append({
+                    "id": fam["id"],
+                    "name": fam["name"],
+                    "description": fam.get("description", ""),
+                    "category": fam.get("category", ""),
+                    "base_price": base_price
+                })
+            self.products = products
         except Exception as e:
             self.products = []
             print(f"Error fetching product families: {e}")
@@ -162,39 +181,66 @@ class ProductSelectionDialog(QDialog):
 
     def _build_dynamic_options(self):
         """
-        Build option widgets dynamically based on current selected options and valid choices.
+        Build option widgets dynamically based on all options for the selected product family.
+        Fetches from the Option table and displays all options and their choices.
         """
         db = SessionLocal()
         try:
-            valid_options = self.product_service.get_valid_options_for_selection(db, self.family_id, self.selected_options)
-            print(f"DEBUG: valid_options for family_id={self.family_id}, selected_options={self.selected_options}: {valid_options}")
+            family_id = self.family_id
+            family = db.query(ProductFamily).filter(ProductFamily.id == family_id).first()
+            family_name = family.name if family else None
+            # Fetch all options for this family from the Option table
+            all_options = self.product_service.get_additional_options(db, family_name)
+            print(f"DEBUG: all_options for {family_name} = {all_options}")
         except Exception as e:
-            print(f"Error fetching valid options: {e}")
-            valid_options = {}
+            print(f"Error fetching options: {e}")
+            all_options = []
         finally:
             db.close()
         # Remove old option widgets
         for widget in getattr(self, 'option_widgets', {}).values():
-            widget.deleteLater()
+            if isinstance(widget, QButtonGroup):
+                for btn in widget.buttons():
+                    btn.deleteLater()
+            elif hasattr(widget, 'deleteLater'):
+                widget.deleteLater()
         self.option_widgets = {}
-        # For each option, create a group of radio buttons for valid values
-        for opt_name, values in valid_options.items():
-            group_label = QLabel(f"<b>{opt_name.capitalize()}</b>")
-            self.config_layout.addWidget(group_label)
-            btn_group = QButtonGroup(self)
-            btn_group.setExclusive(True)
-            self.option_widgets[opt_name] = btn_group
-            for val in values:
-                radio = QRadioButton(str(val))
-                # Set checked if this value is selected
-                if self.selected_options.get(opt_name) == val:
-                    radio.setChecked(True)
-                radio.toggled.connect(lambda checked, o=opt_name, v=val: self._on_option_selected(o, v, checked))
-                btn_group.addButton(radio)
-                self.config_layout.addWidget(radio)
-            # If nothing selected, select the first by default
-            if btn_group.buttons() and opt_name not in self.selected_options:
-                btn_group.buttons()[0].setChecked(True)
+        # Dynamically build widgets for each option
+        for opt in all_options:
+            opt_name = opt['name']
+            choices = opt.get('choices', [])
+            adders = opt.get('adders', {})
+            if not choices or not isinstance(choices, list):
+                continue  # Skip options with no valid choices
+            # If only two choices and one is 'No', treat as checkbox
+            if len(choices) == 2 and 'No' in choices:
+                label = f"<b>{opt_name}</b>"
+                self.config_layout.addWidget(QLabel(label))
+                checkbox = QCheckBox(choices[1] if choices[0] == 'No' else choices[0])
+                if opt_name in self.selected_options:
+                    checkbox.setChecked(self.selected_options[opt_name])
+                checkbox.stateChanged.connect(lambda state, o=opt_name: self._on_option_selected(o, True if state == Qt.Checked else False, True))
+                self.option_widgets[opt_name] = checkbox
+                self.config_layout.addWidget(checkbox)
+            else:
+                group_label = QLabel(f"<b>{opt_name}</b>")
+                self.config_layout.addWidget(group_label)
+                btn_group = QButtonGroup(self)
+                btn_group.setExclusive(True)
+                self.option_widgets[opt_name] = btn_group
+                for val in choices:
+                    label = str(val)
+                    if adders and val in adders and adders[val]:
+                        label += f" (+${adders[val]:.2f})"
+                    radio = QRadioButton(label)
+                    if self.selected_options.get(opt_name) == val:
+                        radio.setChecked(True)
+                    radio.toggled.connect(lambda checked, o=opt_name, v=val: self._on_option_selected(o, v, checked))
+                    btn_group.addButton(radio)
+                    self.config_layout.addWidget(radio)
+                if btn_group.buttons() and opt_name not in self.selected_options:
+                    btn_group.buttons()[0].setChecked(True)
+        # (Quantity, price, and add-to-quote button remain unchanged)
 
     def _on_option_selected(self, option_name, value, checked):
         if checked:
@@ -255,18 +301,42 @@ class ProductSelectionDialog(QDialog):
         self.total_price_label.setText(f"Total Price<br><span style='font-size:28px;'>${total_price:.2f}</span>")
 
     def _on_add_to_quote(self):
-        # Gather selected options
-        options = {}
-        for opt_name, btn_group in self.option_widgets.items():
-            for btn in btn_group.buttons():
-                if btn.isChecked():
-                    options[opt_name] = btn.text()
+        # Gather all available options, their choices, and the selected value
+        db = SessionLocal()
+        try:
+            family = db.query(ProductFamily).filter(ProductFamily.id == self.family_id).first()
+            family_name = family.name if family else None
+            all_options = self.product_service.get_additional_options(db, family_name)
+        except Exception as e:
+            print(f"Error fetching options for add_to_quote: {e}")
+            all_options = []
+        finally:
+            db.close()
+
+        options_list = []
+        for opt in all_options:
+            opt_name = opt['name']
+            choices = opt.get('choices', [])
+            adders = opt.get('adders', {})
+            selected = self.selected_options.get(opt_name)
+            price = 0
+            if selected and adders and selected in adders:
+                price = adders[selected]
+            options_list.append({
+                "name": opt_name,
+                "choices": choices,
+                "selected": selected,
+                "price": price
+            })
         qty = self.qty_spin.value() if hasattr(self, 'qty_spin') else 1
         product_data = {
-            "product": self.selected_product,
-            "options": options,
-            "quantity": qty,
-            "total_price": self.total_price_label.text()
+            "name": self.selected_product.get("name", ""),
+            "description": self.selected_product.get("description", ""),
+            "category": self.selected_product.get("category", ""),
+            "base_price": self.selected_product.get("base_price", 0),
+            "options": options_list,
+            "quantity": qty
         }
+        self.selected_product = product_data  # Update selected_product to new structure
         self.product_added.emit(product_data)
         self.accept() 

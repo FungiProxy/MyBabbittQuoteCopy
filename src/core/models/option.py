@@ -11,9 +11,11 @@ These models support:
 - Compatibility with product families
 - Exclusion of incompatible products
 - Tracking option selections in quotes
+- Structured choices, adders, and rules for dynamic configuration
 """
 from sqlalchemy import Column, Integer, String, Float, Boolean, Text, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import JSON
 
 from src.core.database import Base
 
@@ -23,8 +25,7 @@ class Option(Base):
     SQLAlchemy model representing a configurable product option (add-on).
     
     Stores information about an option, including its name, description, pricing,
-    category, and compatibility rules. Options can be priced as fixed, per-inch,
-    or per-foot, and can be included or excluded for specific products.
+    category, compatibility rules, and now structured choices/adders/rules for dynamic configuration.
     
     Attributes:
         id (int): Primary key
@@ -35,9 +36,12 @@ class Option(Base):
         category (str): Option category (e.g., "mounting", "feature")
         product_families (str): Comma-separated compatible product families
         excluded_products (str): Comma-separated incompatible products
+        choices (list): List of possible choices for this option
+        adders (dict): Mapping of choice to price adder
+        rules (str or dict): Rules for option logic
     
     Example:
-        >>> option = Option(name="Explosion Proof Housing", price=250.0, price_type="fixed")
+        >>> option = Option(name="Material", choices=["S", "H"], adders={"H": 110}, rules="H max 72\"")
         >>> print(option)
     """
     
@@ -57,6 +61,11 @@ class Option(Base):
     # Compatibility
     product_families = Column(String)  # Comma-separated list of compatible product families
     excluded_products = Column(String)  # Comma-separated list of incompatible products
+
+    # Structured configuration
+    choices = Column(JSON, nullable=True)  # List of possible choices
+    adders = Column(JSON, nullable=True)   # Dict of choice -> adder
+    rules = Column(JSON, nullable=True)    # Rules for option logic (or Text if preferred)
     
     def __repr__(self):
         """
@@ -64,7 +73,7 @@ class Option(Base):
         Returns:
             str: A string showing the option's ID, name, and price
         """
-        return f"<Option(id={self.id}, name='{self.name}', price={self.price})>"
+        return f"<Option(id={self.id}, name='{self.name}', price={self.price}, choices={self.choices})>"
 
 
 class QuoteItemOption(Base):

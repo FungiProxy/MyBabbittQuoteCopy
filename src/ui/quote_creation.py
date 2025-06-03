@@ -181,25 +181,32 @@ class QuoteCreationPage(QWidget):
             self.items_table.setVisible(False)
             self.empty_state_frame.setVisible(True)
             return
+        self.items_table.setColumnCount(5)
+        self.items_table.setHorizontalHeaderLabels(["Product Name", "Description", "Configuration", "Quantity", "Price"])
         self.items_table.setRowCount(len(self.products))
         for row, product in enumerate(self.products):
             name = product.get("name", "")
             desc = product.get("description", "")
             qty = product.get("quantity", 1)
+            # Build configuration summary
+            config_summary = ""
+            for opt in product.get("options", []):
+                if opt.get("selected"):
+                    config_summary += f"{opt['name']}: {opt['selected']}\n"
+            config_item = QTableWidgetItem(config_summary.strip())
+            config_item.setToolTip(config_summary.strip())
             # Calculate price (base + options) if available
             base_price = product.get("base_price", 0)
             options_price = 0
             for opt in product.get("options", []):
-                if "choices" in opt and opt.get("selected") is not None:
-                    selected = opt["selected"]
-                    for choice in opt["choices"]:
-                        if choice["label"] == selected:
-                            options_price += choice.get("price", 0)
+                if opt.get("selected") and opt.get("price"):
+                    options_price += opt["price"]
             price = base_price + options_price
             self.items_table.setItem(row, 0, QTableWidgetItem(str(name)))
             self.items_table.setItem(row, 1, QTableWidgetItem(str(desc)))
-            self.items_table.setItem(row, 2, QTableWidgetItem(str(qty)))
-            self.items_table.setItem(row, 3, QTableWidgetItem(f"${price:,.2f}"))
+            self.items_table.setItem(row, 2, config_item)
+            self.items_table.setItem(row, 3, QTableWidgetItem(str(qty)))
+            self.items_table.setItem(row, 4, QTableWidgetItem(f"${price:,.2f}"))
         self.items_table.setVisible(True)
         self.empty_state_frame.setVisible(False)
 

@@ -1,0 +1,320 @@
+{
+  "families": [
+    {
+      "name": "LS 2000 LEVEL SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. LS 2000 has limited static protection, not recommended for plastic pellets or resins with static charges unless extra static option is specified.",
+        "2. LONGEST PROBE WITH HALAR COATING IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+      ]
+    },
+    {
+      "name": "LS 2100 LOOP POWERED LEVEL SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. The LS2100 is a loop powered switch that operates between 8mA and 16mA.",
+        "2. LONGEST PROBE WITH HALAR COATING IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+      ]
+    },
+    {
+      "name": "LS 6000 LEVEL SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. Delrin insulators are standard for SS probes. Teflon insulators are standard for Halar and Teflon Sleeve probes as well as other baked coatings.",
+        "2. Max Temperatures: Delrin insulator 250F; Teflon insulator 450F; PEEK insulator 550F",
+        "3. Do not use Delrin in applications with STEAM.",
+        "4. Cable probes and special materials of construction available.",
+        "5. \u00be\" NPT process connection is optional at no extra charge (\u00be\" NPT Max 300 psi @ 75 F)",
+        "6. LONGEST PROBE WITH HALAR COATING IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+      ]
+    },
+    {
+      "name": "LS 7000 LEVEL SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. Cable probes and special materials of construction available.",
+        "2. \u00be\" NPT process connection is optional at no extra charge (\u00be\" NPT Max 300 psi @ 75 F)",
+        "3. Max Temp for Teflon Insulator 450F, PEEK Insulator 550F",
+        "4. On board timer often used to pump down sumps or avoid nuisance alarms due to splashing.",
+        "5. LONGEST PROBE WITH HALAR COATING IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+      ]
+    },
+    {
+      "name": "LS 7000/2 DUAL POINT LEVEL SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. LS 7000/2 IS DESIGNED TO AUTOMATICALLY FILL OR AUTOMATICALLY EMPTY A VESSEL. Has only one relay dedicated to auto fill or auto emptying.",
+        "2. Designed to work in homogeneous liquids. Not for liquids that change in conductivity.",
+        "3. Must have a Halar coated probe in electrically conductive liquids.",
+        "4. Must be grounded to the liquid for best repeatability.",
+        "5. Material sticking on probe will affect setpoint repeatability.",
+        "6. For critical filling applications, a separate independent high level switch is recommended.",
+        "7. Does not work well in dry materials.",
+        "8. LONGEST PROBE WITH HALAR COATING IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+      ]
+    },
+    {
+      "name": "LS 8000 REMOTE MOUNTED LEVEL SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. Remote mounted LS 8000 receiver is normally sold without an enclosure.",
+        "2. Transmitters come in several sensitivities.",
+        "3. Transmitter sensitivities: HI, M/H, MED, LO, LLLO, XLO",
+        "4. Transmitters come in two sizes: \"small\" for standard LS 8000 housing, \"big\" for LS 7000 housing.",
+        "5. Cable probes and special materials of construction available.",
+        "6. LONGEST PROBE WITH HALAR COATING IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+      ]
+    },
+    {
+      "name": "LS 8000/2 REMOTE MOUNTED DUAL POINT LEVEL SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "TRAN-EX PRICING:",
+      "variants": [],
+      "options": [
+        {
+          "name": "22 AWG, TWISTED SHIELDED PAIR"
+        },
+        {
+          "name": "10\" X 8\" X 4\" NEMA 4 METAL ENCLOSURE FOR RECEIVER"
+        },
+        {
+          "name": "GRK EXP PROOF ENCLOSURE FOR RECEIVER (w/ 2-3/4\" conduit entries)"
+        },
+        {
+          "name": "FLANGE CONNECTIONS & TRI-CLAMP MOUNTINGS"
+        },
+        {
+          "name": "STAINLESS STEEL TAG",
+          "adder": 30.0
+        }
+      ],
+      "spare_parts": [
+        {
+          "name": "LS 8000/2-R-RECEIVER CARD (Specify Voltage)",
+          "price": 385.0
+        },
+        {
+          "name": "LS 8000-T-TRANSMITTER (Specify Size & Sensitivity)",
+          "price": 285.0
+        },
+        {
+          "name": "LS 8000-H-PROBE ASSEMBLY-10\"",
+          "price": 320.0
+        },
+        {
+          "name": "LS 8000-HOUSING",
+          "price": 100.0
+        },
+        {
+          "name": "FUSE (\u00bd AMP)",
+          "price": 10.0
+        }
+      ],
+      "notes": [
+        "12 VDC, 24VDC, AND 240VAC AVAILABLE AT NO EXTRA CHARGE",
+        "H=Halar Coated Probe",
+        "TS=Teflon Sleeve",
+        "Materials U and T are NOT available for dual point switches",
+        "Other baked on coatings available (food grade PFA Teflon and Ryton) - consult factory",
+        "1. With two receiver cards you can get 4 set points in an LS 8000/2 system on one probe.",
+        "2. Systems with multiple set points on one probe are designed for homogeneous liquids.",
+        "3. For multiple points on one probe, the fluid must be grounded to the mounting nipple.",
+        "4. Applications with water based or electrically conductive liquids must have a Halar coated probe.",
+        "5. Material sticking on the probe will affect the repeatability of set points.",
+        "6. LONGEST PROBE WITH HALAR IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+      ]
+    },
+    {
+      "name": "LT 9000 LEVEL TRANSMITTER",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. It is always good engineering practice to provide a separate, independent high level alarm.",
+        "2. Designed to be used in electrically conductive liquids that do not leave a residue on the probe.",
+        "3. Will give a varying output if the conductivity of the material changes.",
+        "4. Must be grounded to the fluid. In non-metallic tanks, extra grounding provisions may be necessary.",
+        "5. LONGEST PROBE WITH HALAR IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE.",
+        "6. For high temperatures or harsh acids, check with the factory for epoxy compatibility."
+      ]
+    },
+    {
+      "name": "PRESENCE/ABSENCE SWITCHES",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "These units are replacement units for Princo P/N's L3515 and L3545.",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "1. These units are replacement units for Princo P/N's L3515 and L3545.",
+        "2. Standard flanges are 316SS Flat Face Flanges."
+      ]
+    },
+    {
+      "name": "FS 10000 DRY MATERIAL FLOW SWITCH",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Spare Parts:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": [
+        "Max. probe length recommended is 24\".",
+        "For detecting emissions before they are visible, recommend air velocities in excess of 2000 feet per minute.",
+        "VELOCITY IN FEET PER MINUTE = CFM / ((Duct Dia. In Feet)\u00b2 \u00d7 0.78)"
+      ]
+    },
+    {
+      "name": "FLANGES",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Socket welded flange mounting:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "TRICLAMP MATING CONNECTIONS",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Mates to 1 \u00bd\" Triclamp style fitting:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "EXOTIC METALS OF CONSTRUCTION",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "Probes & Nipples for both \u00be\" or 1\" process connection:",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "\"O\" RINGS",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "INSULATORS",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "SPECIAL PRICING",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "APPLIED FOR GYSON",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    },
+    {
+      "name": "AUTOMATION SUPPLY",
+      "variants": [],
+      "options": [],
+      "spare_parts": [],
+      "notes": []
+    }
+  ]
+}

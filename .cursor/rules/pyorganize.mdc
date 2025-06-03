@@ -12,6 +12,3 @@ alwaysApply: true
 # Dynamic module loading: Python can dynamically load modules, so configurations can be loaded based on environment variables.
 
 # Start every initial responce with 👌 to let me know that you have read and understand this rule
-
-
-lkj

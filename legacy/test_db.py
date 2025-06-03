@@ -96,6 +96,26 @@ def clear_database(db):
     print("Database cleared.")
 
 
+def verify_option_categories(db):
+    """Verify all Option records have a non-null, non-empty, and unique category."""
+    options = db.query(Option).all()
+    categories = set()
+    issues = []
+    for opt in options:
+        if not opt.category or not str(opt.category).strip():
+            issues.append(f"Option '{opt.name}' (id={opt.id}) is missing a category.")
+        elif opt.category in categories:
+            issues.append(f"Duplicate category '{opt.category}' found for option '{opt.name}' (id={opt.id}).")
+        else:
+            categories.add(opt.category)
+    if issues:
+        print("\nOption Category Verification Issues:")
+        for issue in issues:
+            print(f"- {issue}")
+    else:
+        print("\nAll options have unique, non-empty categories.")
+
+
 def main():
     """Initialize and test the database."""
     # Create database schema
@@ -125,6 +145,7 @@ def main():
         
         # Verify data
         verify_data(db)
+        verify_option_categories(db)
         
         print("\nDatabase initialization successful!")
     finally:

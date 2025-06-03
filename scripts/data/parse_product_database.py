@@ -10,6 +10,10 @@ def parse_level_switches_section(lines):
     current_family = None
     in_level_switches = False
     in_family = False
+    in_notes = False
+    in_options = False
+    in_base_models = False
+    in_spare_parts = False
     for line in lines:
         line = line.rstrip()
         # Detect start of LEVEL SWITCHES section
@@ -17,29 +21,41 @@ def parse_level_switches_section(lines):
             in_level_switches = True
             continue
         if in_level_switches:
-            # Detect start of a new family
+            # Detect start of a new family (real family names only)
             if re.match(r'-{10,}', line):
-                if current_family:
+                if current_family and current_family['name']:
                     families.append(current_family)
                 current_family = None
                 in_family = False
+                in_base_models = False
+                in_options = False
+                in_notes = False
+                in_spare_parts = False
                 continue
-            # Family name
-            if line and not in_family and not line.startswith('-') and not line.startswith('='):
+            # Family name (not Base Models:, not option/adder lines, not section headers, not Notes: or Options:)
+            if line and not in_family and not line.startswith('-') and not line.startswith('=') and not line.strip().startswith('Base Models:') and not line.strip().startswith('*') and not line.strip().endswith('add $45/foot') and not line.strip().endswith('add $110/foot') and not line.strip().startswith('Notes:') and not line.strip().startswith('Options:'):
                 current_family = {
                     'name': line.strip(),
                     'variants': [],
                     'options': [],
+                    'spare_parts': [],
                     'notes': []
                 }
                 in_family = True
+                in_base_models = False
+                in_options = False
+                in_notes = False
+                in_spare_parts = False
                 continue
             # Base Models
             if in_family and line.strip().startswith('Base Models:'):
                 in_base_models = True
+                in_options = False
+                in_notes = False
+                in_spare_parts = False
                 continue
-            # Parse variants
-            if in_family and line.strip().startswith('- '):
+            # Parse variants (only if in_base_models)
+            if in_family and in_base_models and line.strip().startswith('- '):
                 m = re.match(r'- ([^:]+): \$(\d+[.]?\d*)', line.strip())
                 if m:
                     model = m.group(1)
@@ -70,16 +86,12 @@ def parse_level_switches_section(lines):
             # Parse options
             if in_family and line.strip().startswith('Options:'):
                 in_options = True
+                in_base_models = False
+                in_notes = False
+                in_spare_parts = False
                 continue
-            if in_family and 'Spare Parts:' in line:
-                in_options = False
-                continue
-            if in_family and 'Application Notes:' in line:
-                in_options = False
-                in_notes = True
-                continue
-            if in_family and line.strip().startswith('- ') and 'ADD' in line and in_options:
-                # Option with adder
+            if in_family and in_options and line.strip().startswith('- '):
+                # Option with or without adder
                 opt_match = re.match(r'- ([^:]+): ADD \$(\d+[.]?\d*)', line.strip())
                 if opt_match:
                     opt_name = opt_match.group(1).strip()
@@ -87,15 +99,49 @@ def parse_level_switches_section(lines):
                     current_family['options'].append({'name': opt_name, 'adder': adder})
                 else:
                     # Option with adder at end
-                    opt_match = re.match(r'- ([^:]+)\s*ADD \$(\d+[.]?\d*)', line.strip())
+                    opt_match = re.match(r'- ([^:]+) ADD \$(\d+[.]?\d*)', line.strip())
                     if opt_match:
                         opt_name = opt_match.group(1).strip()
                         adder = float(opt_match.group(2))
                         current_family['options'].append({'name': opt_name, 'adder': adder})
+                    else:
+                        # Option with no adder
+                        opt_match = re.match(r'- ([^:]+)', line.strip())
+                        if opt_match:
+                            opt_name = opt_match.group(1).strip()
+                            current_family['options'].append({'name': opt_name})
+                continue
+            # Parse spare parts
+            if in_family and line.strip().startswith('Spare Parts:'):
+                in_spare_parts = True
+                in_options = False
+                in_base_models = False
+                in_notes = False
+                continue
+            if in_family and in_spare_parts and line.strip().startswith('- '):
+                # Spare part with or without price
+                sp_match = re.match(r'- ([^:]+): \$(\d+[.]?\d*)', line.strip())
+                if sp_match:
+                    part_name = sp_match.group(1).strip()
+                    price = float(sp_match.group(2))
+                    current_family['spare_parts'].append({'name': part_name, 'price': price})
+                else:
+                    sp_match = re.match(r'- ([^:]+)', line.strip())
+                    if sp_match:
+                        part_name = sp_match.group(1).strip()
+                        current_family['spare_parts'].append({'name': part_name})
+                continue
+            # End spare parts section if next section starts
+            if in_family and in_spare_parts and (line.strip().startswith('Application Notes:') or line.strip().startswith('Notes:')):
+                in_spare_parts = False
+                in_notes = True
                 continue
             # Parse notes
             if in_family and (line.strip().startswith('Notes:') or line.strip().startswith('Application Notes:')):
                 in_notes = True
+                in_options = False
+                in_base_models = False
+                in_spare_parts = False
                 continue
             if in_family and in_notes and line.strip().startswith('- '):
                 note = line.strip()[2:]
@@ -107,7 +153,7 @@ def parse_level_switches_section(lines):
                 continue
             # End of LEVEL SWITCHES section
             if in_level_switches and 'PRESENCE/ABSENCE SWITCHES' in line:
-                if current_family:
+                if current_family and current_family['name']:
                     families.append(current_family)
                 break
     return families

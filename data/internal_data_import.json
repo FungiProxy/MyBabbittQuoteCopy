@@ -1,0 +1,464 @@
+{
+  "families": [
+    {
+      "name": "LS2000",
+      "base_model": {
+        "model_number": "LS2000-115VAC-S-10",
+        "description": "10\" 316SS Probe, 115VAC (Base Model)",
+        "base_price": 425.00,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "S"
+      },
+      "options": [
+        {
+          "name": "Material",
+          "choices": ["S", "H", "U", "T", "TS"],
+          "adders": {"H": 110, "U": 40, "T": 50, "TS": 110},
+          "notes": "S=316SS, H=Halar, U=UHMWPE, T=Teflon, TS=Teflon Sleeve. H and TS have $110/ft adder, U $40/inch, T $50/inch."
+        },
+        {
+          "name": "Voltage",
+          "choices": ["115VAC", "24VDC"],
+          "adders": {"24VDC": 0},
+          "notes": "12VDC and 240VAC not available for LS2000. 24VDC is no extra charge."
+        },
+        {
+          "name": "Length",
+          "rules": "Standard is 10\". For S, add $45/foot over 10\". For H or TS, add $110/foot over 10\". For U, add $40/inch over 4\". For T, add $50/inch over 4\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."
+        },
+        {
+          "name": "Teflon Insulator",
+          "choices": ["Standard", "Teflon"],
+          "adders": {"Teflon": 40.00},
+          "notes": "Teflon insulator instead of UHMWPE."
+        },
+        {
+          "name": "Mounting",
+          "choices": ["Standard", "Flanged", "Tri-Clamp"],
+          "adders": {"Flanged": null, "Tri-Clamp": null},
+          "notes": "See Level Switch Option Prices for flange/tri-clamp adders."
+        },
+        {
+          "name": "Cable Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 80.00}
+        },
+        {
+          "name": "Bent Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 50.00}
+        },
+        {
+          "name": "Stainless Steel Tag",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 30.00}
+        },
+        {
+          "name": "Extra Static Protection",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 30.00},
+          "notes": "Recommended for plastic pellets or resins with static charges."
+        }
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS).",
+        "12VDC and 240VAC not available for LS2000."
+      ],
+      "notes": [
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory.",
+        "See Level Switch Option Prices for flange/tri-clamp adders and exotic metals.",
+        "S=316SS, H=Halar, U=UHMWPE, T=Teflon, TS=Teflon Sleeve."
+      ],
+      "spare_parts": [
+        {"name": "LS 2000 ELECTRONICS (Specify Voltage)", "price": 265.00},
+        {"name": "LS 2000-U-PROBE ASSEMBLY-4\"", "price": 210.00},
+        {"name": "LS 2000-T-PROBE ASSEMBLY-4\"", "price": 250.00},
+        {"name": "LS 2000-S-PROBE ASSEMBLY-10\"", "price": 195.00},
+        {"name": "LS 2000-H-PROBE ASSEMBLY-10\"", "price": 320.00},
+        {"name": "LS 2000-HOUSING", "price": 100.00}
+      ]
+    },
+    {
+      "name": "LS2100",
+      "base_model": {
+        "model_number": "LS2100-24VDC-S-10",
+        "description": "10\" 316SS Probe, 24VDC (Base Model)",
+        "base_price": 460.00,
+        "base_length": 10,
+        "voltage": "24VDC",
+        "material": "S"
+      },
+      "options": [
+        {
+          "name": "Material",
+          "choices": ["S", "H", "T", "TS", "U"],
+          "adders": {"H": 110, "T": 50, "TS": 110, "U": 40},
+          "notes": "S=316SS, H=Halar, T=Teflon, TS=Teflon Sleeve, U=UHMWPE. H and TS have $110/ft adder, T $50/inch, U $40/inch."
+        },
+        {
+          "name": "Length",
+          "rules": "Standard is 10\". For S, add $45/foot over 10\". For H or TS, add $110/foot over 10\". For T, add $50/inch over 4\". For U, add $40/inch over 4\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."
+        },
+        {
+          "name": "Mounting",
+          "choices": ["Standard", "Flanged", "Tri-Clamp"],
+          "adders": {"Flanged": null, "Tri-Clamp": null},
+          "notes": "See Level Switch Option Prices for flange/tri-clamp adders."
+        },
+        {
+          "name": "Cable Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 80.00}
+        },
+        {
+          "name": "Bent Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 50.00}
+        },
+        {
+          "name": "Stainless Steel Tag",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 30.00}
+        }
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS)."
+      ],
+      "notes": [
+        "24VDC units work on 16 to 32 VDC.",
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory."
+      ],
+      "spare_parts": [
+        {"name": "LS 2100 ELECTRONICS", "price": 290.00},
+        {"name": "LS 2100-S-PROBE ASSEMBLY-10\"", "price": 230.00},
+        {"name": "LS 2100-H-PROBE ASSEMBLY-10\"", "price": 360.00},
+        {"name": "LS 2100-HOUSING", "price": 100.00}
+      ]
+    },
+    {
+      "name": "LS6000",
+      "base_model": {
+        "model_number": "LS6000-115VAC-S-10",
+        "description": "10\" 316SS Probe, 115VAC (Base Model)",
+        "base_price": 550.00,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "S"
+      },
+      "options": [
+        {
+          "name": "Material",
+          "choices": ["S", "H", "TS", "CPVC"],
+          "adders": {"H": 110, "TS": 110, "CPVC": 400},
+          "notes": "S=316SS, H=Halar, TS=Teflon Sleeve, CPVC=CPVC Blind End. H and TS have $110/ft adder, CPVC $400 + $50/inch over 4\"."
+        },
+        {
+          "name": "Voltage",
+          "choices": ["115VAC", "12VDC", "24VDC", "240VAC"],
+          "adders": {"12VDC": 0, "24VDC": 0, "240VAC": 0}
+        },
+        {
+          "name": "Length",
+          "rules": "Standard is 10\". For S, add $45/foot over 10\". For H or TS, add $110/foot over 10\". For CPVC, add $50/inch over 4\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."
+        },
+        {
+          "name": "Teflon Insulator",
+          "choices": ["Standard", "Teflon"],
+          "adders": {"Teflon": 40.00}
+        },
+        {
+          "name": "3/4\" Diameter Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 175.00}
+        },
+        {
+          "name": "Mounting",
+          "choices": ["Standard", "Flanged", "Tri-Clamp"],
+          "adders": {"Flanged": null, "Tri-Clamp": null}
+        },
+        {
+          "name": "Cable Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 80.00}
+        },
+        {
+          "name": "Bent Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 50.00}
+        },
+        {
+          "name": "Stainless Steel Tag",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 30.00}
+        }
+      ],
+      "compatibility_rules": [
+        "Delrin insulators are standard for SS probes. Teflon insulators are standard for Halar and Teflon Sleeve probes as well as other baked coatings.",
+        "Max Temperatures: Delrin insulator 250F; Teflon insulator 450F; PEEK insulator 550F.",
+        "Do not use Delrin in applications with STEAM.",
+        "3/4\" NPT process connection is optional at no extra charge (max 300 psi @ 75F).",
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS)."
+      ],
+      "notes": [
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory.",
+        "Cable probes and special materials of construction available."
+      ],
+      "spare_parts": [
+        {"name": "LS 6000-ELECTRONICS", "price": 295.00},
+        {"name": "LS 6000-S-PROBE ASSEMBLY-10\"", "price": 240.00},
+        {"name": "LS 6000-H-PROBE ASSEMBLY-10\"", "price": 370.00},
+        {"name": "LS6000-HOUSING", "price": 140.00}
+      ]
+    },
+    {
+      "name": "LS7000",
+      "base_model": {
+        "model_number": "LS7000-115VAC-S-10",
+        "description": "10\" 316SS Probe, 115VAC (Base Model)",
+        "base_price": 680.00,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "S"
+      },
+      "options": [
+        {"name": "Material", "choices": ["S", "H", "TS", "CPVC"], "adders": {"H": 110, "TS": 110, "CPVC": 400}, "notes": "S=316SS, H=Halar, TS=Teflon Sleeve, CPVC=CPVC Blind End. H and TS have $110/ft adder, CPVC $400 + $50/inch over 4\"."},
+        {"name": "Voltage", "choices": ["115VAC", "12VDC", "24VDC", "240VAC"], "adders": {"12VDC": 0, "24VDC": 0, "240VAC": 0}},
+        {"name": "Length", "rules": "Standard is 10\". For S, add $45/foot over 10\". For H or TS, add $110/foot over 10\". For CPVC, add $50/inch over 4\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."},
+        {"name": "3/4\" Diameter Probe", "choices": ["No", "Yes"], "adders": {"Yes": 175.00}},
+        {"name": "Stainless Steel Housing (NEMA 4X)", "choices": ["No", "Yes"], "adders": {"Yes": 285.00}},
+        {"name": "Mounting", "choices": ["Standard", "Flanged", "Tri-Clamp"], "adders": {"Flanged": null, "Tri-Clamp": null}},
+        {"name": "Cable Probe", "choices": ["No", "Yes"], "adders": {"Yes": 80.00}},
+        {"name": "Bent Probe", "choices": ["No", "Yes"], "adders": {"Yes": 50.00}},
+        {"name": "Stainless Steel Tag", "choices": ["No", "Yes"], "adders": {"Yes": 30.00}}
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS).",
+        "3/4\" NPT process connection is optional at no extra charge (max 300 psi @ 75F)."
+      ],
+      "notes": [
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory.",
+        "Cable probes and special materials of construction available.",
+        "On board timer often used to pump down sumps or avoid nuisance alarms due to splashing."
+      ],
+      "spare_parts": [
+        {"name": "LS 7000-PS-POWER SUPPLY (Specify voltage)", "price": 230.00},
+        {"name": "LS 7000-SC-SENSING CARD", "price": 235.00},
+        {"name": "LS 7000-S-PROBE ASSEMBLY-10\"", "price": 280.00},
+        {"name": "LS 7000-H-PROBE ASSEMBLY-10\"", "price": 370.00},
+        {"name": "LS 7000-HOUSING", "price": 140.00},
+        {"name": "FUSE (1/2 AMP)", "price": 10.00}
+      ]
+    },
+    {
+      "name": "LS7000/2",
+      "base_model": {
+        "model_number": "LS7000/2-115VAC-H-10",
+        "description": "10\" Halar Coated Probe, 115VAC (Base Model)",
+        "base_price": 770.00,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "H"
+      },
+      "options": [
+        {"name": "Material", "choices": ["H", "TS"], "adders": {"H": 110, "TS": 110}, "notes": "H=Halar, TS=Teflon Sleeve. H and TS have $110/ft adder."},
+        {"name": "Voltage", "choices": ["115VAC", "12VDC", "24VDC", "240VAC"], "adders": {"12VDC": 0, "24VDC": 0, "240VAC": 0}},
+        {"name": "Length", "rules": "Standard is 10\". For H or TS, add $110/foot over 10\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."},
+        {"name": "Mounting", "choices": ["Standard", "Flanged", "Tri-Clamp"], "adders": {"Flanged": null, "Tri-Clamp": null}},
+        {"name": "Stainless Steel Tag", "choices": ["No", "Yes"], "adders": {"Yes": 30.00}}
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS).",
+        "U and T materials are not available for dual point switches.",
+        "LS7000/2 is designed for auto fill/empty only (one relay)."
+      ],
+      "notes": [
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory.",
+        "For critical filling, use a separate independent high level switch for positive shut off."
+      ],
+      "spare_parts": [
+        {"name": "LS 7000-PS-POWER SUPPLY (Specify Voltage)", "price": 230.00},
+        {"name": "LS 7000/2-DP DUAL POINT CARD", "price": 255.00},
+        {"name": "LS 7000-H-PROBE ASSEMBLY-10\"", "price": 370.00},
+        {"name": "LS 7000-HOUSING", "price": 140.00},
+        {"name": "FUSE (1/2 AMP)", "price": 10.00}
+      ]
+    },
+    {
+      "name": "LS8000",
+      "base_model": {
+        "model_number": "LS8000-115VAC-S-10",
+        "description": "10\" 316SS Probe, 115VAC (Base Model)",
+        "base_price": 715.00,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "S"
+      },
+      "options": [
+        {"name": "Material", "choices": ["S", "H", "TS"], "adders": {"H": 110, "TS": 110}, "notes": "S=316SS, H=Halar, TS=Teflon Sleeve. H and TS have $110/ft adder."},
+        {"name": "Voltage", "choices": ["115VAC", "12VDC", "24VDC", "240VAC"], "adders": {"12VDC": 0, "24VDC": 0, "240VAC": 0}},
+        {"name": "Length", "rules": "Standard is 10\". For S, add $45/foot over 10\". For H or TS, add $110/foot over 10\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."},
+        {"name": "Mounting", "choices": ["Standard", "Flanged", "Tri-Clamp"], "adders": {"Flanged": null, "Tri-Clamp": null}},
+        {"name": "Cable Probe", "choices": ["No", "Yes"], "adders": {"Yes": 80.00}},
+        {"name": "Bent Probe", "choices": ["No", "Yes"], "adders": {"Yes": 50.00}},
+        {"name": "Stainless Steel Tag", "choices": ["No", "Yes"], "adders": {"Yes": 30.00}},
+        {"name": "Receiver Enclosure", "choices": ["None", "NEMA 4 Metal", "Explosion Proof"], "adders": {"NEMA 4 Metal": 245.00, "Explosion Proof": 590.00}},
+        {"name": "Process Connection", "choices": ["3/4\" NPT", "1\" NPT"], "adders": {"1\" NPT": 0}, "notes": "1\" NPT and big housing for high vibration available at no extra charge."}
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS)."
+      ],
+      "notes": [
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory.",
+        "Cable probes and special materials of construction available.",
+        "Receiver is normally sold without an enclosure."
+      ],
+      "spare_parts": [
+        {"name": "LS 8000-R-RECEIVER CARD (Specify Voltage)", "price": 305.00},
+        {"name": "LS 8000-T-TRANSMITTER (Specify Size & Sensitivity)", "price": 285.00},
+        {"name": "LS 8000-S-PROBE ASSEMBLY-10\"", "price": 230.00},
+        {"name": "LS 8000-H-PROBE ASSEMBLY-10\"", "price": 320.00},
+        {"name": "LS 8000-HOUSING", "price": 100.00},
+        {"name": "Fuse (1/2 AMP)", "price": 10.00}
+      ]
+    },
+    {
+      "name": "LS8000/2",
+      "base_model": {
+        "model_number": "LS8000/2-115VAC-H-10",
+        "description": "10\" Halar Coated Probe, 115VAC (Base Model)",
+        "base_price": 850.00,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "H"
+      },
+      "options": [
+        {"name": "Material", "choices": ["H", "TS"], "adders": {"H": 110, "TS": 110}, "notes": "H=Halar, TS=Teflon Sleeve. H and TS have $110/ft adder."},
+        {"name": "Voltage", "choices": ["115VAC", "12VDC", "24VDC", "240VAC"], "adders": {"12VDC": 0, "24VDC": 0, "240VAC": 0}},
+        {"name": "Length", "rules": "Standard is 10\". For H or TS, add $110/foot over 10\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."},
+        {"name": "Mounting", "choices": ["Standard", "Flanged", "Tri-Clamp"], "adders": {"Flanged": null, "Tri-Clamp": null}},
+        {"name": "Receiver Enclosure", "choices": ["None", "NEMA 4 Metal", "Explosion Proof"], "adders": {"NEMA 4 Metal": 420.00, "Explosion Proof": 1030.00}},
+        {"name": "Stainless Steel Tag", "choices": ["No", "Yes"], "adders": {"Yes": 30.00}}
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS).",
+        "U and T materials are not available for dual point switches.",
+        "For multiple set points on one probe, fluid must be grounded to mounting nipple."
+      ],
+      "notes": [
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory.",
+        "For critical applications, use a separate independent high level switch for emergency shut-down."
+      ],
+      "spare_parts": [
+        {"name": "LS 8000/2-R-RECEIVER CARD (Specify Voltage)", "price": 385.00},
+        {"name": "LS 8000-T-TRANSMITTER (Specify Size & Sensitivity)", "price": 285.00},
+        {"name": "LS 8000-H-PROBE ASSEMBLY-10\"", "price": 320.00},
+        {"name": "LS 8000-HOUSING", "price": 100.00},
+        {"name": "FUSE (1/2 AMP)", "price": 10.00}
+      ]
+    },
+    {
+      "name": "LT9000",
+      "base_model": {
+        "model_number": "LT9000-115VAC-H-10",
+        "description": "10\" Halar Coated Probe, 115VAC (Base Model)",
+        "base_price": 855.00,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "H"
+      },
+      "options": [
+        {"name": "Material", "choices": ["H", "TS"], "adders": {"H": 110, "TS": 110}, "notes": "H=Halar, TS=Teflon Sleeve. H and TS have $110/ft adder."},
+        {"name": "Voltage", "choices": ["115VAC", "24VDC", "230VAC"], "adders": {"24VDC": 0, "230VAC": 0}},
+        {"name": "Length", "rules": "Standard is 10\". For H or TS, add $110/foot over 10\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."},
+        {"name": "Mounting", "choices": ["Standard", "Flanged", "Tri-Clamp"], "adders": {"Flanged": null, "Tri-Clamp": null}},
+        {"name": "Stainless Steel Tag", "choices": ["No", "Yes"], "adders": {"Yes": 30.00}}
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS)."
+      ],
+      "notes": [
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory.",
+        "For high temperatures or harsh acids, check with factory for epoxy compatibility."
+      ],
+      "spare_parts": [
+        {"name": "LT 9000-MA (Plug-in card)", "price": 295.00},
+        {"name": "LT 9000-BB (Power Supply-specify voltage)", "price": 295.00},
+        {"name": "LT 9000-H-PROBE ASSEMBLY-10\"", "price": 370.00},
+        {"name": "LT9000-HOUSING", "price": 140.00},
+        {"name": "FUSE (1/2 AMP)", "price": 10.00}
+      ]
+    },
+    {
+      "name": "FS10000",
+      "base_model": {
+        "model_number": "FS10000-115VAC-S-6",
+        "description": "6\" 316SS Probe, 115VAC (Base Model)",
+        "base_price": 1885.00,
+        "base_length": 6,
+        "voltage": "115VAC",
+        "material": "S"
+      },
+      "options": [
+        {"name": "Material", "choices": ["S"], "adders": {}},
+        {"name": "Voltage", "choices": ["115VAC", "230VAC"], "adders": {"230VAC": 0}},
+        {"name": "Length", "rules": "Standard is 6\". For S, add $45/foot over 6\". Max probe length recommended is 24\"."},
+        {"name": "Coaxial Cable", "choices": ["15ft Included", "Additional"], "adders": {"Additional": 6.00}, "notes": "15ft included, up to 100ft max."},
+        {"name": "Receiver Enclosure", "choices": ["None", "Explosion Proof"], "adders": {"Explosion Proof": 1030.00}},
+        {"name": "NEMA 4X Windowed Enclosure", "choices": ["No", "Yes"], "adders": {"Yes": 300.00}},
+        {"name": "Stainless Steel Tag", "choices": ["No", "Yes"], "adders": {"Yes": 30.00}}
+      ],
+      "compatibility_rules": [
+        "Max probe length recommended is 24\".",
+        "1.5\", 3\", and 6\" probes are the same price."
+      ],
+      "notes": [
+        "For detecting emissions before visible, recommend air velocities >2000 ft/min.",
+        "See application notes for velocity calculation."
+      ],
+      "spare_parts": [
+        {"name": "FS 10000-ELECTRONICS (Specify Voltage)", "price": 1440.00},
+        {"name": "FS 10000-PROBE ASSEMBLY-6\" (Specify length)", "price": 200.00},
+        {"name": "FS 10000-NEMA 4X WINDOWED ENCLOSURE", "price": 300.00},
+        {"name": "FS 10000-REDDOT-GALB-2-OR (Alum. Probe Housing)", "price": 100.00},
+        {"name": "15 FEET COAXIAL CABLE W/ CONNECTORS", "price": 100.00}
+      ]
+    },
+    {
+      "name": "Presence/Absence Switches",
+      "base_model": {
+        "model_number": "LS7500-115VAC-FP-2-PR",
+        "description": "2\" Flange Partial Ring, 115VAC (Base Model)",
+        "base_price": null,
+        "base_length": 2,
+        "voltage": "115VAC",
+        "material": "316SS"
+      },
+      "options": [
+        {"name": "Model", "choices": ["LS7500", "LS8500"], "adders": {}},
+        {"name": "Flange Size", "choices": ["2\"", "2.5\"", "3\"", "4\"", "6\"", "8\"", "10\""], "adders": {}},
+        {"name": "Flange Type", "choices": ["Partial Ring (PR)", "Full Ring (FR)"], "adders": {}},
+        {"name": "Voltage", "choices": ["115VAC", "24VDC", "220VAC", "12VDC"], "adders": {}},
+        {"name": "Teflon Insulator", "choices": ["No", "Yes (6-12\" flanges only)"], "adders": {"Yes (6-12\" flanges only)": 400.00}},
+        {"name": "Stainless Steel Tag", "choices": ["No", "Yes"], "adders": {"Yes": 30.00}}
+      ],
+      "compatibility_rules": [
+        "Standard flanges are 316SS Flat Face Flanges.",
+        "For other flange sizes, consult factory."
+      ],
+      "notes": [
+        "LS7500 replaces Princo L3515, LS8500 replaces L3545.",
+        "See website for more information and downloadable PDF."
+      ],
+      "spare_parts": []
+    }
+  ]
+} 

@@ -339,13 +339,14 @@ class ProductService:
             for v in variants
         ]
 
-    def get_material_options(self, db: Session, family_name: str) -> List[Dict]:
+    def get_material_options(self, db, product_family_id: int) -> list:
         """
-        Fetch available material options for a product family.
+        Fetch available material options for a product family by ID.
         Returns: List of dicts with material_code, display_name, base_price.
         """
+        from src.core.models.material_option import MaterialOption
         materials = db.query(MaterialOption).filter(
-            MaterialOption.product_family == family_name,
+            MaterialOption.product_family_id == product_family_id,
             MaterialOption.is_available == 1
         ).all()
         return [
@@ -357,26 +358,28 @@ class ProductService:
             for m in materials
         ]
 
-    def get_voltage_options(self, db: Session, family_name: str) -> List[Dict]:
+    def get_voltage_options(self, db, product_family_id: int) -> list:
         """
-        Fetch available voltage options for a product family.
+        Fetch available voltage options for a product family by ID.
         Returns: List of dicts with voltage.
         """
+        from src.core.models.voltage_option import VoltageOption
         voltages = db.query(VoltageOption).filter(
-            VoltageOption.product_family == family_name,
+            VoltageOption.product_family_id == product_family_id,
             VoltageOption.is_available == 1
         ).all()
         return [
             {"voltage": v.voltage} for v in voltages
         ]
 
-    def get_connection_options(self, db: Session, family_name: str) -> List[Dict]:
+    def get_connection_options(self, db, product_family_id: int) -> list:
         """
-        Fetch available connection options for a product family.
+        Fetch available connection options for a product family by ID.
         Returns: List of dicts with type, rating, size, price.
         """
+        from src.core.models.connection_option import ConnectionOption
         connections = db.query(ConnectionOption).filter(
-            ConnectionOption.product_families.like(f"%{family_name}%")
+            ConnectionOption.product_family_id == product_family_id
         ).all()
         return [
             {
@@ -388,11 +391,12 @@ class ProductService:
             for c in connections
         ]
 
-    def get_additional_options(self, db: Session, family_name: str) -> List[Dict]:
+    def get_additional_options(self, db, family_name: str) -> list:
         """
-        Fetch additional configurable options (add-ons) for a product family.
-        Returns: List of dicts with name, description, price, price_type, category.
+        Fetch additional configurable options (add-ons) for a product family by name.
+        Returns: List of dicts with name, description, price, price_type, category, choices, adders.
         """
+        from src.core.models.option import Option
         options = db.query(Option).filter(
             Option.product_families.like(f"%{family_name}%")
         ).all()
@@ -407,7 +411,9 @@ class ProductService:
                 "description": o.description,
                 "price": o.price,
                 "price_type": o.price_type,
-                "category": o.category
+                "category": o.category,
+                "choices": o.choices,
+                "adders": o.adders
             }
             for o in filtered
         ]
