@@ -171,14 +171,37 @@ class ProductSelectionDialog(QDialog):
         
         # Material options
         material_combo = QComboBox()
-        material_combo.addItems(["316SS", "Halar", "UHMWPE", "Teflon", "Teflon Sleeve"])
+        material_combo.addItems([
+            "S - 316 Stainless Steel Probe",
+            "H - Halar Coated Probe",
+            "TS - Teflon Sleeve",
+            "U - UHMWPE Blind End Probe",
+            "T - Teflon Blind End Probe"
+        ])
         material_combo.currentTextChanged.connect(lambda text: self._on_material_selected(text))
         form_layout.addRow("Material:", material_combo)
         self.option_widgets["Material"] = material_combo
         
+        # Exotic Metals options
+        exotic_combo = QComboBox()
+        exotic_combo.addItems([
+            "None",
+            "T - Titanium",
+            "U - Monel",
+            "A - Alloy 20",
+            "H - Hastelloy-C-276",
+            "B - Hastelloy-B"
+        ])
+        exotic_combo.currentTextChanged.connect(lambda text: self._on_exotic_metal_selected(text))
+        form_layout.addRow("Exotic Metal:", exotic_combo)
+        self.option_widgets["Exotic Metal"] = exotic_combo
+        
         # Probe Length options
         length_combo = QComboBox()
-        length_combo.addItems(["10\"", "20\"", "30\"", "40\"", "48\"", "60\"", "72\""])
+        # Default to S/H: 10" to 72"
+        lengths = [f"{i}\"" for i in range(10, 73)]
+        length_combo.addItems(lengths)
+        length_combo.setCurrentText("10\"")
         length_combo.currentTextChanged.connect(lambda text: self._on_probe_length_selected(text))
         form_layout.addRow("Probe Length:", length_combo)
         self.option_widgets["Probe Length"] = length_combo
@@ -283,9 +306,30 @@ class ProductSelectionDialog(QDialog):
 
     def _on_material_selected(self, text):
         """Handle material selection and validate probe length."""
-        if text == "Halar" and self.option_widgets["Probe Length"].currentText() == "72\"":
+        material_code = text.split(" - ")[0]
+        length_combo = self.option_widgets["Probe Length"]
+        current_length = length_combo.currentText()
+        if material_code in ["U", "T"]:
+            # 4" to 72" for U/T
+            length_combo.clear()
+            lengths = [f"{i}\"" for i in range(4, 73)]
+            length_combo.addItems(lengths)
+            if current_length in lengths:
+                length_combo.setCurrentText(current_length)
+            else:
+                length_combo.setCurrentText("4\"")
+        else:
+            # 10" to 72" for S/H
+            length_combo.clear()
+            lengths = [f"{i}\"" for i in range(10, 73)]
+            length_combo.addItems(lengths)
+            if current_length in lengths:
+                length_combo.setCurrentText(current_length)
+            else:
+                length_combo.setCurrentText("10\"")
+        if material_code == "H" and length_combo.currentText() == "72\"":
             QMessageBox.warning(self, "Warning", "Maximum probe length with Halar coating is 72\". For longer probes, please use Teflon Sleeve.")
-        self._on_option_selected("Material", text)
+        self._update_total_price()
 
     def _on_probe_length_selected(self, text):
         """Handle probe length selection and validate against material."""
@@ -419,4 +463,17 @@ class ProductSelectionDialog(QDialog):
             self.selected_options["Tri-Clamp Price"] = 280.00
         elif text == '2"':
             self.selected_options["Tri-Clamp Price"] = 330.00
+        self._update_total_price()
+
+    def _on_exotic_metal_selected(self, text):
+        """Handle exotic metal selection and update pricing."""
+        if text == "T - Titanium":
+            self.selected_options["Exotic Metal Price"] = 280.00
+        elif text == "U - Monel":
+            self.selected_options["Exotic Metal Price"] = 330.00
+        elif text in ["A - Alloy 20", "H - Hastelloy-C-276", "B - Hastelloy-B"]:
+            QMessageBox.information(self, "Exotic Metal", "Please consult factory for pricing.")
+            self.selected_options["Exotic Metal Price"] = 0.00
+        else:
+            self.selected_options["Exotic Metal Price"] = 0.00
         self._update_total_price() 
