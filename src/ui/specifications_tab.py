@@ -18,9 +18,11 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QComboBox, QGroupBox, QFormLayout, QSpacerItem,
     QSizePolicy, QSlider, QSpinBox, QDoubleSpinBox,
-    QCheckBox, QScrollArea, QLineEdit, QPushButton
+    QCheckBox, QScrollArea, QLineEdit, QPushButton,
+    QMessageBox
 )
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QIntValidator
 
 from src.core.database import SessionLocal
 from src.core.services.product_service import ProductService
@@ -234,8 +236,8 @@ class SpecificationsTab(QWidget):
         """
         Add probe length configuration section to the specifications form.
         
-        Creates a group box with probe length options. Only added for
-        products that have probes (skipped for emission monitoring products).
+        Creates a group box with probe length options including both a spinner wheel
+        and a text input box for flexible length selection.
         """
         if "Emissions" in self.current_product.get("category", ""):
             return
@@ -243,15 +245,100 @@ class SpecificationsTab(QWidget):
         group = QGroupBox("Probe Length")
         layout = QFormLayout()
         
-        probe_length = QSpinBox()
-        probe_length.setRange(1, 120)
-        probe_length.setValue(12)
-        probe_length.setSuffix(" inches")
-        layout.addRow("Probe Length:", probe_length)
-        self.specs_widgets["probe_length"] = probe_length
+        # Create a horizontal layout for the length inputs
+        length_layout = QHBoxLayout()
+        
+        # Spinner wheel (QSpinBox)
+        probe_length_spinner = QSpinBox()
+        probe_length_spinner.setRange(1, 120)
+        probe_length_spinner.setValue(12)
+        probe_length_spinner.setSuffix(" inches")
+        probe_length_spinner.setWrapping(True)  # Enable wrapping for circular scrolling
+        probe_length_spinner.setStyleSheet("""
+            QSpinBox {
+                padding: 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: white;
+            }
+            QSpinBox::up-button, QSpinBox::down-button {
+                width: 20px;
+                border: none;
+                background: #f0f0f0;
+            }
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                background: #e0e0e0;
+            }
+        """)
+        
+        # Text input box (QLineEdit)
+        probe_length_input = QLineEdit()
+        probe_length_input.setPlaceholderText("Enter length in inches")
+        probe_length_input.setValidator(QIntValidator(1, 120))  # Only allow integers between 1 and 120
+        probe_length_input.setStyleSheet("""
+            QLineEdit {
+                padding: 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: white;
+            }
+        """)
+        
+        # Add both widgets to the horizontal layout
+        length_layout.addWidget(probe_length_spinner)
+        length_layout.addWidget(probe_length_input)
+        
+        # Connect signals for synchronization
+        def on_spinner_changed(value):
+            probe_length_input.setText(str(value))
+            self._on_probe_length_changed(value)
+            
+        def on_input_changed():
+            try:
+                value = int(probe_length_input.text())
+                if 1 <= value <= 120:
+                    probe_length_spinner.setValue(value)
+                    self._on_probe_length_changed(value)
+            except ValueError:
+                pass
+        
+        probe_length_spinner.valueChanged.connect(on_spinner_changed)
+        probe_length_input.textChanged.connect(on_input_changed)
+        
+        # Add the horizontal layout to the form
+        layout.addRow("Probe Length:", length_layout)
+        
+        # Store both widgets for later access
+        self.specs_widgets["probe_length_spinner"] = probe_length_spinner
+        self.specs_widgets["probe_length_input"] = probe_length_input
         
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
+        
+    def _on_probe_length_changed(self, value):
+        """Handle probe length changes and update pricing."""
+        material = self.specs_widgets.get("material")
+        if material and material.currentText():
+            material_code = material.currentText().split(" - ")[0]
+            
+            # Show warning for Halar coating at 72"
+            if material_code == "H" and value == 72:
+                QMessageBox.warning(
+                    self,
+                    "Maximum Length Warning",
+                    "Maximum probe length with Halar coating is 72\". For longer probes, please use Teflon Sleeve."
+                )
+            
+            # Show warning for non-standard lengths with Halar
+            if material_code == "H" and value not in [6, 8, 10, 12, 16, 24, 36, 48, 60, 72]:
+                QMessageBox.information(
+                    self,
+                    "Non-Standard Length",
+                    "This is a non-standard length for Halar coating. A $300 adder will apply."
+                )
+        
+        # Update the total price
+        self.on_specs_changed()
     
     def add_connection_section(self):
         """
