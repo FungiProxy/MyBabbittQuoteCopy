@@ -4,12 +4,11 @@ Product Selection Dialog for Adding Products to Quote.
 This dialog provides a two-panel interface:
 - Left: Product search and selection
 - Right: Product configuration and add-to-quote
-
-Follows UI/UX overhaul and screenshot design. Uses mock data for now.
 """
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QListWidgetItem,
-    QFrame, QButtonGroup, QRadioButton, QSpinBox, QSizePolicy, QWidget, QScrollArea, QCheckBox
+    QFrame, QButtonGroup, QRadioButton, QSpinBox, QSizePolicy, QWidget, QScrollArea, QCheckBox,
+    QComboBox, QFormLayout, QMessageBox
 )
 from PySide6.QtCore import Qt, Signal
 from src.core.services.product_service import ProductService
@@ -149,17 +148,117 @@ class ProductSelectionDialog(QDialog):
         self.config_layout.addWidget(prompt)
 
     def _show_product_config(self, product):
-        print(f"DEBUG: _show_product_config called with product: {product}")
+        """Show the configuration options for the selected product."""
         self._clear_config_panel()
         self.selected_options = {}
         self.option_widgets = {}  # Track widgets for each option
-        self.family_id = product["id"]
+        
         # Product details
-        details = QLabel(f"<b>{product['name']}</b><br><span style='color:#888;'>{product['description']}</span><br><span style='background:#e3e8f7; color:#2563eb; border-radius:4px; padding:2px 8px; font-size:12px;'>{product['category']}</span>  <b>Base Price: ${product['base_price']}</b>")
+        details = QLabel(f"<b>{product['name']}</b><br><span style='color:#888;'>{product['description']}</span>")
         details.setWordWrap(True)
         self.config_layout.addWidget(details)
-        # Fetch and show dynamic options
-        self._build_dynamic_options()
+        
+        # Add a form layout for the options
+        form_layout = QFormLayout()
+        form_layout.setSpacing(15)
+        
+        # Voltage options
+        voltage_combo = QComboBox()
+        voltage_combo.addItems(["24VDC", "115VAC"])
+        voltage_combo.currentTextChanged.connect(lambda text: self._on_option_selected("Voltage", text))
+        form_layout.addRow("Voltage:", voltage_combo)
+        self.option_widgets["Voltage"] = voltage_combo
+        
+        # Material options
+        material_combo = QComboBox()
+        material_combo.addItems(["316SS", "Halar", "UHMWPE", "Teflon", "Teflon Sleeve"])
+        material_combo.currentTextChanged.connect(lambda text: self._on_material_selected(text))
+        form_layout.addRow("Material:", material_combo)
+        self.option_widgets["Material"] = material_combo
+        
+        # Probe Length options
+        length_combo = QComboBox()
+        length_combo.addItems(["10\"", "20\"", "30\"", "40\"", "48\"", "60\"", "72\""])
+        length_combo.currentTextChanged.connect(lambda text: self._on_probe_length_selected(text))
+        form_layout.addRow("Probe Length:", length_combo)
+        self.option_widgets["Probe Length"] = length_combo
+        
+        # Connection options
+        connection_combo = QComboBox()
+        connection_combo.addItems(["Standard", "Flanged", "Tri-Clamp"])
+        connection_combo.currentTextChanged.connect(lambda text: self._on_connection_selected(text))
+        form_layout.addRow("Connection:", connection_combo)
+        self.option_widgets["Connection"] = connection_combo
+        
+        # Create containers for connection options
+        self.flange_container = QWidget()
+        flange_layout = QFormLayout()
+        flange_layout.setContentsMargins(0, 0, 0, 0)
+        flange_layout.setSpacing(15)
+        
+        flange_rating_combo = QComboBox()
+        flange_rating_combo.addItems(["150#", "300#"])
+        flange_rating_combo.currentTextChanged.connect(lambda text: self._on_flange_option_selected("rating", text))
+        flange_layout.addRow("Flange Rating:", flange_rating_combo)
+        self.option_widgets["Flange Rating"] = flange_rating_combo
+        
+        flange_size_combo = QComboBox()
+        flange_size_combo.addItems(['1"', '1.5"', '2"', '3"', '4"'])
+        flange_size_combo.currentTextChanged.connect(lambda text: self._on_flange_option_selected("size", text))
+        flange_layout.addRow("Flange Size:", flange_size_combo)
+        self.option_widgets["Flange Size"] = flange_size_combo
+        
+        self.flange_container.setLayout(flange_layout)
+        form_layout.addRow(self.flange_container)
+        self.flange_container.hide()
+        
+        self.triclamp_container = QWidget()
+        triclamp_layout = QFormLayout()
+        triclamp_layout.setContentsMargins(0, 0, 0, 0)
+        triclamp_layout.setSpacing(15)
+        
+        triclamp_size_combo = QComboBox()
+        triclamp_size_combo.addItems(['1.5"', '2"'])
+        triclamp_size_combo.currentTextChanged.connect(lambda text: self._on_triclamp_selected(text))
+        triclamp_layout.addRow("Tri-Clamp Size:", triclamp_size_combo)
+        self.option_widgets["Tri-Clamp Size"] = triclamp_size_combo
+        
+        self.triclamp_container.setLayout(triclamp_layout)
+        form_layout.addRow(self.triclamp_container)
+        self.triclamp_container.hide()
+        
+        # Additional Options
+        teflon_check = QCheckBox("Teflon Insulator (Instead of UHMWPE) - Add $40.00")
+        teflon_check.stateChanged.connect(lambda state: self._on_option_selected("Teflon Insulator", state == Qt.Checked))
+        form_layout.addRow("", teflon_check)
+        self.option_widgets["Teflon Insulator"] = teflon_check
+        
+        static_check = QCheckBox("Extra Static Protection - Add $30.00")
+        static_check.stateChanged.connect(lambda state: self._on_option_selected("Extra Static Protection", state == Qt.Checked))
+        form_layout.addRow("", static_check)
+        self.option_widgets["Extra Static Protection"] = static_check
+        
+        cable_check = QCheckBox("Cable Probe - Add $80.00")
+        cable_check.stateChanged.connect(lambda state: self._on_option_selected("Cable Probe", state == Qt.Checked))
+        form_layout.addRow("", cable_check)
+        self.option_widgets["Cable Probe"] = cable_check
+        
+        bent_check = QCheckBox("Bent Probe - Add $50.00")
+        bent_check.stateChanged.connect(lambda state: self._on_option_selected("Bent Probe", state == Qt.Checked))
+        form_layout.addRow("", bent_check)
+        self.option_widgets["Bent Probe"] = bent_check
+        
+        tag_check = QCheckBox("Stainless Steel Tag - Add $30.00")
+        tag_check.stateChanged.connect(lambda state: self._on_option_selected("Stainless Steel Tag", state == Qt.Checked))
+        form_layout.addRow("", tag_check)
+        self.option_widgets["Stainless Steel Tag"] = tag_check
+        
+        # Add the form layout to the main config layout
+        self.config_layout.addLayout(form_layout)
+        
+        # Add some spacing
+        self.config_layout.addSpacing(20)
+        
         # Quantity
         qty_label = QLabel("<b>Quantity</b>")
         self.config_layout.addWidget(qty_label)
@@ -168,106 +267,37 @@ class ProductSelectionDialog(QDialog):
         self.qty_spin.setValue(1)
         self.qty_spin.valueChanged.connect(self._update_total_price)
         self.config_layout.addWidget(self.qty_spin)
+        
         # Total price
         self.total_price_label = QLabel()
         self.total_price_label.setStyleSheet("font-size: 20px; font-weight: bold; margin-top: 10px;")
         self.config_layout.addWidget(self.total_price_label)
+        
         # Add to Quote button
         self.add_btn = QPushButton("+ Add to Quote")
         self.add_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold; padding: 10px 24px; border-radius: 6px; font-size: 16px;")
         self.add_btn.clicked.connect(self._on_add_to_quote)
         self.config_layout.addWidget(self.add_btn)
+        
         self._update_total_price()
 
-    def _build_dynamic_options(self):
-        """
-        Build option widgets dynamically based on all options for the selected product family.
-        Fetches from the Option table and displays all options and their choices.
-        """
-        db = SessionLocal()
-        try:
-            family_id = self.family_id
-            family = db.query(ProductFamily).filter(ProductFamily.id == family_id).first()
-            family_name = family.name if family else None
-            # Fetch all options for this family from the Option table
-            all_options = self.product_service.get_additional_options(db, family_name)
-            print(f"DEBUG: all_options for {family_name} = {all_options}")
-        except Exception as e:
-            print(f"Error fetching options: {e}")
-            all_options = []
-        finally:
-            db.close()
-        # Remove old option widgets
-        for widget in getattr(self, 'option_widgets', {}).values():
-            if isinstance(widget, QButtonGroup):
-                for btn in widget.buttons():
-                    btn.deleteLater()
-            elif hasattr(widget, 'deleteLater'):
-                widget.deleteLater()
-        self.option_widgets = {}
-        # Dynamically build widgets for each option
-        for opt in all_options:
-            opt_name = opt['name']
-            choices = opt.get('choices', [])
-            adders = opt.get('adders', {})
-            if not choices or not isinstance(choices, list):
-                continue  # Skip options with no valid choices
-            # If only two choices and one is 'No', treat as checkbox
-            if len(choices) == 2 and 'No' in choices:
-                label = f"<b>{opt_name}</b>"
-                self.config_layout.addWidget(QLabel(label))
-                checkbox = QCheckBox(choices[1] if choices[0] == 'No' else choices[0])
-                if opt_name in self.selected_options:
-                    checkbox.setChecked(self.selected_options[opt_name])
-                checkbox.stateChanged.connect(lambda state, o=opt_name: self._on_option_selected(o, True if state == Qt.Checked else False, True))
-                self.option_widgets[opt_name] = checkbox
-                self.config_layout.addWidget(checkbox)
-            else:
-                group_label = QLabel(f"<b>{opt_name}</b>")
-                self.config_layout.addWidget(group_label)
-                btn_group = QButtonGroup(self)
-                btn_group.setExclusive(True)
-                self.option_widgets[opt_name] = btn_group
-                for val in choices:
-                    label = str(val)
-                    if adders and val in adders and adders[val]:
-                        label += f" (+${adders[val]:.2f})"
-                    radio = QRadioButton(label)
-                    if self.selected_options.get(opt_name) == val:
-                        radio.setChecked(True)
-                    radio.toggled.connect(lambda checked, o=opt_name, v=val: self._on_option_selected(o, v, checked))
-                    btn_group.addButton(radio)
-                    self.config_layout.addWidget(radio)
-                if btn_group.buttons() and opt_name not in self.selected_options:
-                    btn_group.buttons()[0].setChecked(True)
-        # (Quantity, price, and add-to-quote button remain unchanged)
+    def _on_material_selected(self, text):
+        """Handle material selection and validate probe length."""
+        if text == "Halar" and self.option_widgets["Probe Length"].currentText() == "72\"":
+            QMessageBox.warning(self, "Warning", "Maximum probe length with Halar coating is 72\". For longer probes, please use Teflon Sleeve.")
+        self._on_option_selected("Material", text)
 
-    def _on_option_selected(self, option_name, value, checked):
-        if checked:
-            self.selected_options[option_name] = value
-            # Rebuild options to reflect new valid choices
-            self._rebuild_options_panel()
-            self._update_total_price()
+    def _on_probe_length_selected(self, text):
+        """Handle probe length selection and validate against material."""
+        material = self.option_widgets["Material"].currentText()
+        if material == "Halar" and text == "72\"":
+            QMessageBox.warning(self, "Warning", "Maximum probe length with Halar coating is 72\". For longer probes, please use Teflon Sleeve.")
+        self._on_option_selected("Probe Length", text)
 
-    def _rebuild_options_panel(self):
-        # Remove all option widgets (but not details, qty, price, add button)
-        # We'll keep the first widget (details label), then remove until qty_label
-        count = self.config_layout.count()
-        # Find the index of the qty_label
-        qty_label_idx = None
-        for i in range(count):
-            widget = self.config_layout.itemAt(i).widget()
-            if isinstance(widget, QSpinBox):
-                qty_label_idx = i - 1  # The label is just before the spinbox
-                break
-        # Remove widgets between details and qty_label
-        if qty_label_idx is not None:
-            for i in range(qty_label_idx, 0, -1):
-                widget = self.config_layout.itemAt(i).widget()
-                if widget:
-                    widget.deleteLater()
-        # Rebuild dynamic options
-        self._build_dynamic_options()
+    def _on_option_selected(self, option_name, value):
+        """Handle option selection and update pricing."""
+        self.selected_options[option_name] = value
+        self._update_total_price()
 
     def _clear_config_panel(self):
         # Remove all widgets from config_layout
@@ -278,65 +308,115 @@ class ProductSelectionDialog(QDialog):
                 widget.deleteLater()
 
     def _update_total_price(self):
-        # Calculate total price based on selected options and quantity
-        if not self.selected_product:
-            self.total_price_label.setText("")
-            return
-        base = self.selected_product["base_price"]
-        total = base
+        """Calculate and display the total price based on selected options."""
+        # Start with base price for LS2000
+        total = 425.00  # Base price for LS2000
+        
         # Add option prices
-        for opt_name, btn_group in self.option_widgets.items():
-            for btn in btn_group.buttons():
-                if btn.isChecked():
-                    label = btn.text()
-                    # Extract price from label
-                    if '(+$' in label:
-                        price_str = label.split('(+$', 1)[1].split(')', 1)[0]
-                        try:
-                            total += int(price_str)
-                        except Exception:
-                            pass
+        for opt_name, widget in self.option_widgets.items():
+            if isinstance(widget, QComboBox):
+                selected = widget.currentText()
+                if opt_name == "Material":
+                    if selected == "Halar":
+                        total += 110  # Halar coating adder
+                elif opt_name == "Probe Length":
+                    # Calculate length adder
+                    length = int(selected.split("\"")[0])
+                    if length > 10:
+                        if self.option_widgets["Material"].currentText() == "316SS":
+                            total += (length - 10) * 45  # $45/foot for 316SS
+                        elif self.option_widgets["Material"].currentText() == "Halar":
+                            total += (length - 10) * 110  # $110/foot for Halar
+            elif isinstance(widget, QCheckBox):
+                if widget.isChecked():
+                    if opt_name == "Teflon Insulator":
+                        total += 40
+                    elif opt_name == "Extra Static Protection":
+                        total += 30
+                    elif opt_name == "Cable Probe":
+                        total += 80
+                    elif opt_name == "Bent Probe":
+                        total += 50
+                    elif opt_name == "Stainless Steel Tag":
+                        total += 30
+        
+        # Apply quantity
         qty = self.qty_spin.value() if hasattr(self, 'qty_spin') else 1
         total_price = total * qty
-        self.total_price_label.setText(f"Total Price<br><span style='font-size:28px;'>${total_price:.2f}</span>")
+        
+        # Update display
+        self.total_price_label.setText(f"Total: ${total_price:.2f}")
 
     def _on_add_to_quote(self):
-        # Gather all available options, their choices, and the selected value
-        db = SessionLocal()
-        try:
-            family = db.query(ProductFamily).filter(ProductFamily.id == self.family_id).first()
-            family_name = family.name if family else None
-            all_options = self.product_service.get_additional_options(db, family_name)
-        except Exception as e:
-            print(f"Error fetching options for add_to_quote: {e}")
-            all_options = []
-        finally:
-            db.close()
-
-        options_list = []
-        for opt in all_options:
-            opt_name = opt['name']
-            choices = opt.get('choices', [])
-            adders = opt.get('adders', {})
-            selected = self.selected_options.get(opt_name)
-            price = 0
-            if selected and adders and selected in adders:
-                price = adders[selected]
-            options_list.append({
-                "name": opt_name,
-                "choices": choices,
-                "selected": selected,
-                "price": price
-            })
-        qty = self.qty_spin.value() if hasattr(self, 'qty_spin') else 1
+        """Handle adding the configured product to the quote."""
+        if not self.selected_product:
+            return
+            
+        # Validate configuration
+        if not self._validate_configuration():
+            return
+            
+        # Prepare product data
         product_data = {
-            "name": self.selected_product.get("name", ""),
-            "description": self.selected_product.get("description", ""),
-            "category": self.selected_product.get("category", ""),
-            "base_price": self.selected_product.get("base_price", 0),
-            "options": options_list,
-            "quantity": qty
+            "product_id": self.selected_product["id"],
+            "name": self.selected_product["name"],
+            "quantity": self.qty_spin.value(),
+            "base_price": getattr(self, 'base_price', 425.00),
+            "options": self.selected_options,
+            "total_price": float(self.total_price_label.text().split("$")[1])
         }
-        self.selected_product = product_data  # Update selected_product to new structure
+        
+        # Emit signal with product data
         self.product_added.emit(product_data)
-        self.accept() 
+        self.accept()
+
+    def _validate_configuration(self):
+        """Validate the current configuration."""
+        # Check voltage
+        voltage = self.option_widgets["Voltage"].currentText()
+        if voltage not in ["24VDC", "115VAC"]:
+            QMessageBox.warning(self, "Invalid Configuration", "Only 24VDC and 115VAC are available for LS2000.")
+            return False
+            
+        # Check probe length with Halar
+        material = self.option_widgets["Material"].currentText()
+        length = self.option_widgets["Probe Length"].currentText()
+        if material == "Halar" and length == "72\"":
+            QMessageBox.warning(self, "Invalid Configuration", "Maximum probe length with Halar coating is 72\". Please use Teflon Sleeve for longer probes.")
+            return False
+            
+        return True 
+
+    def _on_connection_selected(self, text):
+        """Handle connection type selection and show/hide relevant options."""
+        # Hide all connection-specific containers first
+        self.flange_container.hide()
+        self.triclamp_container.hide()
+        
+        # Show relevant options based on selection
+        if text == "Flanged":
+            self.flange_container.show()
+            QMessageBox.information(self, "Flange Connection", 
+                "Please consult factory for flange connection pricing.")
+        elif text == "Tri-Clamp":
+            self.triclamp_container.show()
+        
+        self._on_option_selected("Connection", text)
+        self._update_total_price()
+
+    def _on_flange_option_selected(self, option_type, text):
+        """Handle flange rating or size selection."""
+        if option_type == "rating":
+            self.selected_options["Flange Rating"] = text
+        else:  # size
+            self.selected_options["Flange Size"] = text
+        self._update_total_price()
+
+    def _on_triclamp_selected(self, text):
+        """Handle tri-clamp size selection and update pricing."""
+        self.selected_options["Tri-Clamp Size"] = text
+        if text == '1.5"':
+            self.selected_options["Tri-Clamp Price"] = 280.00
+        elif text == '2"':
+            self.selected_options["Tri-Clamp Price"] = 330.00
+        self._update_total_price() 
