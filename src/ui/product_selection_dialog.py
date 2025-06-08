@@ -289,7 +289,6 @@ class ProductSelectionDialog(QDialog):
             
             self.npt_container.setLayout(npt_layout)
             form_layout.addRow(self.npt_container)
-            self.npt_container.show()  # Show NPT container by default
             
             self.flange_container = QWidget()
             flange_layout = QFormLayout()
@@ -311,7 +310,6 @@ class ProductSelectionDialog(QDialog):
             
             self.flange_container.setLayout(flange_layout)
             form_layout.addRow(self.flange_container)
-            self.flange_container.hide()
             
             self.triclamp_container = QWidget()
             triclamp_layout = QFormLayout()
@@ -327,6 +325,10 @@ class ProductSelectionDialog(QDialog):
             
             self.triclamp_container.setLayout(triclamp_layout)
             form_layout.addRow(self.triclamp_container)
+            
+            # Set initial visibility based on default connection type
+            self.npt_container.show()
+            self.flange_container.hide()
             self.triclamp_container.hide()
             
             # Add additional options from database
