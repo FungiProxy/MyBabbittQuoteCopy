@@ -14,7 +14,13 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIntValidator
 from src.core.services.product_service import ProductService
 from src.core.database import SessionLocal
-from src.core.models.product_variant import ProductFamily
+from src.core.models.product_variant import ProductFamily, ProductVariant
+from src.core.models.option import Option
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class ProductSelectionDialog(QDialog):
     """
@@ -36,34 +42,40 @@ class ProductSelectionDialog(QDialog):
         self._init_ui()
 
     def _fetch_products(self):
-        """Fetch product families from the database using ProductService, and ensure required fields."""
+        """Fetch product families from the database using ProductService."""
         db = SessionLocal()
         try:
             # Fetch all product families (models)
             family_objs = self.product_service.get_product_families(db)
-            # For each family, try to get a representative base_price from the first variant
+            logger.debug(f"Fetched {len(family_objs)} product families")
+            
+            # For each family, get the base variant to get pricing info
             products = []
             for fam in family_objs:
-                # Try to get the first variant for this family to get a base_price
-                variant = None
-                try:
-                    variants = self.product_service.get_variants_for_family(db, fam['id'])
-                    if variants:
-                        variant = variants[0]
-                except Exception:
-                    pass
-                base_price = variant['base_price'] if variant and 'base_price' in variant else 0
-                products.append({
-                    "id": fam["id"],
-                    "name": fam["name"],
-                    "description": fam.get("description", ""),
-                    "category": fam.get("category", ""),
-                    "base_price": base_price
-                })
+                variants = self.product_service.get_variants_for_family(db, fam['id'])
+                logger.debug(f"Found {len(variants)} variants for family {fam['name']}")
+                
+                if variants:
+                    # Use the first variant as the base for display
+                    variant = variants[0]
+                    product_info = {
+                        "id": fam["id"],
+                        "name": fam["name"],
+                        "description": fam.get("description", ""),
+                        "category": fam.get("category", ""),
+                        "base_price": variant['base_price'],
+                        "base_length": variant['base_length'],
+                        "voltage": variant['voltage'],
+                        "material": variant['material']
+                    }
+                    logger.debug(f"Adding product: {product_info}")
+                    products.append(product_info)
+            
             self.products = products
+            logger.debug(f"Total products loaded: {len(self.products)}")
         except Exception as e:
+            logger.error(f"Error fetching product families: {e}", exc_info=True)
             self.products = []
-            print(f"Error fetching product families: {e}")
         finally:
             db.close()
 
@@ -118,24 +130,30 @@ class ProductSelectionDialog(QDialog):
         """Populate the product list, optionally filtering by search text."""
         self.product_list.clear()
         filtered_products = [product for product in self.products if filter_text.lower() in product["name"].lower()]
+        logger.debug(f"Filtered products: {len(filtered_products)}")
+        
         for product in filtered_products:
             item = QListWidgetItem()
             item.setText(f"{product['name']}")
             item.setData(Qt.UserRole, product)
             self.product_list.addItem(item)
+            logger.debug(f"Added product to list: {product['name']}")
 
     def _filter_products(self, text):
         self._populate_product_list(text)
 
     def _on_product_selected(self):
+        """Handle product selection from the list."""
         items = self.product_list.selectedItems()
-        print(f"DEBUG: _on_product_selected called. Items: {items}")
+        logger.debug(f"Product selection changed. Selected items: {len(items)}")
+        
         if not items:
-            print("DEBUG: No items selected. Showing select product prompt.")
+            logger.debug("No items selected. Showing select product prompt.")
             self._show_select_product()
             return
+            
         product = items[0].data(Qt.UserRole)
-        print(f"DEBUG: Product selected: {product}")
+        logger.debug(f"Selected product: {product}")
         self.selected_product = product
         self.selected_options = {}
         self.quantity = 1
@@ -150,6 +168,7 @@ class ProductSelectionDialog(QDialog):
 
     def _show_product_config(self, product):
         """Show the configuration options for the selected product."""
+        logger.debug(f"Showing product config for: {product['name']}")
         self._clear_config_panel()
         self.selected_options = {}
         self.option_widgets = {}  # Track widgets for each option
@@ -161,165 +180,195 @@ class ProductSelectionDialog(QDialog):
         
         # Add a form layout for the options
         form_layout = QFormLayout()
-        form_layout.setSpacing(15)
+        form_layout.setSpacing(10)
+        form_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Voltage options
-        voltage_combo = QComboBox()
-        voltage_combo.addItems(["24VDC", "115VAC"])
-        voltage_combo.currentTextChanged.connect(lambda text: self._on_option_selected("Voltage", text))
-        form_layout.addRow("Voltage:", voltage_combo)
-        self.option_widgets["Voltage"] = voltage_combo
-        
-        # Material options
-        material_combo = QComboBox()
-        material_combo.addItems([
-            "S - 316 Stainless Steel Probe",
-            "H - Halar Coated Probe",
-            "TS - Teflon Sleeve",
-            "U - UHMWPE Blind End Probe",
-            "T - Teflon Blind End Probe"
-        ])
-        material_combo.currentTextChanged.connect(lambda text: self._on_material_selected(text))
-        form_layout.addRow("Material:", material_combo)
-        self.option_widgets["Material"] = material_combo
-        
-        # Exotic Metals options
-        exotic_combo = QComboBox()
-        exotic_combo.addItems([
-            "None",
-            "A - Alloy 20",
-            "H - Hastelloy-C-276",
-            "B - Hastelloy-B",
-            "T - Titanium"
-        ])
-        exotic_combo.currentTextChanged.connect(lambda text: self._on_exotic_metal_selected(text))
-        form_layout.addRow("Exotic Metal:", exotic_combo)
-        self.option_widgets["Exotic Metal"] = exotic_combo
-        
-        # Probe Length options
-        length_widget = QWidget()
-        length_layout = QHBoxLayout(length_widget)
-        length_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Spinner wheel (QSpinBox)
-        self.length_spinner = QSpinBox()
-        self.length_spinner.setRange(1, 120)  # 1 to 120 inches
-        self.length_spinner.setValue(12)  # Default to 12 inches
-        self.length_spinner.setSuffix('"')  # Add inch symbol
-        self.length_spinner.setFixedWidth(100)
-        self.length_spinner.valueChanged.connect(self._on_length_changed)
-        
-        # Text input (QLineEdit)
-        self.length_input = QLineEdit()
-        self.length_input.setPlaceholderText("Enter length (inches)")
-        self.length_input.setFixedWidth(100)
-        self.length_input.setValidator(QIntValidator(1, 120))  # Only allow integers between 1 and 120
-        self.length_input.textChanged.connect(self._on_length_text_changed)
-        
-        length_layout.addWidget(self.length_spinner)
-        length_layout.addWidget(self.length_input)
-        length_layout.addStretch()
-        
-        form_layout.addRow("Probe Length:", length_widget)
-        self.option_widgets["Probe Length"] = length_widget
-        
-        # Connection options
-        connection_combo = QComboBox()
-        connection_combo.addItems(["Standard", "Flanged", "Tri-Clamp"])
-        connection_combo.currentTextChanged.connect(lambda text: self._on_connection_selected(text))
-        form_layout.addRow("Connection:", connection_combo)
-        self.option_widgets["Connection"] = connection_combo
-        
-        # Create containers for connection options
-        self.flange_container = QWidget()
-        flange_layout = QFormLayout()
-        flange_layout.setContentsMargins(0, 0, 0, 0)
-        flange_layout.setSpacing(15)
-        
-        flange_rating_combo = QComboBox()
-        flange_rating_combo.addItems(["150#", "300#"])
-        flange_rating_combo.currentTextChanged.connect(lambda text: self._on_flange_option_selected("rating", text))
-        flange_layout.addRow("Flange Rating:", flange_rating_combo)
-        self.option_widgets["Flange Rating"] = flange_rating_combo
-        
-        flange_size_combo = QComboBox()
-        flange_size_combo.addItems(['1"', '1.5"', '2"', '3"', '4"'])
-        flange_size_combo.currentTextChanged.connect(lambda text: self._on_flange_option_selected("size", text))
-        flange_layout.addRow("Flange Size:", flange_size_combo)
-        self.option_widgets["Flange Size"] = flange_size_combo
-        
-        self.flange_container.setLayout(flange_layout)
-        form_layout.addRow(self.flange_container)
-        self.flange_container.hide()
-        
-        self.triclamp_container = QWidget()
-        triclamp_layout = QFormLayout()
-        triclamp_layout.setContentsMargins(0, 0, 0, 0)
-        triclamp_layout.setSpacing(15)
-        
-        triclamp_size_combo = QComboBox()
-        triclamp_size_combo.addItems(['1.5"', '2"'])
-        triclamp_size_combo.currentTextChanged.connect(lambda text: self._on_triclamp_selected(text))
-        triclamp_layout.addRow("Tri-Clamp Size:", triclamp_size_combo)
-        self.option_widgets["Tri-Clamp Size"] = triclamp_size_combo
-        
-        self.triclamp_container.setLayout(triclamp_layout)
-        form_layout.addRow(self.triclamp_container)
-        self.triclamp_container.hide()
-        
-        # Additional Options
-        teflon_check = QCheckBox("Teflon Insulator (Instead of UHMWPE) - Add $40.00")
-        teflon_check.stateChanged.connect(lambda state: self._on_option_selected("Teflon Insulator", state == Qt.Checked))
-        form_layout.addRow("", teflon_check)
-        self.option_widgets["Teflon Insulator"] = teflon_check
-        
-        static_check = QCheckBox("Extra Static Protection - Add $30.00")
-        static_check.stateChanged.connect(lambda state: self._on_option_selected("Extra Static Protection", state == Qt.Checked))
-        form_layout.addRow("", static_check)
-        self.option_widgets["Extra Static Protection"] = static_check
-        
-        cable_check = QCheckBox("Cable Probe - Add $80.00")
-        cable_check.stateChanged.connect(lambda state: self._on_option_selected("Cable Probe", state == Qt.Checked))
-        form_layout.addRow("", cable_check)
-        self.option_widgets["Cable Probe"] = cable_check
-        
-        bent_check = QCheckBox("Bent Probe - Add $50.00")
-        bent_check.stateChanged.connect(lambda state: self._on_option_selected("Bent Probe", state == Qt.Checked))
-        form_layout.addRow("", bent_check)
-        self.option_widgets["Bent Probe"] = bent_check
-        
-        tag_check = QCheckBox("Stainless Steel Tag - Add $30.00")
-        tag_check.stateChanged.connect(lambda state: self._on_option_selected("Stainless Steel Tag", state == Qt.Checked))
-        form_layout.addRow("", tag_check)
-        self.option_widgets["Stainless Steel Tag"] = tag_check
-        
-        # Add the form layout to the main config layout
-        self.config_layout.addLayout(form_layout)
-        
-        # Add some spacing
-        self.config_layout.addSpacing(20)
-        
-        # Quantity
-        qty_label = QLabel("<b>Quantity</b>")
-        self.config_layout.addWidget(qty_label)
-        self.qty_spin = QSpinBox()
-        self.qty_spin.setMinimum(1)
-        self.qty_spin.setValue(1)
-        self.qty_spin.valueChanged.connect(self._update_total_price)
-        self.config_layout.addWidget(self.qty_spin)
-        
-        # Total price
-        self.total_price_label = QLabel()
-        self.total_price_label.setStyleSheet("font-size: 20px; font-weight: bold; margin-top: 10px;")
-        self.config_layout.addWidget(self.total_price_label)
-        
-        # Add to Quote button
-        self.add_btn = QPushButton("+ Add to Quote")
-        self.add_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold; padding: 10px 24px; border-radius: 6px; font-size: 16px;")
-        self.add_btn.clicked.connect(self._on_add_to_quote)
-        self.config_layout.addWidget(self.add_btn)
-        
-        self._update_total_price()
+        db = SessionLocal()
+        try:
+            # Get available options for this product family
+            options = self.product_service.get_all_additional_options(db)
+            logger.debug(f"Found {len(options)} additional options")
+            
+            # Voltage options
+            voltage_combo = QComboBox()
+            voltage_options = self.product_service.get_voltage_options(db, product['id'])
+            logger.debug(f"Found {len(voltage_options)} voltage options")
+            voltage_combo.addItems([v['voltage'] for v in voltage_options])
+            voltage_combo.currentTextChanged.connect(lambda text: self._on_option_selected("Voltage", text))
+            form_layout.addRow("Voltage:", voltage_combo)
+            self.option_widgets["Voltage"] = voltage_combo
+            
+            # Material options
+            material_combo = QComboBox()
+            material_options = self.product_service.get_material_options(db, product['id'])
+            logger.debug(f"Found {len(material_options)} material options")
+            material_combo.addItems([m['display_name'] for m in material_options])
+            material_combo.currentTextChanged.connect(lambda text: self._on_material_selected(text))
+            form_layout.addRow("Material:", material_combo)
+            self.option_widgets["Material"] = material_combo
+            
+            # O-ring Material options
+            oring_combo = QComboBox()
+            oring_combo.addItems([
+                "Viton",
+                "Silicon",
+                "Buna-N",
+                "EPDM",
+                "PTFE",
+                "Kalrez (+$295.00)"
+            ])
+            oring_combo.currentTextChanged.connect(lambda text: self._on_option_selected("O-ring Material", text))
+            form_layout.addRow("O-ring Material:", oring_combo)
+            self.option_widgets["O-ring Material"] = oring_combo
+            
+            # Exotic Metals options
+            exotic_combo = QComboBox()
+            exotic_combo.addItems([
+                "None",
+                "A - Alloy 20 (Consult Factory)",
+                "H - Hastelloy-C-276 (Consult Factory)",
+                "B - Hastelloy-B (Consult Factory)",
+                "T - Titanium (Consult Factory)"
+            ])
+            exotic_combo.currentTextChanged.connect(lambda text: self._on_exotic_metal_selected(text))
+            form_layout.addRow("Exotic Metal:", exotic_combo)
+            self.option_widgets["Exotic Metal"] = exotic_combo
+            
+            # Probe Length options
+            length_widget = QWidget()
+            length_layout = QHBoxLayout(length_widget)
+            length_layout.setContentsMargins(0, 0, 0, 0)
+            
+            # Spinner wheel (QSpinBox)
+            self.length_spinner = QSpinBox()
+            self.length_spinner.setRange(1, 120)  # 1 to 120 inches
+            self.length_spinner.setValue(product['base_length'])  # Use base length from product
+            self.length_spinner.setSuffix('"')  # Add inch symbol
+            self.length_spinner.setFixedWidth(100)
+            self.length_spinner.valueChanged.connect(self._on_length_changed)
+            
+            # Text input (QLineEdit)
+            self.length_input = QLineEdit()
+            self.length_input.setPlaceholderText("Enter length (inches)")
+            self.length_input.setFixedWidth(100)
+            self.length_input.setValidator(QIntValidator(1, 120))  # Only allow integers between 1 and 120
+            self.length_input.textChanged.connect(self._on_length_text_changed)
+            
+            length_layout.addWidget(self.length_spinner)
+            length_layout.addWidget(self.length_input)
+            length_layout.addStretch()
+            
+            form_layout.addRow("Probe Length:", length_widget)
+            self.option_widgets["Probe Length"] = length_widget
+            
+            # Connection options
+            connection_options = self.product_service.get_connection_options(db, product['id'])
+            connection_types = sorted(set(opt['type'] for opt in connection_options))
+            # Ensure NPT is first in the list
+            if "NPT" in connection_types:
+                connection_types.remove("NPT")
+                connection_types.insert(0, "NPT")
+            connection_combo = QComboBox()
+            connection_combo.addItems(connection_types)
+            connection_combo.currentTextChanged.connect(lambda text: self._on_connection_selected(text))
+            form_layout.addRow("Connection:", connection_combo)
+            self.option_widgets["Connection"] = connection_combo
+            
+            # Create containers for connection options
+            self.npt_container = QWidget()
+            npt_layout = QFormLayout()
+            npt_layout.setContentsMargins(0, 0, 0, 0)
+            npt_layout.setSpacing(15)
+            
+            npt_size_combo = QComboBox()
+            npt_sizes = sorted(set(opt['size'] for opt in connection_options if opt['type'] == "NPT"))
+            npt_size_combo.addItems(npt_sizes)
+            npt_size_combo.currentTextChanged.connect(lambda text: self._on_npt_size_selected(text))
+            npt_layout.addRow("NPT Size:", npt_size_combo)
+            self.option_widgets["NPT Size"] = npt_size_combo
+            
+            self.npt_container.setLayout(npt_layout)
+            form_layout.addRow(self.npt_container)
+            self.npt_container.show()  # Show NPT container by default
+            
+            self.flange_container = QWidget()
+            flange_layout = QFormLayout()
+            flange_layout.setContentsMargins(0, 0, 0, 0)
+            flange_layout.setSpacing(15)
+            
+            flange_rating_combo = QComboBox()
+            flange_rating_combo.addItems(["150#", "300#"])
+            flange_rating_combo.currentTextChanged.connect(lambda text: self._on_flange_option_selected("rating", text))
+            flange_layout.addRow("Flange Rating:", flange_rating_combo)
+            self.option_widgets["Flange Rating"] = flange_rating_combo
+            
+            flange_size_combo = QComboBox()
+            flange_sizes = sorted(set(opt['size'] for opt in connection_options if opt['type'] == "Flange"))
+            flange_size_combo.addItems(flange_sizes)
+            flange_size_combo.currentTextChanged.connect(lambda text: self._on_flange_option_selected("size", text))
+            flange_layout.addRow("Flange Size:", flange_size_combo)
+            self.option_widgets["Flange Size"] = flange_size_combo
+            
+            self.flange_container.setLayout(flange_layout)
+            form_layout.addRow(self.flange_container)
+            self.flange_container.hide()
+            
+            self.triclamp_container = QWidget()
+            triclamp_layout = QFormLayout()
+            triclamp_layout.setContentsMargins(0, 0, 0, 0)
+            triclamp_layout.setSpacing(15)
+            
+            triclamp_size_combo = QComboBox()
+            triclamp_sizes = sorted(set(opt['size'] for opt in connection_options if opt['type'] == "Tri-Clamp"))
+            triclamp_size_combo.addItems(triclamp_sizes)
+            triclamp_size_combo.currentTextChanged.connect(lambda text: self._on_triclamp_selected(text))
+            triclamp_layout.addRow("Tri-Clamp Size:", triclamp_size_combo)
+            self.option_widgets["Tri-Clamp Size"] = triclamp_size_combo
+            
+            self.triclamp_container.setLayout(triclamp_layout)
+            form_layout.addRow(self.triclamp_container)
+            self.triclamp_container.hide()
+            
+            # Add additional options from database
+            for option in options:
+                if option.category == "additional":
+                    checkbox = QCheckBox(f"{option.name} - Add ${option.price:.2f}")
+                    checkbox.stateChanged.connect(lambda state, opt=option: self._on_option_selected(opt.name, state == Qt.Checked))
+                    form_layout.addRow("", checkbox)
+                    self.option_widgets[option.name] = checkbox
+            
+            # Add the form layout to the main config layout
+            self.config_layout.addLayout(form_layout)
+            
+            # Add some spacing
+            self.config_layout.addSpacing(20)
+            
+            # Quantity
+            qty_label = QLabel("<b>Quantity</b>")
+            self.config_layout.addWidget(qty_label)
+            self.qty_spin = QSpinBox()
+            self.qty_spin.setMinimum(1)
+            self.qty_spin.setValue(1)
+            self.qty_spin.valueChanged.connect(self._update_total_price)
+            self.config_layout.addWidget(self.qty_spin)
+            
+            # Total price
+            self.total_price_label = QLabel()
+            self.total_price_label.setStyleSheet("font-size: 20px; font-weight: bold; margin-top: 10px;")
+            self.config_layout.addWidget(self.total_price_label)
+            
+            # Add to Quote button
+            self.add_btn = QPushButton("+ Add to Quote")
+            self.add_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold; padding: 10px 24px; border-radius: 6px; font-size: 16px;")
+            self.add_btn.clicked.connect(self._on_add_to_quote)
+            self.config_layout.addWidget(self.add_btn)
+            
+            self._update_total_price()
+            logger.debug("Product configuration UI setup completed")
+        except Exception as e:
+            logger.error(f"Error setting up product configuration: {e}", exc_info=True)
+        finally:
+            db.close()
 
     def _on_material_selected(self, text):
         """Handle material selection and validate probe length."""
@@ -341,8 +390,6 @@ class ProductSelectionDialog(QDialog):
             self.length_spinner.setRange(4, 72)
             self.length_spinner.setValue(current_length)
             self.length_input.setPlaceholderText("Enter length (inches)")
-            QMessageBox.information(self, "Halar Coating", 
-                "Standard lengths for Halar coating are: 6\", 8\", 10\", 12\", 16\", 24\", 36\", 48\", 60\", 72\". $300 adder applies for non-standard lengths.")
         else:
             # 10" to 72" for S/TS
             self.length_spinner.setRange(10, 72)
@@ -374,20 +421,19 @@ class ProductSelectionDialog(QDialog):
         length = self.length_spinner.value()
         
         # Check for Halar coating length restrictions
-        if "H - Halar Coated Probe" in material:
-            if length > 72:
-                QMessageBox.warning(
-                    self,
-                    "Length Warning",
-                    "Probes over 72 inches with Halar coating require a $300 adder.\n"
-                    "Consider using a Teflon Sleeve to avoid this charge."
-                )
-            elif length < 10:
-                QMessageBox.warning(
-                    self,
-                    "Length Warning",
-                    "Minimum length for Halar coated probes is 10 inches."
-                )
+        if "H - Halar Coated Probe" in material and length > 72:
+            QMessageBox.warning(
+                self,
+                "Length Warning",
+                "Probes over 72 inches with Halar coating require a $300 adder.\n"
+                "Consider using a Teflon Sleeve to avoid this charge."
+            )
+        elif "H - Halar Coated Probe" in material and length < 10:
+            QMessageBox.warning(
+                self,
+                "Length Warning",
+                "Minimum length for Halar coated probes is 10 inches."
+            )
         
         # Check for U/T material length restrictions
         elif any(x in material for x in ["U - UHMWPE Blind End Probe", "T - Teflon Blind End Probe"]):
@@ -413,43 +459,54 @@ class ProductSelectionDialog(QDialog):
 
     def _update_total_price(self):
         """Calculate and display the total price based on selected options."""
-        # Start with base price for LS2000
-        total = 425.00  # Base price for LS2000
-        
-        # Add option prices
-        for opt_name, widget in self.option_widgets.items():
-            if isinstance(widget, QComboBox):
-                selected = widget.currentText()
-                if opt_name == "Material":
-                    if selected == "Halar":
-                        total += 110  # Halar coating adder
-                elif opt_name == "Probe Length":
-                    # Calculate length adder
-                    length = int(selected.split("\"")[0])
-                    if length > 10:
-                        if self.option_widgets["Material"].currentText() == "316SS":
-                            total += (length - 10) * 45  # $45/foot for 316SS
-                        elif self.option_widgets["Material"].currentText() == "Halar":
-                            total += (length - 10) * 110  # $110/foot for Halar
-            elif isinstance(widget, QCheckBox):
-                if widget.isChecked():
-                    if opt_name == "Teflon Insulator":
-                        total += 40
-                    elif opt_name == "Extra Static Protection":
-                        total += 30
-                    elif opt_name == "Cable Probe":
-                        total += 80
-                    elif opt_name == "Bent Probe":
-                        total += 50
-                    elif opt_name == "Stainless Steel Tag":
-                        total += 30
-        
-        # Apply quantity
-        qty = self.qty_spin.value() if hasattr(self, 'qty_spin') else 1
-        total_price = total * qty
-        
-        # Update display
-        self.total_price_label.setText(f"Total: ${total_price:.2f}")
+        if not self.selected_product:
+            return
+
+        db = SessionLocal()
+        try:
+            # Get the base variant for the selected product
+            variants = self.product_service.get_variants_for_family(db, self.selected_product["id"])
+            if not variants:
+                return
+
+            # Start with base price from the variant
+            total = variants[0]['base_price']
+            
+            # Add option prices
+            for opt_name, widget in self.option_widgets.items():
+                if isinstance(widget, QComboBox):
+                    selected = widget.currentText()
+                    if opt_name == "Material":
+                        # Get material options for this family
+                        materials = self.product_service.get_material_options(db, self.selected_product["id"])
+                        for mat in materials:
+                            if mat['display_name'] == selected:
+                                total += mat.get('base_price', 0)
+                    elif opt_name == "Probe Length":
+                        # Calculate length adder based on material
+                        length = self.length_spinner.value()
+                        base_length = variants[0]['base_length']
+                        if length > base_length:
+                            material = self.option_widgets["Material"].currentText()
+                            if "316SS" in material:
+                                total += (length - base_length) * 45  # $45/foot for 316SS
+                            elif "Halar" in material:
+                                total += (length - base_length) * 110  # $110/foot for Halar
+                elif isinstance(widget, QCheckBox):
+                    if widget.isChecked():
+                        # Get option price from database
+                        option = db.query(Option).filter_by(name=opt_name).first()
+                        if option and option.price:
+                            total += option.price
+            
+            # Apply quantity
+            qty = self.qty_spin.value() if hasattr(self, 'qty_spin') else 1
+            total_price = total * qty
+            
+            # Update display
+            self.total_price_label.setText(f"Total: ${total_price:.2f}")
+        finally:
+            db.close()
 
     def _on_add_to_quote(self):
         """Handle adding the configured product to the quote."""
@@ -465,7 +522,7 @@ class ProductSelectionDialog(QDialog):
             "product_id": self.selected_product["id"],
             "name": self.selected_product["name"],
             "quantity": self.qty_spin.value(),
-            "base_price": getattr(self, 'base_price', 425.00),
+            "base_price": self.selected_product["base_price"],
             "options": self.selected_options,
             "total_price": float(self.total_price_label.text().split("$")[1])
         }
@@ -476,29 +533,45 @@ class ProductSelectionDialog(QDialog):
 
     def _validate_configuration(self):
         """Validate the current configuration."""
-        # Check voltage
-        voltage = self.option_widgets["Voltage"].currentText()
-        if voltage not in ["24VDC", "115VAC"]:
-            QMessageBox.warning(self, "Invalid Configuration", "Only 24VDC and 115VAC are available for LS2000.")
+        if not self.selected_product:
             return False
-            
-        # Check probe length with Halar
-        material = self.option_widgets["Material"].currentText()
-        length = self.length_spinner.value()
-        if "H - Halar Coated Probe" in material and length == 72:
-            QMessageBox.warning(self, "Invalid Configuration", "Maximum probe length with Halar coating is 72\". Please use Teflon Sleeve for longer probes.")
-            return False
-            
-        return True 
+
+        db = SessionLocal()
+        try:
+            # Get the base variant for validation
+            variants = self.product_service.get_variants_for_family(db, self.selected_product["id"])
+            if not variants:
+                return False
+
+            # Check voltage
+            voltage = self.option_widgets["Voltage"].currentText()
+            voltage_options = self.product_service.get_voltage_options(db, self.selected_product["id"])
+            if voltage not in [v['voltage'] for v in voltage_options]:
+                QMessageBox.warning(self, "Invalid Configuration", f"Invalid voltage option: {voltage}")
+                return False
+                
+            # Check probe length with Halar
+            material = self.option_widgets["Material"].currentText()
+            length = self.length_spinner.value()
+            if "Halar" in material and length > 72:
+                QMessageBox.warning(self, "Invalid Configuration", "Maximum probe length with Halar coating is 72\". Please use Teflon Sleeve for longer probes.")
+                return False
+                
+            return True
+        finally:
+            db.close()
 
     def _on_connection_selected(self, text):
         """Handle connection type selection and show/hide relevant options."""
         # Hide all connection-specific containers first
+        self.npt_container.hide()
         self.flange_container.hide()
         self.triclamp_container.hide()
         
         # Show relevant options based on selection
-        if text == "Flanged":
+        if text == "NPT":
+            self.npt_container.show()
+        elif text == "Flange":
             self.flange_container.show()
             QMessageBox.information(self, "Flange Connection", 
                 "Please consult factory for flange connection pricing.")
@@ -506,6 +579,11 @@ class ProductSelectionDialog(QDialog):
             self.triclamp_container.show()
         
         self._on_option_selected("Connection", text)
+        self._update_total_price()
+
+    def _on_npt_size_selected(self, text):
+        """Handle NPT size selection and update pricing."""
+        self.selected_options["NPT Size"] = text
         self._update_total_price()
 
     def _on_flange_option_selected(self, option_type, text):

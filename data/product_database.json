@@ -36,23 +36,88 @@
     },
     {
       "name": "LS 6000 LEVEL SWITCH",
-      "variants": [],
-      "options": [],
-      "spare_parts": [],
-      "notes": []
-    },
-    {
-      "name": "Spare Parts:",
-      "variants": [],
-      "options": [],
-      "spare_parts": [],
+      "base_model": {
+        "model_number": "LS6000-115VAC-S-10",
+        "description": "10\" 316SS Probe, 115VAC (Base Model)",
+        "base_price": 550.0,
+        "base_length": 10,
+        "voltage": "115VAC",
+        "material": "S"
+      },
+      "options": [
+        {
+          "name": "Material",
+          "choices": ["S", "H", "TS"],
+          "adders": {"H": 110, "TS": 110},
+          "notes": "S=316SS, H=Halar, TS=Teflon Sleeve. H and TS have $110/ft adder."
+        },
+        {
+          "name": "Voltage",
+          "choices": ["115VAC", "12VDC", "24VDC", "240VAC"],
+          "adders": {"12VDC": 0, "24VDC": 0, "240VAC": 0}
+        },
+        {
+          "name": "Length",
+          "rules": "Standard is 10\". For H or TS, add $110/foot over 10\". $300 adder for non-standard lengths (except TS). Halar max 72\". For longer, use TS."
+        },
+        {
+          "name": "Mounting",
+          "choices": ["Standard", "Flanged", "Tri-Clamp"],
+          "adders": {"Flanged": null, "Tri-Clamp": null}
+        },
+        {
+          "name": "Probe Diameter",
+          "choices": ["Standard", "3/4\""],
+          "adders": {"3/4\"": 175.00},
+          "notes": "3/4\" diameter probe option"
+        },
+        {
+          "name": "Insulator",
+          "choices": ["Standard", "Teflon"],
+          "adders": {"Teflon": 40.00},
+          "notes": "Teflon insulator instead of Delrin"
+        },
+        {
+          "name": "CPVC Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 400.00},
+          "notes": "CPVC Blind End Probe with Integrated NPT Nipple - 4\" Standard, plus $50 per additional inch"
+        },
+        {
+          "name": "Cable Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 80.00}
+        },
+        {
+          "name": "Bent Probe",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 50.00}
+        },
+        {
+          "name": "Stainless Steel Tag",
+          "choices": ["No", "Yes"],
+          "adders": {"Yes": 30.00}
+        }
+      ],
+      "compatibility_rules": [
+        "Halar max length is 72\" (6 feet). For longer, use Teflon Sleeve.",
+        "$300 adder for non-standard lengths (except TS).",
+        "3/4\" NPT process connection is optional at no extra charge (3/4\" NPT Max 300 psi @ 75 F)."
+      ],
       "notes": [
-        "1. Delrin insulators are standard for SS probes. Teflon insulators are standard for Halar and Teflon Sleeve probes as well as other baked coatings.",
-        "2. Max Temperatures: Delrin insulator 250F; Teflon insulator 450F; PEEK insulator 550F",
-        "3. Do not use Delrin in applications with STEAM.",
-        "4. Cable probes and special materials of construction available.",
-        "5. \u00be\" NPT process connection is optional at no extra charge (\u00be\" NPT Max 300 psi @ 75 F)",
-        "6. LONGEST PROBE WITH HALAR COATING IS 72\" (6 FEET). FOR PROBES OVER 72\", USE TEFLON SLEEVE."
+        "Delrin insulators are standard for SS probes. Teflon insulators are standard for Halar and Teflon Sleeve probes.",
+        "Max Temperatures: Delrin insulator 250F; Teflon insulator 450F; PEEK insulator 550F.",
+        "Do not use Delrin in applications with STEAM.",
+        "Cable probes and special materials of construction available.",
+        "Other baked on coatings available (food grade PFA Teflon, Ryton) - consult factory."
+      ],
+      "spare_parts": [
+        {"name": "LS 6000-ELECTRONICS", "price": 295.00},
+        {"name": "LS 6000-S-PROBE ASSEMBLY-10\"", "price": 240.00},
+        {"name": "LS 6000-H-PROBE ASSEMBLY-10\"", "price": 370.00},
+        {"name": "LS6000-HOUSING", "price": 140.00},
+        {"name": "LS6000-S-10\" (3/4\" diameter) Probe Assembly Only", "price": 370.00},
+        {"name": "LS6000-115VAC-Electronics only", "price": 295.00}
       ]
     },
     {

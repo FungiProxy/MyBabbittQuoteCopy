@@ -306,7 +306,7 @@ class ProductService:
 
     def get_product_families(self, db: Session) -> List[Dict]:
         """
-        Fetch all product families with basic info.
+        Fetch all product families from the database.
         Returns: List of dicts with id, name, description, category.
         """
         families = db.query(ProductFamily).all()
