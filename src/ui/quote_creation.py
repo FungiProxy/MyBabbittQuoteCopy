@@ -1,10 +1,12 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFrame,
-    QDateEdit, QFormLayout, QSizePolicy, QTableWidget, QTableWidgetItem, QSpacerItem
+    QDateEdit, QFormLayout, QSizePolicy, QTableWidget, QTableWidgetItem, QSpacerItem,
+    QDialog
 )
 from PySide6.QtCore import Qt, QDate
 from src.ui.product_selection_dialog import ProductSelectionDialog
 from src.core.services.product_service import ProductService
+from src.ui.spare_parts_tab import SparePartsTab
 
 class QuoteCreationPage(QWidget):
     """
@@ -149,7 +151,12 @@ class QuoteCreationPage(QWidget):
         # Add Product button
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        self.add_product_btn = QPushButton("+ Add Product")
+        self.add_spare_parts_btn = QPushButton("Spare Parts")
+        self.add_spare_parts_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold; padding: 10px 24px; border-radius: 6px; font-size: 16px;")
+        self.add_spare_parts_btn.setFixedWidth(160)
+        btn_layout.addWidget(self.add_spare_parts_btn)
+        
+        self.add_product_btn = QPushButton("Items")
         self.add_product_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold; padding: 10px 24px; border-radius: 6px; font-size: 16px;")
         self.add_product_btn.setFixedWidth(160)
         btn_layout.addWidget(self.add_product_btn)
@@ -166,6 +173,7 @@ class QuoteCreationPage(QWidget):
         self.main_layout.addLayout(footer_layout)
 
         self.add_product_btn.clicked.connect(self.open_product_dialog)
+        self.add_spare_parts_btn.clicked.connect(self.open_spare_parts_dialog)
 
     def open_product_dialog(self):
         dialog = ProductSelectionDialog(product_service=ProductService(), parent=self)
@@ -175,6 +183,27 @@ class QuoteCreationPage(QWidget):
                 self.products.append(product)
                 self.update_items_table()
                 self.update_summary()
+
+    def open_spare_parts_dialog(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Spare Parts")
+        dialog.setMinimumSize(800, 600)
+        
+        layout = QVBoxLayout(dialog)
+        spare_parts_tab = SparePartsTab(parent=dialog)
+        layout.addWidget(spare_parts_tab)
+        
+        # Connect the part_selected signal
+        spare_parts_tab.part_selected.connect(self.add_spare_part_to_quote)
+        spare_parts_tab.part_selected.connect(dialog.accept)  # Close dialog when part is selected
+        
+        dialog.exec()
+
+    def add_spare_part_to_quote(self, part_info):
+        """Add a spare part to the quote."""
+        self.products.append(part_info)
+        self.update_items_table()
+        self.update_summary()
 
     def update_items_table(self):
         if not self.products:

@@ -119,22 +119,158 @@ class SpecificationsTab(QWidget):
         self.add_to_quote_button.setEnabled(False)  # Initially disabled until product is selected
         main_layout.addWidget(self.add_to_quote_button)
     
-    def update_for_product(self, category, model):
+    def update_specifications(self, product_info):
         """
-        Update specifications form for a newly selected product.
-        
-        Clears existing specifications and rebuilds the form with
-        options appropriate for the selected product category and model.
+        Update the specifications display based on the selected product.
         
         Args:
-            category (str): Product category (e.g., "Level Switch")
-            model (str): Product model number
+            product_info (dict): Dictionary containing product information
         """
-        self.current_product = {"category": category, "model": model}
+        self.current_product = product_info
+        self._clear_specs()
         
-        # Clear existing specs
-        self.clear_specifications()
+        if not product_info:
+            self.placeholder_label.setVisible(True)
+            self.add_to_quote_button.setEnabled(False)
+            return
+            
+        self.placeholder_label.setVisible(False)
+        self.add_to_quote_button.setEnabled(True)
         
+        # Create sections for different types of specifications
+        voltage_group = QGroupBox("Voltage")
+        voltage_layout = QFormLayout()
+        
+        voltage_combo = QComboBox()
+        voltage_combo.addItems(["12VDC", "24VDC", "115VAC", "240VAC"])
+        voltage_combo.currentTextChanged.connect(lambda text: self._on_spec_changed("voltage", text))
+        voltage_layout.addRow("Select Voltage:", voltage_combo)
+        voltage_group.setLayout(voltage_layout)
+        self.specs_widgets["voltage"] = voltage_combo
+        
+        # Only show material and probe length for non-presence/absence switches
+        if not product_info["model"] in ["LS7500", "LS8500"]:
+            material_group = QGroupBox("Material")
+            material_layout = QFormLayout()
+            
+            material_combo = QComboBox()
+            material_combo.addItems([
+                "316SS",
+                "316SS with Teflon Sleeve",
+                "316SS with Halar Coating",
+                "Titanium",
+                "Titanium with Teflon Sleeve"
+            ])
+            material_combo.currentTextChanged.connect(lambda text: self._on_spec_changed("material", text))
+            material_layout.addRow("Select Material:", material_combo)
+            material_group.setLayout(material_layout)
+            self.specs_widgets["material"] = material_combo
+            
+            probe_group = QGroupBox("Probe Configuration")
+            probe_layout = QFormLayout()
+            
+            length_spin = QSpinBox()
+            length_spin.setRange(1, 120)
+            length_spin.setSuffix('"')
+            length_spin.valueChanged.connect(lambda value: self._on_spec_changed("probe_length", value))
+            probe_layout.addRow("Probe Length:", length_spin)
+            self.specs_widgets["probe_length"] = length_spin
+            
+            probe_group.setLayout(probe_layout)
+            self.specs_layout.addWidget(probe_group)
+        
+        connection_group = QGroupBox("Connection")
+        connection_layout = QFormLayout()
+        
+        connection_combo = QComboBox()
+        connection_combo.addItems(["NPT", "Flange", "Tri-Clamp"])
+        connection_combo.currentTextChanged.connect(lambda text: self._on_connection_changed(text))
+        connection_layout.addRow("Connection Type:", connection_combo)
+        self.specs_widgets["connection_type"] = connection_combo
+        
+        # Connection size options
+        self.npt_size_combo = QComboBox()
+        self.npt_size_combo.addItems(["1/2\"", "3/4\"", "1\"", "1-1/2\"", "2\""])
+        self.npt_size_combo.currentTextChanged.connect(lambda text: self._on_spec_changed("npt_size", text))
+        connection_layout.addRow("NPT Size:", self.npt_size_combo)
+        self.specs_widgets["npt_size"] = self.npt_size_combo
+        
+        self.flange_rating_combo = QComboBox()
+        self.flange_rating_combo.addItems(["150#", "300#"])
+        self.flange_rating_combo.currentTextChanged.connect(lambda text: self._on_spec_changed("flange_rating", text))
+        connection_layout.addRow("Flange Rating:", self.flange_rating_combo)
+        self.specs_widgets["flange_rating"] = self.flange_rating_combo
+        
+        self.flange_size_combo = QComboBox()
+        self.flange_size_combo.addItems(["1\"", "1-1/2\"", "2\"", "3\"", "4\""])
+        self.flange_size_combo.currentTextChanged.connect(lambda text: self._on_spec_changed("flange_size", text))
+        connection_layout.addRow("Flange Size:", self.flange_size_combo)
+        self.specs_widgets["flange_size"] = self.flange_size_combo
+        
+        self.triclamp_size_combo = QComboBox()
+        self.triclamp_size_combo.addItems(["1\"", "1-1/2\"", "2\"", "3\"", "4\""])
+        self.triclamp_size_combo.currentTextChanged.connect(lambda text: self._on_spec_changed("triclamp_size", text))
+        connection_layout.addRow("Tri-Clamp Size:", self.triclamp_size_combo)
+        self.specs_widgets["triclamp_size"] = self.triclamp_size_combo
+        
+        # Initially hide all connection size options except NPT
+        self.flange_rating_combo.setVisible(False)
+        self.flange_size_combo.setVisible(False)
+        self.triclamp_size_combo.setVisible(False)
+        
+        connection_group.setLayout(connection_layout)
+        
+        # Add all groups to the main layout
+        self.specs_layout.addWidget(voltage_group)
+        if not product_info["model"] in ["LS7500", "LS8500"]:
+            self.specs_layout.addWidget(material_group)
+        self.specs_layout.addWidget(connection_group)
+        
+        # Add additional options group
+        options_group = QGroupBox("Additional Options")
+        options_layout = QVBoxLayout()
+        
+        # Add checkboxes for additional options
+        self.additional_options = {
+            "High Temperature": QCheckBox("High Temperature Option (+$150.00)"),
+            "Explosion Proof": QCheckBox("Explosion Proof Housing (+$295.00)"),
+            "Weather Shield": QCheckBox("Weather Shield (+$95.00)"),
+            "Mounting Bracket": QCheckBox("Mounting Bracket (+$45.00)")
+        }
+        
+        for name, checkbox in self.additional_options.items():
+            checkbox.stateChanged.connect(lambda state, opt=name: self._on_option_changed(opt, state == Qt.Checked))
+            options_layout.addWidget(checkbox)
+            self.specs_widgets[name] = checkbox
+        
+        options_group.setLayout(options_layout)
+        self.specs_layout.addWidget(options_group)
+        
+        # Add spacer at the bottom
+        self.specs_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+    
+    def _clear_specs(self):
+        """Clear all specification widgets."""
+        # Delete all widgets in the specs layout
+        while self.specs_layout.count():
+            item = self.specs_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # Clear the specs widgets dictionary
+        self.specs_widgets.clear()
+    
+    def _on_spec_changed(self, name, value):
+        """Handle changes to specific specification values."""
+        # Update the current specification value
+        self.specs_widgets[name] = value
+        
+        # Emit signal with updated specifications
+        self.specs_updated.emit(self.specs_widgets)
+    
+    def _on_connection_changed(self, text):
+        """Handle changes to connection type."""
+        # Update the current connection type
         # Remove placeholder
         if self.placeholder_label:
             self.placeholder_label.deleteLater()

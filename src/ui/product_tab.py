@@ -82,8 +82,10 @@ class ProductTab(QWidget):
             "LS6000": "RF Admittance Level Switch - Heavy Duty",
             "LS7000": "RF Admittance Level Switch - Advanced Features",
             "LS7000/2": "Dual Point Level Switch",
+            "LS7500": "Presence/Absence Level Switch",
             "LS8000": "Remote Mounted Level Switch",
             "LS8000/2": "Remote Mounted Dual Point Level Switch",
+            "LS8500": "Presence/Absence Level Switch - Heavy Duty",
             "LT9000": "Level Transmitter",
             "FS10000": "Flow Switch"
         }
@@ -186,6 +188,14 @@ class ProductTab(QWidget):
                     <li>Not suitable for dry materials</li>
                 </ul>
             """,
+            "LS7500": """
+                <p>Presence/Absence Level Switch</p>
+                <ul>
+                    <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
+                    <li>Designed for presence or absence detection</li>
+                    <li>Higher temperature options available</li>
+                </ul>
+            """,
             "LS8000": """
                 <p>Remote Mounted Level Switch</p>
                 <ul>
@@ -202,6 +212,14 @@ class ProductTab(QWidget):
                     <li>Can get 4 set points with two receiver cards</li>
                     <li>Designed for homogeneous liquids</li>
                     <li>Requires proper grounding for best performance</li>
+                </ul>
+            """,
+            "LS8500": """
+                <p>Presence/Absence Level Switch - Heavy Duty</p>
+                <ul>
+                    <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
+                    <li>Designed for presence or absence detection</li>
+                    <li>Higher temperature options available</li>
                 </ul>
             """,
             "LT9000": """
@@ -250,8 +268,10 @@ class ProductTab(QWidget):
             "LS6000": "Level Switch",
             "LS7000": "Level Switch",
             "LS7000/2": "Level Switch",
+            "LS7500": "Level Switch",
             "LS8000": "Level Switch",
             "LS8000/2": "Level Switch",
+            "LS8500": "Level Switch",
             "LT9000": "Level Transmitter",
             "FS10000": "Flow Switch"
         }

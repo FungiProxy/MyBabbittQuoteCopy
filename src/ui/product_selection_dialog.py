@@ -198,14 +198,43 @@ class ProductSelectionDialog(QDialog):
             form_layout.addRow("Voltage:", voltage_combo)
             self.option_widgets["Voltage"] = voltage_combo
             
-            # Material options
-            material_combo = QComboBox()
-            material_options = self.product_service.get_material_options(db, product['id'])
-            logger.debug(f"Found {len(material_options)} material options")
-            material_combo.addItems([m['display_name'] for m in material_options])
-            material_combo.currentTextChanged.connect(lambda text: self._on_material_selected(text))
-            form_layout.addRow("Material:", material_combo)
-            self.option_widgets["Material"] = material_combo
+            # Material and Probe Length options only for non-presence/absence switches
+            if not product['name'] in ["LS7500", "LS8500"]:
+                # Material options
+                material_combo = QComboBox()
+                material_options = self.product_service.get_material_options(db, product['id'])
+                logger.debug(f"Found {len(material_options)} material options")
+                material_combo.addItems([m['display_name'] for m in material_options])
+                material_combo.currentTextChanged.connect(lambda text: self._on_material_selected(text))
+                form_layout.addRow("Material:", material_combo)
+                self.option_widgets["Material"] = material_combo
+                
+                # Probe Length options
+                length_widget = QWidget()
+                length_layout = QHBoxLayout(length_widget)
+                length_layout.setContentsMargins(0, 0, 0, 0)
+                
+                # Spinner wheel (QSpinBox)
+                self.length_spinner = QSpinBox()
+                self.length_spinner.setRange(1, 120)  # 1 to 120 inches
+                self.length_spinner.setValue(product['base_length'])  # Use base length from product
+                self.length_spinner.setSuffix('"')  # Add inch symbol
+                self.length_spinner.setFixedWidth(100)
+                self.length_spinner.valueChanged.connect(self._on_length_changed)
+                
+                # Text input (QLineEdit)
+                self.length_input = QLineEdit()
+                self.length_input.setPlaceholderText("Enter length (inches)")
+                self.length_input.setFixedWidth(100)
+                self.length_input.setValidator(QIntValidator(1, 120))  # Only allow integers between 1 and 120
+                self.length_input.textChanged.connect(self._on_length_text_changed)
+                
+                length_layout.addWidget(self.length_spinner)
+                length_layout.addWidget(self.length_input)
+                length_layout.addStretch()
+                
+                form_layout.addRow("Probe Length:", length_widget)
+                self.option_widgets["Probe Length"] = length_widget
             
             # O-ring Material options
             oring_combo = QComboBox()
@@ -233,33 +262,6 @@ class ProductSelectionDialog(QDialog):
             exotic_combo.currentTextChanged.connect(lambda text: self._on_exotic_metal_selected(text))
             form_layout.addRow("Exotic Metal:", exotic_combo)
             self.option_widgets["Exotic Metal"] = exotic_combo
-            
-            # Probe Length options
-            length_widget = QWidget()
-            length_layout = QHBoxLayout(length_widget)
-            length_layout.setContentsMargins(0, 0, 0, 0)
-            
-            # Spinner wheel (QSpinBox)
-            self.length_spinner = QSpinBox()
-            self.length_spinner.setRange(1, 120)  # 1 to 120 inches
-            self.length_spinner.setValue(product['base_length'])  # Use base length from product
-            self.length_spinner.setSuffix('"')  # Add inch symbol
-            self.length_spinner.setFixedWidth(100)
-            self.length_spinner.valueChanged.connect(self._on_length_changed)
-            
-            # Text input (QLineEdit)
-            self.length_input = QLineEdit()
-            self.length_input.setPlaceholderText("Enter length (inches)")
-            self.length_input.setFixedWidth(100)
-            self.length_input.setValidator(QIntValidator(1, 120))  # Only allow integers between 1 and 120
-            self.length_input.textChanged.connect(self._on_length_text_changed)
-            
-            length_layout.addWidget(self.length_spinner)
-            length_layout.addWidget(self.length_input)
-            length_layout.addStretch()
-            
-            form_layout.addRow("Probe Length:", length_widget)
-            self.option_widgets["Probe Length"] = length_widget
             
             # Connection options
             connection_options = self.product_service.get_connection_options(db, product['id'])
