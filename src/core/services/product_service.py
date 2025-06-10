@@ -484,10 +484,13 @@ class ProductService:
     @staticmethod
     def get_all_additional_options(db: Session) -> list:
         """
-        Retrieve all additional options (category == 'additional').
+        Retrieve all configurable options that have choices and adders defined.
         Returns a list of Option objects.
         """
-        return db.query(Option).filter(Option.category == "additional").all()
+        return db.query(Option).filter(
+            Option.choices.isnot(None),
+            Option.adders.isnot(None)
+        ).all()
 
     def get_valid_options_for_selection(self, db, family_id: int, selected_options: dict) -> dict:
         """

@@ -154,7 +154,17 @@ class QuoteCreationPage(QWidget):
         self.products = []
         self.expanded_item_row = -1
         self.current_quote_id = None
+
+        # Initialize services
+        self.db = SessionLocal()
+        self.product_service = ProductService()
+        self.quote_service = QuoteService()
+        
         self.init_ui()
+
+    def __del__(self):
+        if self.db:
+            self.db.close()
 
     def init_ui(self):
         # Main scroll area
@@ -333,9 +343,8 @@ class QuoteCreationPage(QWidget):
     def load_quote_data(self, quote_id):
         """Fetches quote data and updates the UI."""
         self.current_quote_id = quote_id
-        db = SessionLocal()
         try:
-            quote_data = QuoteService.get_full_quote_details(db, self.current_quote_id)
+            quote_data = QuoteService.get_full_quote_details(self.db, self.current_quote_id)
             if quote_data:
                 self.update_ui_with_quote_data(quote_data)
                 QMessageBox.information(self, "Quote Loaded", f"Quote {quote_data.get('quote_number')} loaded successfully.")
@@ -345,8 +354,6 @@ class QuoteCreationPage(QWidget):
         except Exception as e:
             logger.error(f"Error loading quote details: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", "An error occurred while loading the quote.")
-        finally:
-            db.close()
 
     def update_ui_with_quote_data(self, quote_data):
         """Populates the UI fields with data from a loaded quote."""
@@ -381,9 +388,9 @@ class QuoteCreationPage(QWidget):
 
     def open_product_dialog(self):
         """Opens the dialog to add a new product to the quote."""
-        dialog = ProductSelectionDialog(self)
+        dialog = ProductSelectionDialog(self.product_service, self)
         if dialog.exec():
-            selected_product = dialog.get_selected_product()
+            selected_product = dialog.get_selected_product_data()
             if selected_product:
                 self.products.append(selected_product)
                 self.update_items_list()
@@ -426,9 +433,9 @@ class QuoteCreationPage(QWidget):
         if not product_to_edit:
             return
 
-        dialog = ProductSelectionDialog(self, product_to_edit=product_to_edit)
+        dialog = ProductSelectionDialog(self.product_service, self, product_to_edit=product_to_edit)
         if dialog.exec():
-            updated_product = dialog.get_selected_product()
+            updated_product = dialog.get_selected_product_data()
             if updated_product:
                 for i, p in enumerate(self.products):
                     if p.get("id") == product_id:

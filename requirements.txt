@@ -6,4 +6,5 @@ alembic>=1.10.0
 # Data and Exporting
 reportlab>=3.6.12
 Pillow>=9.4.0
+python-docx>=0.8.11
 python-dateutil>=2.8.2

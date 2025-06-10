@@ -63,14 +63,18 @@ class ProductSelectionDialog(QDialog):
 
     def _fetch_products(self):
         """Fetch product families from the database using ProductService."""
+        logger.info("Starting to fetch product families...")
         try:
             # Fetch all product families (models)
             family_objs = self.product_service.get_product_families(self.db)
-            logger.debug(f"Fetched {len(family_objs)} product families")
-            
+            logger.info(f"Fetched {len(family_objs)} product families from the service.")
+            if not family_objs:
+                logger.warning("No product families returned from service. The product list will be empty.")
+
             # For each family, get the base variant to get pricing info
             products = []
             for fam in family_objs:
+                logger.debug(f"Processing family: {fam['name']} (ID: {fam['id']})")
                 variants = self.product_service.get_variants_for_family(self.db, fam['id'])
                 logger.debug(f"Found {len(variants)} variants for family {fam['name']}")
                 
@@ -87,14 +91,18 @@ class ProductSelectionDialog(QDialog):
                         "voltage": variant['voltage'],
                         "material": variant['material']
                     }
-                    logger.debug(f"Adding product: {product_info}")
+                    logger.debug(f"Adding product to UI list: {product_info['name']}")
                     products.append(product_info)
+                else:
+                    logger.warning(f"No variants found for family: {fam['name']}. It will not be displayed.")
             
             self.products = products
-            logger.debug(f"Total products loaded: {len(self.products)}")
+            logger.info(f"Total products loaded for UI: {len(self.products)}")
         except Exception as e:
-            logger.error(f"Error fetching product families: {e}", exc_info=True)
+            logger.error(f"A critical error occurred while fetching product families: {e}", exc_info=True)
             self.products = []
+        finally:
+            logger.info("Finished fetching products.")
         # The session is managed by the dialog's lifecycle now, so no db.close() here
 
     def _product_to_dict(self, product):
@@ -196,267 +204,215 @@ class ProductSelectionDialog(QDialog):
         """Show the configuration options for the selected product."""
         logger.debug(f"Showing product config for: {product['name']}")
         self._clear_config_panel()
-        self.option_widgets = {}  # Track widgets for each option
-        
-        # Product details
-        details = QLabel(f"<b>{product['name']}</b><br><span style='color:#888;'>{product['description']}</span>")
-        details.setWordWrap(True)
-        self.config_layout.addWidget(details)
-        
-        # Add a form layout for the options
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
-        form_layout.setContentsMargins(0, 0, 0, 0)
+        self.option_widgets = {}
         
         try:
-            # Get available options for this product family
+            # Start a new configuration session
+            self.config_service.start_configuration(
+                product_family_id=product['id'],
+                product_family_name=product['name'],
+                base_product_info=product
+            )
+            
+            # Product details header
+            details = QLabel(f"<b>{product['name']}</b><br><span style='color:#888;'>{product['description']}</span>")
+            details.setWordWrap(True)
+            details.setStyleSheet("margin-bottom: 20px;")
+            self.config_layout.addWidget(details)
+            
+            # Main form layout for options
+            form_layout = QFormLayout()
+            form_layout.setSpacing(15)
+            form_layout.setContentsMargins(0, 0, 0, 0)
+            form_layout.setLabelAlignment(Qt.AlignRight)
+            
+            # Get all available options
             all_options = self.product_service.get_all_additional_options(self.db)
             logger.debug(f"Found {len(all_options)} additional options")
             
-            # Group options by category for dynamic UI generation
+            # Group options by category
             grouped_options = {}
             for opt in all_options:
                 if opt.category not in grouped_options:
                     grouped_options[opt.category] = []
                 grouped_options[opt.category].append(opt)
-
-            # Voltage options (still handled specially for now)
-            voltage_combo = QComboBox()
-            voltage_options = self.product_service.get_voltage_options(self.db, product['id'])
-            logger.debug(f"Found {len(voltage_options)} voltage options")
-            for v_opt in voltage_options:
-                voltage_combo.addItem(v_opt['voltage'], userData=v_opt)
-            voltage_combo.currentIndexChanged.connect(self._on_voltage_changed)
-            form_layout.addRow("Voltage:", voltage_combo)
-            self.option_widgets["Voltage"] = voltage_combo
             
-            # Material and Probe Length options only for non-presence/absence switches
-            if not product['name'] in ["LS7500", "LS8500"]:
-                # Material options
-                material_combo = QComboBox()
-                material_options = self.product_service.get_material_options(self.db, product['id'])
-                logger.debug(f"Found {len(material_options)} material options")
-                for m_opt in material_options:
-                    material_combo.addItem(m_opt['display_name'], userData=m_opt)
-                material_combo.currentIndexChanged.connect(self._on_material_changed)
-                form_layout.addRow("Material:", material_combo)
-                self.option_widgets["Material"] = material_combo
-                
-                # Probe Length options
-                length_widget = QWidget()
-                length_layout = QHBoxLayout(length_widget)
-                length_layout.setContentsMargins(0, 0, 0, 0)
-                
-                # Spinner wheel (QSpinBox)
-                self.length_spinner = QSpinBox()
-                self.length_spinner.setRange(1, 120)  # 1 to 120 inches
-                self.length_spinner.setValue(product['base_length'])  # Use base length from product
-                self.length_spinner.setSuffix('"')  # Add inch symbol
-                self.length_spinner.setFixedWidth(100)
-                self.length_spinner.valueChanged.connect(self._on_length_changed)
-                
-                # Text input (QLineEdit)
-                self.length_input = QLineEdit()
-                self.length_input.setPlaceholderText("Enter length (inches)")
-                self.length_input.setFixedWidth(100)
-                self.length_input.setValidator(QIntValidator(1, 120))  # Only allow integers between 1 and 120
-                self.length_input.textChanged.connect(self._on_length_text_changed)
-                
-                length_layout.addWidget(self.length_spinner)
-                length_layout.addWidget(self.length_input)
-                length_layout.addStretch()
-                
-                form_layout.addRow("Probe Length:", length_widget)
-                self.option_widgets["Probe Length"] = length_widget
+            logger.debug(f"Grouped options by category: {list(grouped_options.keys())}")
             
-            # Dynamically build the rest of the options from the database
-            self._build_dynamic_options(grouped_options, form_layout)
+            # Core options (Voltage, Material, Length)
+            try:
+                self._setup_core_options(form_layout, product, grouped_options)
+            except Exception as e:
+                logger.error(f"Error setting up core options: {e}", exc_info=True)
+                raise
             
-            # Connection options (still handled with specific logic for visibility)
-            self._setup_connection_options(form_layout, grouped_options.get("Connection", []))
-
+            # Connection options
+            try:
+                connection_options = self.product_service.get_connection_options(self.db, product['id'])
+                logger.debug(f"Found {len(connection_options)} connection options")
+                self._setup_connection_options(form_layout, connection_options)
+            except Exception as e:
+                logger.error(f"Error setting up connection options: {e}", exc_info=True)
+                raise
+            
+            # Additional options (checkboxes)
+            try:
+                additional_options = grouped_options.get("additional", [])
+                logger.debug(f"Found {len(additional_options)} additional options")
+                self._setup_additional_options(form_layout, additional_options)
+            except Exception as e:
+                logger.error(f"Error setting up additional options: {e}", exc_info=True)
+                raise
+            
             # Add the form layout to the main config layout
             self.config_layout.addLayout(form_layout)
             
-            # Add some spacing
-            self.config_layout.addSpacing(20)
-            
-            # Quantity
-            qty_label = QLabel("<b>Quantity</b>")
-            self.config_layout.addWidget(qty_label)
-            self.qty_spin = QSpinBox()
-            self.qty_spin.setMinimum(1)
-            self.qty_spin.setValue(1)
-            self.qty_spin.valueChanged.connect(self._on_quantity_changed)
-            self.config_layout.addWidget(self.qty_spin)
-            
-            # Total price
-            self.total_price_label = QLabel()
-            self.total_price_label.setStyleSheet("font-size: 20px; font-weight: bold; margin-top: 10px;")
-            self.config_layout.addWidget(self.total_price_label)
+            # Quantity and total section
+            self._setup_quantity_and_total()
             
             # Add to Quote button
-            btn_text = "Update Item" if self.is_edit_mode else "+ Add to Quote"
-            self.add_btn = QPushButton(btn_text)
-            self.add_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold; padding: 10px 24px; border-radius: 6px; font-size: 16px;")
-            self.add_btn.clicked.connect(self._on_add_to_quote)
-            self.config_layout.addWidget(self.add_btn)
+            self._setup_add_button()
             
-            # Set initial options directly after creating widgets
-            self._on_voltage_changed(self.option_widgets["Voltage"].currentIndex())
-            if "Material" in self.option_widgets:
-                self._on_material_changed(self.option_widgets["Material"].currentIndex())
-            if "Probe Length" in self.option_widgets:
-                self._on_length_changed(self.length_spinner.value())
-
-            if self.is_edit_mode:
-                self._apply_edited_product_options()
+            # Initialize with default values
+            self._initialize_option_values()
             
+            # Update the total price
             self._update_total_price()
+            
             logger.debug("Product configuration UI setup completed")
         except Exception as e:
             logger.error(f"Error setting up product configuration: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to load product configuration options: {str(e)}")
 
-    def _build_dynamic_options(self, grouped_options: dict, layout: QFormLayout):
-        """Builds UI controls for dynamic options fetched from the database."""
+    def _setup_core_options(self, form_layout: QFormLayout, product: dict, grouped_options: dict):
+        """Set up the core product options (Voltage, Material, Length)."""
+        # Voltage options
+        voltage_combo = QComboBox()
+        voltage_combo.setMinimumWidth(200)
+        voltage_options = self.product_service.get_voltage_options(self.db, product['id'])
+        for v_opt in voltage_options:
+            voltage_combo.addItem(v_opt['voltage'], userData=v_opt)
+        voltage_combo.currentIndexChanged.connect(self._on_voltage_changed)
+        form_layout.addRow("Voltage:", voltage_combo)
+        self.option_widgets["Voltage"] = voltage_combo
         
-        # Define the order of categories
-        category_order = ["O-ring Material", "Exotic Metal", "Connection", "additional"]
-        
-        for category in category_order:
-            if category in grouped_options:
-                opts = grouped_options[category]
-                
-                if not opts:
-                    continue
+        # Material options (if applicable)
+        if not product['name'] in ["LS7500", "LS8500"]:
+            material_combo = QComboBox()
+            material_combo.setMinimumWidth(200)
+            material_options = self.product_service.get_material_options(self.db, product['id'])
+            for m_opt in material_options:
+                material_combo.addItem(m_opt['display_name'], userData=m_opt)
+            material_combo.currentIndexChanged.connect(self._on_material_changed)
+            form_layout.addRow("Material:", material_combo)
+            self.option_widgets["Material"] = material_combo
+            
+            # Probe Length
+            length_widget = QWidget()
+            length_layout = QHBoxLayout(length_widget)
+            length_layout.setContentsMargins(0, 0, 0, 0)
+            length_layout.setSpacing(10)
+            
+            self.length_spinner = QSpinBox()
+            self.length_spinner.setRange(1, 120)
+            self.length_spinner.setValue(product['base_length'])
+            self.length_spinner.setSuffix('"')
+            self.length_spinner.setFixedWidth(100)
+            self.length_spinner.valueChanged.connect(self._on_length_changed)
+            
+            self.length_input = QLineEdit()
+            self.length_input.setPlaceholderText("Enter length (inches)")
+            self.length_input.setFixedWidth(100)
+            self.length_input.setValidator(QIntValidator(1, 120))
+            self.length_input.textChanged.connect(self._on_length_text_changed)
+            
+            length_layout.addWidget(self.length_spinner)
+            length_layout.addWidget(self.length_input)
+            length_layout.addStretch()
+            
+            form_layout.addRow("Probe Length:", length_widget)
+            self.option_widgets["Probe Length"] = length_widget
 
-                # Skip connection as it's handled separately
-                if category == "Connection":
-                    continue
-
-                category_label = QLabel(f"<b>{category}</b>")
-                layout.addRow(category_label)
-                
-                # Special handling for "additional" category to be checkboxes
-                if category == "additional":
-                    for opt in opts:
-                        checkbox = QCheckBox(f"{opt.name} - Add ${opt.price:.2f}")
-                        checkbox.stateChanged.connect(lambda state, o=opt: self._on_option_selected(o.name, state == Qt.Checked))
-                        layout.addRow("", checkbox)
-                        self.option_widgets[opt.name] = checkbox
-                    continue
-
-                # For other categories, assume a single selection via ComboBox
-                combo = QComboBox()
-                # Extract all unique choices from the options in this category
-                all_choices = []
-                for opt in opts:
-                    all_choices.extend(opt.choices)
-                
-                # Add "None" option if not a required field (optional)
-                # For now, we add it to all for simplicity
-                combo.addItem("None", userData=None)
-                
-                # Use a set to get unique choices
-                for choice in sorted(list(set(all_choices))):
-                    # Find the option associated with this choice to get data
-                    choice_opt = next((o for o in opts if choice in o.choices), None)
-                    if choice_opt:
-                        display_text = choice
-                        if choice_opt.price > 0:
-                            display_text += f" (+${choice_opt.price:.2f})"
-                        elif "Consult Factory" in choice_opt.description:
-                            display_text += " (Consult Factory)"
-                            
-                        combo.addItem(display_text, userData=choice_opt)
-
-                combo.currentTextChanged.connect(
-                    lambda text, cat=category: self._on_dynamic_option_selected(cat, text)
-                )
-                layout.addRow(f"{category}:", combo)
-                self.option_widgets[category] = combo
-
-    def _setup_connection_options(self, form_layout: QFormLayout, connection_options: list):
-        """Sets up the connection option dropdowns and visibility logic."""
-        if not connection_options:
+    def _setup_additional_options(self, form_layout: QFormLayout, options: list):
+        """Set up additional options as checkboxes."""
+        if not options:
             return
+            
+        form_layout.addRow("", QLabel("<b>Additional Options</b>"))
+        for opt in options:
+            checkbox = QCheckBox(f"{opt.name} - Add ${opt.price:.2f}")
+            checkbox.stateChanged.connect(
+                lambda state, o=opt: self._on_option_selected(o.name, state == Qt.Checked)
+            )
+            form_layout.addRow("", checkbox)
+            self.option_widgets[opt.name] = checkbox
 
-        connection_types = sorted(list(set(opt.type for opt in connection_options)))
-        if "NPT" in connection_types:
-            connection_types.remove("NPT")
-            connection_types.insert(0, "NPT")
+    def _setup_quantity_and_total(self):
+        """Set up the quantity selector and total price display."""
+        # Quantity section
+        qty_widget = QWidget()
+        qty_layout = QHBoxLayout(qty_widget)
+        qty_layout.setContentsMargins(0, 0, 0, 0)
         
-        connection_combo = QComboBox()
-        connection_combo.addItems(connection_types)
-        connection_combo.currentTextChanged.connect(self._on_connection_type_changed)
-        form_layout.addRow("Connection:", connection_combo)
-        self.option_widgets["Connection"] = connection_combo
+        qty_label = QLabel("<b>Quantity</b>")
+        self.qty_spin = QSpinBox()
+        self.qty_spin.setMinimum(1)
+        self.qty_spin.setValue(1)
+        self.qty_spin.setFixedWidth(100)
+        self.qty_spin.valueChanged.connect(self._on_quantity_changed)
         
-        # Containers for different connection types
-        self.connection_containers = {}
-
-        # NPT Container
-        self.npt_container = QWidget()
-        npt_layout = QFormLayout()
-        npt_layout.setContentsMargins(0,0,0,0)
-        npt_size_combo = QComboBox()
-        npt_sizes = sorted(list(set(opt.size for opt in connection_options if opt.type == "NPT")))
-        npt_size_combo.addItems(npt_sizes)
-        npt_size_combo.currentTextChanged.connect(lambda text: self.config_service.select_option("NPT Size", text))
-        npt_layout.addRow("NPT Size:", npt_size_combo)
-        self.npt_container.setLayout(npt_layout)
-        form_layout.addRow(self.npt_container)
-        self.connection_containers["NPT"] = self.npt_container
-
-        # Flange Container
-        self.flange_container = QWidget()
-        flange_layout = QFormLayout()
-        flange_layout.setContentsMargins(0,0,0,0)
-        flange_rating_combo = QComboBox()
-        flange_ratings = sorted(list(set(opt.rating for opt in connection_options if opt.type == "Flange")))
-        flange_rating_combo.addItems(flange_ratings)
-        flange_rating_combo.currentTextChanged.connect(lambda text: self.config_service.select_option("Flange Rating", text))
-        flange_layout.addRow("Flange Rating:", flange_rating_combo)
-        flange_size_combo = QComboBox()
-        flange_sizes = sorted(list(set(opt.size for opt in connection_options if opt.type == "Flange")))
-        flange_size_combo.addItems(flange_sizes)
-        flange_size_combo.currentTextChanged.connect(lambda text: self.config_service.select_option("Flange Size", text))
-        flange_layout.addRow("Flange Size:", flange_size_combo)
-        self.flange_container.setLayout(flange_layout)
-        form_layout.addRow(self.flange_container)
-        self.connection_containers["Flange"] = self.flange_container
+        qty_layout.addWidget(qty_label)
+        qty_layout.addWidget(self.qty_spin)
+        qty_layout.addStretch()
         
-        # Tri-Clamp Container
-        self.triclamp_container = QWidget()
-        triclamp_layout = QFormLayout()
-        triclamp_layout.setContentsMargins(0,0,0,0)
-        triclamp_size_combo = QComboBox()
-        triclamp_sizes = sorted(list(set(opt.size for opt in connection_options if opt.type == "Tri-Clamp")))
-        triclamp_size_combo.addItems(triclamp_sizes)
-        triclamp_size_combo.currentTextChanged.connect(lambda text: self.config_service.select_option("Tri-Clamp Size", text))
-        triclamp_layout.addRow("Tri-Clamp Size:", triclamp_size_combo)
-        self.triclamp_container.setLayout(triclamp_layout)
-        form_layout.addRow(self.triclamp_container)
-        self.connection_containers["Tri-Clamp"] = self.triclamp_container
+        self.config_layout.addWidget(qty_widget)
+        
+        # Total price
+        self.total_price_label = QLabel()
+        self.total_price_label.setStyleSheet("font-size: 20px; font-weight: bold; margin: 20px 0;")
+        self.config_layout.addWidget(self.total_price_label)
 
-        # Set initial visibility
-        self._on_connection_type_changed(connection_combo.currentText())
+    def _setup_add_button(self):
+        """Set up the Add to Quote button."""
+        btn_text = "Update Item" if self.is_edit_mode else "+ Add to Quote"
+        self.add_btn = QPushButton(btn_text)
+        self.add_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1976d2;
+                color: white;
+                font-weight: bold;
+                padding: 10px 24px;
+                border-radius: 6px;
+                font-size: 16px;
+                min-width: 200px;
+            }
+            QPushButton:hover {
+                background-color: #1565c0;
+            }
+        """)
+        self.add_btn.clicked.connect(self._on_add_to_quote)
+        self.config_layout.addWidget(self.add_btn, alignment=Qt.AlignCenter)
 
-    def _on_connection_type_changed(self, connection_type):
-        """Shows and hides the relevant container for the selected connection type."""
-        self.config_service.select_option("Connection", connection_type)
-        for type, container in self.connection_containers.items():
-            container.setVisible(type == connection_type)
-        self._update_total_price()
+    def _initialize_option_values(self):
+        """Initialize all option values with their defaults."""
+        if "Voltage" in self.option_widgets:
+            self._on_voltage_changed(self.option_widgets["Voltage"].currentIndex())
+        if "Material" in self.option_widgets:
+            self._on_material_changed(self.option_widgets["Material"].currentIndex())
+        if "Probe Length" in self.option_widgets:
+            self._on_length_changed(self.length_spinner.value())
+            
+        if self.is_edit_mode:
+            self._apply_edited_product_options()
 
-    def _on_dynamic_option_selected(self, category, text):
-        """Handles selection from a dynamically generated ComboBox."""
-        combo = self.option_widgets.get(category)
-        if combo:
-            user_data = combo.currentData()
-            value = user_data.name if user_data else "None"
-            self.config_service.select_option(category, value)
-            self._update_total_price()
+    def _update_total_price(self):
+        """Update the total price display."""
+        try:
+            total = self.config_service.calculate_price() * self.quantity
+            self.total_price_label.setText(f"Total: ${total:,.2f}")
+        except Exception as e:
+            logger.error(f"Error calculating total price: {e}", exc_info=True)
+            self.total_price_label.setText("Error calculating price")
 
     def _on_quantity_changed(self, value):
         self.quantity = value
@@ -464,20 +420,21 @@ class ProductSelectionDialog(QDialog):
 
     def _on_voltage_changed(self, index):
         combo = self.sender()
-        option_data = combo.itemData(index)
-        self.config_service.select_option("Voltage", option_data['voltage'])
-        self._update_total_price()
+        if isinstance(combo, QComboBox):
+            option_data = combo.itemData(index)
+            self.config_service.select_option("Voltage", option_data['voltage'])
+            self._update_total_price()
+        else:
+            logger.error(f"_on_voltage_changed called from non-QComboBox sender: {type(combo)}")
 
     def _on_material_changed(self, index):
         combo = self.sender()
-        option_data = combo.itemData(index)
-        self.config_service.select_option("Material", option_data['material_code'])
-        self._update_total_price()
-
-    def _on_material_selected(self, text):
-        # This function seems to be intended for a different type of control
-        # The logic is now handled by _on_material_changed
-        pass
+        if isinstance(combo, QComboBox):
+            option_data = combo.itemData(index)
+            self.config_service.select_option("Material", option_data['material_code'])
+            self._update_total_price()
+        else:
+            logger.error(f"_on_material_changed called from non-QComboBox sender: {type(combo)}")
 
     def _on_length_changed(self, value):
         # Update the text input to match the spinner
@@ -513,42 +470,42 @@ class ProductSelectionDialog(QDialog):
         self._update_total_price()
     
     def _clear_config_panel(self):
-        # Clear previous configuration widgets
-        for i in reversed(range(self.config_layout.count())): 
-            widget = self.config_layout.itemAt(i).widget()
-            if widget is not None:
-                widget.deleteLater()
-            else:
-                layout = self.config_layout.itemAt(i).layout()
-                if layout is not None:
-                    # This is a bit more complex, for now we just clear widgets
-                    # A better way is to have a dedicated container widget to clear
-                    pass
+        """Clear all widgets and layouts from the configuration panel."""
+        def clear_layout_recursively(layout):
+            """Recursively clear a layout and all its nested layouts."""
+            if layout is None:
+                return
+                
+            # Process all items in the layout
+            while layout.count():
+                child = layout.takeAt(0)
+                
+                if child.widget():
+                    # If it's a widget, delete it
+                    child.widget().deleteLater()
+                elif child.layout():
+                    # If it's a nested layout, clear it recursively first
+                    clear_layout_recursively(child.layout())
+                    # Then delete the layout itself
+                    child.layout().deleteLater()
         
-        # A more robust way to clear the layout
-        while self.config_layout.count():
-            child = self.config_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-            elif child.layout():
-                # If we have nested layouts, we might need to clear them recursively
-                # For this dialog, it's probably okay for now.
-                pass
-
-    def _update_total_price(self):
-        """
-        Recalculates the total price by calling the configuration service
-        and updates the UI label.
-        """
-        if not self.config_service.current_config:
-            self.total_price_label.setText("Total Price: $0.00")
-            return
-            
-        # The service is now responsible for calculation
-        final_price = self.config_service.calculate_price()
-        quantity = self.qty_spin.value()
+        # Clear the main config layout
+        clear_layout_recursively(self.config_layout)
         
-        self.total_price_label.setText(f"Total Price: ${final_price * quantity:.2f}")
+        # Reset the option widgets dictionary
+        self.option_widgets = {}
+        
+        # Reset any instance variables that might hold references to widgets
+        if hasattr(self, 'length_spinner'):
+            self.length_spinner = None
+        if hasattr(self, 'length_input'):
+            self.length_input = None
+        if hasattr(self, 'qty_spin'):
+            self.qty_spin = None
+        if hasattr(self, 'total_price_label'):
+            self.total_price_label = None
+        if hasattr(self, 'add_btn'):
+            self.add_btn = None
 
     def _on_add_to_quote(self):
         if not self.config_service.current_config:
@@ -617,4 +574,32 @@ class ProductSelectionDialog(QDialog):
             "quantity": quantity,
             "total_price": config.final_price * quantity,
             "description": self.config_service.get_final_description(),
-        } 
+        }
+
+    def _setup_connection_options(self, form_layout: QFormLayout, options: list):
+        """Set up connection options (Flange, Tri-Clamp, etc.)."""
+        if not options:
+            return
+            
+        # Connection type selection
+        connection_combo = QComboBox()
+        connection_combo.setMinimumWidth(200)
+        
+        # Add default "None" option
+        connection_combo.addItem("None", userData={"type": None, "price": 0})
+        
+        # Add connection options
+        for opt in options:
+            display_text = f"{opt['type']}"
+            if opt.get('rating'):
+                display_text += f" {opt['rating']}"
+            display_text += f" {opt['size']}"
+            if opt.get('price', 0) > 0:
+                display_text += f" (+${opt['price']:.2f})"
+            connection_combo.addItem(display_text, userData=opt)
+            
+        connection_combo.currentIndexChanged.connect(
+            lambda idx: self._on_connection_selected(connection_combo.itemData(idx))
+        )
+        form_layout.addRow("Connection:", connection_combo)
+        self.option_widgets["Connection"] = connection_combo 
