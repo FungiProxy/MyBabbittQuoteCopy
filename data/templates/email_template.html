@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Quote from {{company_name}}</title>
+    <style>
+        /* Responsive and email-safe styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+        }
+        .header {
+            background-color: #002347; /* Professional Blue */
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+            color: #333333;
+        }
+        .content h2 {
+            font-size: 20px;
+            color: #002347;
+            margin-top: 0;
+        }
+        .quote-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #002347;
+        }
+        .quote-summary p {
+            margin: 5px 0;
+        }
+        .quote-summary strong {
+            color: #002347;
+        }
+        .attachment-info {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border: 1px dashed #b3d7ff;
+            text-align: center;
+        }
+        .contact-info {
+            margin-top: 30px;
+        }
+        .footer {
+            background-color: #f2f2f2;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+        }
+        .footer a {
+            color: #002347;
+            text-decoration: none;
+        }
+
+        /* Mobile specific styles */
+        @media screen and (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td style="padding: 20px 0;">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" class="email-container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0;">
+                    <!-- Header -->
+                    <tr>
+                        <td class="header" style="background-color: #002347; color: #ffffff; padding: 20px; text-align: center;">
+                            <h1 style="margin: 0; font-size: 24px;">{{company_name}}</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td class="content" style="padding: 30px; line-height: 1.6; color: #333333;">
+                            <h2 style="font-size: 20px; color: #002347; margin-top: 0;">Your Quotation is Ready</h2>
+                            <p>Dear {{customer_name}},</p>
+                            <p>Thank you for your interest in our products. Please find the summary of your quotation below.</p>
+                            
+                            <!-- Quote Summary -->
+                            <div class="quote-summary" style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #002347;">
+                                <p style="margin: 5px 0;"><strong>Quote Number:</strong> {{quote_number}}</p>
+                                <p style="margin: 5px 0;"><strong>Quote Date:</strong> {{quote_date}}</p>
+                                <p style="margin: 5px 0;"><strong>Total Amount:</strong> {{total_price}}</p>
+                            </div>
+
+                            <!-- Attachment Information -->
+                            <div class="attachment-info" style="margin-top: 30px; padding: 15px; background-color: #e7f3ff; border: 1px dashed #b3d7ff; text-align: center;">
+                                <p>A detailed PDF copy of your quote is attached to this email. Please review it for a complete breakdown of items and pricing.</p>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="contact-info" style="margin-top: 30px;">
+                                <p>If you have any questions or would like to proceed with this quote, please don't hesitate to contact us.</p>
+                                <p>
+                                    Sincerely,<br>
+                                    The Team at {{company_name}}<br>
+                                    {{company_phone}}<br>
+                                    {{company_email}}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer" style="background-color: #f2f2f2; padding: 20px; text-align: center; font-size: 12px; color: #666666;">
+                            <p>This is an automated email. Prices are valid until {{expiration_date}}.</p>
+                            <p>
+                                {{company_name}} | {{company_address}} | <a href="http://{{company_website}}" style="color: #002347; text-decoration: none;">{{company_website}}</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

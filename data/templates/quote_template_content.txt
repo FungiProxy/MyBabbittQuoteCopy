@@ -1,0 +1,133 @@
+# QUOTE TEMPLATE CONTENT FOR MICROSOFT WORD
+# Copy this content into Word and apply the formatting from word_template_structure.md
+
+[COMPANY LOGO PLACEHOLDER - Insert your logo here]
+
+{{company_name}}
+{{company_tagline}}
+
+{{company_address}}
+Phone: {{company_phone}} | Email: {{company_email}}
+Website: {{company_website}}
+
+================================================================================
+
+QUOTATION
+
+Quote #: {{quote_number}}
+Date: {{quote_date}}
+Valid Until: {{expiration_date}}
+
+================================================================================
+
+BILL TO:                                    SHIP TO:
+{{customer_name}}                           {{shipping_name}}
+{{customer_company}}                        {{shipping_company}}
+{{customer_address}}                        {{shipping_address}}
+{{customer_city}}, {{customer_state}} {{customer_zip}}    {{shipping_city}}, {{shipping_state}} {{shipping_zip}}
+
+Contact: {{customer_contact_name}}          Delivery Notes: {{delivery_instructions}}
+Phone: {{customer_phone}}
+Email: {{customer_email}}
+
+================================================================================
+
+Project: {{project_name}}
+Reference: {{customer_reference}}
+Sales Representative: {{sales_rep_name}}
+Payment Terms: {{payment_terms}}
+Delivery Terms: {{delivery_terms}}
+
+================================================================================
+
+LINE ITEMS TABLE:
+Item | Product Description | Qty | Unit Price | Total
+-----|-------------------|-----|------------|-------
+1    | {{product_1_name}}                    | {{qty_1}} | {{unit_price_1}} | {{line_total_1}}
+     | {{product_1_description}}            |           |                  |
+     | Model: {{product_1_model}}           |           |                  |
+     | Specifications: {{product_1_specs}}  |           |                  |
+     | Options: {{product_1_options}}       |           |                  |
+-----|-------------------|-----|------------|-------
+2    | {{product_2_name}}                    | {{qty_2}} | {{unit_price_2}} | {{line_total_2}}
+     | {{product_2_description}}            |           |                  |
+     | Model: {{product_2_model}}           |           |                  |
+-----|-------------------|-----|------------|-------
+
+{{line_items_table}}
+
+================================================================================
+
+                                           Subtotal:    {{subtotal}}
+                                           Tax ({{tax_rate}}%):     {{tax_amount}}
+                                           Shipping:    {{shipping_cost}}
+                                           Discount:    {{discount_amount}}
+                                           ────────────────────────────
+                                           TOTAL:       {{total_price}}
+
+================================================================================
+
+Notes:
+{{quote_notes}}
+
+Special Instructions:
+{{special_instructions}}
+
+Delivery Information:
+Expected delivery: {{expected_delivery_date}}
+Shipping method: {{shipping_method}}
+
+================================================================================
+
+TERMS AND CONDITIONS
+
+Payment Terms:
+• Payment is due within {{payment_terms}} days of invoice date
+• {{payment_method}} payments accepted
+• Late payments subject to 1.5% monthly service charge
+
+Delivery Terms:
+• All prices are FOB shipping point unless otherwise specified
+• Delivery dates are estimates and not guaranteed
+• Customer is responsible for inspection upon delivery
+
+Warranty:
+• Products are covered by manufacturer's standard warranty
+• Warranty period: {{warranty_period}}
+• Warranty does not cover misuse, abuse, or normal wear
+
+General Terms:
+• Prices are valid for {{quote_validity_period}} days from quote date
+• Prices subject to change without notice after expiration
+• This quote is not an order confirmation
+• Acceptance of this quote constitutes agreement to these terms
+• Applicable taxes will be added to final invoice
+
+Cancellation Policy:
+• Orders may be cancelled within 24 hours of placement
+• Custom or special order items are non-cancellable
+• Cancellation fees may apply for orders in production
+
+Returns:
+• Returns require prior authorization
+• Restocking fee: {{restocking_fee}}% applies to standard items
+• Custom items are non-returnable
+
+================================================================================
+
+FOOTER (appears on every page):
+{{company_name}} | {{company_address}} | {{company_phone}} | {{company_email}}
+Page {{page_number}} of {{total_pages}}
+
+This document contains confidential and proprietary information.
+
+================================================================================
+
+FORMATTING INSTRUCTIONS:
+1. Apply color scheme: #002347 for headers, #666666 for secondary text
+2. Use Arial font throughout
+3. Create proper tables for customer info and line items
+4. Apply borders and shading as specified in word_template_structure.md
+5. Set up headers and footers
+6. Add company logo at the top
+7. Save as quote_template.docx 
