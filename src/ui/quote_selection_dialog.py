@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
     QListWidget, QListWidgetItem, QFrame, QMessageBox, QFileDialog
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from src.core.services.quote_service import QuoteService
 from src.core.services.export_service import QuoteExportService
 from src.core.database import SessionLocal
@@ -17,6 +17,8 @@ class QuoteSelectionDialog(QDialog):
     """
     A dialog that lists existing quotes and allows the user to select one.
     """
+    quote_deleted = Signal()
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Load Quote")
@@ -37,12 +39,25 @@ class QuoteSelectionDialog(QDialog):
         self.load_btn.clicked.connect(self.accept)
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.clicked.connect(self.reject)
+        
+        self.delete_btn = QPushButton("Delete")
+        self.delete_btn.clicked.connect(self.delete_quote)
+        self.delete_btn.setEnabled(False) # Disabled by default
+        
         button_layout.addStretch()
+        button_layout.addWidget(self.delete_btn)
         button_layout.addWidget(self.load_btn)
         button_layout.addWidget(self.cancel_btn)
         main_layout.addLayout(button_layout)
+        
+        self.quote_list.itemSelectionChanged.connect(self.on_selection_changed)
+
+    def on_selection_changed(self):
+        """Enable/disable delete button based on selection."""
+        self.delete_btn.setEnabled(len(self.quote_list.selectedItems()) > 0)
 
     def populate_quotes(self):
+        self.quote_list.clear()
         db = SessionLocal()
         try:
             # This method will be re-added in the next step
@@ -61,6 +76,39 @@ class QuoteSelectionDialog(QDialog):
             QMessageBox.critical(self, "Error", "Could not load quotes from the database.")
         finally:
             db.close()
+
+    def delete_quote(self):
+        selected_items = self.quote_list.selectedItems()
+        if not selected_items:
+            return
+
+        quote_id = selected_items[0].data(Qt.UserRole)
+        item_text = selected_items[0].text()
+
+        reply = QMessageBox.question(
+            self,
+            "Delete Quote",
+            f"Are you sure you want to delete this quote?\n\n{item_text}\n\nThis action cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            db = SessionLocal()
+            try:
+                success = QuoteService.delete_quote(db, quote_id)
+                if success:
+                    QMessageBox.information(self, "Success", "Quote deleted successfully.")
+                    self.quote_deleted.emit()
+                    # Refresh the list
+                    self.populate_quotes()
+                else:
+                    QMessageBox.warning(self, "Error", "Could not find the quote to delete.")
+            except Exception as e:
+                logger.error(f"Error deleting quote: {e}", exc_info=True)
+                QMessageBox.critical(self, "Error", f"An error occurred while deleting the quote: {e}")
+            finally:
+                db.close()
 
     def export_quote(self):
         selected_items = self.quote_list.selectedItems()

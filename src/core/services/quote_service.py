@@ -229,6 +229,25 @@ class QuoteService:
         return quote 
 
     @staticmethod
+    def delete_quote(db: Session, quote_id: int) -> bool:
+        """
+        Deletes a quote from the database.
+
+        Args:
+            db: The database session.
+            quote_id: The ID of the quote to delete.
+
+        Returns:
+            True if the quote was deleted, False otherwise.
+        """
+        quote = db.query(Quote).filter(Quote.id == quote_id).first()
+        if quote:
+            db.delete(quote)
+            db.commit()
+            return True
+        return False
+
+    @staticmethod
     def get_dashboard_statistics(db: Session) -> Dict[str, Any]:
         """
         Get statistics for the dashboard overview.

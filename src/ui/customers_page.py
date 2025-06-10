@@ -60,24 +60,6 @@ class CustomersPage(QWidget):
         # Customers list section
         customers_card = QFrame()
         customers_card.setObjectName("customersCard")
-        customers_card.setStyleSheet("""
-            QFrame#customersCard { 
-                background: white; 
-                border-radius: 6px; 
-                border: 1px solid #e0e0e0; 
-            }
-            QListWidget { 
-                border: none; 
-                font-size: 13px; 
-            }
-            QListWidget::item { 
-                border-bottom: 1px solid #eee; 
-                padding: 10px;
-            }
-            QListWidget::item:hover {
-                background-color: #f5f5f5;
-            }
-        """)
         
         customers_layout = QVBoxLayout(customers_card)
         customers_layout.setContentsMargins(12, 12, 12, 12)

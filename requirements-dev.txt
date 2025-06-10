@@ -1,0 +1,18 @@
+# Development and Testing Tools
+
+# To install all development dependencies, run:
+# pip install -r requirements-dev.txt
+
+# Core runtime dependencies
+-r requirements.txt
+
+# Testing
+pytest>=7.3.1
+
+# Code Quality & Formatting
+black>=23.1.0
+pylint>=2.16.0
+
+# Optional Utilities
+tqdm>=4.64.1  # For progress bars in scripts
+pyinstaller>=5.8.0  # For building a standalone executable 
