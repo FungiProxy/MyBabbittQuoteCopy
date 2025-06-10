@@ -19,6 +19,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Slot, QTimer, QSize
 from PySide6.QtGui import QIcon # Added for icons
 from src.ui.quote_creation import QuoteCreationPage
+from src.ui.customers_page import CustomersPage
+from src.core.services.export_service import QuoteExportService
+from src.core.database import SessionLocal
+from src.core.services.quote_service import QuoteService
 
 # Remove old tab imports if they are not immediately used as stacked widgets
 # from src.ui.product_tab import ProductTab
@@ -36,7 +40,7 @@ class MainWindow(QMainWindow):
         """Initialize the main window and set up the UI components."""
         super().__init__()
         self.setWindowTitle("Babbitt") # Changed window title
-        self.resize(1200, 800) # Adjusted initial size
+        self.resize(1300, 700) # Adjusted for 1366x768 display with window decorations
         
         print("MainWindow.__init__() called")
         
@@ -88,7 +92,8 @@ class MainWindow(QMainWindow):
         
         nav_items = [
             ("Dashboard", "dashboard_icon.png"), # Placeholder icon names
-            ("Quote Creation", "quote_icon.png")
+            ("Quote Creation", "quote_icon.png"),
+            ("Customers", "customers_icon.png")
         ]
 
         for item_text, icon_path in nav_items:
@@ -130,6 +135,8 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.dashboard_page)
         self.quote_creation_page = QuoteCreationPage()
         self.stacked_widget.addWidget(self.quote_creation_page)
+        self.customers_page = CustomersPage()
+        self.stacked_widget.addWidget(self.customers_page)
         self.settings_page = QLabel("Settings Content (Placeholder)") # For settings button
         self.settings_page.setAlignment(Qt.AlignCenter)
         self.stacked_widget.addWidget(self.settings_page)
@@ -166,9 +173,8 @@ class MainWindow(QMainWindow):
         # New Quote Button
         self.new_quote_button_header = QPushButton("+ New Quote")
         self.new_quote_button_header.setObjectName("newQuoteButtonHeader")
-        # self.new_quote_button_header.setStyleSheet("background-color: #007bff; color: white; padding: 8px 15px; border-radius: 5px; margin-left: 15px;")
         header_layout.addWidget(self.new_quote_button_header)
-        
+
     def _show_dashboard_content(self):
         """Populates the dashboard_page with content resembling the image."""
         self.current_view_title.setText("Dashboard")
@@ -194,92 +200,121 @@ class MainWindow(QMainWindow):
         dashboard_tabs_layout.addStretch()
         dashboard_layout.addLayout(dashboard_tabs_layout)
 
-        # Stats cards section
-        stats_layout = QHBoxLayout()
-        stats_layout.setSpacing(20)
-        
-        # Card 1: Total Quotes
-        card1 = self._create_stat_card("Total Quotes", "127", "+5.2% from last month", "📄")
-        # Card 2: Quote Value
-        card2 = self._create_stat_card("Quote Value", "$45,231.89", "+20.1% from last month", "$")
-        # Card 3: Customers
-        card3 = self._create_stat_card("Customers", "42", "+10.5% from last month", "👥")
-        # Card 4: Products
-        card4 = self._create_stat_card("Products", "89", "+3 new products added", "📦")
-        
-        stats_layout.addWidget(card1)
-        stats_layout.addWidget(card2)
-        stats_layout.addWidget(card3)
-        stats_layout.addWidget(card4)
-        dashboard_layout.addLayout(stats_layout)
+        # Get dashboard statistics
+        db = SessionLocal()
+        try:
+            stats = QuoteService.get_dashboard_statistics(db)
+            
+            # Stats cards section
+            stats_layout = QHBoxLayout()
+            stats_layout.setSpacing(20)
+            
+            # Card 1: Total Quotes
+            card1 = self._create_stat_card(
+                "Total Quotes", 
+                str(stats["total_quotes"]), 
+                f"{stats['quote_change']:+}% from last month", 
+                "📄"
+            )
+            
+            # Card 2: Quote Value
+            card2 = self._create_stat_card(
+                "Quote Value", 
+                f"${stats['total_quote_value']:,.2f}", 
+                f"{stats['value_change']:+}% from last month", 
+                "$"
+            )
+            
+            # Card 3: Customers
+            card3 = self._create_stat_card(
+                "Customers", 
+                str(stats["total_customers"]), 
+                "Total unique customers", 
+                "👥"
+            )
+            
+            # Card 4: Products
+            card4 = self._create_stat_card(
+                "Products", 
+                str(stats["total_products"]), 
+                "Total unique products quoted", 
+                "📦"
+            )
+            
+            stats_layout.addWidget(card1)
+            stats_layout.addWidget(card2)
+            stats_layout.addWidget(card3)
+            stats_layout.addWidget(card4)
+            dashboard_layout.addLayout(stats_layout)
 
-        # Main content section (Recent Quotes | Sales by Product Category)
-        main_dashboard_content_layout = QHBoxLayout()
-        main_dashboard_content_layout.setSpacing(20)
+            # Main content section (Recent Quotes | Sales by Product Category)
+            main_dashboard_content_layout = QHBoxLayout()
+            main_dashboard_content_layout.setSpacing(20)
 
-        # Recent Quotes section
-        recent_quotes_frame = QFrame()
-        recent_quotes_frame.setObjectName("dashboardSectionFrame")
-        recent_quotes_layout = QVBoxLayout(recent_quotes_frame)
-        recent_quotes_title = QLabel("Recent Quotes")
-        recent_quotes_title.setObjectName("sectionTitle")
-        recent_quotes_layout.addWidget(recent_quotes_title)
-        # Add placeholder items for recent quotes
-        for i in range(2): # As per image
-            quote_item_layout = QHBoxLayout()
-            quote_id_customer = QLabel(f"Quote #202310{i+1}\\nAcme Corporation")
-            quote_value_date = QLabel(f"${120.00 + i*1350:.2f}\\n5/13/2025")
-            quote_value_date.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            quote_item_layout.addWidget(quote_id_customer)
-            quote_item_layout.addStretch()
-            quote_item_layout.addWidget(quote_value_date)
-            recent_quotes_layout.addLayout(quote_item_layout)
-            if i < 1: # Add a separator line, not after the last one
-                line = QFrame()
-                line.setFrameShape(QFrame.HLine)
-                line.setFrameShadow(QFrame.Sunken)
-                recent_quotes_layout.addWidget(line)
-        recent_quotes_layout.addStretch()
-        main_dashboard_content_layout.addWidget(recent_quotes_frame, 2) # Takes 2 parts of stretch
+            # Recent Quotes section
+            recent_quotes_frame = QFrame()
+            recent_quotes_frame.setObjectName("dashboardSectionFrame")
+            recent_quotes_layout = QVBoxLayout(recent_quotes_frame)
+            recent_quotes_title = QLabel("Recent Quotes")
+            recent_quotes_title.setObjectName("sectionTitle")
+            recent_quotes_layout.addWidget(recent_quotes_title)
+            
+            # Add recent quotes from database
+            for quote in stats["recent_quotes"]:
+                quote_item_layout = QHBoxLayout()
+                quote_id_customer = QLabel(f"Quote #{quote['quote_number']}\n{quote['customer']}")
+                quote_value_date = QLabel(f"${quote['total']:,.2f}\n{quote['date']}")
+                quote_value_date.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                quote_item_layout.addWidget(quote_id_customer)
+                quote_item_layout.addStretch()
+                quote_item_layout.addWidget(quote_value_date)
+                recent_quotes_layout.addLayout(quote_item_layout)
+                
+                # Add separator line except after last item
+                if quote != stats["recent_quotes"][-1]:
+                    line = QFrame()
+                    line.setFrameShape(QFrame.HLine)
+                    line.setFrameShadow(QFrame.Sunken)
+                    recent_quotes_layout.addWidget(line)
+            
+            recent_quotes_layout.addStretch()
+            main_dashboard_content_layout.addWidget(recent_quotes_frame, 2) # Takes 2 parts of stretch
 
-        # Sales by Product Category section
-        sales_category_frame = QFrame()
-        sales_category_frame.setObjectName("dashboardSectionFrame")
-        sales_category_layout = QVBoxLayout(sales_category_frame)
-        sales_category_title = QLabel("Sales by Product Category")
-        sales_category_title.setObjectName("sectionTitle")
-        sales_category_layout.addWidget(sales_category_title)
-        # Add placeholder items for sales by category
-        categories = [
-            ("Level Switches", "45%"),
-            ("Flow Switches", "30%"),
-            ("Transmitters", "15%"),
-            ("Spare Parts", "10%")
-        ]
-        for cat_name, cat_value in categories:
-            cat_item_layout = QHBoxLayout()
-            # Placeholder for colored dot + Name
-            cat_label = QLabel(f"• {cat_name}") # Simple dot for now
-            cat_percent = QLabel(cat_value)
-            cat_percent.setAlignment(Qt.AlignRight)
-            cat_item_layout.addWidget(cat_label)
-            cat_item_layout.addWidget(cat_percent)
-            sales_category_layout.addLayout(cat_item_layout)
-        sales_category_layout.addStretch()
-        main_dashboard_content_layout.addWidget(sales_category_frame, 1) # Takes 1 part of stretch
-        
-        dashboard_layout.addLayout(main_dashboard_content_layout)
-        dashboard_layout.addStretch() # Pushes content up
+            # Sales by Product Category section
+            sales_category_frame = QFrame()
+            sales_category_frame.setObjectName("dashboardSectionFrame")
+            sales_category_layout = QVBoxLayout(sales_category_frame)
+            sales_category_title = QLabel("Sales by Product Category")
+            sales_category_title.setObjectName("sectionTitle")
+            sales_category_layout.addWidget(sales_category_title)
+            
+            # Add sales by category from database
+            for category in stats["sales_by_category"]:
+                cat_item_layout = QHBoxLayout()
+                cat_label = QLabel(f"• {category['category']}")
+                cat_percent = QLabel(f"{category['percentage']}%")
+                cat_percent.setAlignment(Qt.AlignRight)
+                cat_item_layout.addWidget(cat_label)
+                cat_item_layout.addWidget(cat_percent)
+                sales_category_layout.addLayout(cat_item_layout)
+            
+            sales_category_layout.addStretch()
+            main_dashboard_content_layout.addWidget(sales_category_frame, 1) # Takes 1 part of stretch
+            
+            dashboard_layout.addLayout(main_dashboard_content_layout)
+            dashboard_layout.addStretch() # Pushes content up
 
-        # Footer
-        footer_layout = QHBoxLayout()
-        footer_label_left = QLabel("Babbitt International Inc.")
-        footer_label_right = QLabel("© 2025 All rights reserved")
-        footer_layout.addWidget(footer_label_left)
-        footer_layout.addStretch()
-        footer_layout.addWidget(footer_label_right)
-        dashboard_layout.addLayout(footer_layout)
-
+            # Footer
+            footer_layout = QHBoxLayout()
+            footer_label_left = QLabel("Babbitt International Inc.")
+            footer_label_right = QLabel("© 2025 All rights reserved")
+            footer_layout.addWidget(footer_label_left)
+            footer_layout.addStretch()
+            footer_layout.addWidget(footer_label_right)
+            dashboard_layout.addLayout(footer_layout)
+            
+        finally:
+            db.close()
 
     def _create_stat_card(self, title_text, value_text, sub_text, icon_text=""):
         """Helper function to create a statistics card widget."""
@@ -322,7 +357,7 @@ class MainWindow(QMainWindow):
     def on_nav_item_selected(self, index):
         """Handle sidebar navigation item selection."""
         # Titles correspond to the order in nav_items
-        view_titles = ["Dashboard", "Quote Creation"]
+        view_titles = ["Dashboard", "Quote Creation", "Customers"]
         if 0 <= index < len(view_titles):
             self.current_view_title.setText(view_titles[index])
             self.stacked_widget.setCurrentIndex(index)
@@ -616,3 +651,32 @@ class MainWindow(QMainWindow):
             }
         """)
         print("Styles setup complete.")
+
+    def export_quote(self):
+        """Handles the export of the current quote to a Word document."""
+        try:
+            # Get the current quote details from the quote creation page
+            quote_details = self.quote_creation_page.get_current_quote_details()
+            if not quote_details:
+                QMessageBox.warning(self, "No Quote", "Please create or load a quote first.")
+                return
+
+            customer_name = quote_details['customer']['name'].replace(" ", "_")
+            quote_number = quote_details['quote_number']
+            default_filename = f"Quote_{quote_number}_{customer_name}.docx"
+
+            # For now, we assume a template exists at this path.
+            template_path = "data/templates/quote_template.docx"
+
+            save_path, _ = QFileDialog.getSaveFileName(
+                self, "Save Quote", default_filename, "Word Documents (*.docx)"
+            )
+
+            if save_path:
+                exporter = QuoteExportService(template_path)
+                exporter.generate_word_document(quote_details, save_path)
+                QMessageBox.information(self, "Success", f"Quote successfully exported to {save_path}")
+
+        except Exception as e:
+            logger.error(f"Error exporting quote: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Could not export quote: {e}")

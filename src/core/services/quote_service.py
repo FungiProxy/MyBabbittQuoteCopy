@@ -11,12 +11,15 @@ in Babbitt International's quoting system. It supports:
 Follows domain-driven design and separates business logic from data access.
 """
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
+import uuid
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy import func
 
-from src.core.models import Quote, QuoteItem, QuoteItemOption, ProductVariant, Option
+from src.core.models import Quote, QuoteItem, QuoteItemOption, ProductVariant, Option, Customer, ProductFamily
 from src.core.pricing import calculate_product_price, calculate_option_price
+from src.core.services.customer_service import CustomerService
 from src.utils.db_utils import add_and_commit, get_by_id, generate_quote_number
 
 
@@ -72,124 +75,121 @@ class QuoteService:
         return add_and_commit(db, quote)
     
     @staticmethod
-    def add_product_to_quote(
+    def create_quote_with_items(
         db: Session,
-        quote_id: int,
-        product_id: int,
-        quantity: int = 1,
-        length: Optional[float] = None,
-        material_override: Optional[str] = None,
-        description: Optional[str] = None,
-        discount_percent: float = 0.0
-    ) -> QuoteItem:
+        customer_data: Dict[str, Any],
+        products_data: List[Dict[str, Any]],
+        quote_details: Dict[str, Any]
+    ) -> Quote:
         """
-        Add a product to an existing quote.
-        
-        Args:
-            db: Database session
-            quote_id: ID of the quote
-            product_id: ID of the product variant
-            quantity: Quantity of the product
-            length: Length in inches (if applicable)
-            material_override: Material code to override product's default
-            description: Custom description for the quote item
-            discount_percent: Discount percentage for this line item
-            
-        Returns:
-            Newly created QuoteItem object
-            
-        Raises:
-            ValueError: If quote or product not found
+        Create a full quote including customer, quote items, and options.
         """
-        # Get quote
-        quote = get_by_id(db, Quote, quote_id)
-        if not quote:
-            raise ValueError(f"Quote with ID {quote_id} not found")
+        customer = db.query(Customer).filter(Customer.email == customer_data.get('email')).first()
+        if not customer:
+            customer = CustomerService.create_customer(db, **customer_data)
         
-        # Get product
-        product = get_by_id(db, ProductVariant, product_id)
-        if not product:
-            raise ValueError(f"Product with ID {product_id} not found")
-        
-        # If length is not specified, use product's base length
-        if length is None and hasattr(product, 'base_length'):
-            length = product.base_length
-            
-        # If material is not specified, use product's default material
-        if material_override is None and hasattr(product, 'material'):
-            material_override = product.material
-            
-        # Calculate unit price
-        unit_price = calculate_product_price(
-            db=db, 
-            product_id=product_id, 
-            length=length, 
-            material_override=material_override
+        quote = QuoteService.create_quote(
+            db,
+            customer_id=customer.id,
+            expiration_days=30,
+            notes=quote_details.get("notes")
         )
         
-        # Create quote item
-        quote_item = QuoteItem(
-            quote_id=quote_id,
-            product_id=product_id,
-            quantity=quantity,
-            unit_price=unit_price,
-            length=length,
-            material=material_override,
-            voltage=product.voltage if hasattr(product, 'voltage') else None,
-            description=description or product.description,
-            discount_percent=discount_percent
-        )
+        for product_data in products_data:
+            quote_item = QuoteItem(
+                quote_id=quote.id,
+                product_id=product_data.get("product_id"),
+                quantity=product_data.get("quantity", 1),
+                unit_price=product_data.get("base_price", 0),
+                description=product_data.get("part_number")
+            )
+            db.add(quote_item)
+            db.flush()
+
+            for option_data in product_data.get("options", []):
+                if option_data.get("id"):
+                    db.add(QuoteItemOption(
+                        quote_item_id=quote_item.id,
+                        option_id=option_data["id"],
+                        quantity=1,
+                        price=option_data.get("price", 0)
+                    ))
         
-        return add_and_commit(db, quote_item)
-    
+        db.commit()
+        db.refresh(quote)
+        return quote
+
     @staticmethod
-    def add_option_to_quote_item(
-        db: Session,
-        quote_item_id: int,
-        option_id: int,
-        quantity: int = 1
-    ) -> QuoteItemOption:
+    def get_all_quotes_summary(db: Session) -> List[Dict[str, Any]]:
         """
-        Add an option to a quote line item.
-        
-        Args:
-            db: Database session
-            quote_item_id: ID of the quote item
-            option_id: ID of the option to add
-            quantity: Quantity of the option
-            
-        Returns:
-            Newly created QuoteItemOption
-            
-        Raises:
-            ValueError: If quote item or option not found
+        Retrieves a summary of all quotes.
         """
-        # Get quote item
-        quote_item = get_by_id(db, QuoteItem, quote_item_id)
-        if not quote_item:
-            raise ValueError(f"Quote item with ID {quote_item_id} not found")
+        quotes = db.query(Quote).options(
+            joinedload(Quote.customer),
+            selectinload(Quote.items) # Eager load items to calculate total
+        ).order_by(Quote.date_created.desc()).all()
         
-        # Get option
-        option = get_by_id(db, Option, option_id)
-        if not option:
-            raise ValueError(f"Option with ID {option_id} not found")
-        
-        # Calculate option price based on the quote item's length if needed
-        price = calculate_option_price(
-            option_price=option.price,
-            option_price_type=option.price_type,
-            length=quote_item.length
-        )
-        
-        # Create quote item option
-        quote_item_option = QuoteItemOption(
-            quote_item_id=quote_item_id,
-            option_id=option_id,
-            quantity=quantity,
-            price=price
-        )
-        
-        return add_and_commit(db, quote_item_option)
+        return [
+            {
+                "id": quote.id,
+                "quote_number": quote.quote_number,
+                "customer_name": quote.customer.name,
+                "date_created": quote.date_created.strftime("%Y-%m-%d"),
+                "total": quote.total
+            }
+            for quote in quotes
+        ]
+
+    @staticmethod
+    def get_full_quote_details(db: Session, quote_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves full details for a single quote, formatted for the UI.
+        """
+        quote = db.query(Quote).options(
+            joinedload(Quote.customer),
+            joinedload(Quote.items).joinedload(QuoteItem.product).joinedload(ProductVariant.product_family),
+            joinedload(Quote.items).joinedload(QuoteItem.options).joinedload(QuoteItemOption.option)
+        ).filter(Quote.id == quote_id).first()
+
+        if not quote:
+            return None
+
+        products_data = [
+            {
+                "id": str(uuid.uuid4()),
+                "part_number": item.description,
+                "product_id": item.product.id,
+                "name": item.product.product_family.name,
+                "quantity": item.quantity,
+                "base_price": item.unit_price,
+                "options": [
+                    {
+                        "id": item_opt.option.id,
+                        "name": item_opt.option.category,
+                        "selected": item_opt.option.name,
+                        "price": item_opt.price,
+                        "code": item_opt.option.code
+                    }
+                    for item_opt in item.options
+                ],
+                "description": item.product.product_family.description
+            }
+            for item in quote.items
+        ]
+            
+        return {
+            "quote_number": quote.quote_number,
+            "customer": {
+                "name": quote.customer.name,
+                "company": quote.customer.company,
+                "email": quote.customer.email,
+                "phone": quote.customer.phone,
+            },
+            "products": products_data,
+            "expiration_date": quote.expiration_date,
+            "date_created": quote.date_created,
+            "notes": quote.notes
+        }
     
     @staticmethod
     def update_quote_status(
@@ -227,3 +227,105 @@ class QuoteService:
         db.refresh(quote)
         
         return quote 
+
+    @staticmethod
+    def get_dashboard_statistics(db: Session) -> Dict[str, Any]:
+        """
+        Get statistics for the dashboard overview.
+        
+        Returns:
+            Dict containing:
+            - total_quotes: Total number of quotes
+            - total_quote_value: Total value of all quotes
+            - total_customers: Total number of unique customers
+            - total_products: Total number of unique products quoted
+            - recent_quotes: List of recent quotes with basic info
+            - sales_by_category: Sales breakdown by product category
+        """
+        # Get total quotes
+        total_quotes = db.query(func.count(Quote.id)).scalar()
+        
+        # Get total quote value
+        total_quote_value = db.query(func.sum(QuoteItem.unit_price * QuoteItem.quantity)).scalar() or 0
+        
+        # Get total unique customers
+        total_customers = db.query(func.count(func.distinct(Quote.customer_id))).scalar()
+        
+        # Get total unique products quoted
+        total_products = db.query(func.count(func.distinct(QuoteItem.product_id))).scalar()
+        
+        # Get recent quotes (last 5)
+        recent_quotes = db.query(Quote).options(
+            joinedload(Quote.customer)
+        ).order_by(Quote.date_created.desc()).limit(5).all()
+        
+        recent_quotes_data = [
+            {
+                "quote_number": quote.quote_number,
+                "customer": quote.customer.name,
+                "total": quote.total,
+                "date": quote.date_created.strftime("%Y-%m-%d")
+            }
+            for quote in recent_quotes
+        ]
+        
+        # Get sales by product category
+        sales_by_category = db.query(
+            ProductFamily.category,
+            func.sum(QuoteItem.unit_price * QuoteItem.quantity).label('total')
+        ).join(
+            ProductVariant, ProductVariant.product_family_id == ProductFamily.id
+        ).join(
+            QuoteItem, QuoteItem.product_id == ProductVariant.id
+        ).group_by(
+            ProductFamily.category
+        ).all()
+        
+        # Calculate percentages for each category
+        total_sales = sum(cat.total for cat in sales_by_category) or 1  # Avoid division by zero
+        sales_by_category_data = [
+            {
+                "category": cat.category,
+                "percentage": round((cat.total / total_sales) * 100)
+            }
+            for cat in sales_by_category
+        ]
+        
+        # Get month-over-month changes
+        last_month = datetime.now() - timedelta(days=30)
+        current_month_quotes = db.query(func.count(Quote.id)).filter(
+            Quote.date_created >= last_month
+        ).scalar()
+        
+        previous_month_quotes = db.query(func.count(Quote.id)).filter(
+            Quote.date_created >= last_month - timedelta(days=30),
+            Quote.date_created < last_month
+        ).scalar()
+        
+        quote_change = ((current_month_quotes - previous_month_quotes) / previous_month_quotes * 100) if previous_month_quotes else 0
+        
+        current_month_value = db.query(func.sum(QuoteItem.unit_price * QuoteItem.quantity)).join(
+            Quote, Quote.id == QuoteItem.quote_id
+        ).filter(
+            Quote.date_created >= last_month
+        ).scalar() or 0
+        
+        previous_month_value = db.query(func.sum(QuoteItem.unit_price * QuoteItem.quantity)).join(
+            Quote, Quote.id == QuoteItem.quote_id
+        ).filter(
+            Quote.date_created >= last_month - timedelta(days=30),
+            Quote.date_created < last_month
+        ).scalar() or 0
+        
+        value_change = ((current_month_value - previous_month_value) / previous_month_value * 100) if previous_month_value else 0
+        
+        return {
+            "total_quotes": total_quotes,
+            "total_quote_value": total_quote_value,
+            "total_customers": total_customers,
+            "total_products": total_products,
+            "recent_quotes": recent_quotes_data,
+            "sales_by_category": sales_by_category_data,
+            "quote_change": round(quote_change, 1),
+            "value_change": round(value_change, 1)
+        } 

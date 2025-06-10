@@ -156,7 +156,7 @@ class QuoteItem(Base):
         Returns:
             float: Subtotal before discount
         """
-        return (self.unit_price * self.quantity) + self.options_total
+        return (self.unit_price or 0) * (self.quantity or 1) + self.options_total
     
     @property
     def discount_amount(self):
@@ -169,7 +169,7 @@ class QuoteItem(Base):
         Returns:
             float: Discount value in currency units
         """
-        return self.subtotal * (self.discount_percent / 100)
+        return self.subtotal * ((self.discount_percent or 0) / 100)
     
     @property
     def total(self):

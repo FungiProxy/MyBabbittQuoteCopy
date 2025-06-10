@@ -29,9 +29,14 @@ class ProductSelectionDialog(QDialog):
     """
     product_added = Signal(dict)
 
-    def __init__(self, product_service: ProductService, parent=None):
+    def __init__(self, product_service: ProductService, parent=None, product_to_edit=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Product to Quote")
+        self.product_to_edit = product_to_edit
+        self.is_edit_mode = self.product_to_edit is not None
+        
+        title = "Edit Product" if self.is_edit_mode else "Add Product to Quote"
+        self.setWindowTitle(title)
+        
         self.resize(900, 600)
         self.selected_product = None
         self.selected_options = {}
@@ -40,6 +45,9 @@ class ProductSelectionDialog(QDialog):
         self.products = []
         self._fetch_products()
         self._init_ui()
+        
+        if self.is_edit_mode:
+            self._populate_for_edit()
 
     def _fetch_products(self):
         """Fetch product families from the database using ProductService."""
@@ -124,7 +132,9 @@ class ProductSelectionDialog(QDialog):
         right_layout.addWidget(self.config_scroll)
         main_layout.addWidget(self.right_panel, 1)
         self._populate_product_list()
-        self._show_select_product()
+
+        if not self.is_edit_mode:
+            self._show_select_product()
 
     def _populate_product_list(self, filter_text=""):
         """Populate the product list, optionally filtering by search text."""
@@ -193,8 +203,9 @@ class ProductSelectionDialog(QDialog):
             voltage_combo = QComboBox()
             voltage_options = self.product_service.get_voltage_options(db, product['id'])
             logger.debug(f"Found {len(voltage_options)} voltage options")
-            voltage_combo.addItems([v['voltage'] for v in voltage_options])
-            voltage_combo.currentTextChanged.connect(lambda text: self._on_option_selected("Voltage", text))
+            for v_opt in voltage_options:
+                voltage_combo.addItem(v_opt['voltage'], userData=v_opt)
+            voltage_combo.currentIndexChanged.connect(self._on_voltage_changed)
             form_layout.addRow("Voltage:", voltage_combo)
             self.option_widgets["Voltage"] = voltage_combo
             
@@ -204,8 +215,9 @@ class ProductSelectionDialog(QDialog):
                 material_combo = QComboBox()
                 material_options = self.product_service.get_material_options(db, product['id'])
                 logger.debug(f"Found {len(material_options)} material options")
-                material_combo.addItems([m['display_name'] for m in material_options])
-                material_combo.currentTextChanged.connect(lambda text: self._on_material_selected(text))
+                for m_opt in material_options:
+                    material_combo.addItem(m_opt['display_name'], userData=m_opt)
+                material_combo.currentIndexChanged.connect(self._on_material_changed)
                 form_layout.addRow("Material:", material_combo)
                 self.option_widgets["Material"] = material_combo
                 
@@ -362,10 +374,21 @@ class ProductSelectionDialog(QDialog):
             self.config_layout.addWidget(self.total_price_label)
             
             # Add to Quote button
-            self.add_btn = QPushButton("+ Add to Quote")
+            btn_text = "Update Item" if self.is_edit_mode else "+ Add to Quote"
+            self.add_btn = QPushButton(btn_text)
             self.add_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold; padding: 10px 24px; border-radius: 6px; font-size: 16px;")
             self.add_btn.clicked.connect(self._on_add_to_quote)
             self.config_layout.addWidget(self.add_btn)
+            
+            # Set initial options directly after creating widgets
+            self._on_voltage_changed(self.option_widgets["Voltage"].currentIndex())
+            if "Material" in self.option_widgets:
+                self._on_material_changed(self.option_widgets["Material"].currentIndex())
+            if "Probe Length" in self.option_widgets:
+                self._on_length_changed(self.length_spinner.value())
+
+            if self.is_edit_mode:
+                self._apply_edited_product_options()
             
             self._update_total_price()
             logger.debug("Product configuration UI setup completed")
@@ -373,6 +396,25 @@ class ProductSelectionDialog(QDialog):
             logger.error(f"Error setting up product configuration: {e}", exc_info=True)
         finally:
             db.close()
+
+    def _on_voltage_changed(self, index):
+        """Handle voltage selection."""
+        combo_box = self.option_widgets["Voltage"]
+        voltage_text = combo_box.itemText(index)
+        voltage_code = voltage_text.replace(" ", "")  # "120 VAC" -> "120VAC"
+        self._on_option_selected("Voltage", voltage_text, code=voltage_code)
+
+    def _on_material_changed(self, index):
+        """Handle material selection."""
+        combo_box = self.option_widgets["Material"]
+        selected_data = combo_box.itemData(index)
+        self._on_material_selected(combo_box.itemText(index))
+        self._on_option_selected(
+            "Material", 
+            selected_data['display_name'],
+            price=selected_data.get('base_price', 0),
+            code=selected_data.get('material_code')
+        )
 
     def _on_material_selected(self, text):
         """Handle material selection and validate probe length."""
@@ -448,69 +490,48 @@ class ProductSelectionDialog(QDialog):
                     "Minimum length for U/T material probes is 4 inches."
                 )
 
-    def _on_option_selected(self, option_name, value):
+    def _on_option_selected(self, option_name, value, price=0, code=None):
         """Handle option selection and update pricing."""
-        self.selected_options[option_name] = value
+        if value:
+            self.selected_options[option_name] = {"selected": value, "price": price, "name": option_name, "code": code}
+        elif option_name in self.selected_options:
+            del self.selected_options[option_name]
         self._update_total_price()
 
     def _clear_config_panel(self):
-        # Remove all widgets from config_layout
+        """Clear all widgets and layout items from the config panel."""
+        # First clear all widgets
         while self.config_layout.count():
             item = self.config_layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                # Clear nested layouts
+                while item.layout().count():
+                    nested_item = item.layout().takeAt(0)
+                    if nested_item.widget():
+                        nested_item.widget().deleteLater()
+                # Delete the layout itself
+                QWidget().setLayout(item.layout())
+        
+        # Reset the option widgets dictionary
+        self.option_widgets = {}
 
     def _update_total_price(self):
         """Calculate and display the total price based on selected options."""
         if not self.selected_product:
             return
 
-        db = SessionLocal()
-        try:
-            # Get the base variant for the selected product
-            variants = self.product_service.get_variants_for_family(db, self.selected_product["id"])
-            if not variants:
-                return
+        base_price = self.selected_product.get("base_price", 0)
+        options_price = 0.0
 
-            # Start with base price from the variant
-            total = variants[0]['base_price']
+        for option in self.selected_options.values():
+            options_price += option.get("price", 0)
+
+        total_price = (base_price + options_price) * self.qty_spin.value()
             
-            # Add option prices
-            for opt_name, widget in self.option_widgets.items():
-                if isinstance(widget, QComboBox):
-                    selected = widget.currentText()
-                    if opt_name == "Material":
-                        # Get material options for this family
-                        materials = self.product_service.get_material_options(db, self.selected_product["id"])
-                        for mat in materials:
-                            if mat['display_name'] == selected:
-                                total += mat.get('base_price', 0)
-                    elif opt_name == "Probe Length":
-                        # Calculate length adder based on material
-                        length = self.length_spinner.value()
-                        base_length = variants[0]['base_length']
-                        if length > base_length:
-                            material = self.option_widgets["Material"].currentText()
-                            if "316SS" in material:
-                                total += (length - base_length) * 45  # $45/foot for 316SS
-                            elif "Halar" in material:
-                                total += (length - base_length) * 110  # $110/foot for Halar
-                elif isinstance(widget, QCheckBox):
-                    if widget.isChecked():
-                        # Get option price from database
-                        option = db.query(Option).filter_by(name=opt_name).first()
-                        if option and option.price:
-                            total += option.price
-            
-            # Apply quantity
-            qty = self.qty_spin.value() if hasattr(self, 'qty_spin') else 1
-            total_price = total * qty
-            
-            # Update display
-            self.total_price_label.setText(f"Total: ${total_price:.2f}")
-        finally:
-            db.close()
+        # Update display
+        self.total_price_label.setText(f"Total: ${total_price:,.2f}")
 
     def _on_add_to_quote(self):
         """Handle adding the configured product to the quote."""
@@ -522,21 +543,16 @@ class ProductSelectionDialog(QDialog):
             return
             
         # Prepare product data
-        product_data = {
-            "product_id": self.selected_product["id"],
-            "name": self.selected_product["name"],
-            "quantity": self.qty_spin.value(),
-            "base_price": self.selected_product["base_price"],
-            "options": self.selected_options,
-            "total_price": float(self.total_price_label.text().split("$")[1])
-        }
+        self.selected_product = self.get_selected_product_data()
         
-        # Emit signal with product data
-        self.product_added.emit(product_data)
+        # Emit signal with product data - not needed for edit, but keep for 'add'
+        if not self.is_edit_mode:
+            self.product_added.emit(self.selected_product)
+
         self.accept()
 
     def _validate_configuration(self):
-        """Validate the current configuration."""
+        """Ensure all required configurations are selected."""
         if not self.selected_product:
             return False
 
@@ -614,4 +630,81 @@ class ProductSelectionDialog(QDialog):
             self.selected_options["Exotic Metal Price"] = 0.00
         else:
             self.selected_options["Exotic Metal Price"] = 0.00
-        self._update_total_price() 
+        self._update_total_price()
+
+    def _apply_edited_product_options(self):
+        """If in edit mode, apply the existing options to the UI widgets."""
+        if not self.is_edit_mode:
+            return
+
+        # Set quantity
+        self.qty_spin.setValue(self.product_to_edit.get("quantity", 1))
+
+        # Set selected options
+        for option in self.product_to_edit.get("options", []):
+            option_name = option.get("name")
+            selected_value = option.get("selected")
+            
+            if option_name in self.option_widgets:
+                widget = self.option_widgets[option_name]
+                if isinstance(widget, QComboBox):
+                    widget.setCurrentText(selected_value)
+                # Add logic for other widget types (QCheckBox, etc.) if needed
+
+    def _populate_for_edit(self):
+        """Populate the dialog with the product to be edited."""
+        if not self.is_edit_mode:
+            return
+
+        product_id = self.product_to_edit.get("product_id")
+        
+        # Find the product in the list
+        for i in range(self.product_list.count()):
+            item = self.product_list.item(i)
+            product_data = item.data(Qt.UserRole)
+            if product_data and product_data.get("id") == product_id:
+                self.product_list.setCurrentItem(item)
+                # _on_product_selected will be called automatically
+                break
+
+    def get_selected_product_data(self):
+        """Returns the configured product data."""
+        if not self.selected_product:
+            return None
+
+        # Build final product data
+        total_price = float(self.total_price_label.text().split("$")[1]) if hasattr(self, 'total_price_label') and self.total_price_label.text() else 0.0
+        
+        # Generate part number
+        family = self.selected_product.get("name", "UNK")
+        
+        voltage_opt = self.selected_options.get("Voltage", {})
+        voltage_code = voltage_opt.get("code", "UNK")
+
+        part_number_components = [family, voltage_code]
+
+        if not self.selected_product['name'] in ["LS7500", "LS8500"]:
+            material_opt = self.selected_options.get("Material", {})
+            material_code = material_opt.get("code", "UNK")
+            part_number_components.append(material_code)
+            
+            probe_length = self.length_spinner.value() if hasattr(self, 'length_spinner') else 0
+            part_number_components.append(f'{probe_length}"')
+        
+        part_number = "-".join(part_number_components)
+        
+        product_data = {
+            "part_number": part_number,
+            "product_id": self.selected_product["id"],
+            "name": self.selected_product["name"],
+            "quantity": self.qty_spin.value() if hasattr(self, 'qty_spin') else 1,
+            "base_price": self.selected_product["base_price"],
+            "options": list(self.selected_options.values()),
+            "total_price": total_price
+        }
+
+        # Preserve the unique item ID if editing
+        if self.is_edit_mode and 'id' in self.product_to_edit:
+            product_data['id'] = self.product_to_edit['id']
+            
+        return product_data 

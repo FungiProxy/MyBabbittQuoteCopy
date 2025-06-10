@@ -7,6 +7,7 @@ import sys
 import os
 import traceback
 from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtCore import Qt  # Add Qt import for High DPI attributes
 
 # Print debug information
 print("Starting Babbitt Quote Generator...")
@@ -28,6 +29,10 @@ def main():
     """Main application entry point."""
     try:
         print("Creating QApplication...")
+        # Enable High DPI scaling
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+        
         # Create application
         app = QApplication(sys.argv)
         app.setStyle("Fusion")  # Use Fusion style for a modern look
