@@ -16,7 +16,7 @@ A modern, desktop-based Configure, Price, Quote (CPQ) application for Babbitt In
 
 **In Development / To-Do:**
 -   **Quote Editing:** Editing an existing quote and its line items.
--   **PDF/Data Export:** Finalizing the export templates and logic.
+-   **Export:** Basic PDF and Word export implemented; templates and advanced formatting work continues.
 -   **Full User Authentication:** Implementing user roles and permissions.
 -   **Advanced Analytics:** Building out the "Analytics" and "Reports" sections of the dashboard.
 -   **Settings Page:** Implementing application-level settings.
@@ -40,7 +40,7 @@ A modern, desktop-based Configure, Price, Quote (CPQ) application for Babbitt In
 -   **Quote Creation & Management:** Add configured products to a quote, manage quantities, and see a running total. View existing quotes.
 -   **Customer Dashboard:** An at-a-glance dashboard showing total quotes, total value, number of customers, and number of products quoted.
 -   **Customer Management:** A dedicated page to view and manage the customer list.
--   **Data Export:** Functionality to export quotes to various formats (implementation in progress).
+-   **Data Export:** Quotes can now be exported to PDF or Word. Additional formats and template customization are planned.
 
 ## Directory Structure
 ```
@@ -90,9 +90,10 @@ A modern, desktop-based Configure, Price, Quote (CPQ) application for Babbitt In
     ```
 
 4.  **Initialize and seed the database:**
-    The application is designed to create and seed the database on first run if it doesn't exist. Run the `seed_database.py` script if you need to reset the data.
+    The application will create the SQLite database on first run. To apply schema changes run Alembic migrations, then seed core option data:
     ```sh
-    python scripts/seed_database.py
+    alembic upgrade head
+    python scripts/seed_options.py
     ```
 
 ## Usage

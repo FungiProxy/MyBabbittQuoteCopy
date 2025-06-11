@@ -36,3 +36,5 @@ If you have any questions, start with these files—they contain everything you 
 When starting a new Cursor session, run this onboarding command:
 
 > Please read START_HERE.md, README.md, ACTION_PLAN.md, and project_notes.md in order. Summarize the project state, action plan, and open questions. Confirm readiness to begin work on the top action plan item. 
+
+7. **Ignore the `legacy/` directory** – it contains archived scripts and tests kept for reference only. 

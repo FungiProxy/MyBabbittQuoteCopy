@@ -54,6 +54,16 @@
 - **Write tests** for navigation logic and key UI components.
 - **Test edge cases** (e.g., empty states, error handling).
 
+## 8. Accessibility & Performance (NEW)
+- [ ] Ensure all interactive elements are reachable via keyboard navigation
+- [ ] Provide high-contrast theme toggle
+- [ ] Use lazy/virtualized lists or tables for large option sets
+
+## 9. Component Refactor Roadmap (NEW)
+- [ ] Break `specifications_tab.py` into individual widgets per option category
+- [ ] Split `product_selection_dialog.py` into controller + view widgets
+- [ ] Migrate blocking database calls to background threads with loading spinners
+
 ---
 
 **Next Steps:**

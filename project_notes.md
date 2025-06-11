@@ -129,6 +129,11 @@ python scripts/query_db.py
 - [ ] UI implementation
 - [ ] Export functionality
 
+### In Progress (updated)
+- [ ] UI refactor into smaller widgets/components
+- [ ] Accessibility & keyboard navigation improvements
+- [ ] Export template customization tools
+
 ### To Do
 - [ ] 
 - [ ] 
@@ -208,7 +213,7 @@ Please output the summary in the following format using markdown:
 
 ### 📝 Detailed Report
 
-A natural language summary of the conversation’s goals, themes, and major insights.
+A natural language summary of the conversation's goals, themes, and major insights.
 
 ---
 

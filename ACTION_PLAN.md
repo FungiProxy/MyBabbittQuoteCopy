@@ -57,6 +57,7 @@ This file contains the current prioritized action plan for the MyBabbittQuote pr
 
 ### 4. Export Functionality
 - [ ] Complete PDF export implementation
+- [~] Polish PDF/Word export templates and styling
 - [ ] Add customizable templates
 - [ ] Add preview functionality
 - [ ] Support multiple export formats

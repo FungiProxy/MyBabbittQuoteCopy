@@ -94,4 +94,4 @@
 - Maintain backward compatibility where possible
 - Document all changes and new features
 - Regular testing should be performed on all new features
-- Security should be considered in all new implementations
+- Security should be considered in all new implementations 
