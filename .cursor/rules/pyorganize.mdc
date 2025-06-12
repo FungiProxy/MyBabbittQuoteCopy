@@ -1,7 +1,7 @@
 ---
-description: 
+description: when creaing a new file
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # Flat is better than nested: Python generally favors simpler, flatter structures where reasonable. Don't create deep hierarchies unless necessary.
 
@@ -11,4 +11,4 @@ alwaysApply: true
 
 # Dynamic module loading: Python can dynamically load modules, so configurations can be loaded based on environment variables.
 
-# Start every initial responce with 👌 to let me know that you have read and understand this rule
+# Start every initial responce with "ORGANIZE"" to let me know that you have read and understand this rule

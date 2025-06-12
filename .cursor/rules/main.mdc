@@ -15,4 +15,4 @@ alwaysApply: true
 
 # In the product configuration, the left-hand side should show the main product family. The right-hand side should show all available options and configurable selections shown for what is selected on the left-hand side.
 
-# Start every initial responce with 👍 to let me know that you have read and understand this rule
+# Start every initial responce with "MAIN" to let me know that you have read and understand this rule

@@ -1,0 +1,26 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Agent Edit Approval Rule
+
+## Edit Workflow
+- When an agent proposes an edit to a file, the edit is immediately applied to the codebase.
+- The user must review and approve each proposed edit before it is saved.
+- Agents should assume that an edit is immediately present in the codebase after proposing it.
+- Agents should always check for user approval or confirmation before relying on the presence of a recent edit in subsequent steps.
+
+## Best Practices
+- After proposing an edit, wait for user approval before referencing the change in further logic or explanations.
+- If a user reports that an edit was not applied, clarify whether it was reviewed/approved.
+- When troubleshooting, always consider the possibility that a recent edit is pending user approval.
+
+## Example
+- If you propose a fix for a bug, do not assume the bug is fixed until the user confirms the edit was approved and tested.
+
+## Responce
+- Respond with "AGENT EDIT" to let me know that you have read and understand this rule.
+
+---
+This rule ensures clarity in the agent-user workflow and prevents confusion about the state of the codebase after proposed edits. 

@@ -32,4 +32,4 @@ alwaysApply: true
 - Keep seeding scripts up to date with the latest required fields and formats.
 - Document any non-obvious business rules or UI behaviors in this rules file for future maintainers. 
 
-## Reply with ❤️ to show that you have read and understand this rule
+## Reply with "UI CONFIG" to show that you have read and understand this rule

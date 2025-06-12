@@ -240,11 +240,7 @@ class ProductSelectionDialog(QDialog):
             logger.debug(f"Grouped options by category: {list(grouped_options.keys())}")
             
             # Core options (Voltage, Material, Length)
-            try:
-                self._setup_core_options(form_layout, product, grouped_options)
-            except Exception as e:
-                logger.error(f"Error setting up core options: {e}", exc_info=True)
-                raise
+            self._setup_core_options(form_layout, product, grouped_options)
             
             # Connection options
             try:
@@ -285,53 +281,65 @@ class ProductSelectionDialog(QDialog):
             QMessageBox.critical(self, "Error", f"Failed to load product configuration options: {str(e)}")
 
     def _setup_core_options(self, form_layout: QFormLayout, product: dict, grouped_options: dict):
-        """Set up the core product options (Voltage, Material, Length)."""
-        # Voltage options
-        voltage_combo = QComboBox()
-        voltage_combo.setMinimumWidth(200)
-        voltage_options = self.product_service.get_voltage_options(self.db, product['id'])
-        for v_opt in voltage_options:
-            voltage_combo.addItem(v_opt['voltage'], userData=v_opt)
-        voltage_combo.currentIndexChanged.connect(self._on_voltage_changed)
-        form_layout.addRow("Voltage:", voltage_combo)
-        self.option_widgets["Voltage"] = voltage_combo
+        """Set up core product options (Voltage, Material, Length)."""
+        logger.debug("Setting up core options")
         
-        # Material options (if applicable)
-        if not product['name'] in ["LS7500", "LS8500"]:
-            material_combo = QComboBox()
-            material_combo.setMinimumWidth(200)
-            material_options = self.product_service.get_material_options(self.db, product['id'])
-            for m_opt in material_options:
-                material_combo.addItem(m_opt['display_name'], userData=m_opt)
-            material_combo.currentIndexChanged.connect(self._on_material_changed)
-            form_layout.addRow("Material:", material_combo)
-            self.option_widgets["Material"] = material_combo
-            
-            # Probe Length
-            length_widget = QWidget()
-            length_layout = QHBoxLayout(length_widget)
-            length_layout.setContentsMargins(0, 0, 0, 0)
-            length_layout.setSpacing(10)
-            
-            self.length_spinner = QSpinBox()
-            self.length_spinner.setRange(1, 120)
-            self.length_spinner.setValue(product['base_length'])
-            self.length_spinner.setSuffix('"')
-            self.length_spinner.setFixedWidth(100)
-            self.length_spinner.valueChanged.connect(self._on_length_changed)
-            
-            self.length_input = QLineEdit()
-            self.length_input.setPlaceholderText("Enter length (inches)")
-            self.length_input.setFixedWidth(100)
-            self.length_input.setValidator(QIntValidator(1, 120))
-            self.length_input.textChanged.connect(self._on_length_text_changed)
-            
-            length_layout.addWidget(self.length_spinner)
-            length_layout.addWidget(self.length_input)
-            length_layout.addStretch()
-            
-            form_layout.addRow("Probe Length:", length_widget)
-            self.option_widgets["Probe Length"] = length_widget
+        # Add a section header with styling
+        header = QLabel("<b>Core Configuration</b>")
+        header.setStyleSheet("font-size: 14px; margin-bottom: 10px; color: #1976d2;")
+        form_layout.addRow("", header)
+        
+        # Voltage Options
+        voltage_label = QLabel("Voltage:")
+        voltage_combo = QComboBox()
+        voltage_options = self.product_service.get_voltage_options(self.db, product['id'])
+        for opt in voltage_options:
+            voltage_combo.addItem(opt['display_name'], opt)
+        voltage_combo.currentIndexChanged.connect(self._on_voltage_changed)
+        form_layout.addRow(voltage_label, voltage_combo)
+        self.option_widgets['voltage'] = voltage_combo
+        
+        # Material Options
+        material_label = QLabel("Material:")
+        material_combo = QComboBox()
+        material_options = self.product_service.get_material_options(self.db, product['id'])
+        for opt in material_options:
+            material_combo.addItem(opt['display_name'], opt)
+        material_combo.currentIndexChanged.connect(self._on_material_changed)
+        form_layout.addRow(material_label, material_combo)
+        self.option_widgets['material'] = material_combo
+        
+        # Length Configuration
+        length_label = QLabel("Length (inches):")
+        length_widget = QWidget()
+        length_layout = QHBoxLayout(length_widget)
+        length_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Length spinner with standard lengths
+        length_spinner = QSpinBox()
+        length_spinner.setMinimum(4)  # Minimum length for LS2000
+        length_spinner.setMaximum(72)  # Maximum length for Halar
+        length_spinner.setValue(product.get('base_length', 10))
+        length_spinner.setSuffix('"')
+        length_spinner.valueChanged.connect(self._on_length_changed)
+        
+        # Length text input for non-standard lengths
+        length_input = QLineEdit()
+        length_input.setPlaceholderText("Custom length...")
+        length_input.setValidator(QIntValidator(4, 999))
+        length_input.textChanged.connect(self._on_length_text_changed)
+        
+        length_layout.addWidget(length_spinner)
+        length_layout.addWidget(length_input)
+        form_layout.addRow(length_label, length_widget)
+        self.option_widgets['length'] = (length_spinner, length_input)
+        
+        # Add a separator with some spacing
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        separator.setStyleSheet("margin: 20px 0;")
+        form_layout.addRow("", separator)
 
     def _setup_additional_options(self, form_layout: QFormLayout, options: list):
         """Set up additional options as checkboxes."""
@@ -437,18 +445,83 @@ class ProductSelectionDialog(QDialog):
             logger.error(f"_on_material_changed called from non-QComboBox sender: {type(combo)}")
 
     def _on_length_changed(self, value):
-        # Update the text input to match the spinner
-        self.length_input.setText(str(value))
-        self.config_service.select_option("Probe Length", value)
-        self._update_total_price()
+        """Handle length changes from the spinner."""
+        try:
+            # Update the text input to match the spinner
+            self.length_input.setText(str(value))
+            
+            # Get current material and product family
+            material_combo = self.option_widgets.get('material')
+            if material_combo and self.config_service.current_config:
+                material_data = material_combo.currentData()
+                material_code = material_data.get('material_code') if material_data else None
+                
+                # Validate length
+                is_valid, message = self.product_service.validate_length(
+                    self.config_service.current_config.product_family_name,
+                    material_code,
+                    value
+                )
+                
+                if not is_valid:
+                    QMessageBox.warning(self, "Invalid Length", message)
+                    # Reset to previous valid value
+                    self.length_spinner.setValue(self.config_service.current_config.selected_options.get("Probe Length", 10))
+                    return
+                elif message:  # Warning message for non-standard length
+                    QMessageBox.warning(self, "Non-Standard Length", message)
+            
+            self.config_service.select_option("Probe Length", value)
+            self._update_total_price()
+            
+        except Exception as e:
+            logger.error(f"Error in _on_length_changed: {e}", exc_info=True)
+            QMessageBox.critical(
+                self,
+                "Error",
+                "An error occurred while updating the length. Please try again."
+            )
     
     def _on_length_text_changed(self, text):
-        # Update the spinner to match the text input, if valid
-        if text.isdigit():
+        """Handle length changes from the text input."""
+        try:
+            if not text:
+                return
+                
             value = int(text)
-            if 1 <= value <= 120:
+            
+            # Get current material and product family
+            material_combo = self.option_widgets.get('material')
+            if material_combo and self.config_service.current_config:
+                material_data = material_combo.currentData()
+                material_code = material_data.get('material_code') if material_data else None
+                
+                # Validate length
+                is_valid, message = self.product_service.validate_length(
+                    self.config_service.current_config.product_family_name,
+                    material_code,
+                    value
+                )
+                
+                if not is_valid:
+                    # Reset to previous valid value
+                    self.length_input.setText(str(self.length_spinner.value()))
+                    return
+                    
+            # Update spinner if value is different
+            if self.length_spinner.value() != value:
                 self.length_spinner.setValue(value)
-                # No need to call _on_option_selected here as spinner's valueChanged will trigger it
+                
+        except ValueError:
+            # Invalid input, revert to previous valid value
+            self.length_input.setText(str(self.length_spinner.value()))
+        except Exception as e:
+            logger.error(f"Error in _on_length_text_changed: {e}", exc_info=True)
+            QMessageBox.critical(
+                self,
+                "Error",
+                "An error occurred while updating the length. Please try again."
+            )
 
     def _validate_probe_length(self):
         # This validation is now handled by the input widgets themselves (QIntValidator)

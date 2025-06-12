@@ -361,7 +361,7 @@ class ProductService:
     def get_voltage_options(self, db, product_family_id: int) -> list:
         """
         Fetch available voltage options for a product family by ID.
-        Returns: List of dicts with voltage.
+        Returns: List of dicts with display_name and voltage.
         """
         from src.core.models.voltage_option import VoltageOption
         voltages = db.query(VoltageOption).filter(
@@ -369,7 +369,7 @@ class ProductService:
             VoltageOption.is_available == 1
         ).all()
         return [
-            {"voltage": v.voltage} for v in voltages
+            {"display_name": v.voltage, "voltage": v.voltage} for v in voltages
         ]
 
     def get_connection_options(self, db, product_family_id: int) -> list:
@@ -523,4 +523,80 @@ class ProductService:
         for opt in option_keys:
             if opt not in selected_options:
                 valid_options[opt] = sorted({v[opt] for v in variants if v.get(opt) is not None})
-        return valid_options 
+        return valid_options
+
+    def get_standard_lengths(self, product_family: str) -> List[int]:
+        """
+        Get the list of standard lengths for a product family.
+        
+        Args:
+            product_family: Product family identifier (e.g., "LS2000")
+            
+        Returns:
+            List[int]: List of standard lengths in inches
+        """
+        if product_family == "LS2000":
+            return [6, 8, 10, 12, 16, 24, 36, 48, 60, 72]
+        return []
+        
+    def validate_length(self, product_family: str, material_code: str, length: float) -> Tuple[bool, str]:
+        """
+        Validate a length for a specific product and material.
+        
+        Args:
+            product_family: Product family identifier (e.g., "LS2000")
+            material_code: Material code (e.g., "S", "H", "U", "T", "TS")
+            length: Length in inches
+            
+        Returns:
+            Tuple[bool, str]: (is_valid, error_message)
+        """
+        if product_family == "LS2000":
+            # Check minimum length
+            if length < 4:
+                return False, "Length cannot be less than 4 inches"
+                
+            # Check Halar length limit
+            if material_code == "H" and length > 72:
+                return False, "Halar coated probes cannot exceed 72 inches. Please select Teflon Sleeve for longer lengths."
+                
+            # Check if length is standard
+            standard_lengths = self.get_standard_lengths(product_family)
+            if length not in standard_lengths and material_code != "TS":
+                return True, "Non-standard length will add $300 to the price"
+                
+        return True, ""
+        
+    def calculate_length_price(self, product_family: str, material_code: str, length: float) -> float:
+        """
+        Calculate the price adder for a specific length and material.
+        
+        Args:
+            product_family: Product family identifier (e.g., "LS2000")
+            material_code: Material code (e.g., "S", "H", "U", "T", "TS")
+            length: Length in inches
+            
+        Returns:
+            float: Price adder for the length
+        """
+        if product_family == "LS2000":
+            # Define base lengths and adders
+            if material_code in ["U", "T"]:
+                base_length = 4.0
+                if length > base_length:
+                    extra_length = length - base_length
+                    adder = 40.0 if material_code == "U" else 50.0  # $40/inch for U, $50/inch for T
+                    return extra_length * adder
+            else:
+                base_length = 10.0
+                if length > base_length:
+                    extra_length = length - base_length
+                    adder = 3.75 if material_code == "S" else 9.17  # $45/foot for S, $110/foot for H/TS
+                    return extra_length * adder
+                    
+            # Add non-standard length surcharge
+            standard_lengths = self.get_standard_lengths(product_family)
+            if length not in standard_lengths and material_code != "TS":
+                return 300.0  # $300 adder for non-standard lengths
+                
+        return 0.0 

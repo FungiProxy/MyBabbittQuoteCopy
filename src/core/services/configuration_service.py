@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from src.core.models.configuration import Configuration
 from src.core.services.product_service import ProductService
 from src.core.pricing import calculate_product_price
+from typing import Optional
 
 class ConfigurationService:
     """
@@ -12,7 +13,17 @@ class ConfigurationService:
     def __init__(self, db: Session, product_service: ProductService):
         self.db = db
         self.product_service = product_service
-        self.current_config: Configuration = None
+        self._current_config: Optional[Configuration] = None
+
+    @property
+    def current_config(self) -> Optional[Configuration]:
+        """Get the current configuration."""
+        return self._current_config
+        
+    @current_config.setter
+    def current_config(self, value: Optional[Configuration]):
+        """Set the current configuration."""
+        self._current_config = value
 
     def start_configuration(self, product_family_id: int, product_family_name: str, base_product_info: dict) -> Configuration:
         """
@@ -99,5 +110,23 @@ class ConfigurationService:
                 desc += f" {name}: {value},"
         
         return desc.strip(',')
+
+    def add_non_standard_length_adder(self):
+        """Add the non-standard length surcharge to the configuration."""
+        if not self.current_config:
+            return
+            
+        # Add the non-standard length surcharge
+        self.current_config.selected_options['NonStandardLengthSurcharge'] = True
+        self.current_config.final_price = self.calculate_price()
+        
+    def remove_non_standard_length_adder(self):
+        """Remove the non-standard length surcharge from the configuration."""
+        if not self.current_config:
+            return
+            
+        # Remove the non-standard length surcharge
+        self.current_config.selected_options.pop('NonStandardLengthSurcharge', None)
+        self.current_config.final_price = self.calculate_price()
 
     # More methods will be added here to handle validation, etc. 

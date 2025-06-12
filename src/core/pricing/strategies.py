@@ -73,31 +73,75 @@ class ExtraLengthStrategy(PricingStrategy):
         if context.effective_length_in > context.product.base_length:
             extra_length = context.effective_length_in - context.product.base_length
             material_code = context.material.code
+            product_type = context.product.model_number.split('-')[0]
             
-            length_adders = {
-                'S': 3.75,   # $45/foot
-                'H': 9.17,   # $110/foot
-                'TS': 9.17,  # $110/foot
-                'U': 40.0,   # $40/inch
-                'T': 50.0    # $50/inch
-            }
-            
-            adder = length_adders.get(material_code, 0.0)
-            context.price += extra_length * adder
+            # LS2000 specific pricing
+            if product_type == 'LS2000':
+                length_adders = {
+                    'S': 3.75,   # $45/foot
+                    'H': 9.17,   # $110/foot
+                    'TS': 9.17,  # $110/foot
+                    'U': 40.0,   # $40/inch
+                    'T': 50.0    # $50/inch
+                }
+                
+                # For U and T materials, calculate per inch from 4"
+                if material_code in ['U', 'T']:
+                    base_length = 4.0
+                    if context.effective_length_in > base_length:
+                        extra_length = context.effective_length_in - base_length
+                else:
+                    # For S, H, and TS, calculate per foot from 10"
+                    base_length = 10.0
+                    if context.effective_length_in > base_length:
+                        extra_length = context.effective_length_in - base_length
+                
+                adder = length_adders.get(material_code, 0.0)
+                context.price += extra_length * adder
+            else:
+                # Default pricing for other products
+                length_adders = {
+                    'S': 3.75,   # $45/foot
+                    'H': 9.17,   # $110/foot
+                    'TS': 9.17,  # $110/foot
+                    'U': 40.0,   # $40/inch
+                    'T': 50.0    # $50/inch
+                }
+                adder = length_adders.get(material_code, 0.0)
+                context.price += extra_length * adder
 
         return context.price
 
 
 class NonStandardLengthSurchargeStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        if context.material.has_nonstandard_length_surcharge:
-            is_standard = context.db.query(StandardLength).filter(
-                StandardLength.material_code == context.material.code,
-                StandardLength.length == context.effective_length_in
-            ).first() is not None
+        product_type = context.product.model_number.split('-')[0]
+        
+        # LS2000 specific rules
+        if product_type == 'LS2000':
+            # Define standard lengths for LS2000
+            standard_lengths = [6, 8, 10, 12, 16, 24, 36, 48, 60, 72]
             
-            if not is_standard:
-                context.price += context.material.nonstandard_length_surcharge
+            # Check if length is standard
+            is_standard = context.effective_length_in in standard_lengths
+            
+            # Apply surcharge if not standard length and not Teflon Sleeve
+            if not is_standard and context.material.code != 'TS':
+                context.price += 300.0  # $300 adder for non-standard lengths
+                
+            # Check Halar length limit
+            if context.material.code == 'H' and context.effective_length_in > 72:
+                raise ValueError("Halar coated probes cannot exceed 72 inches. Please select Teflon Sleeve for longer lengths.")
+        else:
+            # Default behavior for other products
+            if context.material.has_nonstandard_length_surcharge:
+                is_standard = context.db.query(StandardLength).filter(
+                    StandardLength.material_code == context.material.code,
+                    StandardLength.length == context.effective_length_in
+                ).first() is not None
+                
+                if not is_standard:
+                    context.price += context.material.nonstandard_length_surcharge
 
         return context.price
 
