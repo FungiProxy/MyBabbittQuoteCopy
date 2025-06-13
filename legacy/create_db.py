@@ -8,7 +8,7 @@ This script creates the database structure and populates it with:
 
 Run this script during development to create a pre-populated database.
 """
-import os
+
 import sys
 from pathlib import Path
 
@@ -38,17 +38,17 @@ def main():
     # Create database schema
     print("Creating database schema...")
     init_db()
-    
+
     # Open database session
     db = SessionLocal()
-    
+
     try:
         # Populate reference data
         print("Populating reference data...")
         populate_materials(db)
         populate_standard_lengths(db)
         populate_options(db)
-        
+
         # Check if we should parse the price list
         price_list_path = Path("data/price_list.txt")
         if price_list_path.exists():
@@ -59,16 +59,16 @@ def main():
             print("Price list not found, using sample product data...")
             populate_product_families(db)
             populate_product_variants(db)
-        
+
         # Add sample customers
         print("Adding sample customer data...")
         populate_sample_customers(db)
-        
+
         print("Database creation complete!")
-        
+
     finally:
         db.close()
 
 
 if __name__ == "__main__":
-    main() 
+    main()

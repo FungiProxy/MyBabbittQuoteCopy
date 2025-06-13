@@ -1,12 +1,15 @@
 """
 Script to seed the database with LS2000 product variants.
 """
+
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from src.core.database import SessionLocal
 from src.core.models.product_variant import ProductFamily, ProductVariant
+
 
 def seed_ls2000_variants():
     """Seed the database with LS2000 product variants."""
@@ -22,58 +25,58 @@ def seed_ls2000_variants():
         variants = [
             ProductVariant(
                 product_family_id=ls2000.id,
-                model_number="LS2000-115VAC-S-10\"",
-                description="LS 2000 level switch with 115VAC power and 10\" 316SS probe",
+                model_number='LS2000-115VAC-S-10"',
+                description='LS 2000 level switch with 115VAC power and 10" 316SS probe',
                 base_price=425.0,
                 base_length=10.0,
                 voltage="115VAC",
-                material="S"
+                material="S",
             ),
             ProductVariant(
                 product_family_id=ls2000.id,
-                model_number="LS2000-115VAC-H-10\"",
-                description="LS 2000 level switch with 115VAC power and 10\" Halar coated probe",
+                model_number='LS2000-115VAC-H-10"',
+                description='LS 2000 level switch with 115VAC power and 10" Halar coated probe',
                 base_price=535.0,
                 base_length=10.0,
                 voltage="115VAC",
-                material="H"
+                material="H",
             ),
             ProductVariant(
                 product_family_id=ls2000.id,
-                model_number="LS2000-24VDC-S-10\"",
-                description="LS 2000 level switch with 24VDC power and 10\" 316SS probe",
+                model_number='LS2000-24VDC-S-10"',
+                description='LS 2000 level switch with 24VDC power and 10" 316SS probe',
                 base_price=425.0,
                 base_length=10.0,
                 voltage="24VDC",
-                material="S"
+                material="S",
             ),
             ProductVariant(
                 product_family_id=ls2000.id,
-                model_number="LS2000-24VDC-H-10\"",
-                description="LS 2000 level switch with 24VDC power and 10\" Halar coated probe",
+                model_number='LS2000-24VDC-H-10"',
+                description='LS 2000 level switch with 24VDC power and 10" Halar coated probe',
                 base_price=535.0,
                 base_length=10.0,
                 voltage="24VDC",
-                material="H"
+                material="H",
             ),
             ProductVariant(
                 product_family_id=ls2000.id,
-                model_number="LS2000-115VAC-U-4\"",
-                description="LS 2000 level switch with 115VAC power and 4\" UHMWPE blind end probe",
+                model_number='LS2000-115VAC-U-4"',
+                description='LS 2000 level switch with 115VAC power and 4" UHMWPE blind end probe',
                 base_price=445.0,
                 base_length=4.0,
                 voltage="115VAC",
-                material="U"
+                material="U",
             ),
             ProductVariant(
                 product_family_id=ls2000.id,
-                model_number="LS2000-115VAC-T-4\"",
-                description="LS 2000 level switch with 115VAC power and 4\" Teflon blind end probe",
+                model_number='LS2000-115VAC-T-4"',
+                description='LS 2000 level switch with 115VAC power and 4" Teflon blind end probe',
                 base_price=485.0,
                 base_length=4.0,
                 voltage="115VAC",
-                material="T"
-            )
+                material="T",
+            ),
         ]
 
         # Add variants to database
@@ -86,5 +89,6 @@ def seed_ls2000_variants():
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    seed_ls2000_variants() 
+    seed_ls2000_variants()

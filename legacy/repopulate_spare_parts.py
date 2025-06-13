@@ -1,6 +1,7 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.core.database import SessionLocal
 from src.core.services.database_populate import populate_spare_parts
 from src.core.models import SparePart
@@ -19,4 +20,4 @@ if __name__ == "__main__":
         print(f"Error during repopulation: {e}")
         db.rollback()
     finally:
-        db.close() 
+        db.close()

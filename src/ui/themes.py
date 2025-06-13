@@ -19,7 +19,7 @@ THEMES = {
         "dark": "#343a40",
         "card_background": "#ffffff",
         "card_border": "#dee2e6",
-        "text_muted": "#6c757d"
+        "text_muted": "#6c757d",
     },
     "Default Dark": {
         "background": "#212529",
@@ -34,7 +34,7 @@ THEMES = {
         "dark": "#343a40",
         "card_background": "#343a40",
         "card_border": "#495057",
-        "text_muted": "#adb5bd"
+        "text_muted": "#adb5bd",
     },
     "Ocean Blue": {
         "background": "#e0f7fa",
@@ -49,7 +49,7 @@ THEMES = {
         "dark": "#004d40",
         "card_background": "#ffffff",
         "card_border": "#b2dfdb",
-        "text_muted": "#455a64"
+        "text_muted": "#455a64",
     },
     "Charcoal & Orange": {
         "background": "#36393f",
@@ -64,7 +64,7 @@ THEMES = {
         "dark": "#2f3136",
         "card_background": "#2f3136",
         "card_border": "#40444b",
-        "text_muted": "#a3a6aa"
+        "text_muted": "#a3a6aa",
     },
     "Classic Professional": {
         "background": "#f4f4f4",
@@ -79,6 +79,6 @@ THEMES = {
         "dark": "#2c3e50",
         "card_background": "#ffffff",
         "card_border": "#bdc3c7",
-        "text_muted": "#95a5a6"
-    }
-} 
+        "text_muted": "#95a5a6",
+    },
+}

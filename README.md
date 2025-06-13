@@ -1,114 +1,91 @@
-# Babbitt Quote Generator
+# MyBabbittQuote Generator
 
-A modern, desktop-based Configure, Price, Quote (CPQ) application for Babbitt International's industrial products. This application is built with Python, using PySide6 for the user interface and SQLAlchemy for the database backend. It provides a rich, user-friendly interface for configuring complex products, managing customers, creating quotes, and exporting documents.
+A professional quote generation system built with Python and PySide6, designed to streamline the process of creating and managing Babbitt-related quotes.
 
-## Project Status (As of last update)
+## 🚀 Features
 
-**Complete & Functional:**
--   **Core Application:** Main window with a modern sidebar navigation.
--   **Database:** SQLAlchemy models with Alembic for migrations.
--   **Product Service:** Fetches product families, variants, and all options from the database.
--   **Configuration Service:** Manages the state of a product being configured.
--   **Quote Service:** Core logic for creating quotes and handling dashboard statistics.
--   **UI - Product Selection:** A comprehensive dialog for selecting and configuring products with real-time price updates.
--   **UI - Customer Management:** A dedicated page for viewing and managing customers.
--   **UI - Dashboard:** Displays key business metrics like total quotes, quote value, and customer counts.
+- Modern, responsive GUI built with PySide6
+- Database-driven quote management
+- PDF and DOCX export capabilities
+- Theme customization
+- Comprehensive error handling
+- Automated testing suite
 
-**In Development / To-Do:**
--   **Quote Editing:** Editing an existing quote and its line items.
--   **Export:** Basic PDF and Word export implemented; templates and advanced formatting work continues.
--   **Full User Authentication:** Implementing user roles and permissions.
--   **Advanced Analytics:** Building out the "Analytics" and "Reports" sections of the dashboard.
--   **Settings Page:** Implementing application-level settings.
+## 📋 Prerequisites
 
----
+- Python 3.8 or higher
+- pip (Python package manager)
+- Git
 
-## Table of Contents
-- [Features](#features)
-- [Directory Structure](#directory-structure)
-- [Prerequisites](#prerequisites)
-- [Setup & Installation](#setup--installation)
-- [Usage](#usage)
-- [Testing](#testing)
+## 🛠️ Installation
 
----
-
-## Features
--   **Modern UI:** A responsive and intuitive user interface built with PySide6, featuring a sidebar navigation and a tab-based content area.
--   **Dynamic Product Configuration:** Select a product and configure it in real-time. Options, pricing, and availability are dynamically updated.
--   **Guided Selling:** The configuration dialog guides the user through required choices like voltage, material, and probe length, plus additional options categorized for clarity.
--   **Quote Creation & Management:** Add configured products to a quote, manage quantities, and see a running total. View existing quotes.
--   **Customer Dashboard:** An at-a-glance dashboard showing total quotes, total value, number of customers, and number of products quoted.
--   **Customer Management:** A dedicated page to view and manage the customer list.
--   **Data Export:** Quotes can now be exported to PDF or Word. Additional formats and template customization are planned.
-
-## Directory Structure
-```
-/
-├── src/                # Main application source code
-│   ├── core/           # Business logic, models, services
-│   │   ├── models/     # SQLAlchemy ORM models
-│   │   ├── services/   # Business logic services (Product, Quote, etc.)
-│   │   └── pricing/    # Pricing calculation modules
-│   ├── ui/             # User interface (PySide6 widgets and dialogs)
-│   ├── export/         # Logic for exporting data (e.g., to PDF)
-│   └── utils/          # Shared utility functions
-├── data/               # Data files (e.g., database file, seed data)
-├── migrations/         # Alembic database migrations
-├── tests/              # Unit and integration tests
-├── main.py             # Application entry point
-├── requirements.txt    # Python runtime dependencies
-├── README.md           # This file
-└── ... (Configuration files like alembic.ini, pytest.ini)
+1. Clone the repository:
+```bash
+git clone [repository-url]
+cd mybabbittquote
 ```
 
-## Prerequisites
--   Python 3.9 or higher
--   Pip (Python package installer)
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
+```
 
-## Setup & Installation
-1.  **Clone the repository:**
-    ```sh
-    git clone <repo-url>
-    cd <repo-directory>
-    ```
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+pip install -r requirements-dev.txt  # For development
+```
 
-2.  **Create and activate a virtual environment (Recommended):**
-    ```sh
-    # Windows
-    python -m venv venv
-    .\venv\Scripts\activate
+## 🏃‍♂️ Running the Application
 
-    # macOS/Linux
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-3.  **Install dependencies:**
-    ```sh
-    pip install -r requirements.txt
-    ```
-
-4.  **Initialize and seed the database:**
-    The application will create the SQLite database on first run. To apply schema changes run Alembic migrations, then seed core option data:
-    ```sh
-    alembic upgrade head
-    python scripts/seed_options.py
-    ```
-
-## Usage
-
-To start the application, run the `main.py` script from the root of the project:
-```sh
+1. Activate the virtual environment (if not already activated)
+2. Run the main application:
+```bash
 python main.py
 ```
 
-## Testing
-To run the test suite, use `pytest`. For development, you may want to install development dependencies.
-```sh
-# It is recommended to install development dependencies first
-pip install -r requirements-dev.txt
+## 🧪 Running Tests
 
-# Run all tests
+```bash
 pytest
 ```
+
+## 📁 Project Structure
+
+```
+mybabbittquote/
+├── src/                    # Source code
+│   ├── core/              # Core business logic
+│   ├── ui/                # User interface components
+│   ├── utils/             # Utility functions
+│   └── export/            # Export functionality
+├── tests/                 # Test suite
+├── docs/                  # Documentation
+├── migrations/            # Database migrations
+└── data/                  # Data files and templates
+```
+
+## 🔧 Development
+
+- Follow PEP 8 style guide
+- Run tests before committing
+- Update documentation for new features
+- Use type hints for better code clarity
+
+## 📝 License
+
+[License information]
+
+## 👥 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## 🆘 Support
+
+For support, please [contact information or issue tracker details] 

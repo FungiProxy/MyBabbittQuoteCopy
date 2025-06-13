@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, clear_mappers
 from src.core.database import Base
 
+
 @pytest.fixture(scope="session")
 def engine():
     # Use in-memory SQLite for fast, isolated tests
@@ -11,6 +12,7 @@ def engine():
     yield engine
     Base.metadata.drop_all(engine)
     clear_mappers()
+
 
 @pytest.fixture(scope="function")
 def db_session(engine):
@@ -22,4 +24,4 @@ def db_session(engine):
     yield session
     session.close()
     transaction.rollback()
-    connection.close() 
+    connection.close()

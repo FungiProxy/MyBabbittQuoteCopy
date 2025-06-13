@@ -10,19 +10,26 @@ The main window serves as the central hub for all quote generation activities.
 """
 
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-    QLabel, QPushButton, QMessageBox, QFrame, 
-    QStackedWidget, QListWidget, QListWidgetItem, QApplication
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QMessageBox,
+    QFrame,
+    QStackedWidget,
+    QListWidget,
+    QListWidgetItem,
+    QApplication,
 )
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtGui import QIcon
 from src.ui.quote_creation import QuoteCreationPage
 from src.ui.customers_page import CustomersPage
 from src.ui.settings_page import SettingsPage
 from src.ui.user_profile_dialog import UserProfileDialog
 from src.ui.analytics_page import AnalyticsPage
 from src.ui.reports_page import ReportsPage
-from src.core.services.export_service import QuoteExportService
 from src.core.database import SessionLocal
 from src.core.services.quote_service import QuoteService
 from src.ui.themes import THEMES
@@ -30,20 +37,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class MainWindow(QMainWindow):
     """
     Main application window for the Babbitt Quote Generator.
     This window features a sidebar for navigation and a main content area.
     """
-    
+
     def __init__(self):
         """Initialize the main window and set up the UI components."""
         super().__init__()
         self.setWindowTitle("Babbitt")
         self.resize(1300, 700)
-        
+
         print("MainWindow.__init__() called")
-        
+
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QHBoxLayout(self.central_widget)
@@ -52,13 +60,13 @@ class MainWindow(QMainWindow):
 
         self._create_sidebar()
         self._create_content_area()
-        
+
         self.main_layout.addWidget(self.sidebar_frame, 1)
         self.main_layout.addWidget(self.content_area_frame, 4)
 
         self._show_dashboard_content()
         self._connect_sidebar_signals()
-        
+
         print("MainWindow initialization complete")
 
     def _create_sidebar(self):
@@ -78,11 +86,11 @@ class MainWindow(QMainWindow):
 
         self.nav_list = QListWidget()
         self.nav_list.setObjectName("navList")
-        
+
         nav_items = ["Dashboard", "Quote Creation", "Customers"]
         for item_text in nav_items:
             self.nav_list.addItem(QListWidgetItem(item_text))
-        
+
         self.nav_list.setCurrentRow(0)
         self.sidebar_layout.addWidget(self.nav_list)
         self.sidebar_layout.addStretch()
@@ -97,7 +105,7 @@ class MainWindow(QMainWindow):
         self.content_area_frame.setObjectName("contentAreaFrame")
 
         self.content_layout = QVBoxLayout(self.content_area_frame)
-        self.content_layout.setContentsMargins(0,0,0,0)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(0)
 
         self._create_content_header()
@@ -112,13 +120,13 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.quote_creation_page)
         self.customers_page = CustomersPage()
         self.stacked_widget.addWidget(self.customers_page)
-        
+
         self.settings_page = SettingsPage()
         self.stacked_widget.addWidget(self.settings_page)
         self.settings_page.theme_changed.connect(self.apply_theme)
-        
+
         self.quote_creation_page.quote_deleted.connect(self.update_dashboard_stats)
-        
+
     def _create_content_header(self):
         """Creates the header part of the content area."""
         self.content_header_frame = QFrame()
@@ -134,11 +142,11 @@ class MainWindow(QMainWindow):
         header_layout.addStretch()
 
         self.bell_button = QPushButton("🔔")
-        self.bell_button.setFixedSize(30,30)
+        self.bell_button.setFixedSize(30, 30)
         self.bell_button.setObjectName("iconButton")
         self.bell_button.clicked.connect(self.show_notifications)
         header_layout.addWidget(self.bell_button)
-        
+
         self.user_profile_button = QPushButton("👤 John Smith")
         self.user_profile_button.setObjectName("userProfileButton")
         header_layout.addWidget(self.user_profile_button)
@@ -150,7 +158,7 @@ class MainWindow(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.dashboard_page)
 
         dashboard_layout = QVBoxLayout(self.dashboard_page)
-        dashboard_layout.setContentsMargins(20,20,20,20)
+        dashboard_layout.setContentsMargins(20, 20, 20, 20)
         dashboard_layout.setSpacing(20)
 
         dashboard_tabs_layout = QHBoxLayout()
@@ -160,28 +168,34 @@ class MainWindow(QMainWindow):
         self.analytics_button.setObjectName("dashboardTabButton")
         self.reports_button_dash = QPushButton("Reports")
         self.reports_button_dash.setObjectName("dashboardTabButton")
-        
+
         dashboard_tabs_layout.addWidget(self.overview_button)
         dashboard_tabs_layout.addWidget(self.analytics_button)
         dashboard_tabs_layout.addWidget(self.reports_button_dash)
         dashboard_tabs_layout.addStretch()
-        
+
         self.dashboard_content_stack = QStackedWidget()
-        
+
         dashboard_layout.addLayout(dashboard_tabs_layout)
         dashboard_layout.addWidget(self.dashboard_content_stack)
 
         self.overview_widget = QWidget()
         overview_layout = QVBoxLayout(self.overview_widget)
-        overview_layout.setContentsMargins(0,10,0,0)
+        overview_layout.setContentsMargins(0, 10, 0, 0)
         self.dashboard_content_stack.addWidget(self.overview_widget)
 
         self.dashboard_content_stack.addWidget(AnalyticsPage())
         self.dashboard_content_stack.addWidget(ReportsPage())
 
-        self.overview_button.clicked.connect(lambda: self.dashboard_content_stack.setCurrentIndex(0))
-        self.analytics_button.clicked.connect(lambda: self.dashboard_content_stack.setCurrentIndex(1))
-        self.reports_button_dash.clicked.connect(lambda: self.dashboard_content_stack.setCurrentIndex(2))
+        self.overview_button.clicked.connect(
+            lambda: self.dashboard_content_stack.setCurrentIndex(0)
+        )
+        self.analytics_button.clicked.connect(
+            lambda: self.dashboard_content_stack.setCurrentIndex(1)
+        )
+        self.reports_button_dash.clicked.connect(
+            lambda: self.dashboard_content_stack.setCurrentIndex(2)
+        )
 
         self.update_dashboard_stats()
 
@@ -202,12 +216,32 @@ class MainWindow(QMainWindow):
             stats = QuoteService.get_dashboard_statistics(db)
             stats_layout = QHBoxLayout()
             stats_layout.setSpacing(20)
-            
-            card1 = self._create_stat_card("Total Quotes", str(stats["total_quotes"]), f"{stats['quote_change']:+}% from last month", "📄")
-            card2 = self._create_stat_card("Quote Value", f"${stats['total_quote_value']:,.2f}", f"{stats['value_change']:+}% from last month", "$")
-            card3 = self._create_stat_card("Customers", str(stats["total_customers"]), "Total unique customers", "👥")
-            card4 = self._create_stat_card("Products", str(stats["total_products"]), "Total unique products quoted", "📦")
-            
+
+            card1 = self._create_stat_card(
+                "Total Quotes",
+                str(stats["total_quotes"]),
+                f"{stats['quote_change']:+}% from last month",
+                "📄",
+            )
+            card2 = self._create_stat_card(
+                "Quote Value",
+                f"${stats['total_quote_value']:,.2f}",
+                f"{stats['value_change']:+}% from last month",
+                "$",
+            )
+            card3 = self._create_stat_card(
+                "Customers",
+                str(stats["total_customers"]),
+                "Total unique customers",
+                "👥",
+            )
+            card4 = self._create_stat_card(
+                "Products",
+                str(stats["total_products"]),
+                "Total unique products quoted",
+                "📦",
+            )
+
             stats_layout.addWidget(card1)
             stats_layout.addWidget(card2)
             stats_layout.addWidget(card3)
@@ -216,14 +250,18 @@ class MainWindow(QMainWindow):
 
             main_content_layout = QHBoxLayout()
             main_content_layout.setSpacing(20)
-            recent_quotes_group = self._create_recent_quotes_section(stats.get("recent_quotes", []))
+            recent_quotes_group = self._create_recent_quotes_section(
+                stats.get("recent_quotes", [])
+            )
             main_content_layout.addWidget(recent_quotes_group)
-            sales_category_group = self._create_sales_by_category_section(stats.get("sales_by_category", []))
+            sales_category_group = self._create_sales_by_category_section(
+                stats.get("sales_by_category", [])
+            )
             main_content_layout.addWidget(sales_category_group)
-            
+
             overview_layout.addLayout(main_content_layout)
             overview_layout.addStretch()
-            
+
         except Exception as e:
             logger.error(f"Error getting dashboard statistics: {e}", exc_info=True)
             overview_layout.addWidget(QLabel("Could not load dashboard statistics."))
@@ -259,7 +297,7 @@ class MainWindow(QMainWindow):
     def _create_sales_by_category_section(self, sales_data):
         # Implementation omitted for brevity, assuming it exists
         return QFrame()
-        
+
     def _connect_sidebar_signals(self):
         """Connects signals for the sidebar navigation."""
         self.nav_list.currentRowChanged.connect(self.on_nav_item_selected)
@@ -291,9 +329,9 @@ class MainWindow(QMainWindow):
         if theme_name not in THEMES:
             logger.warning(f"Theme '{theme_name}' not found. Using 'Default Light'.")
             theme_name = "Default Light"
-            
+
         theme = THEMES[theme_name]
-        
+
         style_sheet = f"""
             QMainWindow, QWidget {{
                 background-color: {theme['background']};
@@ -304,8 +342,8 @@ class MainWindow(QMainWindow):
                 border-right: 1px solid {theme['card_border']};
             }}
             QLabel#logoLabel {{
-                font-size: 22px; 
-                font-weight: bold; 
+                font-size: 22px;
+                font-weight: bold;
                 margin-bottom: 15px;
                 padding: 10px;
                 color: {theme['primary']};
@@ -327,9 +365,9 @@ class MainWindow(QMainWindow):
                 font-weight: bold;
             }}
             QPushButton#settingsButton {{
-                text-align: left; 
-                padding: 12px 15px; 
-                font-size: 14px; 
+                text-align: left;
+                padding: 12px 15px;
+                font-size: 14px;
                 border: none;
                 border-radius: 5px;
                 margin-top: 10px;
@@ -347,7 +385,7 @@ class MainWindow(QMainWindow):
                 border-bottom: 1px solid {theme['card_border']};
             }}
             QLabel#currentViewTitle {{
-                font-size: 18px; 
+                font-size: 18px;
                 font-weight: bold;
                 color: {theme['foreground']};
             }}
@@ -362,7 +400,7 @@ class MainWindow(QMainWindow):
                 color: {theme['primary']};
             }}
             QPushButton#newQuoteButtonHeader {{
-                background-color: {theme['primary']}; 
+                background-color: {theme['primary']};
                 color: {theme['light']};
             }}
             QPushButton#newQuoteButtonHeader:hover {{
@@ -392,29 +430,29 @@ class MainWindow(QMainWindow):
                 margin-right: 5px;
             }}
             QFrame#statCard {{
-                border: 1px solid {theme['card_border']}; 
-                border-radius: 6px; 
-                padding: 18px; 
-                background-color: {theme['card_background']}; 
+                border: 1px solid {theme['card_border']};
+                border-radius: 6px;
+                padding: 18px;
+                background-color: {theme['card_background']};
             }}
             QLabel#statTitle, QLabel#statCardTitle {{
-                font-size: 13px; 
-                color: {theme['text_muted']}; 
+                font-size: 13px;
+                color: {theme['text_muted']};
                 font-weight: 500;
             }}
             QLabel#statIcon {{
-                font-size: 18px; 
+                font-size: 18px;
                 color: {theme['text_muted']};
             }}
             QLabel#statValue {{
                 font-size: 24px;
-                font-weight: bold; 
-                margin-top: 6px; 
+                font-weight: bold;
+                margin-top: 6px;
                 margin-bottom: 6px;
                 color: {theme['foreground']};
             }}
             QLabel#statSubText {{
-                font-size: 11px; 
+                font-size: 11px;
                 color: {theme['text_muted']};
             }}
             QFrame#dashboardSectionFrame, QFrame#customersCard, QFrame#itemsCard, QFrame#customerCard, QFrame#summaryCard {{
@@ -498,4 +536,4 @@ class MainWindow(QMainWindow):
                 color: {theme['foreground']};
             }}
         """
-        QApplication.instance().setStyleSheet(style_sheet) 
+        QApplication.instance().setStyleSheet(style_sheet)

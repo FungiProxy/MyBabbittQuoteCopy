@@ -4,7 +4,7 @@ Database initialization and seeding script.
 This script creates the database and populates it with initial data.
 Run this script during development to create a pre-populated database.
 """
-import os
+
 import sys
 from pathlib import Path
 
@@ -79,7 +79,7 @@ def populate_materials(db: Session):
             length_adder_per_inch=50.0,
         ),
     ]
-    
+
     # Add materials to database
     db.add_all(materials)
     db.commit()
@@ -101,7 +101,7 @@ def populate_standard_lengths(db: Session):
         StandardLength(material_code="H", length=60.0),
         StandardLength(material_code="H", length=72.0),
     ]
-    
+
     # Add standard lengths to database
     db.add_all(standard_lengths)
     db.commit()
@@ -112,36 +112,43 @@ def populate_material_availability(db: Session):
     """Populate material availability for different product types."""
     # Define all product types
     product_types = [
-        "LS2000", "LS2100", "LS6000", "LS7000", "LS7000/2", 
-        "LS8000", "LS8000/2", "LT9000", "FS10000"
+        "LS2000",
+        "LS2100",
+        "LS6000",
+        "LS7000",
+        "LS7000/2",
+        "LS8000",
+        "LS8000/2",
+        "LT9000",
+        "FS10000",
     ]
-    
+
     # Define all materials
     materials = ["S", "H", "U", "T", "TS", "CPVC"]
-    
+
     # Create availability records
     availability_records = []
-    
+
     # For most product types, all materials are available
     for product_type in product_types:
         for material in materials:
             is_available = True
             notes = None
-            
+
             # Special cases based on additional_info.txt
             if product_type in ["LS7000/2", "FS10000"] and material in ["U", "T"]:
                 is_available = False
                 notes = "U and T materials are not available for dual point switches and FS10000"
-                
+
             availability_records.append(
                 MaterialAvailability(
                     material_code=material,
                     product_type=product_type,
                     is_available=is_available,
-                    notes=notes
+                    notes=notes,
                 )
             )
-    
+
     # Add availability records to database
     db.add_all(availability_records)
     db.commit()
@@ -197,7 +204,7 @@ def populate_product_families(db: Session):
             category="Flow Switch",
         ),
     ]
-    
+
     # Add families to database
     db.add_all(families)
     db.commit()
@@ -208,15 +215,15 @@ def populate_product_variants(db: Session):
     """Populate product variants table with initial data."""
     # This is a simplified version - the actual implementation would parse the price list
     # and create variants for each product family with different materials and voltages
-    
+
     # Get product family IDs
     ls2000 = db.query(ProductFamily).filter(ProductFamily.name == "LS2000").first()
-    
+
     variants = [
         ProductVariant(
             product_family_id=ls2000.id,
-            model_number="LS2000-115VAC-S-10\"",
-            description="LS 2000 level switch with 115VAC power and 10\" 316SS probe",
+            model_number='LS2000-115VAC-S-10"',
+            description='LS 2000 level switch with 115VAC power and 10" 316SS probe',
             base_price=425.0,
             base_length=10.0,
             voltage="115VAC",
@@ -224,8 +231,8 @@ def populate_product_variants(db: Session):
         ),
         ProductVariant(
             product_family_id=ls2000.id,
-            model_number="LS2000-115VAC-H-10\"",
-            description="LS 2000 level switch with 115VAC power and 10\" Halar coated probe",
+            model_number='LS2000-115VAC-H-10"',
+            description='LS 2000 level switch with 115VAC power and 10" Halar coated probe',
             base_price=535.0,
             base_length=10.0,
             voltage="115VAC",
@@ -233,8 +240,8 @@ def populate_product_variants(db: Session):
         ),
         ProductVariant(
             product_family_id=ls2000.id,
-            model_number="LS2000-115VAC-U-4\"",
-            description="LS 2000 level switch with 115VAC power and 4\" UHMWPE blind end probe",
+            model_number='LS2000-115VAC-U-4"',
+            description='LS 2000 level switch with 115VAC power and 4" UHMWPE blind end probe',
             base_price=445.0,
             base_length=4.0,
             voltage="115VAC",
@@ -242,15 +249,15 @@ def populate_product_variants(db: Session):
         ),
         ProductVariant(
             product_family_id=ls2000.id,
-            model_number="LS2000-115VAC-T-4\"",
-            description="LS 2000 level switch with 115VAC power and 4\" Teflon blind end probe",
+            model_number='LS2000-115VAC-T-4"',
+            description='LS 2000 level switch with 115VAC power and 4" Teflon blind end probe',
             base_price=485.0,
             base_length=4.0,
             voltage="115VAC",
             material="T",
         ),
     ]
-    
+
     # Add variants to database
     db.add_all(variants)
     db.commit()
@@ -301,7 +308,7 @@ def populate_options(db: Session):
             product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
         ),
     ]
-    
+
     # Add options to database
     db.add_all(options)
     db.commit()
@@ -332,7 +339,7 @@ def populate_sample_customers(db: Session):
             zip_code="10471",
         ),
     ]
-    
+
     # Add customers to database
     db.add_all(customers)
     db.commit()
@@ -343,10 +350,10 @@ def populate_db():
     """Populate the database with initial data."""
     # Initialize database schema
     init_db()
-    
+
     # Create database session
     db = SessionLocal()
-    
+
     try:
         # Populate tables
         populate_materials(db)
@@ -356,7 +363,7 @@ def populate_db():
         populate_product_variants(db)
         populate_options(db)
         populate_sample_customers(db)
-        
+
         print("Database population complete.")
     except Exception as e:
         print(f"Error populating database: {str(e)}")
@@ -366,4 +373,4 @@ def populate_db():
 
 
 if __name__ == "__main__":
-    populate_db() 
+    populate_db()

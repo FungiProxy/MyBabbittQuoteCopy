@@ -1,12 +1,15 @@
 """
 Script to seed the database with presence/absence switch product families.
 """
+
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from src.core.database import SessionLocal, init_db
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
+from src.core.database import SessionLocal
 from src.core.models.product_variant import ProductFamily
+
 
 def seed_presence_absence_families():
     """Seed the database with presence/absence switch product families."""
@@ -16,7 +19,7 @@ def seed_presence_absence_families():
         ls7500 = ProductFamily(
             name="LS7500",
             description="LS 7500 Presence/Absence Switch (replaces Princo L3515)",
-            category="Presence/Absence Switches"
+            category="Presence/Absence Switches",
         )
         db.add(ls7500)
 
@@ -24,7 +27,7 @@ def seed_presence_absence_families():
         ls8500 = ProductFamily(
             name="LS8500",
             description="LS 8500 Presence/Absence Switch (replaces Princo L3545)",
-            category="Presence/Absence Switches"
+            category="Presence/Absence Switches",
         )
         db.add(ls8500)
 
@@ -36,5 +39,6 @@ def seed_presence_absence_families():
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    seed_presence_absence_families() 
+    seed_presence_absence_families()

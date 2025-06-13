@@ -1,13 +1,16 @@
 """
 Script to seed the database with LS6000 connection options.
 """
+
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from src.core.database import SessionLocal
 from src.core.models.connection_option import ConnectionOption
 from src.core.models.product_variant import ProductFamily
+
 
 def seed_ls6000_connections():
     """Seed the database with LS6000 connection options."""
@@ -26,36 +29,36 @@ def seed_ls6000_connections():
                 rating=None,
                 size='1/2"',
                 price=0.0,
-                product_family_id=ls6000.id
+                product_family_id=ls6000.id,
             ),
             ConnectionOption(
                 type="NPT",
                 rating=None,
                 size='3/4"',
                 price=0.0,
-                product_family_id=ls6000.id
+                product_family_id=ls6000.id,
             ),
             ConnectionOption(
                 type="NPT",
                 rating=None,
                 size='1"',
                 price=0.0,
-                product_family_id=ls6000.id
+                product_family_id=ls6000.id,
             ),
             ConnectionOption(
                 type="NPT",
                 rating=None,
                 size='1.5"',
                 price=0.0,
-                product_family_id=ls6000.id
+                product_family_id=ls6000.id,
             ),
             ConnectionOption(
                 type="NPT",
                 rating=None,
                 size='2"',
                 price=0.0,
-                product_family_id=ls6000.id
-            )
+                product_family_id=ls6000.id,
+            ),
         ]
 
         # Add NPT options to database
@@ -68,5 +71,6 @@ def seed_ls6000_connections():
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    seed_ls6000_connections() 
+    seed_ls6000_connections()

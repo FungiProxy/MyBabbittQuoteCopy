@@ -1,18 +1,18 @@
 """
 Script to run the business logic tests with proper path handling.
 """
+
 import os
 import sys
-import importlib.util
 
 # Add the project root to the path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import the test module
 from scripts.test_business_logic import (
     test_customer_service,
     test_product_service,
-    test_quote_service
+    test_quote_service,
 )
 
 if __name__ == "__main__":
@@ -32,4 +32,4 @@ if __name__ == "__main__":
         print("Running all tests...\n")
         test_customer_service()
         test_product_service()
-        test_quote_service() 
+        test_quote_service()

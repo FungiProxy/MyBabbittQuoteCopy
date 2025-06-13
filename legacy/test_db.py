@@ -4,14 +4,13 @@ Test database initialization.
 This script initializes the database with just the reference data
 for testing purposes.
 """
-import os
+
 import sys
 from pathlib import Path
 
 # Add the project root directory to the Python path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlalchemy.orm import Session
 from sqlalchemy import inspect
 
 from src.core.database import SessionLocal, init_db, engine
@@ -42,7 +41,7 @@ def verify_database_tables():
     """Verify that all expected tables exist in the database."""
     inspector = inspect(engine)
     tables = inspector.get_table_names()
-    
+
     expected_tables = [
         "customers",
         "materials",
@@ -54,7 +53,7 @@ def verify_database_tables():
         "quotes",
         "standard_lengths",
     ]
-    
+
     print("\nVerifying database tables:")
     for table in expected_tables:
         if table in tables:
@@ -105,7 +104,9 @@ def verify_option_categories(db):
         if not opt.category or not str(opt.category).strip():
             issues.append(f"Option '{opt.name}' (id={opt.id}) is missing a category.")
         elif opt.category in categories:
-            issues.append(f"Duplicate category '{opt.category}' found for option '{opt.name}' (id={opt.id}).")
+            issues.append(
+                f"Duplicate category '{opt.category}' found for option '{opt.name}' (id={opt.id})."
+            )
         else:
             categories.add(opt.category)
     if issues:
@@ -121,13 +122,13 @@ def main():
     # Create database schema
     print("Creating database schema...")
     init_db()
-    
+
     # Verify tables were created
     verify_database_tables()
-    
+
     # Open database session
     db = SessionLocal()
-    
+
     try:
         # Check if we need to populate the database
         if count_records(db, Material) == 0:
@@ -142,11 +143,11 @@ def main():
             print("Database populated.")
         else:
             print("\nDatabase already contains data.")
-        
+
         # Verify data
         verify_data(db)
         verify_option_categories(db)
-        
+
         print("\nDatabase initialization successful!")
     finally:
         db.close()
@@ -155,4 +156,4 @@ def main():
 if __name__ == "__main__":
     # Clear the database before initializing
     clear_database(SessionLocal())
-    main() 
+    main()

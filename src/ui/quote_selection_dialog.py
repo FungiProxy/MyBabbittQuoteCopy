@@ -1,9 +1,16 @@
 """
 Dialog for selecting an existing quote to load.
 """
+
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QListWidget, QListWidgetItem, QFrame, QMessageBox, QFileDialog
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QListWidget,
+    QListWidgetItem,
+    QMessageBox,
+    QFileDialog,
 )
 from PySide6.QtCore import Qt, Signal
 from src.core.services.quote_service import QuoteService
@@ -13,12 +20,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class QuoteSelectionDialog(QDialog):
     """
     A dialog that lists existing quotes and allows the user to select one.
     """
+
     quote_deleted = Signal()
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Load Quote")
@@ -39,17 +48,17 @@ class QuoteSelectionDialog(QDialog):
         self.load_btn.clicked.connect(self.accept)
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.clicked.connect(self.reject)
-        
+
         self.delete_btn = QPushButton("Delete")
         self.delete_btn.clicked.connect(self.delete_quote)
-        self.delete_btn.setEnabled(False) # Disabled by default
-        
+        self.delete_btn.setEnabled(False)  # Disabled by default
+
         button_layout.addStretch()
         button_layout.addWidget(self.delete_btn)
         button_layout.addWidget(self.load_btn)
         button_layout.addWidget(self.cancel_btn)
         main_layout.addLayout(button_layout)
-        
+
         self.quote_list.itemSelectionChanged.connect(self.on_selection_changed)
 
     def on_selection_changed(self):
@@ -69,11 +78,13 @@ class QuoteSelectionDialog(QDialog):
             for quote in quotes:
                 item_text = f"Quote {quote['quote_number']} - {quote['customer_name']} - ${quote['total']:,.2f} ({quote['date_created']})"
                 item = QListWidgetItem(item_text)
-                item.setData(Qt.UserRole, quote['id'])
+                item.setData(Qt.UserRole, quote["id"])
                 self.quote_list.addItem(item)
         except Exception as e:
             logger.error(f"Error populating quotes: {e}", exc_info=True)
-            QMessageBox.critical(self, "Error", "Could not load quotes from the database.")
+            QMessageBox.critical(
+                self, "Error", "Could not load quotes from the database."
+            )
         finally:
             db.close()
 
@@ -90,7 +101,7 @@ class QuoteSelectionDialog(QDialog):
             "Delete Quote",
             f"Are you sure you want to delete this quote?\n\n{item_text}\n\nThis action cannot be undone.",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.No,
         )
 
         if reply == QMessageBox.Yes:
@@ -98,22 +109,30 @@ class QuoteSelectionDialog(QDialog):
             try:
                 success = QuoteService.delete_quote(db, quote_id)
                 if success:
-                    QMessageBox.information(self, "Success", "Quote deleted successfully.")
+                    QMessageBox.information(
+                        self, "Success", "Quote deleted successfully."
+                    )
                     self.quote_deleted.emit()
                     # Refresh the list
                     self.populate_quotes()
                 else:
-                    QMessageBox.warning(self, "Error", "Could not find the quote to delete.")
+                    QMessageBox.warning(
+                        self, "Error", "Could not find the quote to delete."
+                    )
             except Exception as e:
                 logger.error(f"Error deleting quote: {e}", exc_info=True)
-                QMessageBox.critical(self, "Error", f"An error occurred while deleting the quote: {e}")
+                QMessageBox.critical(
+                    self, "Error", f"An error occurred while deleting the quote: {e}"
+                )
             finally:
                 db.close()
 
     def export_quote(self):
         selected_items = self.quote_list.selectedItems()
         if not selected_items:
-            QMessageBox.warning(self, "No Selection", "Please select a quote to export.")
+            QMessageBox.warning(
+                self, "No Selection", "Please select a quote to export."
+            )
             return
 
         quote_id = selected_items[0].data(Qt.UserRole)
@@ -124,8 +143,8 @@ class QuoteSelectionDialog(QDialog):
                 QMessageBox.critical(self, "Error", "Could not find quote details.")
                 return
 
-            customer_name = quote_details['customer']['name'].replace(" ", "_")
-            quote_number = quote_details['quote_number']
+            customer_name = quote_details["customer"]["name"].replace(" ", "_")
+            quote_number = quote_details["quote_number"]
             default_filename = f"Quote_{quote_number}_{customer_name}.docx"
 
             # For now, we assume a template exists at this path.
@@ -139,7 +158,9 @@ class QuoteSelectionDialog(QDialog):
             if save_path:
                 exporter = QuoteExportService(template_path)
                 exporter.generate_word_document(quote_details, save_path)
-                QMessageBox.information(self, "Success", f"Quote successfully exported to {save_path}")
+                QMessageBox.information(
+                    self, "Success", f"Quote successfully exported to {save_path}"
+                )
 
         except Exception as e:
             logger.error(f"Error exporting quote: {e}", exc_info=True)
@@ -153,4 +174,4 @@ class QuoteSelectionDialog(QDialog):
             QMessageBox.warning(self, "No Selection", "Please select a quote to load.")
             return
         self.selected_quote_id = selected_items[0].data(Qt.UserRole)
-        super().accept() 
+        super().accept()

@@ -7,12 +7,14 @@ persisting them using QSettings for platform-independent storage.
 
 from PySide6.QtCore import QSettings
 
+
 class SettingsService:
     """
     Service class for managing application settings.
-    
+
     Provides methods for getting and setting application configuration values.
     """
+
     def __init__(self, company="BabbittInternational", app="QuoteGenerator"):
         self.settings = QSettings(company, app)
 
@@ -31,7 +33,7 @@ class SettingsService:
     def set_default_export_path(self, path: str):
         """Saves the default path for quote exports."""
         self.settings.setValue("export/default_path", path)
-        
+
     def get_startup_page(self, default="Dashboard"):
         """Retrieves the default page to show on startup."""
         return self.settings.value("ui/startup_page", defaultValue=default)
@@ -47,10 +49,12 @@ class SettingsService:
     def set_export_with_logo(self, with_logo: bool):
         """Saves the setting for including the company logo in exports."""
         self.settings.setValue("export/with_logo", with_logo)
-        
+
     def get_confirm_on_delete(self, default=True):
         """Checks if a confirmation is required before deleting items."""
-        return self.settings.value("ui/confirm_on_delete", defaultValue=default, type=bool)
+        return self.settings.value(
+            "ui/confirm_on_delete", defaultValue=default, type=bool
+        )
 
     def set_confirm_on_delete(self, confirm: bool):
         """Saves the setting for requiring deletion confirmation."""
@@ -58,4 +62,4 @@ class SettingsService:
 
     def sync(self):
         """Ensures that any cached writes are written to permanent storage."""
-        self.settings.sync() 
+        self.settings.sync()

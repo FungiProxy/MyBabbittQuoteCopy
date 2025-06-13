@@ -5,7 +5,7 @@ import traceback
 REQUIRED_PACKAGES = [
     ("reportlab", "reportlab.pdfgen.canvas"),
     ("python-docx", "docx"),
-    ("Pillow", "PIL.Image")
+    ("Pillow", "PIL.Image"),
 ]
 
 TEMPLATE_DIR = os.path.join("data", "templates")
@@ -14,7 +14,7 @@ REQUIRED_FILES = [
     "email_template.html",
     "README.md",
     "quote_template.docx",
-    "pdf_template.py"
+    "pdf_template.py",
 ]
 LOGO_PATH = os.path.join(TEMPLATE_DIR, "logo.png")
 
@@ -25,11 +25,14 @@ EXIT_FAILURE = 1
 def print_success(msg):
     print(f"\033[92m[SUCCESS]\033[0m {msg}")
 
+
 def print_failure(msg):
     print(f"\033[91m[FAILURE]\033[0m {msg}")
 
+
 def print_warning(msg):
     print(f"\033[93m[WARNING]\033[0m {msg}")
+
 
 def print_info(msg):
     print(f"[INFO] {msg}")
@@ -76,13 +79,16 @@ def test_logo():
     if os.path.isfile(LOGO_PATH):
         print_success(f"Logo file found: {LOGO_PATH}")
     else:
-        print_warning(f"Logo file not found: {LOGO_PATH} (not fatal, but PDF branding may be incomplete)")
+        print_warning(
+            f"Logo file not found: {LOGO_PATH} (not fatal, but PDF branding may be incomplete)"
+        )
 
 
 def test_reportlab():
     print_info("Testing basic ReportLab PDF generation...")
     try:
         from reportlab.pdfgen import canvas
+
         test_pdf = os.path.join(TEMPLATE_DIR, "test_reportlab_output.pdf")
         c = canvas.Canvas(test_pdf)
         c.drawString(100, 750, "ReportLab PDF test successful!")
@@ -103,6 +109,7 @@ def test_python_docx():
     print_info("Testing basic python-docx functionality...")
     try:
         import docx
+
         test_docx = os.path.join(TEMPLATE_DIR, "test_docx_output.docx")
         doc = docx.Document()
         doc.add_heading("python-docx test successful!", 0)
@@ -123,6 +130,7 @@ def test_pillow():
     print_info("Testing basic Pillow image creation...")
     try:
         from PIL import Image, ImageDraw
+
         test_img = os.path.join(TEMPLATE_DIR, "test_pillow_output.png")
         img = Image.new("RGB", (200, 100), color=(73, 109, 137))
         d = ImageDraw.Draw(img)
@@ -154,4 +162,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -1,13 +1,16 @@
 """
 Script to seed the database with all possible LS7500 product variants (Presence/Absence Switches).
 """
+
 import os
 import sys
 import itertools
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from src.core.database import SessionLocal
 from src.core.models.product_variant import ProductFamily, ProductVariant
+
 
 def seed_ls7500_variants():
     """Seed the database with all possible LS7500 product variants."""
@@ -19,16 +22,18 @@ def seed_ls7500_variants():
             print("LS7500 family not found in database")
             return
 
-        flange_sizes = ["2\"", "2.5\"", "3\"", "4\"", "6\"", "8\"", "10\""]
+        flange_sizes = ['2"', '2.5"', '3"', '4"', '6"', '8"', '10"']
         flange_types = ["PR", "FR"]
         voltages = ["115VAC", "24VDC", "220VAC", "12VDC"]
         teflon_options = ["No", "Yes"]
         tag_options = ["No", "Yes"]
 
         variants = []
-        for size, ftype, voltage, teflon, tag in itertools.product(flange_sizes, flange_types, voltages, teflon_options, tag_options):
+        for size, ftype, voltage, teflon, tag in itertools.product(
+            flange_sizes, flange_types, voltages, teflon_options, tag_options
+        ):
             # Only allow Teflon Insulator for 6, 8, 10 inch flanges
-            if teflon == "Yes" and size not in ["6\"", "8\"", "10\""]:
+            if teflon == "Yes" and size not in ['6"', '8"', '10"']:
                 continue
 
             # Compose model number
@@ -39,7 +44,9 @@ def seed_ls7500_variants():
                 model_number += "-ST"
 
             # Description
-            description = f"LS7500 presence/absence switch, {voltage}, {size} 150# {ftype} flange"
+            description = (
+                f"LS7500 presence/absence switch, {voltage}, {size} 150# {ftype} flange"
+            )
             if teflon == "Yes":
                 description += ", with Teflon insulator"
             if tag == "Yes":
@@ -52,7 +59,7 @@ def seed_ls7500_variants():
                 base_price=None,  # Consult Factory
                 base_length=None,
                 voltage=voltage,
-                material="316SS"
+                material="316SS",
             )
             variants.append(variant)
 
@@ -65,5 +72,6 @@ def seed_ls7500_variants():
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    seed_ls7500_variants() 
+    seed_ls7500_variants()

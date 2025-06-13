@@ -1,135 +1,79 @@
-# Project Action Plan
+# Action Plan - 2-Day Completion Strategy
 
-_Last updated: May 12th, 2025_
+## Day 1: Core Functionality and Testing
 
-## Overview
-This file contains the current prioritized action plan for the MyBabbittQuote project. It is intended to help new contributors and AI agents quickly understand the project's status, priorities, and next steps. Please update this file as progress is made or priorities change.
+### Morning (4 hours)
+1. **Database Setup and Migration**
+   - [x] Review and finalize database schema
+   - [x] Run and verify all migrations
+   - [x] Create database initialization script (`scripts/init_db.py`)
+   - [ ] Add sample data for testing (script created, ready to run)
 
----
+2. **Core Business Logic**
+   - [ ] Complete quote calculation engine
+   - [ ] Implement pricing rules
+   - [ ] Add validation logic
+   - [ ] Create data models
 
-## Project State
-- **Core business logic:** Implemented (pricing, quoting, models)
-- **UI:** Functional, well-documented, but some missing features
-- **Testing:** Present, but needs centralization and more coverage
-- **Documentation:** Good coverage of core models and UI components
-- **Export:** Basic structure present, needs full implementation
+### Afternoon (4 hours)
+1. **UI Implementation**
+   - [ ] Complete main window layout
+   - [ ] Implement quote form
+   - [ ] Add customer management interface
+   - [ ] Create settings dialog
 
----
+2. **Testing**
+   - [ ] Write unit tests for core functionality
+   - [ ] Create integration tests
+   - [ ] Implement UI tests
+   - [ ] Run full test suite
 
-## Prioritized Action Plan
+## Day 2: Polish and Deployment
 
-### 1. Documentation & Onboarding
-- [X] Expand `README.md` with project overview, setup, usage, and testing instructions
-- [X] Add docstrings to core models
-- [X] Complete docstrings for remaining models
-- [X] Document UI components and their interactions
-  - [X] MainWindow: Tab management and core functionality
-  - [X] ProductTab: Product selection interface
-  - [X] SpecificationsTab: Product configuration form
-  - [X] QuoteTab: Quote management and pricing
-  - [X] SparePartsTab: Spare parts catalog and selection
-- [ ] Document service layer classes
-  - [X] QuoteService
-  - [X] ProductService
-  - [X] MaterialService
-  - [X] CustomerService
-- [X] Create developer guide for common tasks
-- [X] Add architecture overview diagram
-- [X] Document database schema and relationships
+### Morning (4 hours)
+1. **Export Functionality**
+   - [ ] Complete exporting to PDF (implement, test, and verify PDF export for quotes)
+   - [ ] Add DOCX export
+   - [ ] Create template system
+   - [ ] Add preview functionality
 
-### 2. Testing
-- [X] Centralize test files in appropriate directories
-- [X] Add unit tests for core business logic
-- [X] Add integration tests for database operations
-- [ ] Add UI component tests
-- [ ] Set up CI/CD pipeline
-- [ ] Add test coverage reporting
-- [ ] Document testing strategy and procedures
+2. **Error Handling and Logging**
+   - [ ] Implement comprehensive error handling
+   - [ ] Add logging system
+   - [ ] Create error reporting
+   - [ ] Add user feedback mechanisms
 
-### 3. UI Improvements
-- [ ] Break large UI files into smaller components
-- [ ] Add loading indicators for database operations
-- [ ] Improve error handling and user feedback
-- [ ] Add form validation
-- [ ] Implement undo/redo functionality
-- [ ] Add keyboard shortcuts
-- [ ] Improve accessibility
+### Afternoon (4 hours)
+1. **Final Testing and Documentation**
+   - [ ] Run full system tests
+   - [ ] Complete user documentation
+   - [ ] Update API documentation
+   - [ ] Create deployment guide
 
-### 4. Export Functionality
-- [ ] Complete PDF export implementation
-- [~] Polish PDF/Word export templates and styling
-- [ ] Add customizable templates
-- [ ] Add preview functionality
-- [ ] Support multiple export formats
-- [ ] Add batch export capability
-- [ ] Add email integration
+2. **Deployment Preparation**
+   - [ ] Create installation script
+   - [ ] Package application
+   - [ ] Prepare release notes
+   - [ ] Create backup system
 
-### 5. Database & Performance
-- [ ] Optimize database queries
-- [ ] Add database indexing
-- [ ] Implement caching for frequently accessed data
-- [ ] Add database migration scripts
-- [ ] Add backup/restore functionality
-- [ ] Document database maintenance procedures
+## Success Criteria
+- All core features implemented and tested
+- Documentation complete and up-to-date
+- No critical bugs or issues
+- Application ready for deployment
+- All tests passing
+- Code review completed
 
-### 6. Security
-- [ ] Implement user authentication
-- [ ] Add role-based access control
-- [ ] Add audit logging
-- [ ] Implement secure storage for sensitive data
-- [ ] Add input validation and sanitization
-- [ ] Document security procedures
-
-### 7. Code Organization & Refactoring
-- [ ] Refactor large UI files into smaller, focused components or widgets
-- [ ] Consider using service classes (not just static methods) for extensibility
-- [ ] Ensure all subdirectories have `__init__.py` for explicit package structure
-
-### 8. Business Logic Improvements
-- [ ] Move hardcoded pricing rules to configuration files or database tables
-- [ ] Add business rule validation (e.g., valid product/material combinations)
-- [ ] Optimize database access (profile for N+1 queries, use eager loading, cache expensive lookups)
-
-### 9. Dependency & Build Management
-- [ ] Pin dependency versions more strictly in `requirements.txt`
-- [ ] Consider using `pip-tools` or `poetry` for dependency management and lock files
-
-### 10. UI/UX Enhancements
-- [ ] Use a resource file or stylesheet for consistent UI theming
-- [ ] Implement dynamic dropdowns/radio buttons for product-specific options
-- [ ] Review UI for accessibility best practices
-
-### 11. Export & Integration
-- [ ] Encapsulate all export logic in `src/export/`
-- [ ] Decouple export logic from UI to allow CLI or API-triggered exports
-
-### 12. Performance Optimization
-- [ ] Profile and optimize slow code paths
-- [ ] Ensure frequently queried fields are indexed in the database
-
-### 13. Advanced Enhancements (Optional/Future)
-- [ ] Consider using `pydantic` or `dynaconf` for configuration management
-- [ ] Add authentication/authorization if multi-user
-- [ ] Build admin UI for managing products, materials, and pricing rules
-
----
+## Risk Mitigation
+- Daily progress reviews
+- Immediate bug fixes
+- Regular testing
+- Version control commits
+- Backup of critical data
 
 ## Notes
-- Priority order may change based on business needs
-- Each task should include appropriate documentation updates
-- Consider backwards compatibility when making changes
-- Follow established coding standards and patterns
-
-## How to Use This Plan
-- Check off items as they are completed.
-- Add notes, links to relevant files, or references to issues as needed.
-- Update priorities as the project evolves.
-
-## Related Files
-- `README.md`: Project overview and setup
-- `project_notes.md`: Design notes, ideas, and open questions
-- `DECISIONS.md`: Architectural decisions and rationale (if present)
-
----
-
-Welcome! Start here, and refer to the README for more details. 
+- Focus on core functionality first
+- Prioritize stability over features
+- Maintain code quality
+- Regular commits and documentation updates
+- Database initialization script created at `scripts/init_db.py` (ready to populate sample data) 

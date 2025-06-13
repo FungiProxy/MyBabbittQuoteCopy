@@ -11,17 +11,19 @@ Supports:
 - Size-specific pricing
 - Product family compatibility
 """
+
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from src.core.database import Base
+
 
 class ConnectionOption(Base):
     """
     SQLAlchemy model representing a product connection option.
-    
+
     Stores information about connection types (flanges and tri-clamps), their sizes,
     ratings (for flanges), and pricing. Each connection option can be associated with
     multiple product families.
-    
+
     Attributes:
         id (int): Primary key
         type (str): Connection type ("Flange" or "Tri-Clamp")
@@ -29,21 +31,23 @@ class ConnectionOption(Base):
         size (str): Connection size (e.g., '1"', '1.5"', '2"', '3"', '4"')
         price (float): Additional cost for this connection option
         product_family_id (int): Foreign key to product family
-    
+
     Example:
         >>> conn = ConnectionOption(type="Flange", rating="150#", size='2"', price=75.0)
         >>> print(conn)
     """
-    
+
     __tablename__ = "connection_options"
-    
+
     id = Column(Integer, primary_key=True)
     type = Column(String, nullable=False)  # "Flange" or "Tri-Clamp"
     rating = Column(String, nullable=True)  # "150#", "300#", or None for Tri-Clamp
-    size = Column(String, nullable=False)   # e.g., '1"', '1.5"', '2"', '3"', '4"'
+    size = Column(String, nullable=False)  # e.g., '1"', '1.5"', '2"', '3"', '4"'
     price = Column(Float, default=0.0)
-    product_family_id = Column(Integer, ForeignKey("product_families.id"), nullable=False)
-    
+    product_family_id = Column(
+        Integer, ForeignKey("product_families.id"), nullable=False
+    )
+
     def __repr__(self):
         """
         Return a string representation of the ConnectionOption.
@@ -51,4 +55,4 @@ class ConnectionOption(Base):
             str: A string showing the connection type, rating (if applicable), and size
         """
         rating_str = f", rating='{self.rating}'" if self.rating else ""
-        return f"<ConnectionOption(type='{self.type}'{rating_str}, size='{self.size}')>" 
+        return f"<ConnectionOption(type='{self.type}'{rating_str}, size='{self.size}')>"

@@ -11,9 +11,14 @@ Babbitt International catalog, including:
 """
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QComboBox, QGroupBox, QFormLayout, QSpacerItem,
-    QSizePolicy, QListWidget, QListWidgetItem
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+    QComboBox,
+    QGroupBox,
+    QFormLayout,
+    QSpacerItem,
+    QSizePolicy,
 )
 from PySide6.QtCore import Signal
 
@@ -21,46 +26,46 @@ from PySide6.QtCore import Signal
 class ProductTab(QWidget):
     """
     Product selection tab for the quote generator.
-    
+
     This tab allows users to select products from the Babbitt International catalog
     and view detailed information about each product. It maintains a list of available
     models and their descriptions, and emits signals when selections are made.
-    
+
     The tab is organized into two main sections:
     1. Model Selection: Dropdown for choosing the product model
     2. Product Information: Detailed display of the selected product's features
-    
+
     Attributes:
         product_model (QComboBox): Dropdown for model selection
         product_info_label (QLabel): Label for displaying product details
         models (dict): Dictionary mapping model numbers to descriptions
         model_group (QGroupBox): Container for model selection
         info_group (QGroupBox): Container for product information
-    
+
     Signals:
         product_selected (str): Emitted when a product is selected, carries model number
     """
-    
+
     # Signals
     product_selected = Signal(str)  # model
-    
+
     def __init__(self, parent=None):
         """
         Initialize the ProductTab.
-        
+
         Args:
             parent (QWidget, optional): Parent widget. Defaults to None.
         """
         super().__init__(parent)
         self.init_ui()
-        
+
         # Connect signals
         self.product_model.currentIndexChanged.connect(self.on_model_changed)
-        
+
     def init_ui(self):
         """
         Initialize the UI components.
-        
+
         Sets up the tab's layout and widgets, including:
         - Model selection dropdown
         - Product information display
@@ -68,13 +73,13 @@ class ProductTab(QWidget):
         """
         # Main layout
         main_layout = QVBoxLayout(self)
-        
+
         # Product model selection
         self.model_group = QGroupBox("Model Selection")
         model_layout = QFormLayout()
-        
+
         self.product_model = QComboBox()
-        
+
         # Add available models with their descriptions
         self.models = {
             "LS2000": "RF Admittance Level Switch - General Purpose",
@@ -87,61 +92,65 @@ class ProductTab(QWidget):
             "LS8000/2": "Remote Mounted Dual Point Level Switch",
             "LS8500": "Presence/Absence Level Switch - Heavy Duty",
             "LT9000": "Level Transmitter",
-            "FS10000": "Flow Switch"
+            "FS10000": "Flow Switch",
         }
-        
+
         for model, description in self.models.items():
             self.product_model.addItem(f"{model} - {description}", model)
-        
+
         model_layout.addRow("Select Model:", self.product_model)
         self.model_group.setLayout(model_layout)
-        
+
         # Add to main layout
         main_layout.addWidget(self.model_group)
-        
+
         # Add product info section
         self.info_group = QGroupBox("Product Information")
         info_layout = QVBoxLayout()
         self.product_info_label = QLabel("Select a product to view details")
         info_layout.addWidget(self.product_info_label)
         self.info_group.setLayout(info_layout)
-        
+
         main_layout.addWidget(self.info_group)
-        
+
         # Add a spacer at the bottom to push everything up
-        main_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
-    
+        main_layout.addItem(
+            QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        )
+
     def on_model_changed(self, index):
         """
         Handle model selection changes.
-        
+
         Updates the product information display and emits a signal when
         a new model is selected.
-        
+
         Args:
             index (int): Index of the newly selected item in the combo box
         """
         if index >= 0:
-            model = self.product_model.currentData()  # Get the model number from the combobox data
-            
+            model = (
+                self.product_model.currentData()
+            )  # Get the model number from the combobox data
+
             # Update product info
             self.update_product_info(model)
-            
+
             # Emit signal with selected product
             self.product_selected.emit(model)
-    
+
     def update_product_info(self, model):
         """
         Update the product information section.
-        
+
         Updates the information display with detailed features and specifications
         for the selected model.
-        
+
         Args:
             model (str): Model number to display information for
         """
         info_text = f"<h3>{model}</h3>"
-        
+
         # Add model-specific info
         model_info = {
             "LS2000": """
@@ -239,20 +248,22 @@ class ProductTab(QWidget):
                     <li>Designed for flow detection in pipes</li>
                     <li>Adjustable sensitivity for different flow rates</li>
                 </ul>
-            """
+            """,
         }
-        
-        info_text += model_info.get(model, "<p>No detailed information available for this model.</p>")
+
+        info_text += model_info.get(
+            model, "<p>No detailed information available for this model.</p>"
+        )
         self.product_info_label.setText(info_text)
-    
+
     def get_selected_product(self):
         """
         Get the currently selected product information.
-        
+
         Returns a dictionary containing information about the currently
         selected product, including its model number, description,
         and category.
-        
+
         Returns:
             dict: Product information with keys:
                 - model (str): Model number
@@ -260,7 +271,7 @@ class ProductTab(QWidget):
                 - category (str): Product category
         """
         model = self.product_model.currentData()  # Get the model number
-        
+
         # Map model to category
         category_map = {
             "LS2000": "Level Switch",
@@ -273,24 +284,24 @@ class ProductTab(QWidget):
             "LS8000/2": "Level Switch",
             "LS8500": "Level Switch",
             "LT9000": "Level Transmitter",
-            "FS10000": "Flow Switch"
+            "FS10000": "Flow Switch",
         }
-        
+
         return {
             "model": model,
             "description": self.models.get(model, ""),
-            "category": category_map.get(model, "Unknown")
+            "category": category_map.get(model, "Unknown"),
         }
-        
+
     def connect_service(self, product_service):
         """
         Connect this tab to the product service.
-        
+
         Sets up the connection to the product service for fetching
         real product data. Currently a placeholder for future implementation.
-        
+
         Args:
             product_service: Service class for product data access
         """
         # This would be implemented to fetch real data from your service
-        pass 
+        pass

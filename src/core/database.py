@@ -1,7 +1,7 @@
 """
 Database connection and session management.
 """
-import os
+
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -23,6 +23,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Create base class for models
 Base = declarative_base()
 
+
 def get_db():
     """Get database session"""
     db = SessionLocal()
@@ -31,6 +32,7 @@ def get_db():
     finally:
         db.close()
 
+
 def init_db():
     """Initialize database, creating tables if they don't exist"""
-    Base.metadata.create_all(bind=engine) 
+    Base.metadata.create_all(bind=engine)

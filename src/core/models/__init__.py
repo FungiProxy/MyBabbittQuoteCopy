@@ -1,6 +1,7 @@
 """
 Database models for the application.
 """
+
 from src.core.models.customer import Customer
 from src.core.models.product import Product
 from src.core.models.product_variant import ProductFamily, ProductVariant
@@ -33,5 +34,5 @@ __all__ = [
     "MaterialOption",
     "O_RingMaterialOption",
     "CableLengthOption",
-    "HousingTypeOption"
+    "HousingTypeOption",
 ]

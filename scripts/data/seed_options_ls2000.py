@@ -1,6 +1,7 @@
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from src.core.database import SessionLocal, init_db
 from src.core.models.option import Option
@@ -18,7 +19,7 @@ EXAMPLE_OPTIONS = [
         choices=["24VDC", "115VAC", "230VAC"],
         adders={"24VDC": 0, "115VAC": 0, "230VAC": 25},
         rules=None,
-        excluded_products=""
+        excluded_products="",
     ),
     Option(
         name="Material",
@@ -30,7 +31,7 @@ EXAMPLE_OPTIONS = [
         choices=["316SS", "Halar", "UHMWPE", "Teflon"],
         adders={"316SS": 0, "Halar": 50, "UHMWPE": 30, "Teflon": 40},
         rules=None,
-        excluded_products=""
+        excluded_products="",
     ),
     Option(
         name="Probe Length",
@@ -42,7 +43,7 @@ EXAMPLE_OPTIONS = [
         choices=["10", "20", "30", "40"],
         adders={"10": 0, "20": 20, "30": 40, "40": 60},
         rules=None,
-        excluded_products=""
+        excluded_products="",
     ),
     Option(
         name="Housing",
@@ -54,18 +55,22 @@ EXAMPLE_OPTIONS = [
         choices=["Standard", "Explosion-Proof", "Stainless Steel"],
         adders={"Standard": 0, "Explosion-Proof": 100, "Stainless Steel": 200},
         rules=None,
-        excluded_products=""
+        excluded_products="",
     ),
 ]
 
+
 def print_options(db):
-    options = db.query(Option).filter(Option.product_families.like(f"%{FAMILY_NAME}%")).all()
+    options = (
+        db.query(Option).filter(Option.product_families.like(f"%{FAMILY_NAME}%")).all()
+    )
     if not options:
         print(f"No options found for {FAMILY_NAME}.")
     else:
         print(f"Options for {FAMILY_NAME}:")
         for opt in options:
             print(f"- {opt.name}: {opt.choices} (Adders: {opt.adders})")
+
 
 def seed_options(db):
     print(f"Seeding options for {FAMILY_NAME}...")
@@ -74,17 +79,23 @@ def seed_options(db):
     db.commit()
     print("Seeding complete.")
 
+
 def main():
     init_db()
     db = SessionLocal()
     try:
         print_options(db)
-        options = db.query(Option).filter(Option.product_families.like(f"%{FAMILY_NAME}%")).all()
+        options = (
+            db.query(Option)
+            .filter(Option.product_families.like(f"%{FAMILY_NAME}%"))
+            .all()
+        )
         if not options:
             seed_options(db)
             print_options(db)
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    main() 
+    main()

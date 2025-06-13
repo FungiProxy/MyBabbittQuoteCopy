@@ -1,12 +1,15 @@
 """
 Script to seed the database with LS6000 product variants.
 """
+
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from src.core.database import SessionLocal
 from src.core.models.product_variant import ProductFamily, ProductVariant
+
 
 def seed_ls6000_variants():
     """Seed the database with LS6000 product variants."""
@@ -22,94 +25,94 @@ def seed_ls6000_variants():
         variants = [
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-115VAC-S-10\"",
-                description="LS 6000 level switch with 115VAC power and 10\" 316SS probe",
+                model_number='LS6000-115VAC-S-10"',
+                description='LS 6000 level switch with 115VAC power and 10" 316SS probe',
                 base_price=550.0,
                 base_length=10.0,
                 voltage="115VAC",
-                material="S"
+                material="S",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-115VAC-H-10\"",
-                description="LS 6000 level switch with 115VAC power and 10\" Halar coated probe",
+                model_number='LS6000-115VAC-H-10"',
+                description='LS 6000 level switch with 115VAC power and 10" Halar coated probe',
                 base_price=660.0,
                 base_length=10.0,
                 voltage="115VAC",
-                material="H"
+                material="H",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-24VDC-S-10\"",
-                description="LS 6000 level switch with 24VDC power and 10\" 316SS probe",
+                model_number='LS6000-24VDC-S-10"',
+                description='LS 6000 level switch with 24VDC power and 10" 316SS probe',
                 base_price=550.0,
                 base_length=10.0,
                 voltage="24VDC",
-                material="S"
+                material="S",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-24VDC-H-10\"",
-                description="LS 6000 level switch with 24VDC power and 10\" Halar coated probe",
+                model_number='LS6000-24VDC-H-10"',
+                description='LS 6000 level switch with 24VDC power and 10" Halar coated probe',
                 base_price=660.0,
                 base_length=10.0,
                 voltage="24VDC",
-                material="H"
+                material="H",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-12VDC-S-10\"",
-                description="LS 6000 level switch with 12VDC power and 10\" 316SS probe",
+                model_number='LS6000-12VDC-S-10"',
+                description='LS 6000 level switch with 12VDC power and 10" 316SS probe',
                 base_price=550.0,
                 base_length=10.0,
                 voltage="12VDC",
-                material="S"
+                material="S",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-12VDC-H-10\"",
-                description="LS 6000 level switch with 12VDC power and 10\" Halar coated probe",
+                model_number='LS6000-12VDC-H-10"',
+                description='LS 6000 level switch with 12VDC power and 10" Halar coated probe',
                 base_price=660.0,
                 base_length=10.0,
                 voltage="12VDC",
-                material="H"
+                material="H",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-240VAC-S-10\"",
-                description="LS 6000 level switch with 240VAC power and 10\" 316SS probe",
+                model_number='LS6000-240VAC-S-10"',
+                description='LS 6000 level switch with 240VAC power and 10" 316SS probe',
                 base_price=550.0,
                 base_length=10.0,
                 voltage="240VAC",
-                material="S"
+                material="S",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-240VAC-H-10\"",
-                description="LS 6000 level switch with 240VAC power and 10\" Halar coated probe",
+                model_number='LS6000-240VAC-H-10"',
+                description='LS 6000 level switch with 240VAC power and 10" Halar coated probe',
                 base_price=660.0,
                 base_length=10.0,
                 voltage="240VAC",
-                material="H"
+                material="H",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-115VAC-S-10\"-3/4\"",
-                description="LS 6000 level switch with 115VAC power and 10\" 316SS probe (3/4\" diameter)",
+                model_number='LS6000-115VAC-S-10"-3/4"',
+                description='LS 6000 level switch with 115VAC power and 10" 316SS probe (3/4" diameter)',
                 base_price=725.0,
                 base_length=10.0,
                 voltage="115VAC",
-                material="S"
+                material="S",
             ),
             ProductVariant(
                 product_family_id=ls6000.id,
-                model_number="LS6000-115VAC-H-10\"-3/4\"",
-                description="LS 6000 level switch with 115VAC power and 10\" Halar coated probe (3/4\" diameter)",
+                model_number='LS6000-115VAC-H-10"-3/4"',
+                description='LS 6000 level switch with 115VAC power and 10" Halar coated probe (3/4" diameter)',
                 base_price=835.0,
                 base_length=10.0,
                 voltage="115VAC",
-                material="H"
-            )
+                material="H",
+            ),
         ]
 
         # Add variants to database
@@ -122,5 +125,6 @@ def seed_ls6000_variants():
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    seed_ls6000_variants() 
+    seed_ls6000_variants()
