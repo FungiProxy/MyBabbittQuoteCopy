@@ -16,9 +16,9 @@ EXAMPLE_OPTIONS = [
         price=0.0,
         price_type='fixed',
         category='Electrical',
-        choices=['24VDC', '115VAC', '230VAC'],
-        adders={'24VDC': 0, '115VAC': 0, '230VAC': 25},
-        rules=None,
+        choices=['115VAC', '24VDC'],
+        adders={'24VDC': 0},
+        rules='12VDC and 240VAC not available for LS2000. 24VDC is no extra charge.',
         excluded_products='',
     ),
     Option(

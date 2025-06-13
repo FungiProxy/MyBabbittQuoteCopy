@@ -165,15 +165,12 @@ class QuotePDFGenerator:
         story.append(Spacer(1, 0.25 * inch))
 
     def _add_summary(self, story, quote_details):
-        """Adds the quote summary (subtotal, tax, total)."""
+        """Adds the quote summary (subtotal, total)."""
         subtotal = quote_details.get('total_price', 0)
-        # Assuming tax is not included yet. Add tax calculation if needed.
-        tax = 0.0
-        total = subtotal + tax
+        total = subtotal
 
         summary_data = [
             ['Subtotal:', f'${subtotal:,.2f}'],
-            ['Tax (0%):', f'${tax:,.2f}'],
             ['<b>Total:</b>', f'<b>${total:,.2f}</b>'],
         ]
 

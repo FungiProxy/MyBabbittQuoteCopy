@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from PySide6.QtCore import QDate, Qt, Signal
 from PySide6.QtWidgets import (
@@ -87,7 +88,8 @@ class QuoteItemWidget(QWidget):
 
     def __init__(self, product, parent=None):
         super().__init__(parent)
-        self.product_id = product.get('id')
+        # Use a unique instance ID for each product
+        self.instance_id = product.get('instance_id', str(uuid.uuid4()))
         self.product = product
         self.init_ui()
 
@@ -118,13 +120,13 @@ class QuoteItemWidget(QWidget):
         # Create buttons
         self.edit_btn = QPushButton('Edit')
         self.edit_btn.setFixedSize(60, 28)
-        self.edit_btn.clicked.connect(lambda: self.edit_item.emit(str(self.product_id)))
+        self.edit_btn.clicked.connect(lambda: self.edit_item.emit(self.instance_id))
 
         self.remove_btn = QPushButton('Remove')
         self.remove_btn.setFixedSize(60, 28)
         self.remove_btn.setStyleSheet('background-color: #f44336; color: white;')
         self.remove_btn.clicked.connect(
-            lambda: self.remove_item.emit(str(self.product_id))
+            lambda: self.remove_item.emit(self.instance_id)
         )
 
         # Add widgets to layout
@@ -292,8 +294,6 @@ class QuoteCreationPage(QWidget):
         self.items_label.setStyleSheet(style)
         self.items_total_label = QLabel('Subtotal:')
         self.items_total_label.setStyleSheet(style)
-        self.tax_label = QLabel('Tax (0%):')
-        self.tax_label.setStyleSheet(style)
         self.total_label = QLabel('Total:')
         self.total_label.setStyleSheet('font-size: 14px; font-weight: bold;')
 
@@ -303,9 +303,6 @@ class QuoteCreationPage(QWidget):
         self.items_total_value = QLabel('$0.00')
         self.items_total_value.setAlignment(Qt.AlignRight)
         self.items_total_value.setStyleSheet(style)
-        self.tax_value = QLabel('$0.00')
-        self.tax_value.setAlignment(Qt.AlignRight)
-        self.tax_value.setStyleSheet(style)
         self.total_value = QLabel('$0.00')
         self.total_value.setAlignment(Qt.AlignRight)
         self.total_value.setStyleSheet('font-size: 14px; font-weight: bold;')
@@ -314,10 +311,8 @@ class QuoteCreationPage(QWidget):
         self.summary_grid.addWidget(self.items_count, 0, 1)
         self.summary_grid.addWidget(self.items_total_label, 1, 0)
         self.summary_grid.addWidget(self.items_total_value, 1, 1)
-        self.summary_grid.addWidget(self.tax_label, 2, 0)
-        self.summary_grid.addWidget(self.tax_value, 2, 1)
-        self.summary_grid.addWidget(self.total_label, 3, 0)
-        self.summary_grid.addWidget(self.total_value, 3, 1)
+        self.summary_grid.addWidget(self.total_label, 2, 0)
+        self.summary_grid.addWidget(self.total_value, 2, 1)
 
         summary_layout.addLayout(self.summary_grid)
         top_layout.addWidget(summary_card, 2)
@@ -439,6 +434,8 @@ class QuoteCreationPage(QWidget):
 
     def _on_product_added(self, product_data):
         """Handles the product_added signal from ProductSelectionDialog."""
+        # Add a unique instance ID to the product data
+        product_data['instance_id'] = str(uuid.uuid4())
         self.products.append(product_data)
         self.update_items_list()
         self.update_summary()
@@ -470,16 +467,16 @@ class QuoteCreationPage(QWidget):
                 self.items_list_widget.setItemWidget(details_item, details_widget)
                 details_item.setFlags(details_item.flags() & ~Qt.ItemIsSelectable)
 
-    def _remove_product(self, product_id):
-        """Removes a product from the quote."""
-        self.products = [p for p in self.products if p.get('id') != product_id]
+    def _remove_product(self, instance_id):
+        """Removes a product from the quote using its instance ID."""
+        self.products = [p for p in self.products if p.get('instance_id') != instance_id]
         self.update_items_list()
         self.update_summary()
 
-    def _edit_product(self, product_id):
+    def _edit_product(self, instance_id):
         """Opens the product dialog to edit an existing product."""
         product_to_edit = next(
-            (p for p in self.products if p.get('id') == product_id), None
+            (p for p in self.products if p.get('instance_id') == instance_id), None
         )
         if not product_to_edit:
             return
@@ -490,8 +487,10 @@ class QuoteCreationPage(QWidget):
         if dialog.exec():
             updated_product = dialog.get_selected_product_data()
             if updated_product:
+                # Preserve the instance ID when updating
+                updated_product['instance_id'] = instance_id
                 for i, p in enumerate(self.products):
-                    if p.get('id') == product_id:
+                    if p.get('instance_id') == instance_id:
                         self.products[i] = updated_product
                         break
                 self.update_items_list()
@@ -520,12 +519,10 @@ class QuoteCreationPage(QWidget):
             * p.get('quantity', 1)
             for p in self.products
         )
-        tax = 0  # Placeholder for tax calculation
-        total = subtotal + tax
+        total = subtotal
 
         self.items_count.setText(str(num_items))
         self.items_total_value.setText(f'${subtotal:,.2f}')
-        self.tax_value.setText(f'${tax:,.2f}')
         self.total_value.setText(f'${total:,.2f}')
 
     def print_quote(self):

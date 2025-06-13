@@ -1,4 +1,9 @@
 import json
+import os
+import sys
+
+# Add project root to Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from src.core.database import SessionLocal
 from src.core.models.material_option import MaterialOption

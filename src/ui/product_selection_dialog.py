@@ -213,9 +213,31 @@ class ProductSelectionDialog(QDialog):
             self.db, product['name']
         )
 
+        # Get voltage options separately
+        voltage_options = self.product_service.get_voltage_options(
+            self.db, product['id']
+        )
+
+        # Add voltage options first
+        if voltage_options:
+            voltage_combo = QComboBox()
+            voltage_combo.setObjectName("option_Voltage")
+            for option in voltage_options:
+                voltage_combo.addItem(option['display_name'], option['voltage'])
+            voltage_combo.currentIndexChanged.connect(
+                lambda idx, cmb=voltage_combo: self._on_option_changed(
+                    'Voltage', cmb.currentData()
+                )
+            )
+            form_layout.addRow("Voltage:", voltage_combo)
+            self.option_widgets['Voltage'] = voltage_combo
+
         # Group options by category
         options_by_category = {}
         for option in additional_options:
+            # Skip voltage options as we've already handled them
+            if option['name'] == 'Voltage':
+                continue
             category = option.get('category', 'General')
             if category not in options_by_category:
                 options_by_category[category] = []
@@ -223,11 +245,6 @@ class ProductSelectionDialog(QDialog):
 
         # Create UI controls for each option
         for category, options in options_by_category.items():
-            # Add category header
-            if category != 'General':
-                category_label = QLabel(f'<b>{category}</b>')
-                form_layout.addRow(category_label)
-
             for option in options:
                 if not option.get('choices'):
                     continue
@@ -238,7 +255,8 @@ class ProductSelectionDialog(QDialog):
                     combo.setObjectName(f"option_{option['name']}")
                     # Add material options with their codes
                     for choice in option['choices']:
-                        price = option['adders'].get(choice, 0) or 0
+                        adder_map = option.get('adders') or {}
+                        price = adder_map.get(choice, 0) or 0
                         # Map full material names to their codes
                         material_map = {
                             '316SS': 'S',
@@ -273,12 +291,14 @@ class ProductSelectionDialog(QDialog):
                     combo = QComboBox()
                     combo.setObjectName(f"option_{option['name']}")
                     for choice in option['choices']:
-                        price = option['adders'].get(choice, 0) or 0
+                        adder_map = option.get('adders') or {}
+                        price = adder_map.get(choice, 0) or 0
                         display_text = (
                             f'{choice} (+${price:.2f})' if price > 0 else choice
                         )
                         combo.addItem(display_text, choice)
 
+                    # Connect the signal using a lambda that captures the current combo box
                     combo.currentIndexChanged.connect(
                         lambda idx, opt=option, cmb=combo: self._on_option_changed(
                             opt['name'], cmb.currentData()
@@ -290,7 +310,8 @@ class ProductSelectionDialog(QDialog):
                     # Use radio buttons for few choices
                     radio_layout = QHBoxLayout()
                     for choice in option['choices']:
-                        price = option['adders'].get(choice, 0) or 0
+                        adder_map = option.get('adders') or {}
+                        price = adder_map.get(choice, 0) or 0
                         display_text = (
                             f'{choice} (+${price:.2f})' if price > 0 else choice
                         )
@@ -410,7 +431,10 @@ class ProductSelectionDialog(QDialog):
             price = next(
                 (opt['price'] for opt in options if opt['type'] == conn_type), 0
             )
-            display_text = f'{conn_type} (+${price:.2f})' if price > 0 else conn_type
+            price_val = price or 0  # Treat None as 0 for comparison/formatting
+            display_text = (
+                f"{conn_type} (+${price_val:.2f})" if price_val > 0 else conn_type
+            )
             self.connection_type_combo.addItem(display_text, conn_type)
 
         form_layout.addRow('Connection Type:', self.connection_type_combo)
@@ -456,7 +480,10 @@ class ProductSelectionDialog(QDialog):
                 price = next(
                     (opt['price'] for opt in type_options if opt['rating'] == rating), 0
                 )
-                display_text = f'{rating} (+${price:.2f})' if price > 0 else rating
+                price_val = price or 0
+                display_text = (
+                    f"{rating} (+${price_val:.2f})" if price_val > 0 else rating
+                )
                 rating_combo.addItem(display_text, rating)
             sub_form_layout.addRow('Rating:', rating_combo)
             self.option_widgets['Rating'] = rating_combo
@@ -472,7 +499,10 @@ class ProductSelectionDialog(QDialog):
                 price = next(
                     (opt['price'] for opt in type_options if opt['size'] == size), 0
                 )
-                display_text = f'{size} (+${price:.2f})' if price > 0 else size
+                price_val = price or 0
+                display_text = (
+                    f"{size} (+${price_val:.2f})" if price_val > 0 else size
+                )
                 size_combo.addItem(display_text, size)
             sub_form_layout.addRow('Size:', size_combo)
             self.option_widgets['Size'] = size_combo

@@ -59,7 +59,6 @@ Item | Product Description | Qty | Unit Price | Total
 ================================================================================
 
                                            Subtotal:    {{subtotal}}
-                                           Tax ({{tax_rate}}%):     {{tax_amount}}
                                            Shipping:    {{shipping_cost}}
                                            Discount:    {{discount_amount}}
                                            ────────────────────────────
