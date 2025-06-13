@@ -201,39 +201,63 @@ class ProductSelectionDialog(QDialog):
         self._update_total_price()
 
     def _setup_core_options(self, form_layout: QFormLayout, product: dict):
-        # Voltage
-        self.voltage_combo = QComboBox()
-        voltages = self.product_service.get_voltage_options(self.db)
-        for v in voltages:
-            self.voltage_combo.addItem(v["voltage"], v)
-        self.voltage_combo.currentIndexChanged.connect(self._on_voltage_changed)
-        form_layout.addRow("Voltage:", self.voltage_combo)
+        """Set up the core configuration options for the selected product."""
+        # Get product family-specific options
+        additional_options = self.product_service.get_additional_options(
+            self.db, product["name"]
+        )
+        
+        # Group options by category
+        options_by_category = {}
+        for option in additional_options:
+            category = option.get("category", "General")
+            if category not in options_by_category:
+                options_by_category[category] = []
+            options_by_category[category].append(option)
 
-        # Material
-        self.material_combo = QComboBox()
-        materials = self.product_service.get_material_options(self.db)
-        for m in materials:
-            self.material_combo.addItem(m["name"], m)
-        self.material_combo.currentIndexChanged.connect(self._on_material_changed)
-        form_layout.addRow("Material:", self.material_combo)
+        # Create UI controls for each option
+        for category, options in options_by_category.items():
+            # Add category header
+            if category != "General":
+                category_label = QLabel(f"<b>{category}</b>")
+                form_layout.addRow(category_label)
 
-        # Length
-        length_layout = QHBoxLayout()
-        self.length_slider = QSlider(Qt.Horizontal)
-        self.length_slider.setRange(6, 120)
-        self.length_slider.valueChanged.connect(self._on_length_changed)
-        length_layout.addWidget(self.length_slider)
-        self.length_input = QLineEdit()
-        self.length_input.setValidator(QIntValidator(6, 120))
-        self.length_input.setFixedWidth(50)
-        self.length_input.textChanged.connect(self._on_length_text_changed)
-        length_layout.addWidget(self.length_input)
-        form_layout.addRow("Length (in):", length_layout)
+            for option in options:
+                if not option.get("choices"):
+                    continue
 
-        # Set initial values
-        base_length = float(product.get("base_length", 10.0))
-        self.length_slider.setValue(int(base_length))
-        self.length_input.setText(str(int(base_length)))
+                # Create appropriate control based on option type
+                if len(option["choices"]) > 3:
+                    # Use combo box for many choices
+                    combo = QComboBox()
+                    for choice in option["choices"]:
+                        price = option["adders"].get(choice, 0)
+                        display_text = f"{choice} (+${price:.2f})" if price > 0 else choice
+                        combo.addItem(display_text, choice)
+                    
+                    combo.currentIndexChanged.connect(
+                        lambda idx, opt=option: self._on_option_changed(opt["name"], combo.currentData())
+                    )
+                    form_layout.addRow(f"{option['name']}:", combo)
+                    self.option_widgets[option["name"]] = combo
+                else:
+                    # Use radio buttons for few choices
+                    radio_layout = QHBoxLayout()
+                    for choice in option["choices"]:
+                        price = option["adders"].get(choice, 0)
+                        display_text = f"{choice} (+${price:.2f})" if price > 0 else choice
+                        radio = QPushButton(display_text)
+                        radio.setCheckable(True)
+                        radio.setProperty("choice", choice)
+                        radio.clicked.connect(
+                            lambda checked, opt=option, ch=choice: self._on_option_changed(opt["name"], ch) if checked else None
+                        )
+                        radio_layout.addWidget(radio)
+                    form_layout.addRow(f"{option['name']}:", radio_layout)
+                    self.option_widgets[option["name"]] = radio_layout
+
+        # Add a spacer after all options
+        form_layout.addRow(QWidget())
 
     def _setup_quantity_and_total(self):
         h_layout = QHBoxLayout()
@@ -263,51 +287,11 @@ class ProductSelectionDialog(QDialog):
         self.quantity = value
         self._update_total_price()
 
-    def _on_voltage_changed(self, index):
-        if index == -1:
-            return
-        # Using currentData which was set from the dictionary
-        selected_voltage = self.voltage_combo.currentData()["voltage"]
-        self.config_service.select_option("Voltage", selected_voltage)
-        self._update_total_price()
-
-    def _on_material_changed(self, index):
-        if index == -1:
-            return
-        # Using currentData which was set from the dictionary
-        selected_material = self.material_combo.currentData()["material_code"]
-        self.config_service.select_option("Material", selected_material)
-        self._update_total_price()
-
-    def _update_length(self, value: float):
-        """Unified method to update length from any source."""
-        # Block signals to prevent an infinite loop between slider and text box
-        self.length_input.blockSignals(True)
-        self.length_slider.blockSignals(True)
-
-        self.length_input.setText(str(int(value)))
-        self.length_slider.setValue(int(value))
-
-        self.length_input.blockSignals(False)
-        self.length_slider.blockSignals(False)
-
-        logger.debug(f"Length updated to: {value}")
-        self.config_service.select_option("Length", value)
-        self._update_total_price()
-
-    def _on_length_changed(self, value):
-        """Handle QSlider value change."""
-        self._update_length(float(value))
-
-    def _on_length_text_changed(self, text):
-        """Handle QLineEdit text change."""
-        try:
-            if text:
-                self._update_length(float(text))
-        except ValueError:
-            logger.warning(f"Invalid length input: {text}")
-            # Optionally revert to a valid number or show an error
-            pass
+    def _on_option_changed(self, option_name: str, value: any):
+        """Handle changes to any option value."""
+        if self.config_service.current_config:
+            self.config_service.select_option(option_name, value)
+            self._update_total_price()
 
     def _setup_connection_options(self, form_layout: QFormLayout, options: list):
         """Creates UI controls for connection options."""
