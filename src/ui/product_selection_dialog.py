@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QVBoxLayout,
     QWidget,
+    QGroupBox,
 )
 
 from src.core.database import SessionLocal
@@ -130,10 +131,20 @@ class ProductSelectionDialog(QDialog):
         self.right_panel = QWidget()
         self.right_layout = QVBoxLayout(self.right_panel)
         
-        # Add total price label at the top
+        # Add model number and total price at the top in a horizontal layout
+        self.top_info_layout = QHBoxLayout()
+        self.model_number_label = QLabel('Model: PENDING...')
+        self.model_number_label.setObjectName('modelNumberLabel')
+        self.model_number_label.setStyleSheet('font-size: 16pt; font-weight: bold;')
+        self.model_number_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.top_info_layout.addWidget(self.model_number_label, alignment=Qt.AlignLeft)
+
         self.total_price_label = QLabel('$0.00')
+        self.total_price_label.setObjectName('totalPriceLabel')
         self.total_price_label.setStyleSheet('font-size: 16pt; font-weight: bold;')
-        self.right_layout.addWidget(self.total_price_label)
+        self.top_info_layout.addWidget(self.total_price_label, alignment=Qt.AlignRight)
+
+        self.right_layout.addLayout(self.top_info_layout)
         
         self.config_scroll = QScrollArea()
         self.config_scroll.setWidgetResizable(True)
@@ -198,16 +209,6 @@ class ProductSelectionDialog(QDialog):
         self._clear_config_panel()
         self.option_widgets = {}
 
-        details = QLabel(f"<b>{product['name']}</b><br>{product['description']}")
-        details.setWordWrap(True)
-        self.config_layout.addWidget(details)
-
-        # Add a label to display the dynamically generated model number
-        self.model_number_label = QLabel('Model: PENDING...')
-        self.model_number_label.setObjectName('modelNumberLabel')
-        self.model_number_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.config_layout.addWidget(self.model_number_label)
-
         form_layout = QFormLayout()
         form_layout.setSpacing(15)
 
@@ -217,6 +218,9 @@ class ProductSelectionDialog(QDialog):
         except Exception as e:
             logger.error(f"Error setting up core options: {str(e)}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Failed to setup core options: {str(e)}")
+
+        # Add mechanical options
+        self._setup_mechanical_options(form_layout)
 
         # Get all connection-related options for the product family
         try:
@@ -239,46 +243,94 @@ class ProductSelectionDialog(QDialog):
         """Set up the core configuration options for the selected product."""
         logger.debug(f"Setting up core options for product: {product['name']}")
         
-        # Get product family-specific options
-        try:
-            additional_options = self.product_service.get_additional_options(
-                self.db, product['name']
-            )
-            logger.debug(f"Additional options: {additional_options}")
-        except Exception as e:
-            logger.error(f"Error fetching additional options: {str(e)}", exc_info=True)
-            additional_options = []
-
-        # Get voltage options separately
+        # Get voltage options first
         try:
             voltage_options = self.product_service.get_voltage_options(
                 self.db, product['id']
             )
             logger.debug(f"Voltage options: {voltage_options}")
+            
+            if voltage_options:
+                voltage_combo = QComboBox()
+                voltage_combo.setObjectName("option_Voltage")
+                for option in voltage_options:
+                    voltage_combo.addItem(option['display_name'], option['voltage'])
+                voltage_combo.currentIndexChanged.connect(
+                    lambda idx, cmb=voltage_combo: self._on_option_changed(
+                        'Voltage', cmb.currentData()
+                    )
+                )
+                form_layout.addRow("Voltage:", voltage_combo)
+                self.option_widgets['Voltage'] = voltage_combo
+                logger.debug("Added voltage options to form")
         except Exception as e:
             logger.error(f"Error fetching voltage options: {str(e)}", exc_info=True)
-            voltage_options = []
-
-        # Add voltage options first
-        if voltage_options:
-            voltage_combo = QComboBox()
-            voltage_combo.setObjectName("option_Voltage")
-            for option in voltage_options:
-                voltage_combo.addItem(option['display_name'], option['voltage'])
-            voltage_combo.currentIndexChanged.connect(
-                lambda idx, cmb=voltage_combo: self._on_option_changed(
-                    'Voltage', cmb.currentData()
-                )
+        
+        # Get material options
+        try:
+            material_options = self.product_service.get_available_materials_for_product(
+                self.db, product['name']
             )
-            form_layout.addRow("Voltage:", voltage_combo)
-            self.option_widgets['Voltage'] = voltage_combo
-            logger.debug("Added voltage options to form")
+            logger.debug(f"Material options: {material_options}")
+            
+            if material_options:
+                material_combo = QComboBox()
+                material_combo.setObjectName("option_Material")
+                for option in material_options:
+                    material_combo.addItem(option['display_name'], option['code'])
+                    material_combo.currentIndexChanged.connect(
+                        lambda idx, cmb=material_combo: self._on_option_changed(
+                            'Material', cmb.currentData()
+                        )
+                    )
+                form_layout.addRow("Material:", material_combo)
+                self.option_widgets['Material'] = material_combo
+                logger.debug("Added material options to form")
+
+                # Add probe length customization
+                probe_length_spin = QSpinBox()
+                probe_length_spin.setObjectName("option_Probe Length")
+                probe_length_spin.setRange(1, 120)  # Allow lengths from 1 to 120 inches
+                probe_length_spin.setSuffix('"')  # Add inch symbol
+                # Set default value from product's base_length
+                if product.get('base_length'):
+                    probe_length_spin.setValue(product['base_length'])
+                probe_length_spin.valueChanged.connect(
+                    lambda value, cmb=probe_length_spin: self._on_option_changed(
+                        'Probe Length', value
+                    )
+                )
+                form_layout.addRow("Probe Length:", probe_length_spin)
+                self.option_widgets['Probe Length'] = probe_length_spin
+                logger.debug(f"Added probe length customization to form with default value: {product.get('base_length')}")
+        except Exception as e:
+            logger.error(f"Error fetching material options: {str(e)}", exc_info=True)
+        
+        # Get product family-specific options
+        try:
+            additional_options = self.product_service.get_additional_options(
+                self.db, product['name']
+            )
+            logger.debug(f"Additional options for {product['name']}:")
+            for opt in additional_options:
+                logger.debug(f"  Option: {opt['name']}")
+                logger.debug(f"    Category: {opt.get('category', 'No category')}")
+                logger.debug(f"    Choices: {opt.get('choices', 'No choices')}")
+                logger.debug(f"    Adders: {opt.get('adders', 'No adders')}")
+                logger.debug(f"    Product Families: {opt.get('product_families', 'No families')}")
+                logger.debug(f"    Excluded Products: {opt.get('excluded_products', 'None')}")
+        except Exception as e:
+            logger.error(f"Error fetching additional options: {str(e)}", exc_info=True)
+            additional_options = []
 
         # Group options by category
         options_by_category = {}
         for option in additional_options:
             # Skip voltage options as we've already handled them
             if option['name'] == 'Voltage':
+                continue
+            # Skip mechanical options from core options UI
+            if option['name'] in {'Stainless Steel Tag', 'Cable Probe', 'Bent Probe', 'Teflon Insulator'}:
                 continue
             category = option.get('category', 'General')
             if category not in options_by_category:
@@ -287,16 +339,34 @@ class ProductSelectionDialog(QDialog):
             logger.debug(f"Added option {option['name']} to category {category}")
 
         # Create UI controls for each option
+        # Only show the main 'O-Rings' dropdown, not individual material boxes, and skip 'None'
+        oring_material_names = {"Viton", "Silicon", "Buna-N", "EPDM", "PTFE", "Kalrez", "None"}
+        exotic_metal_names = {"Alloy 20", "Hastelloy-C-276", "Hastelloy-B", "Titanium"}
+        exotic_metal_choices = []
+        exotic_metal_option = None
         for category, options in options_by_category.items():
             logger.debug(f"Processing category: {category} with {len(options)} options")
             for option in options:
+                # Skip individual O-Ring material options and 'None', but keep the main 'O-Rings' dropdown
+                if option['name'] in oring_material_names:
+                    logger.debug(f"Skipping option: {option['name']}")
+                    continue
+                # Collect exotic metal options for grouping
+                if option['name'] == 'Exotic Metals' or (
+                    isinstance(option.get('choices'), list) and any(
+                        c in exotic_metal_names for c in option['choices']
+                    )
+                ):
+                    exotic_metal_option = option
+                    for c in option.get('choices', []):
+                        if c not in exotic_metal_choices and c in exotic_metal_names:
+                            exotic_metal_choices.append(c)
+                    continue
                 if not option.get('choices'):
                     logger.warning(f"Option {option['name']} has no choices, skipping")
                     continue
-                
                 logger.debug(f"Creating control for option: {option['name']}")
                 logger.debug(f"Option details: choices={option['choices']}, adders={option['adders']}")
-                
                 try:
                     if isinstance(option['choices'], list):
                         combo = QComboBox()
@@ -308,11 +378,27 @@ class ProductSelectionDialog(QDialog):
                                 name, cmb.currentData()
                             )
                         )
-                        form_layout.addRow(f"{option['name']}:", combo)
+                        # Rename 'Mounting' label to 'Connection' in the UI
+                        label_name = 'Connection' if option['name'] == 'Mounting' else option['name']
+                        form_layout.addRow(f"{label_name}:", combo)
                         self.option_widgets[option['name']] = combo
                         logger.debug(f"Added combo box for {option['name']}")
                 except Exception as e:
                     logger.error(f"Error creating control for option {option['name']}: {str(e)}", exc_info=True)
+
+        # Add the combined Exotic Metals dropdown if any options were found
+        if exotic_metal_choices:
+            combo = QComboBox()
+            combo.setObjectName("option_Exotic Metals")
+            combo.addItem("None", "None")  # Add None as first option
+            for choice in sorted(exotic_metal_choices):  # Sort choices alphabetically
+                combo.addItem(str(choice), choice)
+            combo.currentIndexChanged.connect(
+                lambda idx, cmb=combo: self._on_option_changed("Exotic Metals", cmb.currentData())
+            )
+            form_layout.addRow("Exotic Metals:", combo)
+            self.option_widgets["Exotic Metals"] = combo
+            logger.debug("Added combined Exotic Metals combo box")
 
         # Set default values for core options after they have been created
         self._set_initial_option_value('Voltage', product.get('voltage'))
@@ -574,3 +660,119 @@ class ProductSelectionDialog(QDialog):
         if not items:
             return None
         return items[0].data(Qt.UserRole)
+
+    def _setup_mechanical_options(self, form_layout: QFormLayout):
+        """Set up the mechanical options as a multi-selectable list."""
+        mechanical_group = QGroupBox('Mechanical Options')
+        mechanical_layout = QVBoxLayout()
+        
+        # Create a list widget with checkboxes
+        mechanical_list = QListWidget()
+        mechanical_list.setSelectionMode(QListWidget.MultiSelection)
+        
+        # Get the current product family name
+        product_family = self.config_service.current_config.product_family_name if self.config_service.current_config else None
+        
+        # Define mechanical options based on product family
+        if product_family == 'LS2100':
+            mechanical_options = [
+                ('Cable Probe', 80.00),
+                ('Bent Probe', 50.00),
+                ('Stainless Steel Tag', 30.00)
+            ]
+        elif product_family == 'LS6000':
+            mechanical_options = [
+                ('Stainless Steel Tag', 30.00),
+                ('Cable Probe', 80.00),
+                ('Bent Probe', 50.00),
+                ('Teflon Insulator', 40.00),
+                ('3/4" Diameter Probe x 10"', 175.00)
+            ]
+        elif product_family == 'LS7000':
+            mechanical_options = [
+                ('3/4" Diameter Probe x 10"', 175.00),
+                ('Stainless Steel Housing (NEMA 4X)', 285.00),
+                ('Cable Probe', 80.00),
+                ('Bent Probe', 50.00),
+                ('Stainless Steel Tag', 30.00)
+            ]
+        elif product_family == 'LS7000/2':
+            mechanical_options = [
+                ('Stainless Steel Tag', 30.00)
+            ]
+        elif product_family == 'LS8000':
+            mechanical_options = [
+                ('22 AWG, Twisted Shielded Pair', 0.70),  # Price per foot
+                ('8" x 6" x 3.5" NEMA 4 Metal Enclosure for Receiver', 245.00),
+                ('GRE EXP PROOF HOUSING FOR RECEIVER', 590.00),
+                ('Cable Probe', 80.00),
+                ('Bent Probe', 50.00),
+                ('Stainless Steel Tag', 30.00)
+            ]
+        elif product_family == 'LS8000/2':
+            mechanical_options = [
+                ('22 AWG, Twisted Shielded Pair', 0.70),  # Price per foot
+                ('10" x 8" x 4" NEMA 4 Metal Enclosure', 245.00),
+                ('GRE EXP PROOF HOUSING FOR RECEIVER', 590.00),
+                ('Stainless Steel Tag', 30.00)
+            ]
+        elif product_family == 'LT9000':
+            mechanical_options = [
+                ('Stainless Steel Tag', 30.00)
+            ]
+        elif product_family == 'FS10000':
+            mechanical_options = [
+                ('GRE EXP PROOF HOUSING FOR RECEIVER', 590.00)
+            ]
+        else:  # Default options for other models
+            mechanical_options = [
+                ('Stainless Steel Tag', 30.00),
+                ('Cable Probe', 80.00),
+                ('Bent Probe', 50.00),
+                ('Teflon Insulator', 40.00),
+                ('Extra Static Protection', 30.00)
+            ]
+        
+        for option_name, price in mechanical_options:
+            # Special formatting for per-foot pricing
+            if option_name == '22 AWG, Twisted Shielded Pair':
+                display_text = f"{option_name} (+${price:.2f}/foot)"
+            else:
+                display_text = f"{option_name} (+${price:.2f})"
+            item = QListWidgetItem(display_text)
+            item.setData(Qt.UserRole, {'name': option_name, 'price': price})
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Unchecked)
+            mechanical_list.addItem(item)
+        
+        # Set fixed height based on number of items (25 pixels per item + 10 pixels padding)
+        item_height = 25
+        padding = 10
+        mechanical_list.setFixedHeight(len(mechanical_options) * item_height + padding)
+        
+        # Connect the item changed signal
+        mechanical_list.itemChanged.connect(
+            lambda item: self._on_mechanical_option_changed(item)
+        )
+        
+        mechanical_layout.addWidget(mechanical_list)
+        mechanical_group.setLayout(mechanical_layout)
+        form_layout.addRow(mechanical_group)
+        self.option_widgets['Mechanical Options'] = mechanical_list
+
+    def _on_mechanical_option_changed(self, item):
+        """Handle changes to mechanical options selection."""
+        if not self.config_service.current_config:
+            return
+            
+        option_data = item.data(Qt.UserRole)
+        option_name = option_data['name']
+        is_selected = item.checkState() == Qt.Checked
+        
+        # Update the configuration service
+        if is_selected:
+            self.config_service.select_option(option_name, 'Yes')
+        else:
+            self.config_service.select_option(option_name, 'No')
+            
+        self._update_total_price()

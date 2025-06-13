@@ -24,6 +24,7 @@ def seed_options(db: Session):
             'category': 'O-ring Material',
             'choices': ['Viton'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'Silicon',
@@ -33,6 +34,7 @@ def seed_options(db: Session):
             'category': 'O-ring Material',
             'choices': ['Silicon'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'Buna-N',
@@ -42,6 +44,7 @@ def seed_options(db: Session):
             'category': 'O-ring Material',
             'choices': ['Buna-N'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'EPDM',
@@ -51,6 +54,7 @@ def seed_options(db: Session):
             'category': 'O-ring Material',
             'choices': ['EPDM'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'PTFE',
@@ -60,6 +64,7 @@ def seed_options(db: Session):
             'category': 'O-ring Material',
             'choices': ['PTFE'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'Kalrez',
@@ -69,6 +74,7 @@ def seed_options(db: Session):
             'category': 'O-ring Material',
             'choices': ['Kalrez'],
             'adders': {'Kalrez': 295.0},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         # Exotic Metals
         {
@@ -79,6 +85,7 @@ def seed_options(db: Session):
             'category': 'Exotic Metal',
             'choices': ['None'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'Alloy 20',
@@ -88,6 +95,7 @@ def seed_options(db: Session):
             'category': 'Exotic Metal',
             'choices': ['Alloy 20'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'Hastelloy-C-276',
@@ -97,6 +105,7 @@ def seed_options(db: Session):
             'category': 'Exotic Metal',
             'choices': ['Hastelloy-C-276'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'Hastelloy-B',
@@ -106,6 +115,7 @@ def seed_options(db: Session):
             'category': 'Exotic Metal',
             'choices': ['Hastelloy-B'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
         {
             'name': 'Titanium',
@@ -115,6 +125,18 @@ def seed_options(db: Session):
             'category': 'Exotic Metal',
             'choices': ['Titanium'],
             'adders': {},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
+        },
+        # O-Rings
+        {
+            'name': 'O-Rings',
+            'description': 'O-Ring material selection',
+            'price': 0.0,
+            'price_type': 'fixed',
+            'category': 'O-ring Material',
+            'choices': ['Viton', 'Silicon', 'Buna-N', 'EPDM', 'PTFE', 'Kalrez'],
+            'adders': {'Viton': 0, 'Silicon': 0, 'Buna-N': 0, 'EPDM': 0, 'PTFE': 0, 'Kalrez': 295},
+            'product_families': 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000',
         },
     ]
 

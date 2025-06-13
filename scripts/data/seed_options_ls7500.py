@@ -73,6 +73,30 @@ EXAMPLE_OPTIONS = [
         rules=None,
         excluded_products='',
     ),
+    Option(
+        name='O-Rings',
+        description='O-Ring material selection',
+        product_families=FAMILY_NAME,
+        price=0.0,
+        price_type='fixed',
+        category='O-ring Material',
+        choices=['Viton', 'Silicon', 'Buna-N', 'EPDM', 'PTFE', 'Kalrez'],
+        adders={'Viton': 0, 'Silicon': 0, 'Buna-N': 0, 'EPDM': 0, 'PTFE': 0, 'Kalrez': 295},
+        rules=None,
+        excluded_products='',
+    ),
+    Option(
+        name='Exotic Metals',
+        description='Exotic metal selection',
+        product_families=FAMILY_NAME,
+        price=0.0,
+        price_type='fixed',
+        category='Mechanical',
+        choices=['Alloy 20', 'Hastelloy C', 'Hastelloy B', 'Titanium'],
+        adders={'Alloy 20': 0, 'Hastelloy C': 0, 'Hastelloy B': 0, 'Titanium': 0},
+        rules=None,
+        excluded_products='',
+    ),
 ]
 
 

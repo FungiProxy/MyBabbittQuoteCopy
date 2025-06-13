@@ -189,10 +189,15 @@ class ProductService:
             >>> for material in materials:
             ...     print(f"{material['display_name']}: ${material['base_price']:.2f}")
         """
+        # First get the product family ID
+        family = db.query(ProductFamily).filter_by(name=product_family).first()
+        if not family:
+            return []
+
         materials = (
             db.query(MaterialOption)
             .filter(
-                MaterialOption.product_family == product_family,
+                MaterialOption.product_family_id == family.id,
                 MaterialOption.is_available == 1,
             )
             .all()
@@ -442,12 +447,24 @@ class ProductService:
         logger.debug(f"Fetching additional options for family: {family_name}")
         from src.core.models.option import Option
 
+        # Query options that either have no product_families (NULL) or include this family
         options = (
             db.query(Option)
-            .filter(Option.product_families.like(f'%{family_name}%'))
+            .filter(
+                (Option.product_families.is_(None)) |  # Include options with no family restrictions
+                (Option.product_families.like(f'%{family_name}%'))  # Include options for this family
+            )
             .all()
         )
         logger.debug(f"Found {len(options)} raw options for {family_name}")
+        
+        # Log raw options before filtering
+        for opt in options:
+            logger.debug(f"Raw option: {opt.name}")
+            logger.debug(f"  Product Families: {opt.product_families}")
+            logger.debug(f"  Excluded Products: {opt.excluded_products}")
+            logger.debug(f"  Choices: {opt.choices}")
+            logger.debug(f"  Category: {opt.category}")
         
         # Exclude options where family_name is in excluded_products
         filtered = [
