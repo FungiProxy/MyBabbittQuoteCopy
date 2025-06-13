@@ -11,7 +11,7 @@ Supports:
 - Relationship to product families
 """
 
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey
+from sqlalchemy import Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from src.core.database import Base
@@ -39,7 +39,7 @@ class SparePart(Base):
         >>> print(sp)
     """
 
-    __tablename__ = "spare_parts"
+    __tablename__ = 'spare_parts'
 
     id = Column(Integer, primary_key=True, index=True)
     part_number = Column(String, nullable=False, index=True)
@@ -50,7 +50,7 @@ class SparePart(Base):
     price = Column(Float, nullable=False, default=0.0)
 
     # Related product family
-    product_family_id = Column(Integer, ForeignKey("product_families.id"))
+    product_family_id = Column(Integer, ForeignKey('product_families.id'))
 
     # Categorization
     category = Column(
@@ -58,7 +58,7 @@ class SparePart(Base):
     )  # e.g., "electronics", "probe_assembly", "housing"
 
     # Relationships
-    product_family = relationship("ProductFamily", back_populates="spare_parts")
+    product_family = relationship('ProductFamily', back_populates='spare_parts')
 
     def __repr__(self):
         """

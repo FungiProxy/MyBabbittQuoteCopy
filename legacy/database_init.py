@@ -3,11 +3,12 @@ Database initialization service.
 Handles checking if database exists and creating it if needed.
 """
 
-from pathlib import Path
 import logging
+from pathlib import Path
 
-from src.core.database import SessionLocal, init_db, engine
 from sqlalchemy import inspect
+
+from src.core.database import SessionLocal, engine, init_db
 from src.core.services.database_populate import remove_obsolete_products
 
 # Set up logging
@@ -16,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 def check_database_exists():
     """Check if the database file exists."""
-    data_dir = Path("data")
-    db_path = data_dir / "quotes.db"
+    data_dir = Path('data')
+    db_path = data_dir / 'quotes.db'
     return db_path.exists()
 
 
@@ -29,45 +30,45 @@ def check_tables_exist():
 
         # Define the tables we expect to find
         expected_tables = [
-            "materials",
-            "standard_lengths",
-            "product_families",
-            "product_variants",
-            "options",
-            "customers",
-            "quotes",
-            "quote_items",
-            "quote_item_options",
-            "spare_parts",
+            'materials',
+            'standard_lengths',
+            'product_families',
+            'product_variants',
+            'options',
+            'customers',
+            'quotes',
+            'quote_items',
+            'quote_item_options',
+            'spare_parts',
         ]
 
         # Check if all expected tables exist
         for table in expected_tables:
             if table not in tables:
-                logger.info(f"Missing table: {table}")
+                logger.info(f'Missing table: {table}')
                 return False
 
         return True
     except Exception as e:
-        logger.error(f"Error checking tables: {str(e)}")
+        logger.error(f'Error checking tables: {e!s}')
         return False
 
 
 def create_database():
     """Create the database schema."""
-    logger.info("Creating database schema...")
+    logger.info('Creating database schema...')
     init_db()
-    logger.info("Database schema created.")
+    logger.info('Database schema created.')
 
 
 def ensure_obsolete_products_removed():
     """Ensure that ultrasonic and radar products are removed from the database."""
     db = SessionLocal()
     try:
-        logger.info("Ensuring ultrasonic and radar products are removed...")
+        logger.info('Ensuring ultrasonic and radar products are removed...')
         remove_obsolete_products(db)
     except Exception as e:
-        logger.error(f"Error removing obsolete products: {str(e)}")
+        logger.error(f'Error removing obsolete products: {e!s}')
     finally:
         db.close()
 
@@ -77,23 +78,23 @@ def initialize_database_if_needed():
     try:
         # Check if database file exists
         if not check_database_exists():
-            logger.info("Database file does not exist. Creating database...")
+            logger.info('Database file does not exist. Creating database...')
             create_database()
             return True
 
         # Check if tables exist
         if not check_tables_exist():
-            logger.info("Database tables are missing. Initializing database...")
+            logger.info('Database tables are missing. Initializing database...')
             create_database()
             return True
 
         # Database already exists and has tables
-        logger.info("Database already exists with required tables.")
+        logger.info('Database already exists with required tables.')
 
         # Even if database exists, ensure obsolete products are removed
         ensure_obsolete_products_removed()
 
         return False
     except Exception as e:
-        logger.error(f"Error initializing database: {str(e)}")
+        logger.error(f'Error initializing database: {e!s}')
         return False

@@ -14,7 +14,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from src.core.models import SparePart, ProductFamily
+from src.core.models import ProductFamily, SparePart
 from src.utils.db_utils import get_all
 
 

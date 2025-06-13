@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from src.core.models import Product, Material
+from src.core.models import Material, Product
 
 
 @dataclass
@@ -28,7 +28,7 @@ class PricingContext:
             self.db.query(Product).filter(Product.id == self.product_id).first()
         )
         if not self.product:
-            raise ValueError(f"Product with ID {self.product_id} not found")
+            raise ValueError(f'Product with ID {self.product_id} not found')
 
         # Determine effective length
         self.effective_length_in = (
@@ -45,4 +45,4 @@ class PricingContext:
             self.db.query(Material).filter(Material.code == material_code).first()
         )
         if not self.material:
-            raise ValueError(f"Material {material_code} not found")
+            raise ValueError(f'Material {material_code} not found')

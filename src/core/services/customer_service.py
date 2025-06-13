@@ -15,17 +15,17 @@ The service follows domain-driven design principles and separates business logic
 from data access, providing a clean interface for customer management operations.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
 from src.core.models import Customer
 from src.utils.db_utils import (
     add_and_commit,
-    get_by_id,
-    get_all,
-    update_and_commit,
     delete_and_commit,
+    get_all,
+    get_by_id,
+    update_and_commit,
 )
 
 
@@ -158,7 +158,7 @@ class CustomerService:
         Returns:
             List of matching Customer objects
         """
-        search_pattern = f"%{search_term}%"
+        search_pattern = f'%{search_term}%'
         return (
             db.query(Customer)
             .filter(

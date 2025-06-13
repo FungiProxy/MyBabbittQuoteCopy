@@ -5,7 +5,8 @@ This module defines the CableLengthOption model for Babbitt International's quot
 It stores which cable lengths are available for each product family, along with any price adder.
 """
 
-from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy import Column, Float, ForeignKey, Integer
+
 from src.core.database import Base
 
 
@@ -25,11 +26,11 @@ class CableLengthOption(Base):
         >>> print(clo)
     """
 
-    __tablename__ = "cable_length_options"
+    __tablename__ = 'cable_length_options'
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey("product_families.id"), nullable=False
+        Integer, ForeignKey('product_families.id'), nullable=False
     )
     length = Column(Float, nullable=False)  # Cable length in feet
     price = Column(Float, default=0.0)  # Additional cost for this length

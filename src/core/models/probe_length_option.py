@@ -5,7 +5,8 @@ This module defines the ProbeLengthOption model for Babbitt International's quot
 It stores which probe lengths are available for each product family, along with any price adder.
 """
 
-from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy import Column, Float, ForeignKey, Integer
+
 from src.core.database import Base
 
 
@@ -25,11 +26,11 @@ class ProbeLengthOption(Base):
         >>> print(plo)
     """
 
-    __tablename__ = "probe_length_options"
+    __tablename__ = 'probe_length_options'
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey("product_families.id"), nullable=False
+        Integer, ForeignKey('product_families.id'), nullable=False
     )
     length = Column(Float, nullable=False)  # Probe length in inches
     price = Column(Float, default=0.0)  # Additional cost for this length

@@ -1,4 +1,5 @@
 from functools import wraps
+
 from PySide6.QtCore import QTimer
 
 
@@ -12,13 +13,13 @@ def debounce(ms):
         @wraps(func)
         def wrapper(*args, **kwargs):
             # If the wrapper is called on an instance, self will be the first argument
-            if args and hasattr(args[0], "__dict__"):
+            if args and hasattr(args[0], '__dict__'):
                 self = args[0]
             else:
                 self = wrapper  # Fallback for functions not in a class
 
             # Use a unique attribute on the instance to store the timer
-            timer_attr = f"_debounce_timer_{func.__name__}"
+            timer_attr = f'_debounce_timer_{func.__name__}'
 
             # Clear previous timer if it exists
             if hasattr(self, timer_attr):

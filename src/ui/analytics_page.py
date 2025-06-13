@@ -2,8 +2,8 @@
 Placeholder for the Analytics Page.
 """
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 
 class AnalyticsPage(QWidget):
@@ -17,8 +17,8 @@ class AnalyticsPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
 
-        label = QLabel("Analytics & Reporting Features Coming Soon!")
-        label.setObjectName("placeholderLabel")
-        label.setStyleSheet("font-size: 24px; color: #888;")
+        label = QLabel('Analytics & Reporting Features Coming Soon!')
+        label.setObjectName('placeholderLabel')
+        label.setStyleSheet('font-size: 24px; color: #888;')
 
         layout.addWidget(label)

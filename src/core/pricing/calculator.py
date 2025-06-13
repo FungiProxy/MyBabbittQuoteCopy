@@ -6,19 +6,19 @@ It orchestrates a series of pricing strategies to calculate the final price,
 ensuring that complex business rules for materials, lengths, and options are applied correctly.
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
 from src.core.pricing.context import PricingContext
 from src.core.pricing.strategies import (
-    PricingStrategy,
-    MaterialAvailabilityStrategy,
     BasePriceStrategy,
-    MaterialPremiumStrategy,
-    ExtraLengthStrategy,
-    NonStandardLengthSurchargeStrategy,
     ConnectionOptionStrategy,
+    ExtraLengthStrategy,
+    MaterialAvailabilityStrategy,
+    MaterialPremiumStrategy,
+    NonStandardLengthSurchargeStrategy,
+    PricingStrategy,
 )
 
 
@@ -105,11 +105,11 @@ def calculate_option_price(
     Returns:
         float: Calculated option price
     """
-    if option_price_type == "fixed":
+    if option_price_type == 'fixed':
         return option_price
-    elif option_price_type == "per_inch" and length is not None:
+    elif option_price_type == 'per_inch' and length is not None:
         return option_price * length
-    elif option_price_type == "per_foot" and length is not None:
+    elif option_price_type == 'per_foot' and length is not None:
         # Convert inches to feet
         return option_price * (length / 12)
     else:

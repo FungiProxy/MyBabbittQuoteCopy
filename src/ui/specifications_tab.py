@@ -14,27 +14,27 @@ The specifications are organized into logical sections and automatically updated
 based on product selection and database-driven options.
 """
 
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QComboBox,
-    QGroupBox,
-    QFormLayout,
-    QSpacerItem,
-    QSizePolicy,
-    QSlider,
-    QSpinBox,
-    QDoubleSpinBox,
-    QCheckBox,
-    QScrollArea,
-    QLineEdit,
-    QPushButton,
-    QMessageBox,
-)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIntValidator
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSlider,
+    QSpacerItem,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from src.core.database import SessionLocal
 from src.core.services.product_service import ProductService
@@ -104,7 +104,7 @@ class SpecificationsTab(QWidget):
 
         # Placeholder text when no product is selected
         self.placeholder_label = QLabel(
-            "Please select a product in the Product Selection tab to configure specifications."
+            'Please select a product in the Product Selection tab to configure specifications.'
         )
         self.placeholder_label.setAlignment(Qt.AlignCenter)
         self.specs_layout.addWidget(self.placeholder_label)
@@ -113,8 +113,8 @@ class SpecificationsTab(QWidget):
         main_layout.addWidget(self.scroll)
 
         # Add to Quote button
-        self.add_to_quote_button = QPushButton("Add to Quote")
-        self.add_to_quote_button.setObjectName("add_to_quote_button")
+        self.add_to_quote_button = QPushButton('Add to Quote')
+        self.add_to_quote_button.setObjectName('add_to_quote_button')
         self.add_to_quote_button.setStyleSheet(
             """
             #add_to_quote_button {
@@ -154,98 +154,98 @@ class SpecificationsTab(QWidget):
         self.add_to_quote_button.setEnabled(True)
 
         # Create sections for different types of specifications
-        voltage_group = QGroupBox("Voltage")
+        voltage_group = QGroupBox('Voltage')
         voltage_layout = QFormLayout()
 
         voltage_combo = QComboBox()
-        voltage_combo.addItems(["12VDC", "24VDC", "115VAC", "240VAC"])
+        voltage_combo.addItems(['12VDC', '24VDC', '115VAC', '240VAC'])
         voltage_combo.currentTextChanged.connect(
-            lambda text: self._on_spec_changed("voltage", text)
+            lambda text: self._on_spec_changed('voltage', text)
         )
-        voltage_layout.addRow("Select Voltage:", voltage_combo)
+        voltage_layout.addRow('Select Voltage:', voltage_combo)
         voltage_group.setLayout(voltage_layout)
-        self.specs_widgets["voltage"] = voltage_combo
+        self.specs_widgets['voltage'] = voltage_combo
 
         # Only show material and probe length for non-presence/absence switches
-        if product_info["model"] not in ["LS7500", "LS8500"]:
-            material_group = QGroupBox("Material")
+        if product_info['model'] not in ['LS7500', 'LS8500']:
+            material_group = QGroupBox('Material')
             material_layout = QFormLayout()
 
             material_combo = QComboBox()
             material_combo.addItems(
                 [
-                    "316SS",
-                    "316SS with Teflon Sleeve",
-                    "316SS with Halar Coating",
-                    "Titanium",
-                    "Titanium with Teflon Sleeve",
+                    '316SS',
+                    '316SS with Teflon Sleeve',
+                    '316SS with Halar Coating',
+                    'Titanium',
+                    'Titanium with Teflon Sleeve',
                 ]
             )
             material_combo.currentTextChanged.connect(
-                lambda text: self._on_spec_changed("material", text)
+                lambda text: self._on_spec_changed('material', text)
             )
-            material_layout.addRow("Select Material:", material_combo)
+            material_layout.addRow('Select Material:', material_combo)
             material_group.setLayout(material_layout)
-            self.specs_widgets["material"] = material_combo
+            self.specs_widgets['material'] = material_combo
 
-            probe_group = QGroupBox("Probe Configuration")
+            probe_group = QGroupBox('Probe Configuration')
             probe_layout = QFormLayout()
 
             length_spin = QSpinBox()
             length_spin.setRange(1, 120)
             length_spin.setSuffix('"')
             length_spin.valueChanged.connect(
-                lambda value: self._on_spec_changed("probe_length", value)
+                lambda value: self._on_spec_changed('probe_length', value)
             )
-            probe_layout.addRow("Probe Length:", length_spin)
-            self.specs_widgets["probe_length"] = length_spin
+            probe_layout.addRow('Probe Length:', length_spin)
+            self.specs_widgets['probe_length'] = length_spin
 
             probe_group.setLayout(probe_layout)
             self.specs_layout.addWidget(probe_group)
 
-        connection_group = QGroupBox("Connection")
+        connection_group = QGroupBox('Connection')
         connection_layout = QFormLayout()
 
         connection_combo = QComboBox()
-        connection_combo.addItems(["NPT", "Flange", "Tri-Clamp"])
+        connection_combo.addItems(['NPT', 'Flange', 'Tri-Clamp'])
         connection_combo.currentTextChanged.connect(
             lambda text: self._on_connection_changed(text)
         )
-        connection_layout.addRow("Connection Type:", connection_combo)
-        self.specs_widgets["connection_type"] = connection_combo
+        connection_layout.addRow('Connection Type:', connection_combo)
+        self.specs_widgets['connection_type'] = connection_combo
 
         # Connection size options
         self.npt_size_combo = QComboBox()
         self.npt_size_combo.addItems(['1/2"', '3/4"', '1"', '1-1/2"', '2"'])
         self.npt_size_combo.currentTextChanged.connect(
-            lambda text: self._on_spec_changed("npt_size", text)
+            lambda text: self._on_spec_changed('npt_size', text)
         )
-        connection_layout.addRow("NPT Size:", self.npt_size_combo)
-        self.specs_widgets["npt_size"] = self.npt_size_combo
+        connection_layout.addRow('NPT Size:', self.npt_size_combo)
+        self.specs_widgets['npt_size'] = self.npt_size_combo
 
         self.flange_rating_combo = QComboBox()
-        self.flange_rating_combo.addItems(["150#", "300#"])
+        self.flange_rating_combo.addItems(['150#', '300#'])
         self.flange_rating_combo.currentTextChanged.connect(
-            lambda text: self._on_spec_changed("flange_rating", text)
+            lambda text: self._on_spec_changed('flange_rating', text)
         )
-        connection_layout.addRow("Flange Rating:", self.flange_rating_combo)
-        self.specs_widgets["flange_rating"] = self.flange_rating_combo
+        connection_layout.addRow('Flange Rating:', self.flange_rating_combo)
+        self.specs_widgets['flange_rating'] = self.flange_rating_combo
 
         self.flange_size_combo = QComboBox()
         self.flange_size_combo.addItems(['1"', '1-1/2"', '2"', '3"', '4"'])
         self.flange_size_combo.currentTextChanged.connect(
-            lambda text: self._on_spec_changed("flange_size", text)
+            lambda text: self._on_spec_changed('flange_size', text)
         )
-        connection_layout.addRow("Flange Size:", self.flange_size_combo)
-        self.specs_widgets["flange_size"] = self.flange_size_combo
+        connection_layout.addRow('Flange Size:', self.flange_size_combo)
+        self.specs_widgets['flange_size'] = self.flange_size_combo
 
         self.triclamp_size_combo = QComboBox()
         self.triclamp_size_combo.addItems(['1"', '1-1/2"', '2"', '3"', '4"'])
         self.triclamp_size_combo.currentTextChanged.connect(
-            lambda text: self._on_spec_changed("triclamp_size", text)
+            lambda text: self._on_spec_changed('triclamp_size', text)
         )
-        connection_layout.addRow("Tri-Clamp Size:", self.triclamp_size_combo)
-        self.specs_widgets["triclamp_size"] = self.triclamp_size_combo
+        connection_layout.addRow('Tri-Clamp Size:', self.triclamp_size_combo)
+        self.specs_widgets['triclamp_size'] = self.triclamp_size_combo
 
         # Initially hide all connection size options except NPT
         self.flange_rating_combo.setVisible(False)
@@ -256,20 +256,20 @@ class SpecificationsTab(QWidget):
 
         # Add all groups to the main layout
         self.specs_layout.addWidget(voltage_group)
-        if product_info["model"] not in ["LS7500", "LS8500"]:
+        if product_info['model'] not in ['LS7500', 'LS8500']:
             self.specs_layout.addWidget(material_group)
         self.specs_layout.addWidget(connection_group)
 
         # Add additional options group
-        options_group = QGroupBox("Additional Options")
+        options_group = QGroupBox('Additional Options')
         options_layout = QVBoxLayout()
 
         # Add checkboxes for additional options
         self.additional_options = {
-            "High Temperature": QCheckBox("High Temperature Option (+$150.00)"),
-            "Explosion Proof": QCheckBox("Explosion Proof Housing (+$295.00)"),
-            "Weather Shield": QCheckBox("Weather Shield (+$95.00)"),
-            "Mounting Bracket": QCheckBox("Mounting Bracket (+$45.00)"),
+            'High Temperature': QCheckBox('High Temperature Option (+$150.00)'),
+            'Explosion Proof': QCheckBox('Explosion Proof Housing (+$295.00)'),
+            'Weather Shield': QCheckBox('Weather Shield (+$95.00)'),
+            'Mounting Bracket': QCheckBox('Mounting Bracket (+$45.00)'),
         }
 
         for name, checkbox in self.additional_options.items():
@@ -317,7 +317,7 @@ class SpecificationsTab(QWidget):
             self.placeholder_label = None
 
         # Add header
-        header = QLabel(f"<h3>Specifications for {model}</h3>")
+        header = QLabel(f'<h3>Specifications for {model}</h3>')
         header.setAlignment(Qt.AlignCenter)
         self.specs_layout.addWidget(header)
 
@@ -338,7 +338,7 @@ class SpecificationsTab(QWidget):
         )
 
         # Connect change signals for all widgets
-        for widget_name, widget in self.specs_widgets.items():
+        for _widget_name, widget in self.specs_widgets.items():
             if isinstance(widget, QComboBox):
                 widget.currentIndexChanged.connect(self.on_specs_changed)
             elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
@@ -358,14 +358,14 @@ class SpecificationsTab(QWidget):
         Creates a group box with voltage options appropriate for the
         current product, fetching available options from the database.
         """
-        group = QGroupBox("Voltage")
+        group = QGroupBox('Voltage')
         layout = QFormLayout()
 
         voltage = QComboBox()
 
         # Get available voltages for the current product family
-        if self.current_product and "model" in self.current_product:
-            product_family = self.current_product["model"].split()[0]
+        if self.current_product and 'model' in self.current_product:
+            product_family = self.current_product['model'].split()[0]
 
             db = SessionLocal()
             try:
@@ -376,8 +376,8 @@ class SpecificationsTab(QWidget):
             finally:
                 db.close()
 
-        layout.addRow("Supply Voltage:", voltage)
-        self.specs_widgets["voltage"] = voltage
+        layout.addRow('Supply Voltage:', voltage)
+        self.specs_widgets['voltage'] = voltage
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
@@ -389,13 +389,13 @@ class SpecificationsTab(QWidget):
         Creates a group box with material options appropriate for the
         current product, fetching available options from the database.
         """
-        group = QGroupBox("Material")
+        group = QGroupBox('Material')
         layout = QFormLayout()
 
         material = QComboBox()
 
-        if self.current_product and "model" in self.current_product:
-            product_family = self.current_product["model"].split()[0]
+        if self.current_product and 'model' in self.current_product:
+            product_family = self.current_product['model'].split()[0]
 
             db = SessionLocal()
             try:
@@ -404,12 +404,12 @@ class SpecificationsTab(QWidget):
                         db, product_family
                     )
                 )
-                material.addItems([m["display_name"] for m in available_materials])
+                material.addItems([m['display_name'] for m in available_materials])
             finally:
                 db.close()
 
-        layout.addRow("Material:", material)
-        self.specs_widgets["material"] = material
+        layout.addRow('Material:', material)
+        self.specs_widgets['material'] = material
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
@@ -421,10 +421,10 @@ class SpecificationsTab(QWidget):
         Creates a group box with probe length options including both a spinner wheel
         and a text input box for flexible length selection.
         """
-        if "Emissions" in self.current_product.get("category", ""):
+        if 'Emissions' in self.current_product.get('category', ''):
             return
 
-        group = QGroupBox("Probe Length")
+        group = QGroupBox('Probe Length')
         layout = QFormLayout()
 
         # Create a horizontal layout for the length inputs
@@ -434,7 +434,7 @@ class SpecificationsTab(QWidget):
         probe_length_spinner = QSpinBox()
         probe_length_spinner.setRange(1, 120)
         probe_length_spinner.setValue(12)
-        probe_length_spinner.setSuffix(" inches")
+        probe_length_spinner.setSuffix(' inches')
         probe_length_spinner.setWrapping(True)  # Enable wrapping for circular scrolling
         probe_length_spinner.setStyleSheet(
             """
@@ -457,7 +457,7 @@ class SpecificationsTab(QWidget):
 
         # Text input box (QLineEdit)
         probe_length_input = QLineEdit()
-        probe_length_input.setPlaceholderText("Enter length in inches")
+        probe_length_input.setPlaceholderText('Enter length in inches')
         probe_length_input.setValidator(
             QIntValidator(1, 120)
         )  # Only allow integers between 1 and 120
@@ -494,31 +494,31 @@ class SpecificationsTab(QWidget):
         probe_length_input.textChanged.connect(on_input_changed)
 
         # Add the horizontal layout to the form
-        layout.addRow("Probe Length:", length_layout)
+        layout.addRow('Probe Length:', length_layout)
 
         # Store both widgets for later access
-        self.specs_widgets["probe_length_spinner"] = probe_length_spinner
-        self.specs_widgets["probe_length_input"] = probe_length_input
+        self.specs_widgets['probe_length_spinner'] = probe_length_spinner
+        self.specs_widgets['probe_length_input'] = probe_length_input
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
 
     def _on_probe_length_changed(self, value):
         """Handle probe length changes and update pricing."""
-        material = self.specs_widgets.get("material")
+        material = self.specs_widgets.get('material')
         if material and material.currentText():
-            material_code = material.currentText().split(" - ")[0]
+            material_code = material.currentText().split(' - ')[0]
 
             # Show warning for Halar coating at 72"
-            if material_code == "H" and value == 72:
+            if material_code == 'H' and value == 72:
                 QMessageBox.warning(
                     self,
-                    "Maximum Length Warning",
+                    'Maximum Length Warning',
                     'Maximum probe length with Halar coating is 72". For longer probes, please use Teflon Sleeve.',
                 )
 
             # Show warning for non-standard lengths with Halar
-            if material_code == "H" and value not in [
+            if material_code == 'H' and value not in [
                 6,
                 8,
                 10,
@@ -532,8 +532,8 @@ class SpecificationsTab(QWidget):
             ]:
                 QMessageBox.information(
                     self,
-                    "Non-Standard Length",
-                    "This is a non-standard length for Halar coating. A $300 adder will apply.",
+                    'Non-Standard Length',
+                    'This is a non-standard length for Halar coating. A $300 adder will apply.',
                 )
 
         # Update the total price
@@ -551,51 +551,51 @@ class SpecificationsTab(QWidget):
         The visible options update dynamically based on the selected
         connection type.
         """
-        group = QGroupBox("Connection")
+        group = QGroupBox('Connection')
         layout = QFormLayout()
 
         # Connection type selection
         connection_type = QComboBox()
-        connection_type.addItems(["NPT", "Flange", "Tri-Clamp"])
-        layout.addRow("Connection Type:", connection_type)
-        self.specs_widgets["connection_type"] = connection_type
+        connection_type.addItems(['NPT', 'Flange', 'Tri-Clamp'])
+        layout.addRow('Connection Type:', connection_type)
+        self.specs_widgets['connection_type'] = connection_type
 
         # NPT size selection
         npt_size = QComboBox()
         npt_size.addItems(['1/2" NPT', '3/4" NPT', '1" NPT', '1.5" NPT', '2" NPT'])
-        layout.addRow("NPT Size:", npt_size)
-        self.specs_widgets["npt_size"] = npt_size
+        layout.addRow('NPT Size:', npt_size)
+        self.specs_widgets['npt_size'] = npt_size
 
         # Flange rating and size
         flange_rating = QComboBox()
-        flange_rating.addItems(["150#", "300#"])
-        layout.addRow("Flange Rating:", flange_rating)
-        self.specs_widgets["flange_rating"] = flange_rating
+        flange_rating.addItems(['150#', '300#'])
+        layout.addRow('Flange Rating:', flange_rating)
+        self.specs_widgets['flange_rating'] = flange_rating
 
         flange_size = QComboBox()
         flange_size.addItems(['1"', '1.5"', '2"', '3"', '4"'])
-        layout.addRow("Flange Size:", flange_size)
-        self.specs_widgets["flange_size"] = flange_size
+        layout.addRow('Flange Size:', flange_size)
+        self.specs_widgets['flange_size'] = flange_size
 
         # Tri-Clamp size
         triclamp_size = QComboBox()
         triclamp_size.addItems(['1.5"', '2"'])
-        layout.addRow("Tri-Clamp Size:", triclamp_size)
-        self.specs_widgets["triclamp_size"] = triclamp_size
+        layout.addRow('Tri-Clamp Size:', triclamp_size)
+        self.specs_widgets['triclamp_size'] = triclamp_size
 
         # Show/hide widgets based on connection type
         def update_connection_fields():
-            if connection_type.currentText() == "NPT":
+            if connection_type.currentText() == 'NPT':
                 npt_size.show()
                 flange_rating.hide()
                 flange_size.hide()
                 triclamp_size.hide()
-            elif connection_type.currentText() == "Flange":
+            elif connection_type.currentText() == 'Flange':
                 npt_size.hide()
                 flange_rating.show()
                 flange_size.show()
                 triclamp_size.hide()
-            elif connection_type.currentText() == "Tri-Clamp":
+            elif connection_type.currentText() == 'Tri-Clamp':
                 npt_size.hide()
                 flange_rating.hide()
                 flange_size.hide()
@@ -614,13 +614,13 @@ class SpecificationsTab(QWidget):
         Creates a group box for selecting exotic metal options when
         available for the current product.
         """
-        group = QGroupBox("Exotic Metals")
+        group = QGroupBox('Exotic Metals')
         layout = QFormLayout()
 
         exotic_metals = QComboBox()
-        exotic_metals.addItems(["None", "T - Titanium", "U - Monel"])
-        layout.addRow("Exotic Metal Option:", exotic_metals)
-        self.specs_widgets["exotic_metals"] = exotic_metals
+        exotic_metals.addItems(['None', 'T - Titanium', 'U - Monel'])
+        layout.addRow('Exotic Metal Option:', exotic_metals)
+        self.specs_widgets['exotic_metals'] = exotic_metals
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
@@ -628,57 +628,57 @@ class SpecificationsTab(QWidget):
     def add_oring_section(self):
         """Add O-ring material section."""
         # Skip for products without O-rings
-        if "Emissions" in self.current_product.get("category", ""):
+        if 'Emissions' in self.current_product.get('category', ''):
             return
 
-        group = QGroupBox("O-ring Material")
+        group = QGroupBox('O-ring Material')
         layout = QFormLayout()
 
         oring = QComboBox()
-        oring.addItems(["Viton", "PTFE", "Kalrez", "EPDM"])
-        layout.addRow("O-ring Material:", oring)
-        self.specs_widgets["oring"] = oring
+        oring.addItems(['Viton', 'PTFE', 'Kalrez', 'EPDM'])
+        layout.addRow('O-ring Material:', oring)
+        self.specs_widgets['oring'] = oring
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
 
     def add_cable_length_section(self):
         """Add cable length section."""
-        group = QGroupBox("Cable Length")
+        group = QGroupBox('Cable Length')
         layout = QFormLayout()
 
         cable_length = QSpinBox()
         cable_length.setRange(0, 100)
         cable_length.setValue(10)
-        cable_length.setSuffix(" feet")
-        layout.addRow("Cable Length:", cable_length)
-        self.specs_widgets["cable_length"] = cable_length
+        cable_length.setSuffix(' feet')
+        layout.addRow('Cable Length:', cable_length)
+        self.specs_widgets['cable_length'] = cable_length
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
 
     def add_housing_section(self):
         """Add housing type section."""
-        group = QGroupBox("Housing Type")
+        group = QGroupBox('Housing Type')
         layout = QFormLayout()
 
         housing = QComboBox()
-        housing.addItems(["Standard", "Explosion-Proof", "Stainless Steel"])
-        layout.addRow("Housing Type:", housing)
-        self.specs_widgets["housing"] = housing
+        housing.addItems(['Standard', 'Explosion-Proof', 'Stainless Steel'])
+        layout.addRow('Housing Type:', housing)
+        self.specs_widgets['housing'] = housing
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)
 
     def add_additional_options_section(self):
         """Add additional options section."""
-        group = QGroupBox("Additional Options")
+        group = QGroupBox('Additional Options')
         layout = QVBoxLayout()
         db = SessionLocal()
         try:
             options = self.product_service.get_all_additional_options(db)
             for opt in options:
-                label = f"{opt.name} (+${opt.price:.2f})" if opt.price else opt.name
+                label = f'{opt.name} (+${opt.price:.2f})' if opt.price else opt.name
                 checkbox = QCheckBox(label)
                 if opt.description:
                     checkbox.setToolTip(opt.description)
@@ -735,10 +735,10 @@ class SpecificationsTab(QWidget):
                 if isinstance(widget, QComboBox):
                     widget.setCurrentIndex(0)  # Set to first item
                 elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
-                    if "length" in name:
-                        if name == "probe_length":
+                    if 'length' in name:
+                        if name == 'probe_length':
                             widget.setValue(12)  # Default probe length
-                        elif name == "cable_length":
+                        elif name == 'cable_length':
                             widget.setValue(10)  # Default cable length
                         else:
                             widget.setValue(widget.minimum())  # Set to minimum value
@@ -752,9 +752,9 @@ class SpecificationsTab(QWidget):
             # Emit signal with updated specifications
             self.on_specs_changed()
 
-            print("Specifications reset to defaults")
+            print('Specifications reset to defaults')
         except Exception as e:
-            print(f"Error resetting specifications: {e}")
+            print(f'Error resetting specifications: {e}')
 
     def clear_specifications(self):
         """Clear all specification widgets."""

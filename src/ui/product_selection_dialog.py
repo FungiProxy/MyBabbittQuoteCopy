@@ -6,31 +6,31 @@ This dialog provides a two-panel interface:
 - Right: Product configuration and add-to-quote
 """
 
+import logging
+from typing import Optional
+
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
-    QVBoxLayout,
+    QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QListWidget,
     QListWidgetItem,
-    QFrame,
-    QSpinBox,
-    QWidget,
-    QScrollArea,
-    QComboBox,
-    QFormLayout,
     QMessageBox,
-    QSlider,
+    QPushButton,
+    QScrollArea,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIntValidator
-from src.core.services.product_service import ProductService
-from src.core.services.configuration_service import ConfigurationService
+
 from src.core.database import SessionLocal
-import logging
-from typing import Optional
+from src.core.services.configuration_service import ConfigurationService
+from src.core.services.product_service import ProductService
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -52,7 +52,7 @@ class ProductSelectionDialog(QDialog):
         self.product_to_edit = product_to_edit
         self.is_edit_mode = self.product_to_edit is not None
 
-        title = "Edit Product" if self.is_edit_mode else "Add Product to Quote"
+        title = 'Edit Product' if self.is_edit_mode else 'Add Product to Quote'
         self.setWindowTitle(title)
 
         self.resize(900, 600)
@@ -79,31 +79,31 @@ class ProductSelectionDialog(QDialog):
 
     def _fetch_products(self):
         """Fetch product families from the database using ProductService."""
-        logger.info("Starting to fetch product families...")
+        logger.info('Starting to fetch product families...')
         try:
             family_objs = self.product_service.get_product_families(self.db)
             products = []
             for fam in family_objs:
                 variants = self.product_service.get_variants_for_family(
-                    self.db, fam["id"]
+                    self.db, fam['id']
                 )
                 if variants:
                     variant = variants[0]
                     product_info = {
-                        "id": fam["id"],
-                        "name": fam["name"],
-                        "description": fam.get("description", ""),
-                        "category": fam.get("category", ""),
-                        "base_price": variant["base_price"],
-                        "base_length": variant["base_length"],
-                        "voltage": variant["voltage"],
-                        "material": variant["material"],
+                        'id': fam['id'],
+                        'name': fam['name'],
+                        'description': fam.get('description', ''),
+                        'category': fam.get('category', ''),
+                        'base_price': variant['base_price'],
+                        'base_length': variant['base_length'],
+                        'voltage': variant['voltage'],
+                        'material': variant['material'],
                     }
                     products.append(product_info)
             self.products = products
         except Exception as e:
             logger.error(
-                f"A critical error occurred while fetching product families: {e}",
+                f'A critical error occurred while fetching product families: {e}',
                 exc_info=True,
             )
             self.products = []
@@ -115,7 +115,7 @@ class ProductSelectionDialog(QDialog):
         left_panel.setFixedWidth(340)
         left_layout = QVBoxLayout(left_panel)
         self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText("Search products...")
+        self.search_bar.setPlaceholderText('Search products...')
         self.search_bar.textChanged.connect(self._filter_products)
         left_layout.addWidget(self.search_bar)
         self.product_list = QListWidget()
@@ -139,11 +139,11 @@ class ProductSelectionDialog(QDialog):
         if not self.is_edit_mode:
             self._show_select_product()
 
-    def _populate_product_list(self, filter_text=""):
+    def _populate_product_list(self, filter_text=''):
         """Populate the product list, optionally filtering by search text."""
         self.product_list.clear()
         filtered_products = [
-            p for p in self.products if filter_text.lower() in p["name"].lower()
+            p for p in self.products if filter_text.lower() in p['name'].lower()
         ]
         for product in filtered_products:
             item = QListWidgetItem(f"{product['name']}")
@@ -162,8 +162,8 @@ class ProductSelectionDialog(QDialog):
 
         product_data = items[0].data(Qt.UserRole)
         self.config_service.start_configuration(
-            product_family_id=product_data["id"],
-            product_family_name=product_data["name"],
+            product_family_id=product_data['id'],
+            product_family_name=product_data['name'],
             base_product_info=product_data,
         )
         self.quantity = 1
@@ -171,7 +171,7 @@ class ProductSelectionDialog(QDialog):
 
     def _show_select_product(self):
         self._clear_config_panel()
-        prompt = QLabel("<b>Select a Product</b><br>Choose a product to configure.")
+        prompt = QLabel('<b>Select a Product</b><br>Choose a product to configure.')
         prompt.setAlignment(Qt.AlignCenter)
         self.config_layout.addWidget(prompt)
 
@@ -184,6 +184,12 @@ class ProductSelectionDialog(QDialog):
         details.setWordWrap(True)
         self.config_layout.addWidget(details)
 
+        # Add a label to display the dynamically generated model number
+        self.model_number_label = QLabel('Model: PENDING...')
+        self.model_number_label.setObjectName('modelNumberLabel')
+        self.model_number_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.config_layout.addWidget(self.model_number_label)
+
         form_layout = QFormLayout()
         form_layout.setSpacing(15)
 
@@ -191,7 +197,7 @@ class ProductSelectionDialog(QDialog):
 
         # Get all connection-related options for the product family
         connection_options = self.product_service.get_connection_options(
-            self.db, product["id"]
+            self.db, product['id']
         )
         self._setup_connection_options(form_layout, connection_options)
 
@@ -204,13 +210,13 @@ class ProductSelectionDialog(QDialog):
         """Set up the core configuration options for the selected product."""
         # Get product family-specific options
         additional_options = self.product_service.get_additional_options(
-            self.db, product["name"]
+            self.db, product['name']
         )
-        
+
         # Group options by category
         options_by_category = {}
         for option in additional_options:
-            category = option.get("category", "General")
+            category = option.get('category', 'General')
             if category not in options_by_category:
                 options_by_category[category] = []
             options_by_category[category].append(option)
@@ -218,70 +224,164 @@ class ProductSelectionDialog(QDialog):
         # Create UI controls for each option
         for category, options in options_by_category.items():
             # Add category header
-            if category != "General":
-                category_label = QLabel(f"<b>{category}</b>")
+            if category != 'General':
+                category_label = QLabel(f'<b>{category}</b>')
                 form_layout.addRow(category_label)
 
             for option in options:
-                if not option.get("choices"):
+                if not option.get('choices'):
+                    continue
+
+                # Special handling for Material option
+                if option['name'] == 'Material':
+                    combo = QComboBox()
+                    combo.setObjectName(f"option_{option['name']}")
+                    # Add material options with their codes
+                    for choice in option['choices']:
+                        price = option['adders'].get(choice, 0) or 0
+                        # Map full material names to their codes
+                        material_map = {
+                            '316SS': 'S',
+                            '304SS': 'S',
+                            'Hastelloy C': 'H',
+                            'Monel': 'M',
+                            'Titanium': 'T',
+                            'Inconel': 'I',
+                            '316SS with Teflon Sleeve': 'TS',
+                            '316SS with Halar Coating': 'H',
+                            'Titanium with Teflon Sleeve': 'TS',
+                        }
+                        # Get the material code, defaulting to the choice if not in map
+                        material_code = material_map.get(choice, choice)
+                        display_text = (
+                            f'{choice} (+${price:.2f})' if price > 0 else choice
+                        )
+                        combo.addItem(display_text, material_code)
+
+                    combo.currentIndexChanged.connect(
+                        lambda idx, opt=option, cmb=combo: self._on_option_changed(
+                            opt['name'], cmb.currentData()
+                        )
+                    )
+                    form_layout.addRow(f"{option['name']}:", combo)
+                    self.option_widgets[option['name']] = combo
                     continue
 
                 # Create appropriate control based on option type
-                if len(option["choices"]) > 3:
+                if len(option['choices']) > 3:
                     # Use combo box for many choices
                     combo = QComboBox()
-                    for choice in option["choices"]:
-                        price = option["adders"].get(choice, 0)
-                        display_text = f"{choice} (+${price:.2f})" if price > 0 else choice
+                    combo.setObjectName(f"option_{option['name']}")
+                    for choice in option['choices']:
+                        price = option['adders'].get(choice, 0) or 0
+                        display_text = (
+                            f'{choice} (+${price:.2f})' if price > 0 else choice
+                        )
                         combo.addItem(display_text, choice)
-                    
+
                     combo.currentIndexChanged.connect(
-                        lambda idx, opt=option: self._on_option_changed(opt["name"], combo.currentData())
+                        lambda idx, opt=option, cmb=combo: self._on_option_changed(
+                            opt['name'], cmb.currentData()
+                        )
                     )
                     form_layout.addRow(f"{option['name']}:", combo)
-                    self.option_widgets[option["name"]] = combo
+                    self.option_widgets[option['name']] = combo
                 else:
                     # Use radio buttons for few choices
                     radio_layout = QHBoxLayout()
-                    for choice in option["choices"]:
-                        price = option["adders"].get(choice, 0)
-                        display_text = f"{choice} (+${price:.2f})" if price > 0 else choice
+                    for choice in option['choices']:
+                        price = option['adders'].get(choice, 0) or 0
+                        display_text = (
+                            f'{choice} (+${price:.2f})' if price > 0 else choice
+                        )
                         radio = QPushButton(display_text)
                         radio.setCheckable(True)
-                        radio.setProperty("choice", choice)
+                        radio.setProperty('choice', choice)
                         radio.clicked.connect(
-                            lambda checked, opt=option, ch=choice: self._on_option_changed(opt["name"], ch) if checked else None
+                            lambda checked, opt=option, ch=choice: (
+                                self._on_option_changed(opt['name'], ch)
+                                if checked
+                                else None
+                            )
                         )
                         radio_layout.addWidget(radio)
+                    radio_layout.setObjectName(f"option_{option['name']}")
                     form_layout.addRow(f"{option['name']}:", radio_layout)
-                    self.option_widgets[option["name"]] = radio_layout
+                    self.option_widgets[option['name']] = radio_layout
+
+                logger.info(
+                    f"Created widget for option '{option['name']}' of type: {type(self.option_widgets[option['name']])}"
+                )
+
+        # Set default values for core options after they have been created
+        self._set_initial_option_value('Voltage', product.get('voltage'))
+        self._set_initial_option_value('Material', product.get('material'))
+        self._set_initial_option_value('Probe Length', product.get('base_length'))
 
         # Add a spacer after all options
         form_layout.addRow(QWidget())
 
+    def _set_initial_option_value(self, option_name, value):
+        """Sets the initial value of a configuration widget, handling different widget types."""
+        if option_name not in self.option_widgets or value is None:
+            return
+
+        widget = self.option_widgets[option_name]
+
+        if isinstance(widget, QComboBox):
+            # For QComboBox, find the index where the item data matches the value.
+            # The data could be str, int, or float, so we compare as strings.
+            str_value = str(value)
+            if isinstance(value, float) and value.is_integer():
+                str_value = str(int(value))
+
+            for i in range(widget.count()):
+                item_data_str = str(widget.itemData(i))
+                if item_data_str == str_value:
+                    widget.setCurrentIndex(i)
+                    return
+
+        elif isinstance(widget, QHBoxLayout):
+            # For QHBoxLayout (radio buttons), find the button with the matching 'choice' property.
+            for i in range(widget.count()):
+                button = widget.itemAt(i).widget()
+                if (
+                    isinstance(button, QPushButton)
+                    and button.property('choice') == value
+                ):
+                    button.setChecked(True)
+                    return
+
     def _setup_quantity_and_total(self):
         h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Quantity:"))
+        h_layout.addWidget(QLabel('Quantity:'))
         self.quantity_spinner = QSpinBox()
         self.quantity_spinner.setRange(1, 999)
         self.quantity_spinner.setValue(self.quantity)
         self.quantity_spinner.valueChanged.connect(self._on_quantity_changed)
         h_layout.addWidget(self.quantity_spinner)
         h_layout.addStretch()
-        self.total_price_label = QLabel("$0.00")
-        self.total_price_label.setObjectName("totalPriceLabel")
+        self.total_price_label = QLabel('$0.00')
+        self.total_price_label.setObjectName('totalPriceLabel')
         h_layout.addWidget(self.total_price_label)
         self.config_layout.addLayout(h_layout)
 
     def _setup_add_button(self):
-        self.add_button = QPushButton("Add to Quote")
+        self.add_button = QPushButton('Add to Quote')
         self.add_button.clicked.connect(self._on_add_to_quote)
         self.config_layout.addWidget(self.add_button)
 
     def _update_total_price(self):
         if self.config_service.current_config:
             total = self.config_service.current_config.final_price * self.quantity
-            self.total_price_label.setText(f"${total:,.2f}")
+            self.total_price_label.setText(f'${total:,.2f}')
+            self._update_model_number()
+
+    def _update_model_number(self):
+        """Updates the model number label from the configuration service."""
+        if self.config_service.current_config and hasattr(self, 'model_number_label'):
+            model_number = self.config_service.generate_model_number()
+            self.model_number_label.setText(f'<b>Model:</b> {model_number}')
 
     def _on_quantity_changed(self, value):
         self.quantity = value
@@ -295,26 +395,26 @@ class ProductSelectionDialog(QDialog):
 
     def _setup_connection_options(self, form_layout: QFormLayout, options: list):
         """Creates UI controls for connection options."""
-        logger.debug(f"Setting up connection options. Received {len(options)} options.")
+        logger.debug(f'Setting up connection options. Received {len(options)} options.')
         if not options:
             return
 
         # Create the main connection type dropdown
         self.connection_type_combo = QComboBox()
-        self.connection_type_combo.addItem("None", None)  # Add a 'None' option
+        self.connection_type_combo.addItem('None', None)  # Add a 'None' option
 
         # Add connection types from the options
-        connection_types = sorted(set(opt["type"] for opt in options))
+        connection_types = sorted({opt['type'] for opt in options})
         for conn_type in connection_types:
             # Find the first option with this type to get its price
             price = next(
-                (opt["price"] for opt in options if opt["type"] == conn_type), 0
+                (opt['price'] for opt in options if opt['type'] == conn_type), 0
             )
-            display_text = f"{conn_type} (+${price:.2f})" if price > 0 else conn_type
+            display_text = f'{conn_type} (+${price:.2f})' if price > 0 else conn_type
             self.connection_type_combo.addItem(display_text, conn_type)
 
-        form_layout.addRow("Connection Type:", self.connection_type_combo)
-        self.option_widgets["Connection Type"] = self.connection_type_combo
+        form_layout.addRow('Connection Type:', self.connection_type_combo)
+        self.option_widgets['Connection Type'] = self.connection_type_combo
 
         # Placeholder for sub-option layouts
         self.connection_sub_options_layout = QVBoxLayout()
@@ -335,49 +435,49 @@ class ProductSelectionDialog(QDialog):
 
         # Add selected connection type to config
         self.config_service.select_option(
-            "Connection Type", selected_type if selected_type != "None" else None
+            'Connection Type', selected_type if selected_type != 'None' else None
         )
         self._update_total_price()
 
-        if selected_type == "None":
+        if selected_type == 'None':
             return
 
         # Create a new form layout for the sub-options
         sub_form_layout = QFormLayout()
 
         # Filter options for the selected connection type
-        type_options = [opt for opt in all_options if opt["type"] == selected_type]
+        type_options = [opt for opt in all_options if opt['type'] == selected_type]
 
         # Add rating options if available
-        ratings = sorted(set(opt["rating"] for opt in type_options if opt["rating"]))
+        ratings = sorted({opt['rating'] for opt in type_options if opt['rating']})
         if ratings:
             rating_combo = QComboBox()
             for rating in ratings:
                 price = next(
-                    (opt["price"] for opt in type_options if opt["rating"] == rating), 0
+                    (opt['price'] for opt in type_options if opt['rating'] == rating), 0
                 )
-                display_text = f"{rating} (+${price:.2f})" if price > 0 else rating
+                display_text = f'{rating} (+${price:.2f})' if price > 0 else rating
                 rating_combo.addItem(display_text, rating)
-            sub_form_layout.addRow("Rating:", rating_combo)
-            self.option_widgets["Rating"] = rating_combo
+            sub_form_layout.addRow('Rating:', rating_combo)
+            self.option_widgets['Rating'] = rating_combo
             rating_combo.currentTextChanged.connect(
-                lambda text: self._on_sub_option_changed("Rating", text)
+                lambda text: self._on_sub_option_changed('Rating', text)
             )
 
         # Add size options if available
-        sizes = sorted(set(opt["size"] for opt in type_options if opt["size"]))
+        sizes = sorted({opt['size'] for opt in type_options if opt['size']})
         if sizes:
             size_combo = QComboBox()
             for size in sizes:
                 price = next(
-                    (opt["price"] for opt in type_options if opt["size"] == size), 0
+                    (opt['price'] for opt in type_options if opt['size'] == size), 0
                 )
-                display_text = f"{size} (+${price:.2f})" if price > 0 else size
+                display_text = f'{size} (+${price:.2f})' if price > 0 else size
                 size_combo.addItem(display_text, size)
-            sub_form_layout.addRow("Size:", size_combo)
-            self.option_widgets["Size"] = size_combo
+            sub_form_layout.addRow('Size:', size_combo)
+            self.option_widgets['Size'] = size_combo
             size_combo.currentTextChanged.connect(
-                lambda text: self._on_sub_option_changed("Size", text)
+                lambda text: self._on_sub_option_changed('Size', text)
             )
 
         # Add the sub-form to the main sub-options layout
@@ -386,11 +486,11 @@ class ProductSelectionDialog(QDialog):
         # Initialize the first values
         if ratings:
             self._on_sub_option_changed(
-                "Rating", self.option_widgets["Rating"].currentText()
+                'Rating', self.option_widgets['Rating'].currentText()
             )
         if sizes:
             self._on_sub_option_changed(
-                "Size", self.option_widgets["Size"].currentText()
+                'Size', self.option_widgets['Size'].currentText()
             )
 
     def _on_sub_option_changed(self, option_name: str, value: str):
@@ -405,28 +505,51 @@ class ProductSelectionDialog(QDialog):
 
     def _clear_config_panel(self):
         """Clears all widgets from the configuration panel."""
-        while self.config_layout.count():
-            child = self.config_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-            elif child.layout():
-                # This doesn't recursively clear layouts, but for this dialog it's okay
-                pass
+        for i in reversed(range(self.config_layout.count())):
+            item = self.config_layout.takeAt(i)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self._clear_layout(item.layout())
+
+    def _clear_layout(self, layout):
+        """Recursively clears all widgets from a layout."""
+        if layout is None:
+            return
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+            else:
+                sub_layout = item.layout()
+                if sub_layout:
+                    self._clear_layout(sub_layout)
 
     def _on_add_to_quote(self):
         # Validation logic will be moved to ConfigurationService
         if not self.config_service.current_config:
-            QMessageBox.warning(self, "Warning", "Please select a product.")
+            QMessageBox.warning(self, 'Warning', 'Please select a product.')
             return
 
         final_config = self.config_service.current_config
         product_data = {
-            "product_family_id": final_config.product_family_id,
-            "product_family_name": final_config.product_family_name,
-            "quantity": self.quantity,
-            "unit_price": final_config.final_price,
-            "description": self.config_service.get_final_description(),
-            "options": final_config.selected_options,
+            'id': str(final_config.product_family_id),
+            'part_number': final_config.model_number,
+            'product_family_id': final_config.product_family_id,
+            'product_family_name': final_config.product_family_name,
+            'quantity': self.quantity,
+            'base_price': final_config.final_price,
+            'unit_price': final_config.final_price,
+            'description': self.config_service.get_final_description(),
+            'options': [
+                {
+                    'name': name,
+                    'selected': value,
+                    'price': final_config.get_option_price(name, value) or 0,
+                }
+                for name, value in final_config.selected_options.items()
+            ],
         }
         self.product_added.emit(product_data)
         self.accept()

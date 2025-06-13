@@ -13,25 +13,25 @@ The tab integrates with the database to provide real-time access to the
 spare parts catalog and maintains consistency with the quote management system.
 """
 
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
     QComboBox,
-    QGroupBox,
     QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
-    QHeaderView,
-    QMessageBox,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, Signal
 
 from src.core.database import SessionLocal
-from src.core.services.spare_part_service import SparePartService
 from src.core.models import ProductFamily, SparePart
+from src.core.services.spare_part_service import SparePartService
 
 
 class SparePartsTab(QWidget):
@@ -93,7 +93,7 @@ class SparePartsTab(QWidget):
         main_layout = QVBoxLayout(self)
 
         # Header
-        header = QLabel("<h2>Spare Parts</h2>")
+        header = QLabel('<h2>Spare Parts</h2>')
         header.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(header)
 
@@ -102,26 +102,26 @@ class SparePartsTab(QWidget):
 
         # Product family filter
         self.family_filter = QComboBox()
-        self.family_filter.addItem("All Product Families", None)
+        self.family_filter.addItem('All Product Families', None)
         self.populate_family_filter()
-        filter_layout.addWidget(QLabel("Product Family:"))
+        filter_layout.addWidget(QLabel('Product Family:'))
         filter_layout.addWidget(self.family_filter)
 
         # Category filter
         self.category_filter = QComboBox()
-        self.category_filter.addItem("All Categories", None)
+        self.category_filter.addItem('All Categories', None)
         self.populate_category_filter()
-        filter_layout.addWidget(QLabel("Category:"))
+        filter_layout.addWidget(QLabel('Category:'))
         filter_layout.addWidget(self.category_filter)
 
         # Filter buttons
-        self.apply_filter_btn = QPushButton("Apply Filter")
+        self.apply_filter_btn = QPushButton('Apply Filter')
         filter_layout.addWidget(self.apply_filter_btn)
 
-        self.reset_filter_btn = QPushButton("Reset")
+        self.reset_filter_btn = QPushButton('Reset')
         filter_layout.addWidget(self.reset_filter_btn)
 
-        self.debug_btn = QPushButton("Debug Info")
+        self.debug_btn = QPushButton('Debug Info')
         filter_layout.addWidget(self.debug_btn)
 
         main_layout.addLayout(filter_layout)
@@ -130,7 +130,7 @@ class SparePartsTab(QWidget):
         self.parts_table = QTableWidget()
         self.parts_table.setColumnCount(5)
         self.parts_table.setHorizontalHeaderLabels(
-            ["Part Number", "Name", "Category", "Product Family", "Price"]
+            ['Part Number', 'Name', 'Category', 'Product Family', 'Price']
         )
         self.parts_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.parts_table.setSelectionMode(QTableWidget.SingleSelection)
@@ -138,7 +138,7 @@ class SparePartsTab(QWidget):
         main_layout.addWidget(self.parts_table)
 
         # Details section
-        self.details_group = QGroupBox("Part Details")
+        self.details_group = QGroupBox('Part Details')
         details_layout = QFormLayout()
 
         self.part_number_label = QLabel()
@@ -148,18 +148,18 @@ class SparePartsTab(QWidget):
         self.part_family_label = QLabel()
         self.part_category_label = QLabel()
 
-        details_layout.addRow("Part Number:", self.part_number_label)
-        details_layout.addRow("Name:", self.part_name_label)
-        details_layout.addRow("Description:", self.part_description_label)
-        details_layout.addRow("Price:", self.part_price_label)
-        details_layout.addRow("Product Family:", self.part_family_label)
-        details_layout.addRow("Category:", self.part_category_label)
+        details_layout.addRow('Part Number:', self.part_number_label)
+        details_layout.addRow('Name:', self.part_name_label)
+        details_layout.addRow('Description:', self.part_description_label)
+        details_layout.addRow('Price:', self.part_price_label)
+        details_layout.addRow('Product Family:', self.part_family_label)
+        details_layout.addRow('Category:', self.part_category_label)
 
         self.details_group.setLayout(details_layout)
         main_layout.addWidget(self.details_group)
 
         # Add to quote button
-        self.add_to_quote_btn = QPushButton("Add to Quote")
+        self.add_to_quote_btn = QPushButton('Add to Quote')
         self.add_to_quote_btn.setEnabled(False)
         main_layout.addWidget(self.add_to_quote_btn)
 
@@ -212,17 +212,17 @@ class SparePartsTab(QWidget):
         parts = sorted(
             parts,
             key=lambda p: (
-                p.product_family.name if p.product_family else "",
-                p.part_number or "",
+                p.product_family.name if p.product_family else '',
+                p.part_number or '',
             ),
         )
 
-        print(f"Loading {len(parts)} spare parts")
+        print(f'Loading {len(parts)} spare parts')
 
         # Populate table
         self.parts_table.setRowCount(len(parts))
         for row, part in enumerate(parts):
-            family_name = part.product_family.name if part.product_family else ""
+            family_name = part.product_family.name if part.product_family else ''
 
             # Create table items
             self.parts_table.setItem(row, 0, QTableWidgetItem(part.part_number))
@@ -230,10 +230,10 @@ class SparePartsTab(QWidget):
             self.parts_table.setItem(
                 row,
                 2,
-                QTableWidgetItem(part.category.capitalize() if part.category else ""),
+                QTableWidgetItem(part.category.capitalize() if part.category else ''),
             )
             self.parts_table.setItem(row, 3, QTableWidgetItem(family_name))
-            self.parts_table.setItem(row, 4, QTableWidgetItem(f"${part.price:.2f}"))
+            self.parts_table.setItem(row, 4, QTableWidgetItem(f'${part.price:.2f}'))
 
             # Store part ID in the first column item
             self.parts_table.item(row, 0).setData(Qt.UserRole, part.id)
@@ -254,16 +254,16 @@ class SparePartsTab(QWidget):
             # Get LS2000 and LS2100 product family IDs
             ls2000 = (
                 self.db.query(ProductFamily)
-                .filter(ProductFamily.name == "LS2000")
+                .filter(ProductFamily.name == 'LS2000')
                 .first()
             )
             ls2100 = (
                 self.db.query(ProductFamily)
-                .filter(ProductFamily.name == "LS2100")
+                .filter(ProductFamily.name == 'LS2100')
                 .first()
             )
 
-            debug_info = f"Total spare parts: {len(all_parts)}\n\n"
+            debug_info = f'Total spare parts: {len(all_parts)}\n\n'
 
             if ls2000:
                 ls2000_parts = (
@@ -271,11 +271,11 @@ class SparePartsTab(QWidget):
                     .filter(SparePart.product_family_id == ls2000.id)
                     .all()
                 )
-                debug_info += f"LS2000 parts count: {len(ls2000_parts)}\n"
+                debug_info += f'LS2000 parts count: {len(ls2000_parts)}\n'
                 for part in ls2000_parts:
-                    debug_info += f"  - {part.part_number} ({part.name})\n"
+                    debug_info += f'  - {part.part_number} ({part.name})\n'
             else:
-                debug_info += "LS2000 product family not found\n"
+                debug_info += 'LS2000 product family not found\n'
 
             if ls2100:
                 ls2100_parts = (
@@ -283,15 +283,15 @@ class SparePartsTab(QWidget):
                     .filter(SparePart.product_family_id == ls2100.id)
                     .all()
                 )
-                debug_info += f"\nLS2100 parts count: {len(ls2100_parts)}\n"
+                debug_info += f'\nLS2100 parts count: {len(ls2100_parts)}\n'
                 for part in ls2100_parts:
-                    debug_info += f"  - {part.part_number} ({part.name})\n"
+                    debug_info += f'  - {part.part_number} ({part.name})\n'
             else:
-                debug_info += "\nLS2100 product family not found\n"
+                debug_info += '\nLS2100 product family not found\n'
 
-            QMessageBox.information(self, "Spare Parts Debug Info", debug_info)
+            QMessageBox.information(self, 'Spare Parts Debug Info', debug_info)
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error getting debug info: {str(e)}")
+            QMessageBox.critical(self, 'Error', f'Error getting debug info: {e!s}')
 
     def apply_filters(self):
         """
@@ -346,7 +346,7 @@ class SparePartsTab(QWidget):
         # Populate table
         self.parts_table.setRowCount(len(parts))
         for row, part in enumerate(parts):
-            family_name = part.product_family.name if part.product_family else ""
+            family_name = part.product_family.name if part.product_family else ''
 
             # Create table items
             self.parts_table.setItem(row, 0, QTableWidgetItem(part.part_number))
@@ -354,10 +354,10 @@ class SparePartsTab(QWidget):
             self.parts_table.setItem(
                 row,
                 2,
-                QTableWidgetItem(part.category.capitalize() if part.category else ""),
+                QTableWidgetItem(part.category.capitalize() if part.category else ''),
             )
             self.parts_table.setItem(row, 3, QTableWidgetItem(family_name))
-            self.parts_table.setItem(row, 4, QTableWidgetItem(f"${part.price:.2f}"))
+            self.parts_table.setItem(row, 4, QTableWidgetItem(f'${part.price:.2f}'))
 
             # Store part ID in the first column item
             self.parts_table.item(row, 0).setData(Qt.UserRole, part.id)
@@ -391,16 +391,16 @@ class SparePartsTab(QWidget):
         # Update details section
         self.part_number_label.setText(part.part_number)
         self.part_name_label.setText(part.name)
-        self.part_description_label.setText(part.description or "")
-        self.part_price_label.setText(f"${part.price:.2f}")
+        self.part_description_label.setText(part.description or '')
+        self.part_price_label.setText(f'${part.price:.2f}')
 
         if part.product_family:
             self.part_family_label.setText(part.product_family.name)
         else:
-            self.part_family_label.setText("N/A")
+            self.part_family_label.setText('N/A')
 
         self.part_category_label.setText(
-            part.category.capitalize() if part.category else "N/A"
+            part.category.capitalize() if part.category else 'N/A'
         )
 
         # Enable add to quote button
@@ -408,12 +408,12 @@ class SparePartsTab(QWidget):
 
     def clear_details(self):
         """Clear the details section."""
-        self.part_number_label.setText("")
-        self.part_name_label.setText("")
-        self.part_description_label.setText("")
-        self.part_price_label.setText("")
-        self.part_family_label.setText("")
-        self.part_category_label.setText("")
+        self.part_number_label.setText('')
+        self.part_name_label.setText('')
+        self.part_description_label.setText('')
+        self.part_price_label.setText('')
+        self.part_family_label.setText('')
+        self.part_category_label.setText('')
 
     def on_add_to_quote(self):
         """Add selected part to the quote."""
@@ -433,14 +433,14 @@ class SparePartsTab(QWidget):
 
         # Create part info dictionary
         part_info = {
-            "type": "spare_part",
-            "id": part.id,
-            "part_number": part.part_number,
-            "name": part.name,
-            "description": part.description,
-            "price": part.price,
-            "category": part.category,
-            "product_family": part.product_family.name if part.product_family else "",
+            'type': 'spare_part',
+            'id': part.id,
+            'part_number': part.part_number,
+            'name': part.name,
+            'description': part.description,
+            'price': part.price,
+            'category': part.category,
+            'product_family': part.product_family.name if part.product_family else '',
         }
 
         # Emit signal with part info
