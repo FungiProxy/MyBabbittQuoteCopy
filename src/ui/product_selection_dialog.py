@@ -326,11 +326,24 @@ class ProductSelectionDialog(QDialog):
         # Group options by category
         options_by_category = {}
         for option in additional_options:
+            # Hide 'NEMA 4X Windowed Enclosure' for FS10000
+            if product.get('name', '').startswith('FS10000') and option['name'] == 'NEMA 4X Windowed Enclosure':
+                logger.debug("Hiding 'NEMA 4X Windowed Enclosure' from core options for FS10000")
+                continue
+            if product.get('name', '').startswith('LS6000') and option['name'] == '3/4" Diameter Probe':
+                logger.debug("Hiding '3/4\" Diameter Probe' from core options for LS6000")
+                continue
+            if product.get('name', '').startswith('LS6000'):
+                print(f"LS6000 option: '{option['name']}'")
             # Skip voltage options as we've already handled them
             if option['name'] == 'Voltage':
                 continue
             # Skip mechanical options from core options UI
             if option['name'] in {'Stainless Steel Tag', 'Cable Probe', 'Bent Probe', 'Teflon Insulator'}:
+                continue
+            # Hide '3/4" Diameter Probe x 10"' for LS6000 only (core options only)
+            if product.get('name', '').startswith('LS6000') and option['name'] == '3/4" Diameter Probe x 10"':
+                logger.debug("Hiding '3/4 Diameter Probe x 10' from core options for LS6000")
                 continue
             category = option.get('category', 'General')
             if category not in options_by_category:
