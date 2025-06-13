@@ -32,8 +32,11 @@ from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging with more detailed format
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 
@@ -124,15 +127,21 @@ class ProductSelectionDialog(QDialog):
         left_layout.addWidget(self.product_list, 1)
         main_layout.addWidget(left_panel)
 
-        self.right_panel = QFrame()
-        right_layout = QVBoxLayout(self.right_panel)
+        self.right_panel = QWidget()
+        self.right_layout = QVBoxLayout(self.right_panel)
+        
+        # Add total price label at the top
+        self.total_price_label = QLabel('$0.00')
+        self.total_price_label.setStyleSheet('font-size: 16pt; font-weight: bold;')
+        self.right_layout.addWidget(self.total_price_label)
+        
         self.config_scroll = QScrollArea()
         self.config_scroll.setWidgetResizable(True)
         self.config_widget = QWidget()
         self.config_layout = QVBoxLayout(self.config_widget)
         self.config_layout.setAlignment(Qt.AlignTop)
         self.config_scroll.setWidget(self.config_widget)
-        right_layout.addWidget(self.config_scroll)
+        self.right_layout.addWidget(self.config_scroll)
         main_layout.addWidget(self.right_panel, 1)
 
         self._populate_product_list()
@@ -157,17 +166,25 @@ class ProductSelectionDialog(QDialog):
         """Handle product selection from the list."""
         items = self.product_list.selectedItems()
         if not items:
+            logger.debug("No items selected, showing select product prompt")
             self._show_select_product()
             return
 
         product_data = items[0].data(Qt.UserRole)
-        self.config_service.start_configuration(
-            product_family_id=product_data['id'],
-            product_family_name=product_data['name'],
-            base_product_info=product_data,
-        )
-        self.quantity = 1
-        self._show_product_config(product_data)
+        logger.debug(f"Selected product data: {product_data}")
+        
+        try:
+            logger.debug(f"Starting configuration for product family: {product_data['name']}")
+            self.config_service.start_configuration(
+                product_family_id=product_data['id'],
+                product_family_name=product_data['name'],
+                base_product_info=product_data,
+            )
+            self.quantity = 1
+            self._show_product_config(product_data)
+        except Exception as e:
+            logger.error(f"Error starting configuration: {str(e)}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to configure product: {str(e)}")
 
     def _show_select_product(self):
         self._clear_config_panel()
@@ -177,6 +194,7 @@ class ProductSelectionDialog(QDialog):
 
     def _show_product_config(self, product):
         """Show the configuration options for the selected product."""
+        logger.debug(f"Showing product config for: {product['name']}")
         self._clear_config_panel()
         self.option_widgets = {}
 
@@ -193,13 +211,24 @@ class ProductSelectionDialog(QDialog):
         form_layout = QFormLayout()
         form_layout.setSpacing(15)
 
-        self._setup_core_options(form_layout, product)
+        try:
+            logger.debug("Setting up core options")
+            self._setup_core_options(form_layout, product)
+        except Exception as e:
+            logger.error(f"Error setting up core options: {str(e)}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to setup core options: {str(e)}")
 
         # Get all connection-related options for the product family
-        connection_options = self.product_service.get_connection_options(
-            self.db, product['id']
-        )
-        self._setup_connection_options(form_layout, connection_options)
+        try:
+            logger.debug("Fetching connection options")
+            connection_options = self.product_service.get_connection_options(
+                self.db, product['id']
+            )
+            logger.debug(f"Connection options: {connection_options}")
+            self._setup_connection_options(form_layout, connection_options)
+        except Exception as e:
+            logger.error(f"Error setting up connection options: {str(e)}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to setup connection options: {str(e)}")
 
         self.config_layout.addLayout(form_layout)
         self._setup_quantity_and_total()
@@ -208,15 +237,27 @@ class ProductSelectionDialog(QDialog):
 
     def _setup_core_options(self, form_layout: QFormLayout, product: dict):
         """Set up the core configuration options for the selected product."""
+        logger.debug(f"Setting up core options for product: {product['name']}")
+        
         # Get product family-specific options
-        additional_options = self.product_service.get_additional_options(
-            self.db, product['name']
-        )
+        try:
+            additional_options = self.product_service.get_additional_options(
+                self.db, product['name']
+            )
+            logger.debug(f"Additional options: {additional_options}")
+        except Exception as e:
+            logger.error(f"Error fetching additional options: {str(e)}", exc_info=True)
+            additional_options = []
 
         # Get voltage options separately
-        voltage_options = self.product_service.get_voltage_options(
-            self.db, product['id']
-        )
+        try:
+            voltage_options = self.product_service.get_voltage_options(
+                self.db, product['id']
+            )
+            logger.debug(f"Voltage options: {voltage_options}")
+        except Exception as e:
+            logger.error(f"Error fetching voltage options: {str(e)}", exc_info=True)
+            voltage_options = []
 
         # Add voltage options first
         if voltage_options:
@@ -231,6 +272,7 @@ class ProductSelectionDialog(QDialog):
             )
             form_layout.addRow("Voltage:", voltage_combo)
             self.option_widgets['Voltage'] = voltage_combo
+            logger.debug("Added voltage options to form")
 
         # Group options by category
         options_by_category = {}
@@ -242,97 +284,35 @@ class ProductSelectionDialog(QDialog):
             if category not in options_by_category:
                 options_by_category[category] = []
             options_by_category[category].append(option)
+            logger.debug(f"Added option {option['name']} to category {category}")
 
         # Create UI controls for each option
         for category, options in options_by_category.items():
+            logger.debug(f"Processing category: {category} with {len(options)} options")
             for option in options:
                 if not option.get('choices'):
+                    logger.warning(f"Option {option['name']} has no choices, skipping")
                     continue
-
-                # Special handling for Material option
-                if option['name'] == 'Material':
-                    combo = QComboBox()
-                    combo.setObjectName(f"option_{option['name']}")
-                    # Add material options with their codes
-                    for choice in option['choices']:
-                        adder_map = option.get('adders') or {}
-                        price = adder_map.get(choice, 0) or 0
-                        # Map full material names to their codes
-                        material_map = {
-                            '316SS': 'S',
-                            '304SS': 'S',
-                            'Hastelloy C': 'H',
-                            'Monel': 'M',
-                            'Titanium': 'T',
-                            'Inconel': 'I',
-                            '316SS with Teflon Sleeve': 'TS',
-                            '316SS with Halar Coating': 'H',
-                            'Titanium with Teflon Sleeve': 'TS',
-                        }
-                        # Get the material code, defaulting to the choice if not in map
-                        material_code = material_map.get(choice, choice)
-                        display_text = (
-                            f'{choice} (+${price:.2f})' if price > 0 else choice
-                        )
-                        combo.addItem(display_text, material_code)
-
-                    combo.currentIndexChanged.connect(
-                        lambda idx, opt=option, cmb=combo: self._on_option_changed(
-                            opt['name'], cmb.currentData()
-                        )
-                    )
-                    form_layout.addRow(f"{option['name']}:", combo)
-                    self.option_widgets[option['name']] = combo
-                    continue
-
-                # Create appropriate control based on option type
-                if len(option['choices']) > 3:
-                    # Use combo box for many choices
-                    combo = QComboBox()
-                    combo.setObjectName(f"option_{option['name']}")
-                    for choice in option['choices']:
-                        adder_map = option.get('adders') or {}
-                        price = adder_map.get(choice, 0) or 0
-                        display_text = (
-                            f'{choice} (+${price:.2f})' if price > 0 else choice
-                        )
-                        combo.addItem(display_text, choice)
-
-                    # Connect the signal using a lambda that captures the current combo box
-                    combo.currentIndexChanged.connect(
-                        lambda idx, opt=option, cmb=combo: self._on_option_changed(
-                            opt['name'], cmb.currentData()
-                        )
-                    )
-                    form_layout.addRow(f"{option['name']}:", combo)
-                    self.option_widgets[option['name']] = combo
-                else:
-                    # Use radio buttons for few choices
-                    radio_layout = QHBoxLayout()
-                    for choice in option['choices']:
-                        adder_map = option.get('adders') or {}
-                        price = adder_map.get(choice, 0) or 0
-                        display_text = (
-                            f'{choice} (+${price:.2f})' if price > 0 else choice
-                        )
-                        radio = QPushButton(display_text)
-                        radio.setCheckable(True)
-                        radio.setProperty('choice', choice)
-                        radio.clicked.connect(
-                            lambda checked, opt=option, ch=choice: (
-                                self._on_option_changed(opt['name'], ch)
-                                if checked
-                                else None
+                
+                logger.debug(f"Creating control for option: {option['name']}")
+                logger.debug(f"Option details: choices={option['choices']}, adders={option['adders']}")
+                
+                try:
+                    if isinstance(option['choices'], list):
+                        combo = QComboBox()
+                        combo.setObjectName(f"option_{option['name']}")
+                        for choice in option['choices']:
+                            combo.addItem(str(choice), choice)
+                        combo.currentIndexChanged.connect(
+                            lambda idx, name=option['name'], cmb=combo: self._on_option_changed(
+                                name, cmb.currentData()
                             )
                         )
-                        radio_layout.addWidget(radio)
-                    radio_layout.setObjectName(f"option_{option['name']}")
-                    form_layout.addRow(f"{option['name']}:", radio_layout)
-                    self.option_widgets[option['name']] = radio_layout
-
-                logger.info(
-                    f"Created widget for option '{option['name']}' of type: {type(self.option_widgets[option['name']])}"
-                )
+                        form_layout.addRow(f"{option['name']}:", combo)
+                        self.option_widgets[option['name']] = combo
+                        logger.debug(f"Added combo box for {option['name']}")
+                except Exception as e:
+                    logger.error(f"Error creating control for option {option['name']}: {str(e)}", exc_info=True)
 
         # Set default values for core options after they have been created
         self._set_initial_option_value('Voltage', product.get('voltage'))

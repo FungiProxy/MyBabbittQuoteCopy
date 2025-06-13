@@ -16,6 +16,7 @@ The service follows the Repository pattern and provides a clean interface
 for interacting with product-related data and business rules.
 """
 
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
@@ -32,6 +33,8 @@ from src.core.models.product_variant import ProductFamily, ProductVariant
 from src.core.pricing import calculate_product_price
 from src.utils.db_utils import get_all, get_by_id
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 class ProductService:
     """
@@ -329,8 +332,9 @@ class ProductService:
         Fetch all product families from the database.
         Returns: List of dicts with id, name, description, category.
         """
+        logger.debug("Fetching all product families")
         families = db.query(ProductFamily).all()
-        return [
+        result = [
             {
                 'id': f.id,
                 'name': f.name,
@@ -339,18 +343,21 @@ class ProductService:
             }
             for f in families
         ]
+        logger.debug(f"Found {len(result)} product families: {[f['name'] for f in result]}")
+        return result
 
     def get_variants_for_family(self, db: Session, family_id: int) -> List[Dict]:
         """
         Fetch all product variants for a given family.
         Returns: List of dicts with id, model_number, description, base_price, etc.
         """
+        logger.debug(f"Fetching variants for family ID: {family_id}")
         variants = (
             db.query(ProductVariant)
             .filter(ProductVariant.product_family_id == family_id)
             .all()
         )
-        return [
+        result = [
             {
                 'id': v.id,
                 'model_number': v.model_number,
@@ -362,6 +369,8 @@ class ProductService:
             }
             for v in variants
         ]
+        logger.debug(f"Found {len(result)} variants for family {family_id}")
+        return result
 
     def get_material_options(self, db, product_family_id: int) -> list:
         """
@@ -392,6 +401,7 @@ class ProductService:
         Fetch available voltage options for a product family by ID.
         Returns: List of dicts with display_name and voltage.
         """
+        logger.debug(f"Fetching voltage options for family ID: {product_family_id}")
         from src.core.models.voltage_option import VoltageOption
 
         voltages = (
@@ -402,29 +412,34 @@ class ProductService:
             )
             .all()
         )
-        return [{'display_name': v.voltage, 'voltage': v.voltage} for v in voltages]
+        result = [{'display_name': v.voltage, 'voltage': v.voltage} for v in voltages]
+        logger.debug(f"Found voltage options: {result}")
+        return result
 
     def get_connection_options(self, db, product_family_id: int) -> list:
         """
         Fetch available connection options for a product family by ID.
         Returns: List of dicts with type, rating, size, price.
         """
-
+        logger.debug(f"Fetching connection options for family ID: {product_family_id}")
         connections = (
             db.query(ConnectionOption)
             .filter(ConnectionOption.product_family_id == product_family_id)
             .all()
         )
-        return [
+        result = [
             {'type': c.type, 'rating': c.rating, 'size': c.size, 'price': c.price}
             for c in connections
         ]
+        logger.debug(f"Found connection options: {result}")
+        return result
 
     def get_additional_options(self, db, family_name: str) -> list:
         """
         Fetch additional configurable options (add-ons) for a product family by name.
         Returns: List of dicts with name, description, price, price_type, category, choices, adders.
         """
+        logger.debug(f"Fetching additional options for family: {family_name}")
         from src.core.models.option import Option
 
         options = (
@@ -432,6 +447,8 @@ class ProductService:
             .filter(Option.product_families.like(f'%{family_name}%'))
             .all()
         )
+        logger.debug(f"Found {len(options)} raw options for {family_name}")
+        
         # Exclude options where family_name is in excluded_products
         filtered = [
             o
@@ -439,7 +456,9 @@ class ProductService:
             if not o.excluded_products
             or family_name not in o.excluded_products.split(',')
         ]
-        return [
+        logger.debug(f"After filtering exclusions: {len(filtered)} options")
+        
+        result = [
             {
                 'name': o.name,
                 'description': o.description,
@@ -451,6 +470,15 @@ class ProductService:
             }
             for o in filtered
         ]
+        
+        # Log details of each option
+        for opt in result:
+            logger.debug(f"Option {opt['name']}:")
+            logger.debug(f"  - Choices: {opt['choices']}")
+            logger.debug(f"  - Adders: {opt['adders']}")
+            logger.debug(f"  - Category: {opt['category']}")
+        
+        return result
 
     def search_products(self, db: Session, query: str) -> List[Dict]:
         """

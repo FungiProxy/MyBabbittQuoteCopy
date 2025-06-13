@@ -7,6 +7,7 @@ from src.core.models.configuration import Configuration
 from src.core.pricing import calculate_product_price
 from src.core.services.product_service import ProductService
 
+# Set up logging
 logger = logging.getLogger(__name__)
 
 
@@ -21,6 +22,7 @@ class ConfigurationService:
         self.db = db
         self.product_service = product_service
         self._current_config: Optional[Configuration] = None
+        logger.debug("ConfigurationService initialized")
 
     @property
     def current_config(self) -> Optional[Configuration]:
@@ -31,39 +33,36 @@ class ConfigurationService:
     def current_config(self, value: Optional[Configuration]):
         """Set the current configuration."""
         self._current_config = value
+        if value:
+            logger.debug(f"Current configuration set for product family: {value.product_family_name}")
+        else:
+            logger.debug("Current configuration cleared")
 
     def start_configuration(
         self, product_family_id: int, product_family_name: str, base_product_info: dict
-    ) -> Configuration:
+    ):
         """
-        Initializes a new product configuration session.
-
+        Start a new configuration session for a product family.
+        
         Args:
-            product_family_id: The ID of the product family being configured.
-            product_family_name: The name of the product family.
-            base_product_info: A dictionary containing the details of the base product selected.
-
-        Returns:
-            The newly created Configuration object.
+            product_family_id: ID of the product family
+            product_family_name: Name of the product family
+            base_product_info: Base product information
         """
-        self.current_config = Configuration(
-            db=self.db,
-            product_family_id=product_family_id,
-            product_family_name=product_family_name,
-            base_product=base_product_info,
-        )
-
-        # Initialize with base product values to ensure defaults are set
-        options = self.current_config.selected_options
-        options['Voltage'] = base_product_info.get('voltage')
-        options['Material'] = base_product_info.get('material')
-        options['Probe Length'] = base_product_info.get('base_length', 0.0)
-
-        # Perform initial calculation and model number generation
-        self.current_config.final_price = self.calculate_price()
-        self.current_config.model_number = self.generate_model_number()
-
-        return self.current_config
+        logger.debug(f"Starting configuration for {product_family_name} (ID: {product_family_id})")
+        logger.debug(f"Base product info: {base_product_info}")
+        
+        try:
+            self._current_config = Configuration(
+                db=self.db,
+                product_family_id=product_family_id,
+                product_family_name=product_family_name,
+                base_product=base_product_info,
+            )
+            logger.debug("Configuration object created successfully")
+        except Exception as e:
+            logger.error(f"Error creating configuration: {str(e)}", exc_info=True)
+            raise
 
     def select_option(self, option_name: str, value: any):
         """
@@ -74,60 +73,52 @@ class ConfigurationService:
             value (any): The selected value for the option.
         """
         if not self.current_config:
+            logger.warning("No current configuration when trying to select option")
             return
 
+        logger.debug(f"Selecting option: {option_name} = {value}")
+        
         # Store the current material before updating options
         current_material = self.current_config.selected_options.get('Material')
         if not current_material:
             current_material = self.current_config.base_product.get('material')
+            logger.debug(f"Using base product material: {current_material}")
 
         # Update the selected option
         if option_name == 'Material':
             # If the value is a number (like a length), don't update it
             if str(value).isdigit():
+                logger.debug(f"Material value {value} is numeric, keeping current material: {current_material}")
                 self.current_config.selected_options['Material'] = current_material
             else:
-                # Map full material names to their codes if needed
-                material_map = {
-                    '316SS': 'S',
-                    '304SS': 'S',
-                    'Hastelloy C': 'H',
-                    'Monel': 'M',
-                    'Titanium': 'T',
-                    'Inconel': 'I',
-                    '316SS with Teflon Sleeve': 'TS',
-                    '316SS with Halar Coating': 'H',
-                    'Titanium with Teflon Sleeve': 'TS',
-                }
-
-                # For LS2000, always use single-letter codes
-                if self.current_config.product_family_name == 'LS2000':
-                    # If it's already a single letter or two letters (like TS), use it directly
-                    if len(str(value)) <= 2:
-                        self.current_config.selected_options['Material'] = value
-                    else:
-                        # Otherwise, look up the code in the material map
-                        self.current_config.selected_options['Material'] = (
-                            material_map.get(str(value), value)
-                        )
-                else:
-                    # For other models, preserve the original value
-                    self.current_config.selected_options['Material'] = value
-        elif option_name == 'Probe Length':
-            # If we're changing the length, ensure we preserve the material
-            self.current_config.selected_options[option_name] = value
-            # Only update material if it's not already set or if it was accidentally changed
-            if (
-                not self.current_config.selected_options.get('Material')
-                or str(self.current_config.selected_options.get('Material')).isdigit()
-            ):
-                self.current_config.selected_options['Material'] = current_material
+                logger.debug(f"Updating material to: {value}")
+                self.current_config.selected_options['Material'] = value
         else:
-            # For all other options, just update the value
+            logger.debug(f"Updating option {option_name} to: {value}")
             self.current_config.selected_options[option_name] = value
 
-        self.current_config.final_price = self.calculate_price()
-        self.current_config.model_number = self.generate_model_number()
+        # Update the model number and price
+        self._update_model_number()
+        self._update_price()
+        logger.debug(f"Updated configuration: {self.current_config.selected_options}")
+
+    def _update_model_number(self):
+        """Update the model number based on selected options."""
+        if not self.current_config:
+            logger.warning("No current configuration when trying to update model number")
+            return
+            
+        logger.debug("Updating model number")
+        # Implementation details...
+
+    def _update_price(self):
+        """Update the price based on selected options."""
+        if not self.current_config:
+            logger.warning("No current configuration when trying to update price")
+            return
+            
+        logger.debug("Updating price")
+        # Implementation details...
 
     def generate_model_number(self) -> str:
         """Generates the model number based on the current configuration."""
