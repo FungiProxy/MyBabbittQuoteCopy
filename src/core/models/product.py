@@ -14,9 +14,11 @@ The Product model supports:
 - Categorization and searching
 """
 
-from sqlalchemy import Column, Float, Integer, String, Text
+from sqlalchemy import Column, Float, Integer, String, Text, ForeignKey
+from sqlalchemy.orm import relationship
 
 from src.core.database import Base
+from src.core.models.product_variant import ProductVariant
 
 
 class Product(Base):
@@ -75,8 +77,6 @@ class Product(Base):
     # Configuration options
     voltage = Column(String)  # e.g., "115VAC", "24VDC"
     material = Column(String)  # e.g., "S", "H", "U", "T"
-
-    # No relationships with QuoteItem - it now relates to ProductVariant
 
     def __repr__(self) -> str:
         """

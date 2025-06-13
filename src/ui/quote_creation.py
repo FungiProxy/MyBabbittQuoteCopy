@@ -131,7 +131,6 @@ class QuoteItemWidget(QWidget):
 
         # Add widgets to layout
         layout.addWidget(item_label)
-        layout.addStretch()
         layout.addWidget(price_label)
         layout.addWidget(self.edit_btn)
         layout.addWidget(self.remove_btn)

@@ -24,6 +24,7 @@ class Configuration:
     final_price: float = 0.0
     final_description: str = ''
     model_number: str = ''
+    quantity: int = 1  # Default quantity is 1
 
     # Metadata
     is_valid: bool = False

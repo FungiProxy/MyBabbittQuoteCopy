@@ -7,7 +7,7 @@ This dialog provides a two-panel interface:
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Any, Dict, List, Union
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -28,10 +28,13 @@ from PySide6.QtWidgets import (
     QWidget,
     QGroupBox,
 )
+from PySide6.QtGui import QFont
 
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
+from src.core.models.configuration import Configuration
+from src.core.models.product import Product, ProductVariant
 
 # Set up logging with more detailed format
 logging.basicConfig(
@@ -238,6 +241,7 @@ class ProductSelectionDialog(QDialog):
         self._setup_quantity_and_total()
         self._setup_add_button()
         self._update_total_price()
+        self._update_model_number_label()
 
     def _setup_core_options(self, form_layout: QFormLayout, product: dict):
         """Set up the core configuration options for the selected product."""
@@ -266,45 +270,98 @@ class ProductSelectionDialog(QDialog):
         except Exception as e:
             logger.error(f"Error fetching voltage options: {str(e)}", exc_info=True)
         
-        # Get material options
+        # Get material options (refactored to use Option from additional_options)
+        material_option = None
         try:
-            material_options = self.product_service.get_available_materials_for_product(
+            additional_options = self.product_service.get_additional_options(
                 self.db, product['name']
             )
-            logger.debug(f"Material options: {material_options}")
-            
-            if material_options:
-                material_combo = QComboBox()
-                material_combo.setObjectName("option_Material")
-                for option in material_options:
-                    material_combo.addItem(option['display_name'], option['code'])
-                    material_combo.currentIndexChanged.connect(
-                        lambda idx, cmb=material_combo: self._on_option_changed(
-                            'Material', cmb.currentData()
+            logger.debug(f"Additional options for {product['name']}:")
+            for opt in additional_options:
+                logger.debug(f"  Option: {opt['name']}")
+                if opt['name'] == 'Material':
+                    material_option = opt
+                logger.debug(f"    Category: {opt.get('category', 'No category')}")
+                logger.debug(f"    Choices: {opt.get('choices', 'No choices')}")
+                logger.debug(f"    Adders: {opt.get('adders', 'No adders')}")
+                logger.debug(f"    Product Families: {opt.get('product_families', 'No families')}")
+                logger.debug(f"    Excluded Products: {opt.get('excluded_products', 'None')}")
+        except Exception as e:
+            logger.error(f"Error fetching additional options: {str(e)}", exc_info=True)
+            additional_options = []
+
+        # Build Material dropdown from Option (with adders)
+        if material_option and isinstance(material_option.get('choices'), list):
+            material_combo = QComboBox()
+            material_combo.setObjectName("option_Material")
+            adders = material_option.get('adders', {})
+            for choice in material_option['choices']:
+                price_adder = adders.get(choice, 0) if isinstance(adders, dict) else 0
+                if price_adder:
+                    display_text = f"{choice} (+${price_adder:.2f})"
+                else:
+                    display_text = str(choice)
+                material_combo.addItem(display_text, choice)
+            material_combo.currentIndexChanged.connect(
+                lambda idx, cmb=material_combo: self._on_option_changed(
+                    'Material', cmb.currentData()
+                )
+            )
+            form_layout.addRow("Material:", material_combo)
+            self.option_widgets['Material'] = material_combo
+            logger.debug("Added material options to form (from Option)")
+            # Add probe length customization (unchanged)
+            probe_length_spin = QSpinBox()
+            probe_length_spin.setObjectName("option_Probe Length")
+            probe_length_spin.setRange(1, 120)  # Allow lengths from 1 to 120 inches
+            probe_length_spin.setSuffix('"')  # Add inch symbol
+            if product.get('base_length'):
+                probe_length_spin.setValue(product['base_length'])
+            probe_length_spin.valueChanged.connect(
+                lambda value, cmb=probe_length_spin: self._on_option_changed(
+                    'Probe Length', value
+                )
+            )
+            form_layout.addRow("Probe Length:", probe_length_spin)
+            self.option_widgets['Probe Length'] = probe_length_spin
+            logger.debug(f"Added probe length customization to form with default value: {product.get('base_length')}")
+        else:
+            # fallback to old method if no material_option found
+            try:
+                material_options = self.product_service.get_available_materials_for_product(
+                    self.db, product['name']
+                )
+                logger.debug(f"Material options: {material_options}")
+                if material_options:
+                    material_combo = QComboBox()
+                    material_combo.setObjectName("option_Material")
+                    for option in material_options:
+                        material_combo.addItem(option['display_name'], option['code'])
+                        material_combo.currentIndexChanged.connect(
+                            lambda idx, cmb=material_combo: self._on_option_changed(
+                                'Material', cmb.currentData()
+                            )
+                        )
+                    form_layout.addRow("Material:", material_combo)
+                    self.option_widgets['Material'] = material_combo
+                    logger.debug("Added material options to form (fallback)")
+                    # Add probe length customization (unchanged)
+                    probe_length_spin = QSpinBox()
+                    probe_length_spin.setObjectName("option_Probe Length")
+                    probe_length_spin.setRange(1, 120)  # Allow lengths from 1 to 120 inches
+                    probe_length_spin.setSuffix('"')  # Add inch symbol
+                    if product.get('base_length'):
+                        probe_length_spin.setValue(product['base_length'])
+                    probe_length_spin.valueChanged.connect(
+                        lambda value, cmb=probe_length_spin: self._on_option_changed(
+                            'Probe Length', value
                         )
                     )
-                form_layout.addRow("Material:", material_combo)
-                self.option_widgets['Material'] = material_combo
-                logger.debug("Added material options to form")
-
-                # Add probe length customization
-                probe_length_spin = QSpinBox()
-                probe_length_spin.setObjectName("option_Probe Length")
-                probe_length_spin.setRange(1, 120)  # Allow lengths from 1 to 120 inches
-                probe_length_spin.setSuffix('"')  # Add inch symbol
-                # Set default value from product's base_length
-                if product.get('base_length'):
-                    probe_length_spin.setValue(product['base_length'])
-                probe_length_spin.valueChanged.connect(
-                    lambda value, cmb=probe_length_spin: self._on_option_changed(
-                        'Probe Length', value
-                    )
-                )
-                form_layout.addRow("Probe Length:", probe_length_spin)
-                self.option_widgets['Probe Length'] = probe_length_spin
-                logger.debug(f"Added probe length customization to form with default value: {product.get('base_length')}")
-        except Exception as e:
-            logger.error(f"Error fetching material options: {str(e)}", exc_info=True)
+                    form_layout.addRow("Probe Length:", probe_length_spin)
+                    self.option_widgets['Probe Length'] = probe_length_spin
+                    logger.debug(f"Added probe length customization to form with default value: {product.get('base_length')}")
+            except Exception as e:
+                logger.error(f"Error fetching material options: {str(e)}", exc_info=True)
         
         # Get product family-specific options
         try:
@@ -384,8 +441,15 @@ class ProductSelectionDialog(QDialog):
                     if isinstance(option['choices'], list):
                         combo = QComboBox()
                         combo.setObjectName(f"option_{option['name']}")
+                        adders = option.get('adders', {})
                         for choice in option['choices']:
-                            combo.addItem(str(choice), choice)
+                            # Show price adder if present and nonzero
+                            price_adder = adders.get(choice, 0) if isinstance(adders, dict) else 0
+                            if price_adder:
+                                display_text = f"{choice} (+${price_adder:.2f})"
+                            else:
+                                display_text = str(choice)
+                            combo.addItem(display_text, choice)
                         combo.currentIndexChanged.connect(
                             lambda idx, name=option['name'], cmb=combo: self._on_option_changed(
                                 name, cmb.currentData()
@@ -417,6 +481,20 @@ class ProductSelectionDialog(QDialog):
         self._set_initial_option_value('Voltage', product.get('voltage'))
         self._set_initial_option_value('Material', product.get('material'))
         self._set_initial_option_value('Probe Length', product.get('base_length'))
+
+        # --- Minimalistic fix: trigger option changed for defaults to update price ---
+        # Voltage
+        voltage_widget = self.option_widgets.get('Voltage')
+        if isinstance(voltage_widget, QComboBox) and voltage_widget.currentIndex() >= 0:
+            self._on_option_changed('Voltage', voltage_widget.currentData())
+        # Material
+        material_widget = self.option_widgets.get('Material')
+        if isinstance(material_widget, QComboBox) and material_widget.currentIndex() >= 0:
+            self._on_option_changed('Material', material_widget.currentData())
+        # Probe Length
+        probe_length_widget = self.option_widgets.get('Probe Length')
+        if isinstance(probe_length_widget, QSpinBox):
+            self._on_option_changed('Probe Length', probe_length_widget.value())
 
         # Add a spacer after all options
         form_layout.addRow(QWidget())
@@ -461,9 +539,6 @@ class ProductSelectionDialog(QDialog):
         self.quantity_spinner.valueChanged.connect(self._on_quantity_changed)
         h_layout.addWidget(self.quantity_spinner)
         h_layout.addStretch()
-        self.total_price_label = QLabel('$0.00')
-        self.total_price_label.setObjectName('totalPriceLabel')
-        h_layout.addWidget(self.total_price_label)
         self.config_layout.addLayout(h_layout)
 
     def _setup_add_button(self):
@@ -472,26 +547,59 @@ class ProductSelectionDialog(QDialog):
         self.config_layout.addWidget(self.add_button)
 
     def _update_total_price(self):
-        if self.config_service.current_config:
-            total = self.config_service.current_config.final_price * self.quantity
-            self.total_price_label.setText(f'${total:,.2f}')
-            self._update_model_number()
+        """Update the total price display."""
+        try:
+            logger.info("Starting total price update in dialog")
+            if not self.config_service.current_config:
+                logger.warning("No current configuration when updating total price")
+                self.total_price_label.setText("$0.00")
+                return
+                
+            final_price = self.config_service.current_config.final_price
+            logger.info(f"Retrieved final price from config service: ${final_price:,.2f}")
+            
+            # Format the price
+            formatted_price = f"${final_price:,.2f}"
+            logger.info(f"Formatted price for display: {formatted_price}")
+            
+            # Update the label
+            self.total_price_label.setText(formatted_price)
+            logger.info("Updated total price label in UI")
+            
+        except Exception as e:
+            logger.error(f"Error updating total price: {str(e)}", exc_info=True)
+            self.total_price_label.setText("$0.00")
 
-    def _update_model_number(self):
-        """Updates the model number label from the configuration service."""
-        if self.config_service.current_config and hasattr(self, 'model_number_label'):
-            model_number = self.config_service.generate_model_number()
-            self.model_number_label.setText(f'<b>Model:</b> {model_number}')
+    def _on_quantity_changed(self, value: int):
+        """Handle changes to quantity."""
+        try:
+            logger.info(f"Quantity changed to: {value}")
+            if self.config_service.current_config:
+                self.config_service.current_config.quantity = value
+                logger.info("Updated quantity in configuration")
+                
+                # Update the price display
+                self._update_total_price()
+                logger.info("Triggered total price update after quantity change")
+            else:
+                logger.warning("No current configuration when quantity changed")
+                
+        except Exception as e:
+            logger.error(f"Error handling quantity change: {str(e)}", exc_info=True)
 
-    def _on_quantity_changed(self, value):
-        self.quantity = value
-        self._update_total_price()
-
-    def _on_option_changed(self, option_name: str, value: any):
+    def _on_option_changed(self, option_name: str, value: Union[str, int, float, bool, None]):
         """Handle changes to any option value."""
-        if self.config_service.current_config:
+        try:
+            logger.info(f"Option changed: {option_name}={value}")
             self.config_service.select_option(option_name, value)
+            logger.info("Updated configuration service with new option")
+            
+            # Update the price display
             self._update_total_price()
+            logger.info("Triggered total price update after option change")
+            self._update_model_number_label()
+        except Exception as e:
+            logger.error(f"Error handling option change: {str(e)}", exc_info=True)
 
     def _setup_connection_options(self, form_layout: QFormLayout, options: list):
         """Creates UI controls for connection options."""
@@ -789,3 +897,75 @@ class ProductSelectionDialog(QDialog):
             self.config_service.select_option(option_name, 'No')
             
         self._update_total_price()
+
+    def _update_option_price(self, option_name: str, value: any):
+        """Update the price display for a specific option."""
+        if self.config_service.current_config:
+            option = self.config_service.current_config.get_option(option_name)
+            if option and hasattr(option, 'price'):
+                price_label = self.option_price_labels.get(option_name)
+                if price_label:
+                    price_label.setText(f'${option.price:,.2f}')
+            self._update_total_price()
+
+    def _setup_option_row(self, option_name: str, option_data: dict):
+        """Set up a row for an option in the configuration layout."""
+        row_layout = QHBoxLayout()
+        
+        # Option name and value
+        option_label = QLabel(f"{option_data.get('label', option_name)}:")
+        option_label.setMinimumWidth(150)
+        row_layout.addWidget(option_label)
+
+        # Option value widget (combo box, checkbox, etc.)
+        value_widget = self._create_option_widget(option_name, option_data)
+        row_layout.addWidget(value_widget)
+
+        # Price label
+        price_label = QLabel('$0.00')
+        price_label.setMinimumWidth(100)
+        price_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.option_price_labels[option_name] = price_label
+        row_layout.addWidget(price_label)
+
+        self.config_layout.addLayout(row_layout)
+
+    def _update_model_number_label(self):
+        """Update the model number label based on current selections."""
+        # Get the selected product/model name
+        product = self._get_current_product_family()
+        if not product:
+            self.model_number_label.setText('Model: PENDING...')
+            return
+        model = product.get('name', 'PENDING')
+
+        # Get voltage
+        voltage = None
+        voltage_widget = self.option_widgets.get('Voltage')
+        if isinstance(voltage_widget, QComboBox) and voltage_widget.currentIndex() >= 0:
+            voltage = voltage_widget.currentData()
+        if not voltage:
+            voltage = product.get('voltage', 'PENDING')
+
+        # Get material code
+        material_code = None
+        material_widget = self.option_widgets.get('Material')
+        if isinstance(material_widget, QComboBox) and material_widget.currentIndex() >= 0:
+            material_code = material_widget.currentData()
+        if not material_code:
+            material_code = product.get('material', 'PENDING')
+
+        # Get probe length
+        probe_length = None
+        probe_length_widget = self.option_widgets.get('Probe Length')
+        if isinstance(probe_length_widget, QSpinBox):
+            probe_length = probe_length_widget.value()
+        if not probe_length:
+            probe_length = product.get('base_length', 'PENDING')
+
+        # Format probe length with inch symbol
+        probe_length_str = f'{probe_length}"' if probe_length != 'PENDING' else 'PENDING'
+
+        # Build model number string
+        model_number = f"{model}-{voltage}-{material_code}-{probe_length_str}"
+        self.model_number_label.setText(f"Model: {model_number}")

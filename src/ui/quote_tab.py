@@ -347,8 +347,6 @@ class QuoteTab(QWidget):
 
         Calculates and updates the display of base price, options price,
         and total price based on the current product and specifications.
-        This is currently using placeholder calculations and would normally
-        integrate with a proper pricing module.
         """
         # Base price based on product model
         base_price = 0.0
@@ -426,21 +424,15 @@ class QuoteTab(QWidget):
                 # Add cost for longer probes
                 standard_length = 10  # Standard length is 10" for most models
                 if base_model in ['LS2000', 'LS2100'] and value > standard_length:
-                    options_price += (
-                        value - standard_length
-                    ) * 8.0  # $8 per inch over standard
+                    options_price += (value - standard_length) * 8.0  # $8 per inch over standard
                 elif value > standard_length:
-                    options_price += (
-                        value - standard_length
-                    ) * 12.0  # $12 per inch over standard for other models
+                    options_price += (value - standard_length) * 12.0  # $12 per inch over standard for other models
 
             if name == 'cable_length' and isinstance(value, (int, float)):
                 # Add cost for longer cables
                 standard_cable = 10  # Standard cable length is 10 feet
                 if value > standard_cable:
-                    options_price += (
-                        value - standard_cable
-                    ) * 5.0  # $5 per foot over standard
+                    options_price += (value - standard_cable) * 5.0  # $5 per foot over standard
 
         # Add connection option price
         db = SessionLocal()
@@ -478,10 +470,64 @@ class QuoteTab(QWidget):
             'total_price': total_price,
         }
 
-        # Update the UI
-        self.base_price_label.setText(f'${base_price:.2f}')
-        self.options_price_label.setText(f'${options_price:.2f}')
-        self.total_price_label.setText(f'${total_price:.2f}')
+        # Update the UI with formatted prices
+        self.base_price_label.setText(f'${base_price:,.2f}')
+        self.options_price_label.setText(f'${options_price:,.2f}')
+        self.total_price_label.setText(f'${total_price:,.2f}')
+
+        # Update items table prices
+        self.update_items_table_prices()
+
+    def update_items_table_prices(self):
+        """Update the prices in the items table with proper formatting."""
+        for row in range(self.items_table.rowCount()):
+            # Update unit price
+            unit_price_item = self.items_table.item(row, 2)
+            if unit_price_item:
+                try:
+                    price = float(unit_price_item.text().replace('$', '').replace(',', ''))
+                    unit_price_item.setText(f'${price:,.2f}')
+                except ValueError:
+                    pass
+
+            # Update total price
+            total_price_item = self.items_table.item(row, 3)
+            if total_price_item:
+                try:
+                    price = float(total_price_item.text().replace('$', '').replace(',', ''))
+                    total_price_item.setText(f'${price:,.2f}')
+                except ValueError:
+                    pass
+
+    def update_total_pricing(self):
+        """Update total pricing including spare parts."""
+        # Calculate base product price from current pricing
+        base_price = self.pricing.get('base_price', 0.0)
+        options_price = self.pricing.get('options_price', 0.0)
+
+        # Calculate additional items price
+        items_price = 0.0
+        for row in range(self.items_table.rowCount()):
+            item_data = self.items_table.item(row, 0).data(Qt.UserRole)
+            if item_data:
+                quantity = int(self.items_table.item(row, 1).text())
+                unit_price = item_data.get('price', 0.0)
+                items_price += quantity * unit_price
+
+        # Update total price
+        total_price = base_price + options_price + items_price
+
+        # Update pricing data
+        self.pricing['items_price'] = items_price
+        self.pricing['total_price'] = total_price
+
+        # Update UI with formatted prices
+        self.base_price_label.setText(f'${base_price:,.2f}')
+        self.options_price_label.setText(f'${options_price:,.2f}')
+        self.total_price_label.setText(f'${total_price:,.2f}')
+
+        # Update items table prices
+        self.update_items_table_prices()
 
     def on_customer_info_changed(self):
         """Handle changes to customer information."""
@@ -572,38 +618,3 @@ class QuoteTab(QWidget):
         # Show a brief notification
         self.status_label.setText(notification_text)
         QTimer.singleShot(3000, lambda: self.status_label.setText(''))
-
-    def update_total_pricing(self):
-        """Update total pricing including spare parts."""
-        # Calculate base product price from current pricing
-        base_price = self.pricing.get('base_price', 0.0)
-        options_price = self.pricing.get('options_price', 0.0)
-
-        # Calculate additional items price
-        items_price = 0.0
-        for row in range(self.items_table.rowCount()):
-            item_data = self.items_table.item(row, 0).data(Qt.UserRole)
-            if item_data:
-                quantity = int(self.items_table.item(row, 1).text())
-                unit_price = item_data.get('price', 0.0)
-                items_price += quantity * unit_price
-
-        # Update total price
-        total_price = base_price + options_price + items_price
-
-        # Update pricing data
-        self.pricing['items_price'] = items_price
-        self.pricing['total_price'] = total_price
-
-        # Update UI with standard fonts
-        font = QFont('Arial', 9)
-        self.base_price_label.setFont(font)
-        self.options_price_label.setFont(font)
-
-        bold_font = QFont('Arial', 10)
-        bold_font.setBold(True)
-        self.total_price_label.setFont(bold_font)
-
-        self.base_price_label.setText(f'${base_price:.2f}')
-        self.options_price_label.setText(f'${options_price:.2f}')
-        self.total_price_label.setText(f'${total_price:.2f}')

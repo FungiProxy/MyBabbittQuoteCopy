@@ -111,14 +111,85 @@ class ConfigurationService:
         logger.debug("Updating model number")
         # Implementation details...
 
-    def _update_price(self):
-        """Update the price based on selected options."""
+    def _get_current_variant(self):
+        """Get the current product variant based on selected options."""
         if not self.current_config:
-            logger.warning("No current configuration when trying to update price")
-            return
+            logger.warning("No current configuration when trying to get variant")
+            return None
             
-        logger.debug("Updating price")
-        # Implementation details...
+        try:
+            # Find the specific variant that matches the current selection
+            variant = self.product_service.find_variant(
+                self.db, 
+                self.current_config.product_family_id, 
+                self.current_config.selected_options
+            )
+            
+            if not variant:
+                logger.warning(f"No matching variant found for options: {self.current_config.selected_options}")
+                return None
+                
+            return variant
+            
+        except Exception as e:
+            logger.error(f"Error getting current variant: {str(e)}", exc_info=True)
+            return None
+
+    def _get_option_price(self, option_name: str, value: any) -> float:
+        """Get the price for a given option and its selected value."""
+        if not self.current_config:
+            return 0.0
+
+        try:
+            # Get the option price from the configuration
+            price = self.current_config.get_option_price(option_name, value)
+            logger.debug(f"Price for {option_name}={value}: ${price:,.2f}")
+            return price
+        except Exception as e:
+            logger.error(f"Error getting option price: {str(e)}", exc_info=True)
+            return 0.0
+
+    def _update_price(self):
+        """Update the final price based on current configuration."""
+        try:
+            logger.info("Starting price update calculation")
+            logger.info(f"Current configuration: {self.current_config}")
+            
+            # Get the product variant
+            variant = self._get_current_variant()
+            if not variant:
+                logger.error("No variant found for price calculation")
+                return
+                
+            logger.info(f"Found variant: {variant.model_number}")
+            
+            # Calculate base price
+            base_price = variant.base_price
+            logger.info(f"Base price: ${base_price:,.2f}")
+            
+            # Calculate options price
+            options_price = 0
+            for option_name, value in self.current_config.selected_options.items():
+                option_price = self._get_option_price(option_name, value)
+                logger.info(f"Option {option_name}={value}: ${option_price:,.2f}")
+                options_price += option_price
+                
+            logger.info(f"Total options price: ${options_price:,.2f}")
+            
+            # Calculate final price
+            final_price = base_price + options_price
+            logger.info(f"Final price before quantity: ${final_price:,.2f}")
+            
+            # Apply quantity
+            final_price *= self.current_config.quantity
+            logger.info(f"Final price after quantity {self.current_config.quantity}: ${final_price:,.2f}")
+            
+            self.current_config.final_price = final_price
+            logger.info(f"Updated final price in configuration: ${final_price:,.2f}")
+            
+        except Exception as e:
+            logger.error(f"Error updating price: {str(e)}", exc_info=True)
+            raise
 
     def generate_model_number(self) -> str:
         """Generates the model number based on the current configuration."""
