@@ -22,35 +22,35 @@ from src.core.services.database_populate import (
 
 def update_database():
     """Update database with new tables."""
-    print('Updating database with new tables...')
+    print("Updating database with new tables...")
 
     try:
         # Create all tables before populating
         Base.metadata.create_all(bind=engine)
-        print('All tables created.')
+        print("All tables created.")
 
         # Populate the product families and spare parts data
         db = SessionLocal()
         try:
-            print('Populating product families...')
+            print("Populating product families...")
             populate_from_price_list(db)  # Ensure product families are present
-            print('Populating spare parts...')
+            print("Populating spare parts...")
             populate_spare_parts(db)
 
             # Verify data was inserted
             parts_count = db.query(SparePart).count()
-            print(f'Spare parts count after population: {parts_count}')
+            print(f"Spare parts count after population: {parts_count}")
 
             if parts_count > 0:
                 # Get LS2000 and LS2100 product family IDs
                 ls2000 = (
                     db.query(ProductFamily)
-                    .filter(ProductFamily.name == 'LS2000')
+                    .filter(ProductFamily.name == "LS2000")
                     .first()
                 )
                 ls2100 = (
                     db.query(ProductFamily)
-                    .filter(ProductFamily.name == 'LS2100')
+                    .filter(ProductFamily.name == "LS2100")
                     .first()
                 )
 
@@ -60,9 +60,9 @@ def update_database():
                         .filter(SparePart.product_family_id == ls2000.id)
                         .all()
                     )
-                    print(f'\nLS2000 parts count: {len(ls2000_parts)}')
+                    print(f"\nLS2000 parts count: {len(ls2000_parts)}")
                     for part in ls2000_parts:
-                        print(f'  - {part.part_number} ({part.name})')
+                        print(f"  - {part.part_number} ({part.name})")
 
                 if ls2100:
                     ls2100_parts = (
@@ -70,31 +70,31 @@ def update_database():
                         .filter(SparePart.product_family_id == ls2100.id)
                         .all()
                     )
-                    print(f'\nLS2100 parts count: {len(ls2100_parts)}')
+                    print(f"\nLS2100 parts count: {len(ls2100_parts)}")
                     for part in ls2100_parts:
-                        print(f'  - {part.part_number} ({part.name})')
+                        print(f"  - {part.part_number} ({part.name})")
 
-                print('\nSample of all spare parts:')
+                print("\nSample of all spare parts:")
                 parts = db.query(SparePart).limit(5).all()
                 for part in parts:
                     print(
-                        f'  - {part.part_number} (Family ID: {part.product_family_id})'
+                        f"  - {part.part_number} (Family ID: {part.product_family_id})"
                     )
             else:
-                print('WARNING: No spare parts were added!')
+                print("WARNING: No spare parts were added!")
 
-            print('Spare parts data populated.')
+            print("Spare parts data populated.")
         except Exception as e:
-            print(f'Error populating spare parts: {e}')
+            print(f"Error populating spare parts: {e}")
             print(traceback.format_exc())
         finally:
             db.close()
 
-        print('Database update completed.')
+        print("Database update completed.")
     except Exception as e:
-        print(f'Error updating database: {e}')
+        print(f"Error updating database: {e}")
         print(traceback.format_exc())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     update_database()

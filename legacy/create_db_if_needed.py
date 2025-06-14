@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Set up logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -37,17 +37,17 @@ def create_database_if_needed():
         # If we created a new database, populate it with initial data
         if created:
             populate_database()
-            logger.info('Database created and populated successfully.')
+            logger.info("Database created and populated successfully.")
         else:
-            logger.info('Database already exists with all required tables.')
+            logger.info("Database already exists with all required tables.")
 
         return True
     except Exception as e:
-        logger.error(f'Error creating database: {e!s}')
+        logger.error(f"Error creating database: {e!s}")
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run the create database function
     success = create_database_if_needed()
 

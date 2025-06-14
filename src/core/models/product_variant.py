@@ -37,7 +37,7 @@ class ProductFamily(Base):
         >>> print(pf)
     """
 
-    __tablename__ = 'product_families'
+    __tablename__ = "product_families"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)  # e.g., "LS2000", "LS7000"
@@ -45,8 +45,8 @@ class ProductFamily(Base):
     category = Column(String, index=True)  # e.g., "Level Switch", "Transmitter"
 
     # Relationships
-    variants = relationship('ProductVariant', back_populates='product_family')
-    spare_parts = relationship('SparePart', back_populates='product_family')
+    variants = relationship("ProductVariant", back_populates="product_family")
+    spare_parts = relationship("SparePart", back_populates="product_family")
 
     def __repr__(self):
         """
@@ -82,11 +82,11 @@ class ProductVariant(Base):
         >>> print(pv)
     """
 
-    __tablename__ = 'product_variants'
+    __tablename__ = "product_variants"
 
     id = Column(Integer, primary_key=True, index=True)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
     model_number = Column(
         String, nullable=False, index=True
@@ -102,8 +102,8 @@ class ProductVariant(Base):
     material = Column(String)  # e.g., "S", "H", "U", "T"
 
     # Relationships
-    product_family = relationship('ProductFamily', back_populates='variants')
-    quote_items = relationship('QuoteItem', back_populates='product')
+    product_family = relationship("ProductFamily", back_populates="variants")
+    quote_items = relationship("QuoteItem", back_populates="product")
 
     def __repr__(self):
         """

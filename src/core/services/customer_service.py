@@ -158,7 +158,7 @@ class CustomerService:
         Returns:
             List of matching Customer objects
         """
-        search_pattern = f'%{search_term}%'
+        search_pattern = f"%{search_term}%"
         return (
             db.query(Customer)
             .filter(

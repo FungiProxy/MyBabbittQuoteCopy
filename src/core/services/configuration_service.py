@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from src.core.models.configuration import Configuration
 from src.core.pricing import calculate_product_price
 from src.core.services.product_service import ProductService
+from src.core.models.option import Option
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -34,7 +35,9 @@ class ConfigurationService:
         """Set the current configuration."""
         self._current_config = value
         if value:
-            logger.debug(f"Current configuration set for product family: {value.product_family_name}")
+            logger.debug(
+                f"Current configuration set for product family: {value.product_family_name}"
+            )
         else:
             logger.debug("Current configuration cleared")
 
@@ -43,15 +46,17 @@ class ConfigurationService:
     ):
         """
         Start a new configuration session for a product family.
-        
+
         Args:
             product_family_id: ID of the product family
             product_family_name: Name of the product family
             base_product_info: Base product information
         """
-        logger.debug(f"Starting configuration for {product_family_name} (ID: {product_family_id})")
+        logger.debug(
+            f"Starting configuration for {product_family_name} (ID: {product_family_id})"
+        )
         logger.debug(f"Base product info: {base_product_info}")
-        
+
         try:
             self._current_config = Configuration(
                 db=self.db,
@@ -77,22 +82,24 @@ class ConfigurationService:
             return
 
         logger.debug(f"Selecting option: {option_name} = {value}")
-        
+
         # Store the current material before updating options
-        current_material = self.current_config.selected_options.get('Material')
+        current_material = self.current_config.selected_options.get("Material")
         if not current_material:
-            current_material = self.current_config.base_product.get('material')
+            current_material = self.current_config.base_product.get("material")
             logger.debug(f"Using base product material: {current_material}")
 
         # Update the selected option
-        if option_name == 'Material':
+        if option_name == "Material":
             # If the value is a number (like a length), don't update it
             if str(value).isdigit():
-                logger.debug(f"Material value {value} is numeric, keeping current material: {current_material}")
-                self.current_config.selected_options['Material'] = current_material
+                logger.debug(
+                    f"Material value {value} is numeric, keeping current material: {current_material}"
+                )
+                self.current_config.selected_options["Material"] = current_material
             else:
                 logger.debug(f"Updating material to: {value}")
-                self.current_config.selected_options['Material'] = value
+                self.current_config.selected_options["Material"] = value
         else:
             logger.debug(f"Updating option {option_name} to: {value}")
             self.current_config.selected_options[option_name] = value
@@ -105,9 +112,11 @@ class ConfigurationService:
     def _update_model_number(self):
         """Update the model number based on selected options."""
         if not self.current_config:
-            logger.warning("No current configuration when trying to update model number")
+            logger.warning(
+                "No current configuration when trying to update model number"
+            )
             return
-            
+
         logger.debug("Updating model number")
         # Implementation details...
 
@@ -116,21 +125,23 @@ class ConfigurationService:
         if not self.current_config:
             logger.warning("No current configuration when trying to get variant")
             return None
-            
+
         try:
             # Find the specific variant that matches the current selection
             variant = self.product_service.find_variant(
-                self.db, 
-                self.current_config.product_family_id, 
-                self.current_config.selected_options
+                self.db,
+                self.current_config.product_family_id,
+                self.current_config.selected_options,
             )
-            
+
             if not variant:
-                logger.warning(f"No matching variant found for options: {self.current_config.selected_options}")
+                logger.warning(
+                    f"No matching variant found for options: {self.current_config.selected_options}"
+                )
                 return None
-                
+
             return variant
-            
+
         except Exception as e:
             logger.error(f"Error getting current variant: {str(e)}", exc_info=True)
             return None
@@ -154,39 +165,62 @@ class ConfigurationService:
         try:
             logger.info("Starting price update calculation")
             logger.info(f"Current configuration: {self.current_config}")
-            
+
             # Get the product variant
             variant = self._get_current_variant()
             if not variant:
                 logger.error("No variant found for price calculation")
                 return
-                
+
             logger.info(f"Found variant: {variant.model_number}")
-            
+
             # Calculate base price
             base_price = variant.base_price
             logger.info(f"Base price: ${base_price:,.2f}")
-            
+
             # Calculate options price
             options_price = 0
             for option_name, value in self.current_config.selected_options.items():
-                option_price = self._get_option_price(option_name, value)
-                logger.info(f"Option {option_name}={value}: ${option_price:,.2f}")
+                # For Material options, use the option's adders directly
+                if option_name == "Material":
+                    # Get the Material option from the database
+                    material_option = (
+                        self.db.query(Option)
+                        .filter(
+                            Option.name == "Material",
+                            Option.product_families
+                            == self.current_config.product_family_name,
+                        )
+                        .first()
+                    )
+
+                    if material_option and material_option.adders:
+                        option_price = material_option.adders.get(value, 0)
+                        logger.info(f"Material option {value}: ${option_price:,.2f}")
+                    else:
+                        logger.warning(f"No adders found for Material option {value}")
+                        option_price = 0
+                else:
+                    # For other options, use the strategy-based pricing
+                    option_price = self._get_option_price(option_name, value)
+                    logger.info(f"Option {option_name}={value}: ${option_price:,.2f}")
                 options_price += option_price
-                
+
             logger.info(f"Total options price: ${options_price:,.2f}")
-            
+
             # Calculate final price
             final_price = base_price + options_price
             logger.info(f"Final price before quantity: ${final_price:,.2f}")
-            
+
             # Apply quantity
             final_price *= self.current_config.quantity
-            logger.info(f"Final price after quantity {self.current_config.quantity}: ${final_price:,.2f}")
-            
+            logger.info(
+                f"Final price after quantity {self.current_config.quantity}: ${final_price:,.2f}"
+            )
+
             self.current_config.final_price = final_price
             logger.info(f"Updated final price in configuration: ${final_price:,.2f}")
-            
+
         except Exception as e:
             logger.error(f"Error updating price: {str(e)}", exc_info=True)
             raise
@@ -194,30 +228,30 @@ class ConfigurationService:
     def generate_model_number(self) -> str:
         """Generates the model number based on the current configuration."""
         if not self.current_config:
-            return ''
+            return ""
 
         config = self.current_config
         family = config.product_family_name
 
         # Get values from selected options, falling back to base product values
         voltage = config.selected_options.get(
-            'Voltage', config.base_product.get('voltage')
+            "Voltage", config.base_product.get("voltage")
         )
         material = config.selected_options.get(
-            'Material', config.base_product.get('material')
+            "Material", config.base_product.get("material")
         )
         length = config.selected_options.get(
-            'Probe Length', config.base_product.get('base_length')
+            "Probe Length", config.base_product.get("base_length")
         )
 
         # Map material names to their single-letter codes
         material_map = {
-            '316SS': 'S',
-            '304SS': 'S',
-            'Hastelloy C': 'H',
-            'Monel': 'M',
-            'Titanium': 'T',
-            'Inconel': 'I',
+            "316SS": "S",
+            "304SS": "S",
+            "Hastelloy C": "H",
+            "Monel": "M",
+            "Titanium": "T",
+            "Inconel": "I",
         }
 
         # Get the single-letter material code
@@ -238,7 +272,7 @@ class ConfigurationService:
         except (ValueError, TypeError):
             length_str = f'{length}"' if length else 'LENGTH"'
 
-        return f'{family}-{voltage}-{material_code}-{length_str}'
+        return f"{family}-{voltage}-{material_code}-{length_str}"
 
     def calculate_price(self) -> float:
         """
@@ -258,22 +292,22 @@ class ConfigurationService:
         # Fallback to base product or handle as an error. For now, return base price.
         if not variant:
             logger.warning(
-                f'No matching variant found for options: {config.selected_options}. Using base price.'
+                f"No matching variant found for options: {config.selected_options}. Using base price."
             )
             # Attempt to use the family's base product as a fallback
-            return config.base_product.get('base_price', 0.0)
+            return config.base_product.get("base_price", 0.0)
 
         # Now, we have a specific variant, so we can use its ID for pricing
         price = calculate_product_price(
             db=self.db,
             product_id=variant.id,  # Use the specific variant ID
-            length=config.selected_options.get('Probe Length'),
+            length=config.selected_options.get("Probe Length"),
             material_override=variant.material,  # Use the variant's material
             specs={
-                'connection_type': config.selected_options.get('Connection'),
-                'flange_rating': config.selected_options.get('Flange Rating'),
-                'flange_size': config.selected_options.get('Flange Size'),
-                'triclamp_size': config.selected_options.get('Tri-Clamp Size'),
+                "connection_type": config.selected_options.get("Connection"),
+                "flange_rating": config.selected_options.get("Flange Rating"),
+                "flange_size": config.selected_options.get("Flange Size"),
+                "triclamp_size": config.selected_options.get("Tri-Clamp Size"),
             },
         )
         return price
@@ -283,15 +317,15 @@ class ConfigurationService:
         Generates a final description based on the selected options.
         """
         if not self.current_config:
-            return ''
+            return ""
 
         # Basic description, can be expanded
-        desc = f'{self.current_config.product_family_name} with:'
+        desc = f"{self.current_config.product_family_name} with:"
         for name, value in self.current_config.selected_options.items():
             if value:
-                desc += f' {name}: {value},'
+                desc += f" {name}: {value},"
 
-        return desc.strip(',')
+        return desc.strip(",")
 
     def add_non_standard_length_adder(self):
         """Add the non-standard length surcharge to the configuration."""
@@ -299,7 +333,7 @@ class ConfigurationService:
             return
 
         # Add the non-standard length surcharge
-        self.current_config.selected_options['NonStandardLengthSurcharge'] = True
+        self.current_config.selected_options["NonStandardLengthSurcharge"] = True
         self.current_config.final_price = self.calculate_price()
 
     def remove_non_standard_length_adder(self):
@@ -308,7 +342,7 @@ class ConfigurationService:
             return
 
         # Remove the non-standard length surcharge
-        self.current_config.selected_options.pop('NonStandardLengthSurcharge', None)
+        self.current_config.selected_options.pop("NonStandardLengthSurcharge", None)
         self.current_config.final_price = self.calculate_price()
 
     # More methods will be added here to handle validation, etc.

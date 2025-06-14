@@ -23,11 +23,11 @@ class MaterialAvailabilityStrategy(PricingStrategy):
             return context.price  # No override, no check needed
 
         # Extract product type from model number
-        product_type = context.product.model_number.split('-')[0]
+        product_type = context.product.model_number.split("-")[0]
 
         # Handle special cases for dual point switches
-        if product_type == 'LS7000' and '/2' in context.product.model_number:
-            product_type = 'LS7000/2'
+        if product_type == "LS7000" and "/2" in context.product.model_number:
+            product_type = "LS7000/2"
 
         availability = (
             context.db.query(MaterialAvailability)
@@ -41,7 +41,7 @@ class MaterialAvailabilityStrategy(PricingStrategy):
 
         if not availability:
             raise ValueError(
-                f'Material {context.material_override_code} is not available for product type {product_type}'
+                f"Material {context.material_override_code} is not available for product type {product_type}"
             )
 
         return context.price  # No price change, just validation
@@ -53,13 +53,13 @@ class BasePriceStrategy(PricingStrategy):
         material_code = context.material.code
 
         # For exotic materials, price is based on Stainless Steel 'S' version
-        if material_code in ['U', 'T']:
+        if material_code in ["U", "T"]:
             s_material_product = (
                 context.db.query(Product)
                 .filter(
                     Product.model_number == context.product.model_number,
                     Product.voltage == context.product.voltage,
-                    Product.material == 'S',
+                    Product.material == "S",
                 )
                 .first()
             )
@@ -77,11 +77,12 @@ class BasePriceStrategy(PricingStrategy):
 
 class MaterialPremiumStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        # Only applies if base price was calculated from 'S' material
-        if context.material.code == 'U':  # UHMWPE
+        # Only applies to exotic materials that need special handling
+        if context.material.code == "U":  # UHMWPE
             context.price += 20.0  # $20 adder to S base price
-        elif context.material.code == 'T':  # Teflon
+        elif context.material.code == "T":  # Teflon
             context.price += 60.0  # $60 adder to S base price
+        # CPVC is handled by the Material option directly
 
         return context.price
 
@@ -94,20 +95,20 @@ class ExtraLengthStrategy(PricingStrategy):
         if effective_length > base_length:
             extra_length = effective_length - base_length
             material_code = context.material.code
-            product_type = context.product.model_number.split('-')[0]
+            product_type = context.product.model_number.split("-")[0]
 
             # LS2000 specific pricing
-            if product_type == 'LS2000':
+            if product_type == "LS2000":
                 length_adders = {
-                    'S': 3.75,  # $45/foot
-                    'H': 9.17,  # $110/foot
-                    'TS': 9.17,  # $110/foot
-                    'U': 40.0,  # $40/inch
-                    'T': 50.0,  # $50/inch
+                    "S": 3.75,  # $45/foot
+                    "H": 9.17,  # $110/foot
+                    "TS": 9.17,  # $110/foot
+                    "U": 40.0,  # $40/inch
+                    "T": 50.0,  # $50/inch
                 }
 
                 # For U and T materials, calculate per inch from 4"
-                if material_code in ['U', 'T']:
+                if material_code in ["U", "T"]:
                     base_length = 4.0
                     if effective_length > base_length:
                         extra_length = effective_length - base_length
@@ -122,12 +123,24 @@ class ExtraLengthStrategy(PricingStrategy):
             else:
                 # Default pricing for other products
                 length_adders = {
-                    'S': 3.75,  # $45/foot
-                    'H': 9.17,  # $110/foot
-                    'TS': 9.17,  # $110/foot
-                    'U': 40.0,  # $40/inch
-                    'T': 50.0,  # $50/inch
+                    "S": 3.75,  # $45/foot
+                    "H": 9.17,  # $110/foot
+                    "TS": 9.17,  # $110/foot
+                    "U": 40.0,  # $40/inch
+                    "T": 50.0,  # $50/inch
                 }
+
+                # For U and T materials, calculate per inch from 4"
+                if material_code in ["U", "T"]:
+                    base_length = 4.0
+                    if effective_length > base_length:
+                        extra_length = effective_length - base_length
+                else:
+                    # For other materials, calculate per foot from 10"
+                    base_length = 10.0
+                    if effective_length > base_length:
+                        extra_length = effective_length - base_length
+
                 adder = length_adders.get(material_code, 0.0)
                 context.price += extra_length * adder
 
@@ -136,11 +149,11 @@ class ExtraLengthStrategy(PricingStrategy):
 
 class NonStandardLengthSurchargeStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        product_type = context.product.model_number.split('-')[0]
+        product_type = context.product.model_number.split("-")[0]
         effective_length = float(context.effective_length_in or 0.0)
 
         # LS2000 specific rules
-        if product_type == 'LS2000':
+        if product_type == "LS2000":
             # Define standard lengths for LS2000
             standard_lengths = [6, 8, 10, 12, 16, 24, 36, 48, 60, 72]
 
@@ -148,13 +161,13 @@ class NonStandardLengthSurchargeStrategy(PricingStrategy):
             is_standard = effective_length in standard_lengths
 
             # Apply surcharge if not standard length and not Teflon Sleeve
-            if not is_standard and context.material.code != 'TS':
-                context.price += 300.0  # $300 adder for non-standard lengths
+            if not is_standard and context.material.code != "TS":
+                context.price += 50.0  # $50 adder for non-standard lengths
 
             # Check Halar length limit
-            if context.material.code == 'H' and effective_length > 72:
+            if context.material.code == "H" and effective_length > 72:
                 raise ValueError(
-                    'Halar coated probes cannot exceed 72 inches. Please select Teflon Sleeve for longer lengths.'
+                    "Halar coated probes cannot exceed 72 inches. Please select Teflon Sleeve for longer lengths."
                 )
         else:
             # Default behavior for other products
@@ -177,24 +190,24 @@ class NonStandardLengthSurchargeStrategy(PricingStrategy):
 
 class ConnectionOptionStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        connection_type = context.specs.get('connection_type')
+        connection_type = context.specs.get("connection_type")
         price_adder = 0.0
 
-        if connection_type == 'Flange':
-            rating = context.specs.get('flange_rating')
-            size = context.specs.get('flange_size')
+        if connection_type == "Flange":
+            rating = context.specs.get("flange_rating")
+            size = context.specs.get("flange_size")
             option = (
                 context.db.query(ConnectionOption)
-                .filter_by(type='Flange', rating=rating, size=size)
+                .filter_by(type="Flange", rating=rating, size=size)
                 .first()
             )
             if option:
                 price_adder = option.price
-        elif connection_type == 'Tri-Clamp':
-            size = context.specs.get('triclamp_size')
+        elif connection_type == "Tri-Clamp":
+            size = context.specs.get("triclamp_size")
             option = (
                 context.db.query(ConnectionOption)
-                .filter_by(type='Tri-Clamp', size=size)
+                .filter_by(type="Tri-Clamp", size=size)
                 .first()
             )
             if option:

@@ -1,9 +1,12 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict
+import logging
 
 from sqlalchemy.orm import Session
 
 from src.core.models.option import Option
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,8 +25,8 @@ class Configuration:
 
     # Calculated values
     final_price: float = 0.0
-    final_description: str = ''
-    model_number: str = ''
+    final_description: str = ""
+    model_number: str = ""
     quantity: int = 1  # Default quantity is 1
 
     # Metadata
@@ -33,12 +36,42 @@ class Configuration:
     def get_option_price(self, option_name: str, option_value: Any) -> float:
         """Get the price for a given option and its selected value."""
         if not option_value:
+            logger.debug(f"No value provided for option {option_name}")
             return 0.0
 
-        option_details = self.db.query(Option).filter_by(name=option_name).first()
-        if not option_details or not option_details.adders:
+        logger.debug(f"Getting price for {option_name}={option_value}")
+        logger.debug(f"Product family: {self.product_family_name}")
+
+        # Filter options by name and product family
+        option_details = (
+            self.db.query(Option)
+            .filter(
+                Option.name == option_name,
+                Option.product_families == self.product_family_name,
+            )
+            .first()
+        )
+
+        if not option_details:
+            logger.warning(
+                f"No option found for {option_name} in {self.product_family_name}"
+            )
             return 0.0
+
+        logger.debug(f"Found option: {option_details.name}")
+        logger.debug(f"Choices: {option_details.choices}")
+        logger.debug(f"Adders: {option_details.adders}")
+
+        if not option_details.adders:
+            logger.warning(f"No adders found for option {option_name}")
+            return 0.0
+
+        # Convert option_value to string for comparison
+        option_value_str = str(option_value)
+        logger.debug(f"Looking for price for value: {option_value_str}")
 
         # The price may be in a nested dictionary if adders are complex
-        price = option_details.adders.get(str(option_value), 0.0)
+        price = option_details.adders.get(option_value_str, 0.0)
+        logger.debug(f"Found price: ${price:,.2f}")
+
         return float(price or 0.0)

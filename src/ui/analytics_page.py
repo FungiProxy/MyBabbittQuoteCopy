@@ -17,8 +17,8 @@ class AnalyticsPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
 
-        label = QLabel('Analytics & Reporting Features Coming Soon!')
-        label.setObjectName('placeholderLabel')
-        label.setStyleSheet('font-size: 24px; color: #888;')
+        label = QLabel("Analytics & Reporting Features Coming Soon!")
+        label.setObjectName("placeholderLabel")
+        label.setStyleSheet("font-size: 24px; color: #888;")
 
         layout.addWidget(label)

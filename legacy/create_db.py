@@ -33,7 +33,7 @@ from src.core.database import SessionLocal, init_db
 def main():
     """Create and populate the complete database."""
     # Create database schema
-    print('Creating database schema...')
+    print("Creating database schema...")
     init_db()
 
     # Open database session
@@ -41,31 +41,31 @@ def main():
 
     try:
         # Populate reference data
-        print('Populating reference data...')
+        print("Populating reference data...")
         populate_materials(db)
         populate_standard_lengths(db)
         populate_options(db)
 
         # Check if we should parse the price list
-        price_list_path = Path('data/price_list.txt')
+        price_list_path = Path("data/price_list.txt")
         if price_list_path.exists():
-            print('Parsing price list and populating products...')
+            print("Parsing price list and populating products...")
             product_data = parse_price_list(price_list_path)
             populate_products_from_data(db, product_data)
         else:
-            print('Price list not found, using sample product data...')
+            print("Price list not found, using sample product data...")
             populate_product_families(db)
             populate_product_variants(db)
 
         # Add sample customers
-        print('Adding sample customer data...')
+        print("Adding sample customer data...")
         populate_sample_customers(db)
 
-        print('Database creation complete!')
+        print("Database creation complete!")
 
     finally:
         db.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

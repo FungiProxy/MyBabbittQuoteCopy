@@ -26,11 +26,11 @@ class HousingTypeOption(Base):
         >>> print(hto)
     """
 
-    __tablename__ = 'housing_type_options'
+    __tablename__ = "housing_type_options"
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
     housing_type = Column(String, nullable=False)  # Type of housing
     price = Column(Float, default=0.0)  # Additional cost for this housing type
