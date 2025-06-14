@@ -33,7 +33,7 @@ def seed_ls8000_2_variants():
         # Base prices for S and H, TS, CPVC
         base_prices = {
             "S": 850.0,  # Base price for 316SS
-            "H": 960.0,  # Base price for Halar
+            "H": 850.0,  # Base price for Halar (updated to match default)
             "TS": 960.0,  # Same as Halar for Teflon Sleeve
             "CPVC": 870.0,  # Base price for CPVC
         }

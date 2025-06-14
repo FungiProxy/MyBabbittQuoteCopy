@@ -316,32 +316,32 @@ class ProductSelectionDialog(QDialog):
                     display_text = str(choice)
                 material_combo.addItem(display_text, choice)
 
-            # Fix: Use a proper method to handle the option change
-            def on_material_changed():
-                value = material_combo.currentData()
-                logger.debug(f"Material changed to: {value}")
-                self._on_option_changed("Material", value)
+                # Fix: Use a proper method to handle the option change
+                def on_material_changed():
+                    value = material_combo.currentData()
+                    logger.debug(f"Material changed to: {value}")
+                    self._on_option_changed("Material", value)
 
-            material_combo.currentIndexChanged.connect(on_material_changed)
-            form_layout.addRow("Material:", material_combo)
-            self.option_widgets["Material"] = material_combo
-            logger.debug("Added material options to form (from Option)")
+                material_combo.currentIndexChanged.connect(on_material_changed)
+                form_layout.addRow("Material:", material_combo)
+                self.option_widgets["Material"] = material_combo
+                logger.debug("Added material options to form (from Option)")
 
-            # Add probe length customization (unchanged)
-            probe_length_spin = QSpinBox()
-            probe_length_spin.setObjectName("option_Probe Length")
-            probe_length_spin.setRange(1, 120)  # Allow lengths from 1 to 120 inches
-            probe_length_spin.setSuffix('"')  # Add inch symbol
-            if product.get("base_length"):
-                probe_length_spin.setValue(product["base_length"])
-            probe_length_spin.valueChanged.connect(
-                lambda value: self._on_option_changed("Probe Length", value)
-            )
-            form_layout.addRow("Probe Length:", probe_length_spin)
-            self.option_widgets["Probe Length"] = probe_length_spin
-            logger.debug(
-                f"Added probe length customization to form with default value: {product.get('base_length')}"
-            )
+                # Add probe length customization (unchanged)
+                probe_length_spin = QSpinBox()
+                probe_length_spin.setObjectName("option_Probe Length")
+                probe_length_spin.setRange(1, 120)  # Allow lengths from 1 to 120 inches
+                probe_length_spin.setSuffix('"')  # Add inch symbol
+                if product.get("base_length"):
+                    probe_length_spin.setValue(product["base_length"])
+                probe_length_spin.valueChanged.connect(
+                    lambda value: self._on_option_changed("Probe Length", value)
+                )
+                form_layout.addRow("Probe Length:", probe_length_spin)
+                self.option_widgets["Probe Length"] = probe_length_spin
+                logger.debug(
+                    f"Added probe length customization to form with default value: {product.get('base_length')}"
+                )
         else:
             # fallback to old method if no material_option found
             try:
@@ -442,6 +442,10 @@ class ProductSelectionDialog(QDialog):
                 "Teflon Insulator",
                 "Material",
             }:
+                continue
+            # Remove 'Extra Static Protection' as a standalone option for LS2000
+            if product.get("name", "").startswith("LS2000") and option["name"] == "Extra Static Protection":
+                logger.debug("Hiding 'Extra Static Protection' from core options for LS2000 (mechanical option)")
                 continue
             # Hide '3/4" Diameter Probe x 10"' for LS6000 only (core options only)
             if (
@@ -690,12 +694,12 @@ class ProductSelectionDialog(QDialog):
         self.connection_type_combo = QComboBox()
         self.connection_type_combo.addItem("None", None)  # Add a 'None' option
 
-        # Add connection types from the options
-        connection_types = sorted({opt["type"] for opt in options})
+        # Add connection types from the options (use attribute access)
+        connection_types = sorted({opt.type for opt in options})
         for conn_type in connection_types:
             # Find the first option with this type to get its price
             price = next(
-                (opt["price"] for opt in options if opt["type"] == conn_type), 0
+                (opt.price for opt in options if opt.type == conn_type), 0
             )
             price_val = price or 0  # Treat None as 0 for comparison/formatting
             display_text = (
@@ -735,16 +739,16 @@ class ProductSelectionDialog(QDialog):
         # Create a new form layout for the sub-options
         sub_form_layout = QFormLayout()
 
-        # Filter options for the selected connection type
-        type_options = [opt for opt in all_options if opt["type"] == selected_type]
+        # Filter options for the selected connection type (use attribute access)
+        type_options = [opt for opt in all_options if opt.type == selected_type]
 
         # Add rating options if available
-        ratings = sorted({opt["rating"] for opt in type_options if opt["rating"]})
+        ratings = sorted({opt.rating for opt in type_options if getattr(opt, 'rating', None)})
         if ratings:
             rating_combo = QComboBox()
             for rating in ratings:
                 price = next(
-                    (opt["price"] for opt in type_options if opt["rating"] == rating), 0
+                    (opt.price for opt in type_options if getattr(opt, 'rating', None) == rating), 0
                 )
                 price_val = price or 0
                 display_text = (
@@ -758,12 +762,12 @@ class ProductSelectionDialog(QDialog):
             )
 
         # Add size options if available
-        sizes = sorted({opt["size"] for opt in type_options if opt["size"]})
+        sizes = sorted({opt.size for opt in type_options if getattr(opt, 'size', None)})
         if sizes:
             size_combo = QComboBox()
             for size in sizes:
                 price = next(
-                    (opt["price"] for opt in type_options if opt["size"] == size), 0
+                    (opt.price for opt in type_options if getattr(opt, 'size', None) == size), 0
                 )
                 price_val = price or 0
                 display_text = f"{size} (+${price_val:.2f})" if price_val > 0 else size
@@ -926,7 +930,6 @@ class ProductSelectionDialog(QDialog):
                 ("Cable Probe", 80.00),
                 ("Bent Probe", 50.00),
                 ("Teflon Insulator", 40.00),
-                ("Extra Static Protection", 30.00),
             ]
 
         for option_name, price in mechanical_options:
@@ -963,13 +966,14 @@ class ProductSelectionDialog(QDialog):
 
         option_data = item.data(Qt.UserRole)
         option_name = option_data["name"]
+        price = option_data["price"]
         is_selected = item.checkState() == Qt.Checked
 
-        # Update the configuration service
+        # Always use select_option for both selection and deselection
         if is_selected:
-            self.config_service.select_option(option_name, "Yes")
+            self.config_service.select_option(option_name, price)
         else:
-            self.config_service.select_option(option_name, "No")
+            self.config_service.select_option(option_name, None)
 
         self._update_total_price()
 

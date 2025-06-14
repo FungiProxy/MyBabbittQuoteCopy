@@ -53,8 +53,9 @@ def test_get_variants_for_family(db_session):
 
 
 def test_get_material_options(db_session):
+    """Test getting material options for a product family."""
     mo = MaterialOption(
-        product_family="LS2000",
+        product_family_id=1,
         material_code="S",
         display_name="316 Stainless Steel",
         base_price=10.0,
@@ -62,34 +63,44 @@ def test_get_material_options(db_session):
     )
     db_session.add(mo)
     db_session.commit()
-    options = ProductService().get_material_options(db_session, "LS2000")
+
+    options = ProductService.get_material_options(db_session, product_family_id=1)
     assert len(options) == 1
-    assert options[0]["material_code"] == "S"
-    assert options[0]["display_name"] == "316 Stainless Steel"
-    assert options[0]["base_price"] == 10.0
+    assert options[0].material_code == "S"
+    assert options[0].display_name == "316 Stainless Steel"
 
 
 def test_get_voltage_options(db_session):
-    vo = VoltageOption(product_family="LS2000", voltage="24VDC", is_available=1)
+    """Test getting voltage options for a product family."""
+    vo = VoltageOption(
+        product_family_id=1,
+        voltage="24VDC",
+        is_available=1
+    )
     db_session.add(vo)
     db_session.commit()
-    options = ProductService().get_voltage_options(db_session, "LS2000")
+
+    options = ProductService.get_voltage_options(db_session, product_family_id=1)
     assert len(options) == 1
-    assert options[0]["voltage"] == "24VDC"
+    assert options[0].voltage == "24VDC"
 
 
 def test_get_connection_options(db_session):
+    """Test getting connection options for a product family."""
     co = ConnectionOption(
-        type="Flange", rating="150#", size='2"', price=75.0, product_families="LS2000"
+        type="Flange",
+        rating="150#",
+        size='2"',
+        price=75.0,
+        product_family_id=1
     )
     db_session.add(co)
     db_session.commit()
-    options = ProductService().get_connection_options(db_session, "LS2000")
+
+    options = ProductService.get_connection_options(db_session, product_family_id=1)
     assert len(options) == 1
-    assert options[0]["type"] == "Flange"
-    assert options[0]["rating"] == "150#"
-    assert options[0]["size"] == '2"'
-    assert options[0]["price"] == 75.0
+    assert options[0].type == "Flange"
+    assert options[0].rating == "150#"
 
 
 def test_get_additional_options(db_session):

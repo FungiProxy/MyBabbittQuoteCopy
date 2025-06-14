@@ -380,67 +380,20 @@ class ProductService:
         logger.debug(f"Found {len(result)} variants for family {family_id}")
         return result
 
-    def get_material_options(self, db, product_family_id: int) -> list:
-        """
-        Fetch available material options for a product family by ID.
-        Returns: List of dicts with material_code, display_name, base_price.
-        """
-        from src.core.models.material_option import MaterialOption
+    @staticmethod
+    def get_material_options(db, product_family_id: int) -> List[MaterialOption]:
+        """Get available material options for a product family."""
+        return db.query(MaterialOption).filter_by(product_family_id=product_family_id).all()
 
-        materials = (
-            db.query(MaterialOption)
-            .filter(
-                MaterialOption.product_family_id == product_family_id,
-                MaterialOption.is_available == 1,
-            )
-            .all()
-        )
-        return [
-            {
-                "material_code": m.material_code,
-                "display_name": m.display_name,
-                "base_price": m.base_price,
-            }
-            for m in materials
-        ]
+    @staticmethod
+    def get_voltage_options(db, product_family_id: int) -> List[VoltageOption]:
+        """Get available voltage options for a product family."""
+        return db.query(VoltageOption).filter_by(product_family_id=product_family_id).all()
 
-    def get_voltage_options(self, db, product_family_id: int) -> list:
-        """
-        Fetch available voltage options for a product family by ID.
-        Returns: List of dicts with display_name and voltage.
-        """
-        logger.debug(f"Fetching voltage options for family ID: {product_family_id}")
-        from src.core.models.voltage_option import VoltageOption
-
-        voltages = (
-            db.query(VoltageOption)
-            .filter(
-                VoltageOption.product_family_id == product_family_id,
-                VoltageOption.is_available == 1,
-            )
-            .all()
-        )
-        result = [{"display_name": v.voltage, "voltage": v.voltage} for v in voltages]
-        logger.debug(f"Found voltage options: {result}")
-        return result
-
-    def get_connection_options(self, db, product_family_id: int) -> list:
-        """
-        Fetch available connection options for a product family by ID.
-        Returns: List of dicts with type, rating, size, price.
-        """
-        logger.debug(f"Fetching connection options for family ID: {product_family_id}")
-        connections = (
-            db.query(ConnectionOption)
-            .filter(ConnectionOption.product_family_id == product_family_id)
-            .all()
-        )
-        result = [
-            {"type": c.type, "rating": c.rating, "size": c.size, "price": c.price}
-            for c in connections
-        ]
-        logger.debug(f"Found connection options: {result}")
-        return result
+    @staticmethod
+    def get_connection_options(db, product_family_id: int) -> List[ConnectionOption]:
+        """Get available connection options for a product family."""
+        return db.query(ConnectionOption).filter_by(product_family_id=product_family_id).all()
 
     def get_additional_options(self, db, family_name: str) -> list:
         """

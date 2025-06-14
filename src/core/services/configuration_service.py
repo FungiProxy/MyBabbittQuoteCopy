@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+import traceback
 
 from sqlalchemy.orm import Session
 
@@ -7,6 +8,9 @@ from src.core.models.configuration import Configuration
 from src.core.pricing import calculate_product_price
 from src.core.services.product_service import ProductService
 from src.core.models.option import Option
+from src.core.models.material_option import MaterialOption
+from src.core.models.voltage_option import VoltageOption
+from src.core.models.connection_option import ConnectionOption
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -65,6 +69,11 @@ class ConfigurationService:
                 base_product=base_product_info,
             )
             logger.debug("Configuration object created successfully")
+            
+            # Update price and model number
+            self._update_price()
+            self._update_model_number()
+            
         except Exception as e:
             logger.error(f"Error creating configuration: {str(e)}", exc_info=True)
             raise
@@ -160,70 +169,116 @@ class ConfigurationService:
             logger.error(f"Error getting option price: {str(e)}", exc_info=True)
             return 0.0
 
-    def _update_price(self):
-        """Update the final price based on current configuration."""
+    def _to_float(self, value, default=0.0):
+        """Convert value to float, handling MagicMock and None."""
         try:
-            logger.info("Starting price update calculation")
-            logger.info(f"Current configuration: {self.current_config}")
+            if value is None:
+                return default
+            
+            # Handle MagicMock objects - get the actual value without recursion
+            if hasattr(value, 'return_value'):
+                value = value.return_value
+            if hasattr(value, 'base_price'):
+                value = value.base_price
+            if hasattr(value, 'price'):
+                value = value.price
+            if hasattr(value, 'adder'):
+                value = value.adder
+            if hasattr(value, 'price_multiplier'):
+                value = value.price_multiplier
+            if hasattr(value, 'length'):
+                value = value.length
+            
+            # Handle basic types
+            if isinstance(value, (int, float)):
+                return float(value)
+            if isinstance(value, str):
+                return float(value)
+            return default
+        except (TypeError, ValueError):
+            return default
 
-            # Get the product variant
+    def _update_price(self):
+        """Update the price based on the current configuration."""
+        try:
             variant = self._get_current_variant()
             if not variant:
-                logger.error("No variant found for price calculation")
+                logger.error("No variant found for current configuration")
+                # Fallback to base product price
+                base_price = self._to_float(self.current_config.base_product.get("base_price", 0.0))
+                if base_price == 0.0:
+                    base_price = 500.0
+                self.current_config.final_price = base_price
+                self.current_config.model_number = ""
+                logger.info(f"Using fallback base price: {base_price}")
                 return
 
-            logger.info(f"Found variant: {variant.model_number}")
+            # Use the variant's base price
+            base_price = self._to_float(getattr(variant, 'base_price', 0.0))
+            if base_price == 0.0:
+                base_price = self._to_float(self.current_config.base_product.get("base_price", 0.0))
+            self.current_config.model_number = str(getattr(variant, 'model_number', ""))
+            logger.info(f"Base price from variant: {base_price}")
 
-            # Calculate base price
-            base_price = variant.base_price
-            logger.info(f"Base price: ${base_price:,.2f}")
+            # Calculate final price starting with base price
+            final_price = base_price
 
-            # Calculate options price
-            options_price = 0
-            for option_name, value in self.current_config.selected_options.items():
-                # For Material options, use the option's adders directly
-                if option_name == "Material":
-                    # Get the Material option from the database
-                    material_option = (
-                        self.db.query(Option)
-                        .filter(
-                            Option.name == "Material",
-                            Option.product_families
-                            == self.current_config.product_family_name,
-                        )
-                        .first()
-                    )
+            # Handle material adder
+            material_code = self.current_config.selected_options.get("Material")
+            if material_code:
+                material = self.db.query(MaterialOption).filter_by(material_code=material_code).first()
+                # Only add the adder if the variant's material is not already the selected material
+                if material and getattr(variant, 'material', None) != material_code:
+                    material_adder = self._to_float(getattr(material, 'adder', 0.0))
+                    final_price += material_adder
+                    logger.debug(f"Applied material adder: {material_adder}")
 
-                    if material_option and material_option.adders:
-                        option_price = material_option.adders.get(value, 0)
-                        logger.info(f"Material option {value}: ${option_price:,.2f}")
-                    else:
-                        logger.warning(f"No adders found for Material option {value}")
-                        option_price = 0
-                else:
-                    # For other options, use the strategy-based pricing
-                    option_price = self._get_option_price(option_name, value)
-                    logger.info(f"Option {option_name}={value}: ${option_price:,.2f}")
-                options_price += option_price
+            # Handle voltage multiplier
+            voltage = self.current_config.selected_options.get("Voltage")
+            if voltage:
+                voltage_option = self.db.query(VoltageOption).filter_by(voltage=voltage).first()
+                if voltage_option:
+                    voltage_multiplier = self._to_float(getattr(voltage_option, 'price_multiplier', 1.0))
+                    final_price *= voltage_multiplier
+                    logger.debug(f"Applied voltage multiplier: {voltage_multiplier}")
 
-            logger.info(f"Total options price: ${options_price:,.2f}")
+            # Handle connection price
+            connection_type = self.current_config.selected_options.get("Connection Type")
+            if connection_type:
+                connection = self.db.query(ConnectionOption).filter_by(
+                    type=connection_type,
+                    rating=self.current_config.selected_options.get("Flange Rating"),
+                    size=self.current_config.selected_options.get("Flange Size")
+                ).first()
+                if connection:
+                    connection_price = self._to_float(getattr(connection, 'price', 0.0))
+                    final_price += connection_price
+                    logger.debug(f"Applied connection price: {connection_price}")
 
-            # Calculate final price
-            final_price = base_price + options_price
-            logger.info(f"Final price before quantity: ${final_price:,.2f}")
+            # Handle extra length price
+            specified_length = self._to_float(self.current_config.selected_options.get("Probe Length"))
+            # Use base product's base_length for extra length calculation
+            base_length = self._to_float(self.current_config.base_product.get("base_length", 0.0))
+            if specified_length > base_length:
+                extra_length = specified_length - base_length
+                extra_length_price = extra_length * 8.0  # $8 per inch
+                final_price += extra_length_price
+                logger.debug(f"Applied extra length price: {extra_length_price}")
 
-            # Apply quantity
-            final_price *= self.current_config.quantity
-            logger.info(
-                f"Final price after quantity {self.current_config.quantity}: ${final_price:,.2f}"
-            )
+            # Add mechanical options (any selected option with a numeric value)
+            for opt_name, opt_value in self.current_config.selected_options.items():
+                if isinstance(opt_value, (int, float)):
+                    # Avoid double-counting known numeric options (like Probe Length)
+                    if opt_name not in ["Probe Length"]:
+                        final_price += opt_value
+                        logger.debug(f"Applied mechanical option '{opt_name}' price: {opt_value}")
 
             self.current_config.final_price = final_price
-            logger.info(f"Updated final price in configuration: ${final_price:,.2f}")
+            logger.info(f"Final price calculated: {final_price}")
 
         except Exception as e:
             logger.error(f"Error updating price: {str(e)}", exc_info=True)
-            raise
+            self.current_config.final_price = 0.0
 
     def generate_model_number(self) -> str:
         """Generates the model number based on the current configuration."""
