@@ -94,14 +94,14 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Material",
-                choices=["S", "H", "U", "T", "TS", "C"],
+                choices=["S", "H", "TS", "U", "T", "C"],
                 adders={
                     "S": 0,  # 316 Stainless Steel
                     "H": 110,  # Halar Coated
+                    "TS": 110,  # Teflon Sleeve
                     "U": 20,  # UHMWPE Blind End
                     "T": 60,  # Teflon Blind End
-                    "TS": 110,  # Teflon Sleeve
-                    "C": 80,  # $45 per foot for Cable
+                    "C": 80,  # Cable
                 },
                 product_families="LS2000",
             ),
@@ -113,14 +113,14 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Material",
-                choices=["S", "H", "U", "T", "TS", "C"],
+                choices=["S", "H", "TS",  "U", "T", "C"],
                 adders={
                     "S": 0,  # 316 Stainless Steel
                     "H": 110,  # Halar Coated
+                    "TS": 110,  # Teflon Sleeve
                     "U": 20,  # UHMWPE Blind End
                     "T": 60,  # Teflon Blind End
-                    "TS": 110,  # Teflon Sleeve
-                    "C": 80,  # $45 per foot for Cable
+                    "C": 80,  # Cable
                 },
                 product_families="LS2100",
             ),
@@ -132,11 +132,14 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Material",
-                choices=["S", "H", "TS", "CPVC"],
+                choices=["S", "H", "TS", "U", "T", "C", "CPVC"],
                 adders={
                     "S": 0,  # 316 Stainless Steel
                     "H": 110,  # Halar Coated
                     "TS": 110,  # Teflon Sleeve
+                    "U": 20,  # UHMWPE Blind End
+                    "T": 60,  # Teflon Blind End
+                    "C": 80,  # Cable
                     "CPVC": 400,  # CPVC Blind End
                 },
                 product_families="LS6000",
@@ -154,8 +157,9 @@ def init_business_config():
                     "S": 0,  # 316 Stainless Steel
                     "H": 110,  # Halar Coated
                     "TS": 110,  # Teflon Sleeve
-                    "T": 40,  # Teflon Blind End
                     "U": 20,  # UHMWPE Blind End
+                    "T": 60,  # Teflon Blind End
+                    "C": 80,  # Cable
                     "CPVC": 400,  # CPVC Blind End
                 },
                 product_families="LS7000",
@@ -170,8 +174,8 @@ def init_business_config():
                 category="Material",
                 choices=["H", "TS"],
                 adders={
-                    "H": 110,  # Halar Coated
-                    "TS": 110,  # Teflon Sleeve
+                    "H": 0,  # Halar Coated
+                    "TS": 0,  # Teflon Sleeve
                 },
                 product_families="LS7000/2",
             ),
@@ -183,11 +187,12 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Material",
-                choices=["S", "H", "TS"],
+                choices=["S", "H", "TS", "C"],
                 adders={
                     "S": 0,  # 316 Stainless Steel
                     "H": 110,  # Halar Coated
                     "TS": 110,  # Teflon Sleeve
+                    "C": 80,  # Cable
                 },
                 product_families="LS8000",
             ),
@@ -214,14 +219,10 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Material",
-                choices=["S", "H", "TS", "T", "U", "CPVC"],
+                choices=["H", "TS"],
                 adders={
-                    "S": 0,  # 316 Stainless Steel
-                    "H": 110,  # Halar Coated
-                    "TS": 110,  # Teflon Sleeve
-                    "T": 40,  # Teflon Blind End
-                    "U": 20,  # UHMWPE Blind End
-                    "CPVC": 400,  # CPVC Blind End
+                    "H": 0,  # Halar Coated
+                    "TS": 0,  # Teflon Sleeve
                 },
                 product_families="LT9000",
             ),
@@ -233,12 +234,9 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Material",
-                choices=["S", "H", "TS", "CPVC"],
+                choices=["S"],
                 adders={
                     "S": 0,  # 316 Stainless Steel
-                    "H": 110,  # Halar Coated
-                    "TS": 110,  # Teflon Sleeve
-                    "CPVC": 400,  # CPVC Blind End
                 },
                 product_families="FS10000",
             ),
@@ -256,7 +254,7 @@ def init_business_config():
                 },
                 product_families="LS7500,LS8500",
             ),
-            
+
             # O-Ring Materials
             Option(
                 name="O-Rings",
@@ -275,7 +273,7 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-            
+
             # Exotic Metals
             Option(
                 name="Exotic Metal",
@@ -293,24 +291,169 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-            
-            # Voltage Options
+
+            # Voltage Options for LS2000, 
             Option(
                 name="Voltage",
                 description="Supply voltage selection",
                 price=0.0,
                 price_type="fixed",
                 category="Electrical",
-                choices=["115VAC", "12VDC", "24VDC", "230VAC"],
+                choices=["115VAC", "24VDC"],
                 adders={
                     "115VAC": 0,
-                    "12VDC": 0,
                     "24VDC": 0,
-                    "230VAC": 0,
                 },
-                product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
+                product_families="LS2000",
             ),
             
+            # Voltage Options for LS2100
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["24VDC"],
+                adders={
+                    "24VDC": 0,
+                },
+                product_families="LS2100",
+            ),
+            
+            # Voltage Options for LS6000
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["115VAC", "230VAC", "12VDC", "24VDC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                    "12VDC": 0,
+                    "24VDC": 0,
+                },
+                product_families="LS6000",
+            ),
+            
+            # Voltage Options for LS7000
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["115VAC", "230VAC", "12VDC", "24VDC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                    "12VDC": 0,
+                    "24VDC": 0,
+                },
+                product_families="LS7000",
+            ),
+            
+            # Voltage Options for LS7000/2
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["115VAC", "230VAC", "12VDC", "24VDC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                    "12VDC": 0,
+                    "24VDC": 0,
+                },
+                product_families="LS7000/2",
+            ),
+            
+            # Voltage Options for LS8000
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["115VAC", "230VAC", "12VDC", "24VDC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                    "12VDC": 0,
+                    "24VDC": 0,
+                },
+                product_families="LS8000",
+            ),
+            
+            # Voltage Options for LS8000/2
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["115VAC", "230VAC", "12VDC", "24VDC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                    "12VDC": 0,
+                    "24VDC": 0,
+                },
+                product_families="LS8000/2",
+            ),
+            
+            # Voltage Options for LT9000
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["115VAC", "230VAC", "24VDC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                    "24VDC": 0,
+                },
+                product_families="LT9000",
+            ),
+
+            # Voltage Options for FS10000   
+            Option(
+                name="Voltage",
+                description="Supply voltage selection",
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",  
+                choices=["115VAC", "230VAC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                },
+                product_families="FS10000",
+            ),
+
+            # Voltage Options for LS7500, LS8500
+            Option(
+                name="Voltage",
+                description="Supply voltage selection", 
+                price=0.0,
+                price_type="fixed",
+                category="Electrical",
+                choices=["115VAC", "230VAC", "12VDC", "24VDC"],
+                adders={
+                    "115VAC": 0,
+                    "230VAC": 0,
+                    "12VDC": 0,
+                    "24VDC": 0,
+                },
+                product_families="LS7500, LS8500",
+            ),
+
             # Connection Types
             Option(
                 name="Connection Type",
@@ -327,21 +470,33 @@ def init_business_config():
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
             
-            # NPT Sizes
+            # NPT Sizes for LS2000, LS2100
             Option(
                 name="NPT Size",
                 description="NPT connection size selection",
                 price=0.0,
                 price_type="fixed",
                 category="Mechanical",
-                choices=["1/2\"", "3/4\"", "1\"", "1-1/2\""],
+                choices=["3/4\""],
                 adders={
-                    "1/2\"": 0,
                     "3/4\"": 0,
-                    "1\"": 25,
-                    "1-1/2\"": 50,
                 },
-                product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
+                product_families="LS2000,LS2100",
+            ),
+            
+            # NPT Sizes for LS6000, LS7000
+            Option(
+                name="NPT Size",
+                description="NPT connection size selection",
+                price=0.0,
+                price_type="fixed",
+                category="Mechanical",
+                choices=["1\"", "3/4\""],
+                adders={
+                    "1\"": 0,
+                    "3/4\"": 0,
+                },
+                product_families="LS6000,LS7000",
             ),
             
             # Flange Types

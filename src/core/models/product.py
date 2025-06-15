@@ -38,10 +38,10 @@ class Product(Base):
         base_length (float): Standard length in inches for the product
         voltage (str): Default voltage configuration (e.g., "115VAC", "24VDC")
         material (str): Default material code:
-                       - "S": 316 Stainless Steel
-                       - "H": Halar Coated
-                       - "U": UHMWPE
-                       - "T": Teflon
+                - "S": 316 Stainless Steel
+                - "H": Halar Coated
+                - "U": UHMWPE
+                - "T": Teflon
 
     Note:
         - Product variants (specific configurations) are handled by the ProductVariant model

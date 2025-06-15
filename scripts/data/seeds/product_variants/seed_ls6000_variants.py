@@ -86,16 +86,8 @@ def seed_ls6000_variants():
                 voltage="115VAC",
                 material="CPVC",
             ),
-            ProductVariant(
-                product_family_id=ls6000.id,
-                model_number='LS6000-115VAC-S-10"',
-                description='LS6000 level switch with 115VAC power and 10" 316SS probe',
-                base_price=660.0,
-                base_length=10.0,
-                voltage="115VAC",
-                material="CPVC",
-            ),
-
+        ]
+        
         # Add variants to database
         db.add_all(variants)
         db.commit()
