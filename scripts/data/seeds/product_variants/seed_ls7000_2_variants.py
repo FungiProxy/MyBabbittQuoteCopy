@@ -16,9 +16,7 @@ def seed_ls7000_2_variants():
     db = SessionLocal()
     try:
         # Get the LS7000/2 family
-        ls7000_2 = (
-            db.query(ProductFamily).filter(ProductFamily.name == "LS7000/2").first()
-        )
+        ls7000_2 = db.query(ProductFamily).filter(ProductFamily.name == "LS7000/2").first()
         if not ls7000_2:
             print("LS7000/2 family not found in database")
             return
@@ -28,7 +26,7 @@ def seed_ls7000_2_variants():
             ProductVariant(
                 product_family_id=ls7000_2.id,
                 model_number='LS7000/2-115VAC-H-10"',
-                description='LS 7000/2 level switch with 115VAC power and 10" Halar coated probe',
+                description='LS7000/2 level switch with 115VAC power and 10" Halar coated probe',
                 base_price=770.0,
                 base_length=10.0,
                 voltage="115VAC",
@@ -37,7 +35,7 @@ def seed_ls7000_2_variants():
             ProductVariant(
                 product_family_id=ls7000_2.id,
                 model_number='LS7000/2-24VDC-H-10"',
-                description='LS 7000/2 level switch with 24VDC power and 10" Halar coated probe',
+                description='LS7000/2 level switch with 24VDC power and 10" Halar coated probe',
                 base_price=770.0,
                 base_length=10.0,
                 voltage="24VDC",
@@ -46,7 +44,7 @@ def seed_ls7000_2_variants():
             ProductVariant(
                 product_family_id=ls7000_2.id,
                 model_number='LS7000/2-12VDC-H-10"',
-                description='LS 7000/2 level switch with 12VDC power and 10" Halar coated probe',
+                description='LS7000/2 level switch with 12VDC power and 10" Halar coated probe',
                 base_price=770.0,
                 base_length=10.0,
                 voltage="12VDC",
@@ -54,18 +52,18 @@ def seed_ls7000_2_variants():
             ),
             ProductVariant(
                 product_family_id=ls7000_2.id,
-                model_number='LS7000/2-240VAC-H-10"',
-                description='LS 7000/2 level switch with 240VAC power and 10" Halar coated probe',
+                model_number='LS7000/2-230VAC-H-10"',
+                description='LS7000/2 level switch with 230VAC power and 10" Halar coated probe',
                 base_price=770.0,
                 base_length=10.0,
-                voltage="240VAC",
+                voltage="230VAC",
                 material="H",
             ),
             ProductVariant(
                 product_family_id=ls7000_2.id,
                 model_number='LS7000/2-115VAC-TS-10"',
-                description='LS 7000/2 level switch with 115VAC power and 10" Teflon Sleeve probe',
-                base_price=880.0,
+                description='LS7000/2 level switch with 115VAC power and 10" Teflon Sleeve probe',
+                base_price=770.0,
                 base_length=10.0,
                 voltage="115VAC",
                 material="TS",
@@ -74,7 +72,7 @@ def seed_ls7000_2_variants():
                 product_family_id=ls7000_2.id,
                 model_number='LS7000/2-24VDC-TS-10"',
                 description='LS 7000/2 level switch with 24VDC power and 10" Teflon Sleeve probe',
-                base_price=880.0,
+                base_price=770.0,
                 base_length=10.0,
                 voltage="24VDC",
                 material="TS",
@@ -82,19 +80,19 @@ def seed_ls7000_2_variants():
             ProductVariant(
                 product_family_id=ls7000_2.id,
                 model_number='LS7000/2-12VDC-TS-10"',
-                description='LS 7000/2 level switch with 12VDC power and 10" Teflon Sleeve probe',
-                base_price=880.0,
+                description='LS7000/2 level switch with 12VDC power and 10" Teflon Sleeve probe',
+                base_price=770.0,
                 base_length=10.0,
                 voltage="12VDC",
                 material="TS",
             ),
             ProductVariant(
                 product_family_id=ls7000_2.id,
-                model_number='LS7000/2-240VAC-TS-10"',
-                description='LS 7000/2 level switch with 240VAC power and 10" Teflon Sleeve probe',
-                base_price=880.0,
+                model_number='LS7000/2-230VAC-TS-10"',
+                description='LS7000/2 level switch with 230VAC power and 10" Teflon Sleeve probe',
+                base_price=770.0,
                 base_length=10.0,
-                voltage="240VAC",
+                voltage="230VAC",
                 material="TS",
             ),
         ]

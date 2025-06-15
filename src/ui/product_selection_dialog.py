@@ -28,7 +28,10 @@ from PySide6.QtWidgets import (
     QWidget,
     QGroupBox,
 )
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIntValidator
+from PySide6.QtWidgets import QSpinBox, QLineEdit, QHBoxLayout
+from PySide6.QtGui import QDoubleValidator
+from PySide6.QtCore import Qt
 
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
@@ -266,8 +269,11 @@ class ProductSelectionDialog(QDialog):
             if voltage_options:
                 voltage_combo = QComboBox()
                 voltage_combo.setObjectName("option_Voltage")
+                seen_voltages = set()
                 for option in voltage_options:
-                    voltage_combo.addItem(option["display_name"], option["voltage"])
+                    if option.voltage not in seen_voltages:
+                        voltage_combo.addItem(option.voltage, option.voltage)
+                        seen_voltages.add(option.voltage)
                 voltage_combo.currentIndexChanged.connect(
                     lambda idx, cmb=voltage_combo: self._on_option_changed(
                         "Voltage", cmb.currentData()
@@ -327,20 +333,58 @@ class ProductSelectionDialog(QDialog):
                 self.option_widgets["Material"] = material_combo
                 logger.debug("Added material options to form (from Option)")
 
-                # Add probe length customization (unchanged)
+                # Add probe length customization (both boxes always visible, integer only)
+                probe_length_layout = QHBoxLayout()
                 probe_length_spin = QSpinBox()
-                probe_length_spin.setObjectName("option_Probe Length")
-                probe_length_spin.setRange(1, 120)  # Allow lengths from 1 to 120 inches
-                probe_length_spin.setSuffix('"')  # Add inch symbol
+                probe_length_spin.setObjectName("option_Probe Length Spin")
+                probe_length_spin.setRange(1, 120)
+                probe_length_spin.setSuffix('"')
                 if product.get("base_length"):
-                    probe_length_spin.setValue(product["base_length"])
-                probe_length_spin.valueChanged.connect(
-                    lambda value: self._on_option_changed("Probe Length", value)
-                )
-                form_layout.addRow("Probe Length:", probe_length_spin)
-                self.option_widgets["Probe Length"] = probe_length_spin
+                    probe_length_spin.setValue(int(product["base_length"]))
+                probe_length_spin.setFixedWidth(70)
+
+                probe_length_edit = QLineEdit()
+                probe_length_edit.setObjectName("option_Probe Length Edit")
+                probe_length_edit.setPlaceholderText("Manual (1-120)")
+                probe_length_edit.setFixedWidth(90)
+                probe_length_edit.setText(str(probe_length_spin.value()))
+                validator = QIntValidator(1, 120)
+                probe_length_edit.setValidator(validator)
+
+                probe_length_spin.partner = probe_length_edit
+                probe_length_edit.partner = probe_length_spin
+
+                # Sync: Spin -> Edit
+                def on_spin_changed(val):
+                    probe_length_edit.setText(str(val))
+                    self._on_option_changed("Probe Length", val)
+                probe_length_spin.valueChanged.connect(on_spin_changed)
+
+                # Sync: Edit -> Spin (integer only)
+                def on_edit_changed():
+                    text = probe_length_edit.text()
+                    try:
+                        val = int(text)
+                        val = max(1, min(120, val))
+                        probe_length_edit.blockSignals(True)
+                        probe_length_edit.setText(str(val))
+                        probe_length_edit.blockSignals(False)
+                        probe_length_spin.blockSignals(True)
+                        probe_length_spin.setValue(val)
+                        probe_length_spin.blockSignals(False)
+                        self._on_option_changed("Probe Length", val)
+                    except Exception:
+                        pass
+                probe_length_edit.editingFinished.connect(on_edit_changed)
+
+                probe_length_layout.addWidget(probe_length_spin)
+                probe_length_layout.addSpacing(8)
+                probe_length_layout.addWidget(probe_length_edit)
+                form_layout.addRow("Probe Length:", probe_length_layout)
+                self.option_widgets["Probe Length Spin"] = probe_length_spin
+                self.option_widgets["Probe Length Edit"] = probe_length_edit
                 logger.debug(
-                    f"Added probe length customization to form with default value: {product.get('base_length')}"
+                    f"Added probe length spin and edit with default value: {product.get('base_length')}"
                 )
         else:
             # fallback to old method if no material_option found
@@ -364,24 +408,56 @@ class ProductSelectionDialog(QDialog):
                     form_layout.addRow("Material:", material_combo)
                     self.option_widgets["Material"] = material_combo
                     logger.debug("Added material options to form (fallback)")
-                    # Add probe length customization (unchanged)
+                    # Add probe length customization (both boxes always visible, integer only)
+                    probe_length_layout = QHBoxLayout()
                     probe_length_spin = QSpinBox()
-                    probe_length_spin.setObjectName("option_Probe Length")
-                    probe_length_spin.setRange(
-                        1, 120
-                    )  # Allow lengths from 1 to 120 inches
-                    probe_length_spin.setSuffix('"')  # Add inch symbol
+                    probe_length_spin.setObjectName("option_Probe Length Spin")
+                    probe_length_spin.setRange(1, 120)
+                    probe_length_spin.setSuffix('"')
                     if product.get("base_length"):
-                        probe_length_spin.setValue(product["base_length"])
-                    probe_length_spin.valueChanged.connect(
-                        lambda value, cmb=probe_length_spin: self._on_option_changed(
-                            "Probe Length", value
-                        )
-                    )
-                    form_layout.addRow("Probe Length:", probe_length_spin)
-                    self.option_widgets["Probe Length"] = probe_length_spin
+                        probe_length_spin.setValue(int(product["base_length"]))
+                    probe_length_spin.setFixedWidth(70)
+
+                    probe_length_edit = QLineEdit()
+                    probe_length_edit.setObjectName("option_Probe Length Edit")
+                    probe_length_edit.setPlaceholderText("Manual (1-120)")
+                    probe_length_edit.setFixedWidth(90)
+                    probe_length_edit.setText(str(probe_length_spin.value()))
+                    validator = QIntValidator(1, 120)
+                    probe_length_edit.setValidator(validator)
+
+                    probe_length_spin.partner = probe_length_edit
+                    probe_length_edit.partner = probe_length_spin
+
+                    def on_spin_changed(val):
+                        probe_length_edit.setText(str(val))
+                        self._on_option_changed("Probe Length", val)
+                    probe_length_spin.valueChanged.connect(on_spin_changed)
+
+                    def on_edit_changed():
+                        text = probe_length_edit.text()
+                        try:
+                            val = int(text)
+                            val = max(1, min(120, val))
+                            probe_length_edit.blockSignals(True)
+                            probe_length_edit.setText(str(val))
+                            probe_length_edit.blockSignals(False)
+                            probe_length_spin.blockSignals(True)
+                            probe_length_spin.setValue(val)
+                            probe_length_spin.blockSignals(False)
+                            self._on_option_changed("Probe Length", val)
+                        except Exception:
+                            pass
+                    probe_length_edit.editingFinished.connect(on_edit_changed)
+
+                    probe_length_layout.addWidget(probe_length_spin)
+                    probe_length_layout.addSpacing(8)
+                    probe_length_layout.addWidget(probe_length_edit)
+                    form_layout.addRow("Probe Length:", probe_length_layout)
+                    self.option_widgets["Probe Length Spin"] = probe_length_spin
+                    self.option_widgets["Probe Length Edit"] = probe_length_edit
                     logger.debug(
-                        f"Added probe length customization to form with default value: {product.get('base_length')}"
+                        f"Added probe length spin and edit with default value: {product.get('base_length')}"
                     )
             except Exception as e:
                 logger.error(
@@ -571,7 +647,7 @@ class ProductSelectionDialog(QDialog):
         ):
             self._on_option_changed("Material", material_widget.currentData())
         # Probe Length
-        probe_length_widget = self.option_widgets.get("Probe Length")
+        probe_length_widget = self.option_widgets.get("Probe Length Spin")
         if isinstance(probe_length_widget, QSpinBox):
             self._on_option_changed("Probe Length", probe_length_widget.value())
 
@@ -1039,7 +1115,7 @@ class ProductSelectionDialog(QDialog):
 
         # Get probe length
         probe_length = None
-        probe_length_widget = self.option_widgets.get("Probe Length")
+        probe_length_widget = self.option_widgets.get("Probe Length Spin")
         if isinstance(probe_length_widget, QSpinBox):
             probe_length = probe_length_widget.value()
         if not probe_length:

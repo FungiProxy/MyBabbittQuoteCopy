@@ -691,6 +691,38 @@ class ProductService:
         Returns:
             The matching ProductVariant object, or None if not found.
         """
+        # Get the product family name
+        family = db.query(ProductFamily).filter_by(id=family_id).first()
+        if not family:
+            return None
+
+        # For LS8000/2, we need exact matches for core attributes
+        if family.name == "LS8000/2":
+            query = db.query(ProductVariant).filter_by(product_family_id=family_id)
+            
+            # Filter by core attributes
+            if options.get("Voltage"):
+                query = query.filter_by(voltage=options["Voltage"])
+            if options.get("Material"):
+                query = query.filter_by(material=options["Material"])
+            
+            # Get all matching variants
+            variants = query.all()
+            
+            # Find the variant that matches all selected options
+            for variant in variants:
+                # Check probe type match (if specified)
+                if options.get("Probe Type") and not variant.model_number.endswith('-3/4"'):
+                    continue
+                # Check housing match (if specified)
+                if options.get("Housing") == "Stainless Steel (NEMA 4X)" and not variant.model_number.endswith("-SS"):
+                    continue
+                # If we get here, we have a match
+                return variant
+            
+            return None
+        
+        # For other products, use the scoring system
         query = db.query(ProductVariant).filter_by(product_family_id=family_id)
 
         # Filter by core attributes present in the options dictionary
@@ -699,6 +731,30 @@ class ProductService:
         if options.get("Material"):
             query = query.filter_by(material=options["Material"])
 
-        # Add other potential variant-defining options here if needed in the future
-
-        return query.first()
+        # Get all variants for this family
+        variants = query.all()
+        
+        # Find the variant that best matches the selected options
+        best_match = None
+        best_match_score = 0
+        
+        for variant in variants:
+            score = 0
+            # Check voltage match
+            if options.get("Voltage") == variant.voltage:
+                score += 1
+            # Check material match
+            if options.get("Material") == variant.material:
+                score += 1
+            # Check probe type match (if specified)
+            if options.get("Probe Type") and variant.model_number.endswith('-3/4"'):
+                score += 1
+            # Check housing match (if specified)
+            if options.get("Housing") == "Stainless Steel (NEMA 4X)" and variant.model_number.endswith("-SS"):
+                score += 1
+            
+            if score > best_match_score:
+                best_match = variant
+                best_match_score = score
+        
+        return best_match

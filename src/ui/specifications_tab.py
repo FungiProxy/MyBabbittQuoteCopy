@@ -302,11 +302,22 @@ class SpecificationsTab(QWidget):
 
     def _on_spec_changed(self, name, value):
         """Handle changes to specific specification values."""
-        # Update the current specification value
-        self.specs_widgets[name] = value
+        try:
+            # Update the current specification value
+            self.specs_widgets[name] = value
 
-        # Emit signal with updated specifications
-        self.specs_updated.emit(self.specs_widgets)
+            # Special handling for O-ring selection
+            if name == "O-Rings":
+                # Get the configuration service from the parent dialog
+                dialog = self.parent()
+                if dialog and hasattr(dialog, 'config_service'):
+                    dialog.config_service.select_option("O-Rings", value)
+                    dialog._update_total_price()
+
+            # Emit signal with updated specifications
+            self.specs_updated.emit(self.specs_widgets)
+        except Exception as e:
+            logger.error(f"Error handling specification change: {str(e)}", exc_info=True)
 
     def _on_connection_changed(self, text):
         """Handle changes to connection type."""
@@ -638,6 +649,9 @@ class SpecificationsTab(QWidget):
         oring.addItems(["Viton", "PTFE", "Kalrez", "EPDM"])
         layout.addRow("O-ring Material:", oring)
         self.specs_widgets["oring"] = oring
+
+        # Connect the O-ring selection to the configuration service
+        oring.currentTextChanged.connect(lambda text: self._on_spec_changed("O-Rings", text))
 
         group.setLayout(layout)
         self.specs_layout.addWidget(group)

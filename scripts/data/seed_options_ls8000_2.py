@@ -20,9 +20,9 @@ EXAMPLE_OPTIONS = [
         price=0.0,
         price_type="fixed",
         category="Mechanical",
-        choices=["S", "H", "TS", "CPVC"],
-        adders={"S": 0, "H": 110, "TS": 110, "CPVC": 400},
-        rules=None,
+        choices=["H", "TS"],  # LS8000/2 only supports H and TS materials
+        adders={"H": 0, "TS": 0},  # No adders since base price includes material cost
+        rules="H=Halar, TS=Teflon Sleeve. Base price includes Halar material. No additional cost for Teflon Sleeve.",
         excluded_products="",
     ),
     Option(
@@ -46,7 +46,7 @@ EXAMPLE_OPTIONS = [
         category="Mechanical",
         choices=["10", "20", "30", "40", "50", "60", "72"],
         adders={"10": 0, "20": 20, "30": 40, "40": 60, "50": 80, "60": 100, "72": 144},
-        rules='Standard is 10". For S, add $45/foot over 10". For H or TS, add $110/foot over 10". For CPVC, add $50/inch over 4". $300 adder for non-standard lengths (except TS). Halar max 72". For longer, use TS.',
+        rules='Standard is 10". For H or TS, add $110/foot over 10". $300 adder for non-standard lengths (except TS). Halar max 72". For longer, use TS.',
         excluded_products="",
     ),
     Option(
@@ -145,6 +145,9 @@ def print_options(db):
 
 def seed_options(db):
     print(f"Seeding options for {FAMILY_NAME}...")
+    # Delete existing options for this family
+    db.query(Option).filter(Option.product_families.like(f"%{FAMILY_NAME}%")).delete(synchronize_session=False)
+    db.commit()
     for opt in EXAMPLE_OPTIONS:
         db.add(opt)
     db.commit()

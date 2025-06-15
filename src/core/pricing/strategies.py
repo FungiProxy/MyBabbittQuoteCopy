@@ -91,58 +91,62 @@ class ExtraLengthStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
         effective_length = float(context.effective_length_in or 0.0)
         base_length = float(context.product.base_length or 0.0)
+        material_code = context.material.code
+        product_type = context.product.model_number.split("-")[0]
 
-        if effective_length > base_length:
-            extra_length = effective_length - base_length
-            material_code = context.material.code
-            product_type = context.product.model_number.split("-")[0]
+        # For U and T materials, calculate per inch from 4"
+        if material_code in ["U", "T"]:
+            base_length = 4.0
+            if effective_length > base_length:
+                extra_length = effective_length - base_length
+                adder = 40.0 if material_code == "U" else 50.0  # $40/inch for U, $50/inch for T
+                context.price += extra_length * adder
+            return context.price
 
-            # LS2000 specific pricing
+        # For S material with 10" base length, use hard-coded thresholds
+        if material_code == "S" and base_length == 10.0:
+            # Define thresholds and their corresponding adders
+            thresholds = {
+                24: 45.0,   # $45 for 24"
+                36: 90.0,   # $90 for 36"
+                48: 135.0,  # $135 for 48"
+                60: 180.0,  # $180 for 60"
+                72: 225.0,  # $225 for 72"
+                84: 270.0,  # $270 for 84"
+                96: 315.0,  # $315 for 96"
+                108: 360.0, # $360 for 108"
+                120: 405.0  # $405 for 120"
+            }
+            
+            # Find the highest threshold that's less than or equal to the effective length
+            applicable_threshold = max((t for t in thresholds.keys() if t <= effective_length), default=0)
+            if applicable_threshold > 0:
+                context.price += thresholds[applicable_threshold]
+            return context.price
+
+        # For other materials, calculate per foot from base length
+        if effective_length <= base_length:
+            return context.price
+
+        # Calculate full feet over base length
+        extra_inches = effective_length - base_length
+        full_feet = int(extra_inches / 12)  # Integer division to get complete feet
+
+        if full_feet > 0:
+            # Get the appropriate adder per foot
             if product_type == "LS2000":
                 length_adders = {
-                    "S": 3.75,  # $45/foot
-                    "H": 9.17,  # $110/foot
-                    "TS": 9.17,  # $110/foot
-                    "U": 40.0,  # $40/inch
-                    "T": 50.0,  # $50/inch
+                    "H": 110.0,  # $110/foot
+                    "TS": 110.0,  # $110/foot
                 }
-
-                # For U and T materials, calculate per inch from 4"
-                if material_code in ["U", "T"]:
-                    base_length = 4.0
-                    if effective_length > base_length:
-                        extra_length = effective_length - base_length
-                else:
-                    # For S, H, and TS, calculate per foot from 10"
-                    base_length = 10.0
-                    if effective_length > base_length:
-                        extra_length = effective_length - base_length
-
-                adder = length_adders.get(material_code, 0.0)
-                context.price += extra_length * adder
             else:
-                # Default pricing for other products
                 length_adders = {
-                    "S": 3.75,  # $45/foot
-                    "H": 9.17,  # $110/foot
-                    "TS": 9.17,  # $110/foot
-                    "U": 40.0,  # $40/inch
-                    "T": 50.0,  # $50/inch
+                    "H": 110.0,  # $110/foot
+                    "TS": 110.0,  # $110/foot
                 }
 
-                # For U and T materials, calculate per inch from 4"
-                if material_code in ["U", "T"]:
-                    base_length = 4.0
-                    if effective_length > base_length:
-                        extra_length = effective_length - base_length
-                else:
-                    # For other materials, calculate per foot from 10"
-                    base_length = 10.0
-                    if effective_length > base_length:
-                        extra_length = effective_length - base_length
-
-                adder = length_adders.get(material_code, 0.0)
-                context.price += extra_length * adder
+            adder = length_adders.get(material_code, 0.0)
+            context.price += full_feet * adder
 
         return context.price
 

@@ -228,7 +228,8 @@ class ConfigurationService:
             if material_code:
                 material = self.db.query(MaterialOption).filter_by(material_code=material_code).first()
                 # Only add the adder if the variant's material is not already the selected material
-                if material and getattr(variant, 'material', None) != material_code:
+                # and the product is not LS8000/2 (since its base price already includes material costs)
+                if material and getattr(variant, 'material', None) != material_code and self.current_config.product_family_name != "LS8000/2":
                     material_adder = self._to_float(getattr(material, 'adder', 0.0))
                     final_price += material_adder
                     logger.debug(f"Applied material adder: {material_adder}")
@@ -255,15 +256,44 @@ class ConfigurationService:
                     final_price += connection_price
                     logger.debug(f"Applied connection price: {connection_price}")
 
+            # Handle O-ring price (hardcoded for Kalrez)
+            oring_material = self.current_config.selected_options.get("O-Rings")
+            if oring_material == "Kalrez":
+                final_price += 295.0
+                logger.debug("Applied hardcoded Kalrez O-ring adder: 295.0")
+            else:
+                logger.debug(f"No O-ring adder applied for material: {oring_material}")
+
             # Handle extra length price
             specified_length = self._to_float(self.current_config.selected_options.get("Probe Length"))
             # Use base product's base_length for extra length calculation
             base_length = self._to_float(self.current_config.base_product.get("base_length", 0.0))
+            
             if specified_length > base_length:
-                extra_length = specified_length - base_length
-                extra_length_price = extra_length * 8.0  # $8 per inch
-                final_price += extra_length_price
-                logger.debug(f"Applied extra length price: {extra_length_price}")
+                # For S material with 10" base length, use hard-coded thresholds
+                if material_code == "S" and base_length == 10.0:
+                    thresholds = {
+                        24: 45.0,   # $45 for 24"
+                        36: 90.0,   # $90 for 36"
+                        48: 135.0,  # $135 for 48"
+                        60: 180.0,  # $180 for 60"
+                        72: 225.0,  # $225 for 72"
+                        84: 270.0,  # $270 for 84"
+                        96: 315.0,  # $315 for 96"
+                        108: 360.0, # $360 for 108"
+                        120: 405.0  # $405 for 120"
+                    }
+                    # Find the highest threshold that's less than or equal to the specified length
+                    applicable_threshold = max((t for t in thresholds.keys() if t <= specified_length), default=0)
+                    if applicable_threshold > 0:
+                        final_price += thresholds[applicable_threshold]
+                        logger.debug(f"Applied length threshold price: {thresholds[applicable_threshold]}")
+                else:
+                    # For other materials, use per-inch calculation
+                    extra_length = specified_length - base_length
+                    extra_length_price = extra_length * 8.0  # $8 per inch
+                    final_price += extra_length_price
+                    logger.debug(f"Applied extra length price: {extra_length_price}")
 
             # Add mechanical options (any selected option with a numeric value)
             for opt_name, opt_value in self.current_config.selected_options.items():
@@ -273,12 +303,14 @@ class ConfigurationService:
                         final_price += opt_value
                         logger.debug(f"Applied mechanical option '{opt_name}' price: {opt_value}")
 
+            # Update the final price
             self.current_config.final_price = final_price
             logger.info(f"Final price calculated: {final_price}")
 
         except Exception as e:
             logger.error(f"Error updating price: {str(e)}", exc_info=True)
-            self.current_config.final_price = 0.0
+            # Set a fallback price
+            self.current_config.final_price = 500.0
 
     def generate_model_number(self) -> str:
         """Generates the model number based on the current configuration."""

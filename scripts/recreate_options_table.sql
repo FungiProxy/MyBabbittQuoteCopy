@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS options;
 
 -- Create new options table with correct schema
 CREATE TABLE options (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     name VARCHAR NOT NULL,
     description TEXT,
     price FLOAT NOT NULL DEFAULT 0.0,

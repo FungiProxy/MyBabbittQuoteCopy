@@ -85,6 +85,7 @@ def seed_options(db: Session):
             "category": "Exotic Metal",
             "choices": ["None"],
             "adders": {},
+            
             "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
         },
         {
@@ -171,6 +172,54 @@ def seed_options(db: Session):
 
     db.commit()
     print("Successfully seeded product options.")
+
+    # Remove duplicate material options for LS2100, LS6000, and LS7000
+    for model in ["LS2100", "LS6000", "LS7000"]:
+        duplicate_materials = [
+            {
+                "name": "Material",
+                "description": "Probe material",
+                "price": 0.0,
+                "price_type": "adder",
+                "category": "specifications",
+                "choices": ["316SS", "Hastelloy C276", "Titanium", "Monel", "Inconel 600", "Inconel 625"],
+                "adders": {
+                    "316SS": 0.0,
+                    "Hastelloy C276": 0.0,
+                    "Titanium": 0.0,
+                    "Monel": 0.0,
+                    "Inconel 600": 0.0,
+                    "Inconel 625": 0.0
+                },
+                "product_families": [model]
+            }
+        ]
+        for material in duplicate_materials:
+            db.query(Option).filter_by(name=material["name"], product_families=model).delete()
+
+    # Remove duplicate probe length options for LS2100, LS6000, and LS7000
+    for model in ["LS2100", "LS6000", "LS7000"]:
+        duplicate_lengths = [
+            {
+                "name": "Probe Length",
+                "description": "Probe length in inches",
+                "price": 0.0,
+                "price_type": "adder",
+                "category": "specifications",
+                "choices": ["1", "2", "3", "4", "5", "6"],
+                "adders": {
+                    "1": 0.0,
+                    "2": 0.0,
+                    "3": 0.0,
+                    "4": 0.0,
+                    "5": 0.0,
+                    "6": 0.0
+                },
+                "product_families": [model]
+            }
+        ]
+        for length in duplicate_lengths:
+            db.query(Option).filter_by(name=length["name"], product_families=model).delete()
 
 
 if __name__ == "__main__":
