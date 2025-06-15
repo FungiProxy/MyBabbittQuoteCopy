@@ -3,7 +3,7 @@ Database initialization orchestrator.
 This script coordinates the initialization of both business configuration and sample data.
 """
 
-from init_business_config import init_business_config
+from scripts.data.init.init_business_config import init_business_config
 from init_sample_data import init_sample_data
 
 
