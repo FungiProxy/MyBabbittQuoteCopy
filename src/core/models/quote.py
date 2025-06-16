@@ -44,20 +44,20 @@ class Quote(Base):
         >>> print(quote.total)
     """
 
-    __tablename__ = "quotes"
+    __tablename__ = 'quotes'
 
     id = Column(Integer, primary_key=True, index=True)
     quote_number = Column(String, unique=True, index=True, nullable=False)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey('customers.id'), nullable=False)
     date_created = Column(DateTime, default=datetime.now)
     expiration_date = Column(DateTime)
-    status = Column(String, default="draft")  # "draft", "sent", "accepted", "rejected"
+    status = Column(String, default='draft')  # "draft", "sent", "accepted", "rejected"
     notes = Column(Text)
 
     # Relationships
-    customer = relationship("Customer", back_populates="quotes")
+    customer = relationship('Customer', back_populates='quotes')
     items = relationship(
-        "QuoteItem", back_populates="quote", cascade="all, delete-orphan"
+        'QuoteItem', back_populates='quote', cascade='all, delete-orphan'
     )
 
     def __repr__(self):
@@ -106,11 +106,11 @@ class QuoteItem(Base):
         >>> print(item.total)
     """
 
-    __tablename__ = "quote_items"
+    __tablename__ = 'quote_items'
 
     id = Column(Integer, primary_key=True, index=True)
-    quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("product_variants.id"), nullable=False)
+    quote_id = Column(Integer, ForeignKey('quotes.id'), nullable=False)
+    product_id = Column(Integer, ForeignKey('product_variants.id'), nullable=False)
 
     # Product configuration
     quantity = Column(Integer, default=1)
@@ -124,10 +124,10 @@ class QuoteItem(Base):
     discount_percent = Column(Float, default=0.0)
 
     # Relationships
-    quote = relationship("Quote", back_populates="items")
-    product = relationship("ProductVariant", back_populates="quote_items")
+    quote = relationship('Quote', back_populates='items')
+    product = relationship('ProductVariant', back_populates='quote_items')
     options = relationship(
-        "QuoteItemOption", back_populates="quote_item", cascade="all, delete-orphan"
+        'QuoteItemOption', back_populates='quote_item', cascade='all, delete-orphan'
     )
 
     def __repr__(self):
@@ -136,7 +136,7 @@ class QuoteItem(Base):
         Returns:
             str: A string showing the item ID, product ID, and quantity
         """
-        return f"<QuoteItem(id={self.id}, product_id={self.product_id}, quantity={self.quantity})>"
+        return f'<QuoteItem(id={self.id}, product_id={self.product_id}, quantity={self.quantity})>'
 
     @property
     def options_total(self):

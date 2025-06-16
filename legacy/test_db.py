@@ -42,23 +42,23 @@ def verify_database_tables():
     tables = inspector.get_table_names()
 
     expected_tables = [
-        "customers",
-        "materials",
-        "options",
-        "product_families",
-        "product_variants",
-        "quote_items",
-        "quote_item_options",
-        "quotes",
-        "standard_lengths",
+        'customers',
+        'materials',
+        'options',
+        'product_families',
+        'product_variants',
+        'quote_items',
+        'quote_item_options',
+        'quotes',
+        'standard_lengths',
     ]
 
-    print("\nVerifying database tables:")
+    print('\nVerifying database tables:')
     for table in expected_tables:
         if table in tables:
-            print(f"✓ Table {table} exists")
+            print(f'✓ Table {table} exists')
         else:
-            print(f"✗ Table {table} does not exist")
+            print(f'✗ Table {table} does not exist')
 
 
 def count_records(db, model):
@@ -68,18 +68,18 @@ def count_records(db, model):
 
 def verify_data(db):
     """Verify that data was correctly inserted into the database."""
-    print("\nVerifying data:")
-    print(f"✓ {count_records(db, Material)} materials")
-    print(f"✓ {count_records(db, StandardLength)} standard lengths")
-    print(f"✓ {count_records(db, ProductFamily)} product families")
-    print(f"✓ {count_records(db, ProductVariant)} product variants")
-    print(f"✓ {count_records(db, Option)} options")
-    print(f"✓ {count_records(db, Customer)} customers")
+    print('\nVerifying data:')
+    print(f'✓ {count_records(db, Material)} materials')
+    print(f'✓ {count_records(db, StandardLength)} standard lengths')
+    print(f'✓ {count_records(db, ProductFamily)} product families')
+    print(f'✓ {count_records(db, ProductVariant)} product variants')
+    print(f'✓ {count_records(db, Option)} options')
+    print(f'✓ {count_records(db, Customer)} customers')
 
 
 def clear_database(db):
     """Clear all data from the database."""
-    print("\nClearing database data...")
+    print('\nClearing database data...')
     # Order matters due to foreign key constraints
     db.query(QuoteItemOption).delete()
     db.query(QuoteItem).delete()
@@ -91,7 +91,7 @@ def clear_database(db):
     db.query(Option).delete()
     db.query(Customer).delete()
     db.commit()
-    print("Database cleared.")
+    print('Database cleared.')
 
 
 def verify_option_categories(db):
@@ -109,17 +109,17 @@ def verify_option_categories(db):
         else:
             categories.add(opt.category)
     if issues:
-        print("\nOption Category Verification Issues:")
+        print('\nOption Category Verification Issues:')
         for issue in issues:
-            print(f"- {issue}")
+            print(f'- {issue}')
     else:
-        print("\nAll options have unique, non-empty categories.")
+        print('\nAll options have unique, non-empty categories.')
 
 
 def main():
     """Initialize and test the database."""
     # Create database schema
-    print("Creating database schema...")
+    print('Creating database schema...')
     init_db()
 
     # Verify tables were created
@@ -132,27 +132,27 @@ def main():
         # Check if we need to populate the database
         if count_records(db, Material) == 0:
             # Populate reference data
-            print("\nPopulating reference data...")
+            print('\nPopulating reference data...')
             populate_materials(db)
             populate_standard_lengths(db)
             populate_options(db)
             populate_product_families(db)
             populate_product_variants(db)
             populate_sample_customers(db)
-            print("Database populated.")
+            print('Database populated.')
         else:
-            print("\nDatabase already contains data.")
+            print('\nDatabase already contains data.')
 
         # Verify data
         verify_data(db)
         verify_option_categories(db)
 
-        print("\nDatabase initialization successful!")
+        print('\nDatabase initialization successful!')
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Clear the database before initializing
     clear_database(SessionLocal())
     main()

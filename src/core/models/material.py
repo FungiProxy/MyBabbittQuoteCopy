@@ -45,7 +45,7 @@ class Material(Base):
         >>> print(material)
     """
 
-    __tablename__ = "materials"
+    __tablename__ = 'materials'
 
     id = Column(Integer, primary_key=True, index=True)
     code = Column(
@@ -65,7 +65,7 @@ class Material(Base):
     base_price_adder = Column(Float, default=0.0)  # Amount to add to base price
 
     # Relationships
-    product_types = relationship("MaterialAvailability", back_populates="material")
+    product_types = relationship('MaterialAvailability', back_populates='material')
 
     def __repr__(self):
         """
@@ -93,7 +93,7 @@ class StandardLength(Base):
         >>> print(sl)
     """
 
-    __tablename__ = "standard_lengths"
+    __tablename__ = 'standard_lengths'
 
     id = Column(Integer, primary_key=True, index=True)
     material_code = Column(String, nullable=False, index=True)
@@ -129,11 +129,11 @@ class MaterialAvailability(Base):
         >>> print(ma)
     """
 
-    __tablename__ = "material_availability"
+    __tablename__ = 'material_availability'
 
     id = Column(Integer, primary_key=True, index=True)
     material_code = Column(
-        String, ForeignKey("materials.code"), nullable=False, index=True
+        String, ForeignKey('materials.code'), nullable=False, index=True
     )
     product_type = Column(
         String, nullable=False, index=True
@@ -142,7 +142,7 @@ class MaterialAvailability(Base):
     notes = Column(Text)
 
     # Relationships
-    material = relationship("Material", back_populates="product_types")
+    material = relationship('Material', back_populates='product_types')
 
     def __repr__(self):
         """

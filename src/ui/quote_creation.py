@@ -34,21 +34,21 @@ class PhoneNumberInput(QLineEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setPlaceholderText("(xxx) xxx-xxxx")
+        self.setPlaceholderText('(xxx) xxx-xxxx')
         self.textChanged.connect(self._format_phone_number)
-        self._previous_text = ""
+        self._previous_text = ''
 
     def _format_phone_number(self, text):
         """Format the phone number as the user types."""
         # Remove all non-digit characters
-        digits = "".join(filter(str.isdigit, text))
+        digits = ''.join(filter(str.isdigit, text))
 
         # Don't process if the text is being deleted
         if len(digits) < len(
-            self._previous_text.replace("-", "")
-            .replace("(", "")
-            .replace(")", "")
-            .replace(" ", "")
+            self._previous_text.replace('-', '')
+            .replace('(', '')
+            .replace(')', '')
+            .replace(' ', '')
         ):
             self._previous_text = text
             return
@@ -57,11 +57,11 @@ class PhoneNumberInput(QLineEdit):
         if len(digits) <= 3:
             formatted = digits
         elif len(digits) <= 6:
-            formatted = f"({digits[:3]}) {digits[3:]}"
+            formatted = f'({digits[:3]}) {digits[3:]}'
         else:
             # Ensure we only take up to 10 digits
             digits = digits[:10]
-            formatted = f"({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+            formatted = f'({digits[:3]}) {digits[3:6]}-{digits[6:]}'
 
         # Only update if the formatting would change
         if formatted != text:
@@ -89,7 +89,7 @@ class QuoteItemWidget(QWidget):
     def __init__(self, product, parent=None):
         super().__init__(parent)
         # Use a unique instance ID for each product
-        self.instance_id = product.get("instance_id", str(uuid.uuid4()))
+        self.instance_id = product.get('instance_id', str(uuid.uuid4()))
         self.product = product
         self.init_ui()
 
@@ -98,33 +98,33 @@ class QuoteItemWidget(QWidget):
         layout.setContentsMargins(10, 5, 10, 5)
 
         # Get product details with safe defaults
-        part_number = self.product.get("part_number", "N/A")
-        qty = self.product.get("quantity", 1)
+        part_number = self.product.get('part_number', 'N/A')
+        qty = self.product.get('quantity', 1)
 
         # Calculate price with safe defaults
-        base_price = self.product.get("base_price", 0)
-        options = self.product.get("options", [])
+        base_price = self.product.get('base_price', 0)
+        options = self.product.get('options', [])
         options_price = sum(
-            float(op.get("price", 0)) for op in options if isinstance(op, dict)
+            float(op.get('price', 0)) for op in options if isinstance(op, dict)
         )
         total_price = (base_price + options_price) * qty
 
         # Create labels with proper formatting
-        item_label = QLabel(f"<b>{part_number}</b> (Qty: {qty})")
+        item_label = QLabel(f'<b>{part_number}</b> (Qty: {qty})')
         item_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
-        price_label = QLabel(f"<b>${total_price:,.2f}</b>")
+        price_label = QLabel(f'<b>${total_price:,.2f}</b>')
         price_label.setFixedWidth(120)
         price_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
         # Create buttons
-        self.edit_btn = QPushButton("Edit")
+        self.edit_btn = QPushButton('Edit')
         self.edit_btn.setFixedSize(60, 28)
         self.edit_btn.clicked.connect(lambda: self.edit_item.emit(self.instance_id))
 
-        self.remove_btn = QPushButton("Remove")
+        self.remove_btn = QPushButton('Remove')
         self.remove_btn.setFixedSize(60, 28)
-        self.remove_btn.setStyleSheet("background-color: #f44336; color: white;")
+        self.remove_btn.setStyleSheet('background-color: #f44336; color: white;')
         self.remove_btn.clicked.connect(lambda: self.remove_item.emit(self.instance_id))
 
         # Add widgets to layout
@@ -146,20 +146,20 @@ class ItemDetailsWidget(QWidget):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(20, 10, 20, 10)
 
-        details_label = QLabel("<b>Complete Configuration:</b>")
+        details_label = QLabel('<b>Complete Configuration:</b>')
         self.main_layout.addWidget(details_label)
 
-        for option in self.product.get("options", []):
-            if option.get("selected"):
+        for option in self.product.get('options', []):
+            if option.get('selected'):
                 row_layout = QHBoxLayout()
                 row_layout.setSpacing(10)
 
-                name = option.get("name", "Option")
-                value = option.get("selected", "N/A")
-                price_adder = option.get("price", 0)
+                name = option.get('name', 'Option')
+                value = option.get('selected', 'N/A')
+                price_adder = option.get('price', 0)
 
-                option_label = QLabel(f"{name}: <b>{value}</b>")
-                price_label = QLabel(f"+${price_adder:,.2f}")
+                option_label = QLabel(f'{name}: <b>{value}</b>')
+                price_label = QLabel(f'+${price_adder:,.2f}')
 
                 row_layout.addWidget(option_label)
                 row_layout.addWidget(price_label)
@@ -209,14 +209,14 @@ class QuoteCreationPage(QWidget):
 
         # Header: Title and actions
         header_layout = QHBoxLayout()
-        title_label = QLabel("Quote Builder")
-        title_label.setStyleSheet("font-size: 22px; font-weight: bold;")
+        title_label = QLabel('Quote Builder')
+        title_label.setStyleSheet('font-size: 22px; font-weight: bold;')
         header_layout.addWidget(title_label)
         header_layout.addStretch()
-        self.load_quote_btn = QPushButton("Load Quote")
-        self.save_quote_btn = QPushButton("Save Quote")
-        self.print_btn = QPushButton("Print")
-        self.export_btn = QPushButton("Export")
+        self.load_quote_btn = QPushButton('Load Quote')
+        self.save_quote_btn = QPushButton('Save Quote')
+        self.print_btn = QPushButton('Print')
+        self.export_btn = QPushButton('Export')
         header_layout.addWidget(self.load_quote_btn)
         header_layout.addWidget(self.save_quote_btn)
         header_layout.addWidget(self.print_btn)
@@ -229,12 +229,12 @@ class QuoteCreationPage(QWidget):
 
         # Customer Info Card
         customer_card = QFrame()
-        customer_card.setObjectName("customerCard")
+        customer_card.setObjectName('customerCard')
         customer_layout = QVBoxLayout(customer_card)
         customer_layout.setContentsMargins(12, 12, 12, 12)
         customer_layout.setSpacing(8)
 
-        customer_title = QLabel("Customer Information")
+        customer_title = QLabel('Customer Information')
         customer_layout.addWidget(customer_title)
 
         form_layout = QFormLayout()
@@ -242,21 +242,21 @@ class QuoteCreationPage(QWidget):
         form_layout.setLabelAlignment(Qt.AlignLeft)
 
         self.customer_name = QLineEdit()
-        self.customer_name.setPlaceholderText("Full Name")
+        self.customer_name.setPlaceholderText('Full Name')
         self.company_name = QLineEdit()
-        self.company_name.setPlaceholderText("Company Name")
+        self.company_name.setPlaceholderText('Company Name')
         name_layout = QHBoxLayout()
         name_layout.addWidget(self.customer_name)
         name_layout.addWidget(self.company_name)
-        form_layout.addRow("Customer:", name_layout)
+        form_layout.addRow('Customer:', name_layout)
 
         self.email = QLineEdit()
-        self.email.setPlaceholderText("Email Address")
+        self.email.setPlaceholderText('Email Address')
         self.phone = PhoneNumberInput()
         contact_layout = QHBoxLayout()
         contact_layout.addWidget(self.email)
         contact_layout.addWidget(self.phone)
-        form_layout.addRow("Contact:", contact_layout)
+        form_layout.addRow('Contact:', contact_layout)
 
         self.quote_reference = QLineEdit()
         self.quote_reference.setReadOnly(True)
@@ -267,42 +267,42 @@ class QuoteCreationPage(QWidget):
         details_layout = QHBoxLayout()
         details_layout.addWidget(self.quote_date)
         details_layout.addWidget(self.expiration_date)
-        form_layout.addRow("Dates:", details_layout)
-        form_layout.addRow("Reference:", self.quote_reference)
+        form_layout.addRow('Dates:', details_layout)
+        form_layout.addRow('Reference:', self.quote_reference)
 
         customer_layout.addLayout(form_layout)
         top_layout.addWidget(customer_card, 3)
 
         # Quote Summary Card
         summary_card = QFrame()
-        summary_card.setObjectName("summaryCard")
+        summary_card.setObjectName('summaryCard')
         summary_layout = QVBoxLayout(summary_card)
         summary_layout.setContentsMargins(12, 12, 12, 12)
         summary_layout.setSpacing(8)
 
-        summary_title = QLabel("Quote Summary")
+        summary_title = QLabel('Quote Summary')
         summary_layout.addWidget(summary_title)
 
         self.summary_grid = QGridLayout()
         self.summary_grid.setSpacing(6)
 
-        style = "font-size: 13px;"
-        self.items_label = QLabel("Items:")
+        style = 'font-size: 13px;'
+        self.items_label = QLabel('Items:')
         self.items_label.setStyleSheet(style)
-        self.items_total_label = QLabel("Subtotal:")
+        self.items_total_label = QLabel('Subtotal:')
         self.items_total_label.setStyleSheet(style)
-        self.total_label = QLabel("Total:")
-        self.total_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.total_label = QLabel('Total:')
+        self.total_label.setStyleSheet('font-size: 14px; font-weight: bold;')
 
-        self.items_count = QLabel("0")
+        self.items_count = QLabel('0')
         self.items_count.setAlignment(Qt.AlignRight)
         self.items_count.setStyleSheet(style)
-        self.items_total_value = QLabel("$0.00")
+        self.items_total_value = QLabel('$0.00')
         self.items_total_value.setAlignment(Qt.AlignRight)
         self.items_total_value.setStyleSheet(style)
-        self.total_value = QLabel("$0.00")
+        self.total_value = QLabel('$0.00')
         self.total_value.setAlignment(Qt.AlignRight)
-        self.total_value.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.total_value.setStyleSheet('font-size: 14px; font-weight: bold;')
 
         self.summary_grid.addWidget(self.items_label, 0, 0)
         self.summary_grid.addWidget(self.items_count, 0, 1)
@@ -317,12 +317,12 @@ class QuoteCreationPage(QWidget):
 
         # Items section
         items_header_layout = QHBoxLayout()
-        items_label = QLabel("Quote Items")
-        items_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        items_label = QLabel('Quote Items')
+        items_label.setStyleSheet('font-size: 16px; font-weight: bold;')
         items_header_layout.addWidget(items_label)
         items_header_layout.addStretch()
-        self.add_product_btn = QPushButton("+ Add Product")
-        self.add_spare_parts_btn = QPushButton("+ Add Spare Parts")
+        self.add_product_btn = QPushButton('+ Add Product')
+        self.add_spare_parts_btn = QPushButton('+ Add Spare Parts')
         items_header_layout.addWidget(self.add_product_btn)
         items_header_layout.addWidget(self.add_spare_parts_btn)
         self.main_layout.addLayout(items_header_layout)
@@ -333,7 +333,7 @@ class QuoteCreationPage(QWidget):
         self.main_layout.addWidget(self.items_list_widget)
 
         self.notes_input = QLineEdit()
-        self.notes_input.setPlaceholderText("Add notes for the quote...")
+        self.notes_input.setPlaceholderText('Add notes for the quote...')
         self.main_layout.addWidget(self.notes_input)
 
         # Connect signals
@@ -374,54 +374,54 @@ class QuoteCreationPage(QWidget):
                 self.update_ui_with_quote_data(quote_data)
                 QMessageBox.information(
                     self,
-                    "Quote Loaded",
+                    'Quote Loaded',
                     f"Quote {quote_data.get('quote_number')} loaded successfully.",
                 )
                 self.quote_loaded.emit(self.current_quote_id)
             else:
                 QMessageBox.warning(
-                    self, "Load Error", "Could not retrieve quote details."
+                    self, 'Load Error', 'Could not retrieve quote details.'
                 )
         except Exception as e:
-            logger.error(f"Error loading quote details: {e}", exc_info=True)
+            logger.error(f'Error loading quote details: {e}', exc_info=True)
             QMessageBox.critical(
-                self, "Error", "An error occurred while loading the quote."
+                self, 'Error', 'An error occurred while loading the quote.'
             )
 
     def update_ui_with_quote_data(self, quote_data):
         """Populates the UI fields with data from a loaded quote."""
-        customer_info = quote_data.get("customer", {})
-        self.customer_name.setText(customer_info.get("name", ""))
-        self.company_name.setText(customer_info.get("company", ""))
-        self.email.setText(customer_info.get("email", ""))
-        self.phone.setText(customer_info.get("phone", ""))
+        customer_info = quote_data.get('customer', {})
+        self.customer_name.setText(customer_info.get('name', ''))
+        self.company_name.setText(customer_info.get('company', ''))
+        self.email.setText(customer_info.get('email', ''))
+        self.phone.setText(customer_info.get('phone', ''))
 
-        self.quote_reference.setText(quote_data.get("quote_number", ""))
+        self.quote_reference.setText(quote_data.get('quote_number', ''))
 
-        created_date = quote_data.get("date_created")
+        created_date = quote_data.get('date_created')
         if created_date:
             self.quote_date.setDate(
                 QDate(created_date.year, created_date.month, created_date.day)
             )
 
-        expiration_date = quote_data.get("expiration_date")
+        expiration_date = quote_data.get('expiration_date')
         if expiration_date:
             self.expiration_date.setDate(
                 QDate(expiration_date.year, expiration_date.month, expiration_date.day)
             )
 
         self.products.clear()
-        for product_data in quote_data.get("products", []):
+        for product_data in quote_data.get('products', []):
             self.products.append(product_data)
 
         self.update_items_list()
         self.update_summary()
-        self.notes_input.setText(quote_data.get("notes", ""))
+        self.notes_input.setText(quote_data.get('notes', ''))
 
     def save_quote(self):
         """Saves the current quote details to the database."""
         # This is a placeholder for the actual save logic.
-        QMessageBox.information(self, "Save", "Save functionality not yet implemented.")
+        QMessageBox.information(self, 'Save', 'Save functionality not yet implemented.')
 
     def open_product_dialog(self):
         """Opens the dialog to add a new product to the quote."""
@@ -432,7 +432,7 @@ class QuoteCreationPage(QWidget):
     def _on_product_added(self, product_data):
         """Handles the product_added signal from ProductSelectionDialog."""
         # Add a unique instance ID to the product data
-        product_data["instance_id"] = str(uuid.uuid4())
+        product_data['instance_id'] = str(uuid.uuid4())
         self.products.append(product_data)
         self.update_items_list()
         self.update_summary()
@@ -441,7 +441,7 @@ class QuoteCreationPage(QWidget):
         """Opens the dialog to add spare parts to the quote."""
         # This is a placeholder
         QMessageBox.information(
-            self, "Spare Parts", "Spare parts dialog not yet implemented."
+            self, 'Spare Parts', 'Spare parts dialog not yet implemented.'
         )
 
     def update_items_list(self):
@@ -467,7 +467,7 @@ class QuoteCreationPage(QWidget):
     def _remove_product(self, instance_id):
         """Removes a product from the quote using its instance ID."""
         self.products = [
-            p for p in self.products if p.get("instance_id") != instance_id
+            p for p in self.products if p.get('instance_id') != instance_id
         ]
         self.update_items_list()
         self.update_summary()
@@ -475,7 +475,7 @@ class QuoteCreationPage(QWidget):
     def _edit_product(self, instance_id):
         """Opens the product dialog to edit an existing product."""
         product_to_edit = next(
-            (p for p in self.products if p.get("instance_id") == instance_id), None
+            (p for p in self.products if p.get('instance_id') == instance_id), None
         )
         if not product_to_edit:
             return
@@ -487,9 +487,9 @@ class QuoteCreationPage(QWidget):
             updated_product = dialog.get_selected_product_data()
             if updated_product:
                 # Preserve the instance ID when updating
-                updated_product["instance_id"] = instance_id
+                updated_product['instance_id'] = instance_id
                 for i, p in enumerate(self.products):
-                    if p.get("instance_id") == instance_id:
+                    if p.get('instance_id') == instance_id:
                         self.products[i] = updated_product
                         break
                 self.update_items_list()
@@ -512,42 +512,42 @@ class QuoteCreationPage(QWidget):
         num_items = len(self.products)
         subtotal = sum(
             (
-                p.get("base_price", 0)
-                + sum(op.get("price", 0) for op in p.get("options", []))
+                p.get('base_price', 0)
+                + sum(op.get('price', 0) for op in p.get('options', []))
             )
-            * p.get("quantity", 1)
+            * p.get('quantity', 1)
             for p in self.products
         )
         total = subtotal
 
         self.items_count.setText(str(num_items))
-        self.items_total_value.setText(f"${subtotal:,.2f}")
-        self.total_value.setText(f"${total:,.2f}")
+        self.items_total_value.setText(f'${subtotal:,.2f}')
+        self.total_value.setText(f'${total:,.2f}')
 
     def print_quote(self):
         """Handles printing the quote."""
         QMessageBox.information(
-            self, "Print", "Print functionality not yet implemented."
+            self, 'Print', 'Print functionality not yet implemented.'
         )
 
     def export_quote(self):
         """Handles exporting the quote."""
         QMessageBox.information(
-            self, "Export", "Export functionality not yet implemented."
+            self, 'Export', 'Export functionality not yet implemented.'
         )
 
     def get_current_quote_details(self):
         """Constructs a dictionary with the current state of the quote."""
         return {
-            "customer": {
-                "name": self.customer_name.text(),
-                "company": self.company_name.text(),
-                "email": self.email.text(),
-                "phone": self.phone.text(),
+            'customer': {
+                'name': self.customer_name.text(),
+                'company': self.company_name.text(),
+                'email': self.email.text(),
+                'phone': self.phone.text(),
             },
-            "products": self.products,
-            "quote_number": self.quote_reference.text(),
-            "date_created": self.quote_date.date().toPython(),
-            "expiration_date": self.expiration_date.date().toPython(),
-            "notes": self.notes_input.text(),
+            'products': self.products,
+            'quote_number': self.quote_reference.text(),
+            'date_created': self.quote_date.date().toPython(),
+            'expiration_date': self.expiration_date.date().toPython(),
+            'notes': self.notes_input.text(),
         }

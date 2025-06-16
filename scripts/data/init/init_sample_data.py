@@ -10,10 +10,10 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from src.core.database import SessionLocal, init_db
 from scripts.data.seeds.customers import seed_customers
 from scripts.data.seeds.options import seed_options
 from scripts.data.seeds.product_variants import seed_all_product_variants
+from src.core.database import SessionLocal, init_db
 
 
 def init_sample_data():
@@ -26,26 +26,26 @@ def init_sample_data():
 
     try:
         # Seed product variants
-        print("\nSeeding product variants...")
+        print('\nSeeding product variants...')
         seed_all_product_variants(db)
 
         # Seed options
-        print("\nSeeding options...")
+        print('\nSeeding options...')
         seed_options(db)
 
         # Seed customers
-        print("\nSeeding customers...")
+        print('\nSeeding customers...')
         seed_customers(db)
 
-        print("\nSample data initialized successfully!")
+        print('\nSample data initialized successfully!')
 
     except Exception as e:
         db.rollback()
-        print(f"Error initializing sample data: {e}")
+        print(f'Error initializing sample data: {e}')
         raise
     finally:
         db.close()
 
 
-if __name__ == "__main__":
-    init_sample_data() 
+if __name__ == '__main__':
+    init_sample_data()

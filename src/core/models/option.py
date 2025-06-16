@@ -46,7 +46,7 @@ class Option(Base):
         >>> print(option)
     """
 
-    __tablename__ = "options"
+    __tablename__ = 'options'
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
@@ -54,7 +54,7 @@ class Option(Base):
 
     # Pricing information
     price = Column(Float, nullable=False, default=0.0)
-    price_type = Column(String, default="fixed")  # "fixed", "per_inch", "per_foot"
+    price_type = Column(String, default='fixed')  # "fixed", "per_inch", "per_foot"
 
     # Option category
     category = Column(String, index=True)  # e.g., "mounting", "material", "feature"
@@ -100,17 +100,17 @@ class QuoteItemOption(Base):
         >>> print(qio)
     """
 
-    __tablename__ = "quote_item_options"
+    __tablename__ = 'quote_item_options'
 
     id = Column(Integer, primary_key=True, index=True)
-    quote_item_id = Column(Integer, ForeignKey("quote_items.id"), nullable=False)
-    option_id = Column(Integer, ForeignKey("options.id"), nullable=False)
+    quote_item_id = Column(Integer, ForeignKey('quote_items.id'), nullable=False)
+    option_id = Column(Integer, ForeignKey('options.id'), nullable=False)
     quantity = Column(Integer, default=1)
     price = Column(Float, nullable=False)  # Price at time of quote
 
     # Relationships
-    quote_item = relationship("QuoteItem", back_populates="options")
-    option = relationship("Option")
+    quote_item = relationship('QuoteItem', back_populates='options')
+    option = relationship('Option')
 
     def __repr__(self):
         """
@@ -118,4 +118,4 @@ class QuoteItemOption(Base):
         Returns:
             str: A string showing the option ID and price
         """
-        return f"<QuoteItemOption(id={self.id}, option_id={self.option_id}, price={self.price})>"
+        return f'<QuoteItemOption(id={self.id}, option_id={self.option_id}, price={self.price})>'

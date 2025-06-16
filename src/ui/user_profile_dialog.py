@@ -20,16 +20,16 @@ class UserProfileDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("User Profile")
+        self.setWindowTitle('User Profile')
         self.setMinimumWidth(300)
 
         main_layout = QVBoxLayout(self)
 
         # --- User Info ---
         form_layout = QFormLayout()
-        form_layout.addRow("Name:", QLabel("John Smith (Admin)"))
-        form_layout.addRow("Email:", QLabel("john.smith@example.com"))
-        form_layout.addRow("Role:", QLabel("Administrator"))
+        form_layout.addRow('Name:', QLabel('John Smith (Admin)'))
+        form_layout.addRow('Email:', QLabel('john.smith@example.com'))
+        form_layout.addRow('Role:', QLabel('Administrator'))
 
         main_layout.addLayout(form_layout)
         main_layout.addSpacing(15)

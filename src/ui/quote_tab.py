@@ -29,9 +29,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.core.database import SessionLocal
-from src.core.models.connection_option import ConnectionOption
-
 
 class QuoteTab(QWidget):
     """
@@ -85,7 +82,7 @@ class QuoteTab(QWidget):
         # Initialize data structures
         self.product_info = {}
         self.specs = {}
-        self.pricing = {"base_price": 0.0, "options_price": 0.0, "total_price": 0.0}
+        self.pricing = {'base_price': 0.0, 'options_price': 0.0, 'total_price': 0.0}
 
     def init_ui(self):
         """
@@ -101,18 +98,18 @@ class QuoteTab(QWidget):
         main_layout = QVBoxLayout(self)
 
         # Create summary section
-        summary_group = QGroupBox("Quote Summary")
+        summary_group = QGroupBox('Quote Summary')
         summary_layout = QVBoxLayout()
 
         # Product summary
-        self.product_summary = QLabel("No product selected")
-        self.product_summary.setStyleSheet("font-weight: bold;")
-        self.product_summary.setFont(QFont("Arial", 10))
+        self.product_summary = QLabel('No product selected')
+        self.product_summary.setStyleSheet('font-weight: bold;')
+        self.product_summary.setFont(QFont('Arial', 10))
         summary_layout.addWidget(self.product_summary)
 
         # Configuration summary
         self.specs_table = QTableWidget(0, 2)
-        self.specs_table.setHorizontalHeaderLabels(["Configuration Item", "Value"])
+        self.specs_table.setHorizontalHeaderLabels(['Configuration Item', 'Value'])
         self.specs_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.specs_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.specs_table.verticalHeader().setVisible(False)
@@ -122,13 +119,13 @@ class QuoteTab(QWidget):
         main_layout.addWidget(summary_group)
 
         # Create quote items section
-        items_group = QGroupBox("Quote Items")
+        items_group = QGroupBox('Quote Items')
         items_layout = QVBoxLayout()
 
         # Items table (products and spare parts)
         self.items_table = QTableWidget(0, 4)
         self.items_table.setHorizontalHeaderLabels(
-            ["Description", "Quantity", "Unit Price", "Total"]
+            ['Description', 'Quantity', 'Unit Price', 'Total']
         )
         self.items_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.items_table.horizontalHeader().setSectionResizeMode(
@@ -144,52 +141,52 @@ class QuoteTab(QWidget):
         items_layout.addWidget(self.items_table)
 
         # Status label for notifications
-        self.status_label = QLabel("")
-        self.status_label.setStyleSheet("color: #08D13F; font-weight: bold;")
-        self.status_label.setFont(QFont("Arial", 10))
+        self.status_label = QLabel('')
+        self.status_label.setStyleSheet('color: #08D13F; font-weight: bold;')
+        self.status_label.setFont(QFont('Arial', 10))
         items_layout.addWidget(self.status_label)
 
         items_group.setLayout(items_layout)
         main_layout.addWidget(items_group)
 
         # Create pricing section
-        pricing_group = QGroupBox("Pricing")
+        pricing_group = QGroupBox('Pricing')
         pricing_layout = QFormLayout()
 
-        self.base_price_label = QLabel("$0.00")
-        pricing_layout.addRow("Base Price:", self.base_price_label)
+        self.base_price_label = QLabel('$0.00')
+        pricing_layout.addRow('Base Price:', self.base_price_label)
 
-        self.options_price_label = QLabel("$0.00")
-        pricing_layout.addRow("Options:", self.options_price_label)
+        self.options_price_label = QLabel('$0.00')
+        pricing_layout.addRow('Options:', self.options_price_label)
 
-        self.total_price_label = QLabel("$0.00")
+        self.total_price_label = QLabel('$0.00')
         font = QFont()
         font.setBold(True)
         self.total_price_label.setFont(font)
-        pricing_layout.addRow("Total Price:", self.total_price_label)
+        pricing_layout.addRow('Total Price:', self.total_price_label)
 
         pricing_group.setLayout(pricing_layout)
         main_layout.addWidget(pricing_group)
 
         # Create customer information section
-        customer_group = QGroupBox("Customer Information")
+        customer_group = QGroupBox('Customer Information')
         customer_layout = QFormLayout()
 
         self.customer_name = QLineEdit()
-        customer_layout.addRow("Customer Name:", self.customer_name)
+        customer_layout.addRow('Customer Name:', self.customer_name)
 
         self.contact_name = QLineEdit()
-        customer_layout.addRow("Contact Person:", self.contact_name)
+        customer_layout.addRow('Contact Person:', self.contact_name)
 
         self.email = QLineEdit()
-        customer_layout.addRow("Email:", self.email)
+        customer_layout.addRow('Email:', self.email)
 
         self.phone = QLineEdit()
-        customer_layout.addRow("Phone:", self.phone)
+        customer_layout.addRow('Phone:', self.phone)
 
         self.notes = QTextEdit()
         self.notes.setMaximumHeight(100)
-        customer_layout.addRow("Notes:", self.notes)
+        customer_layout.addRow('Notes:', self.notes)
 
         customer_group.setLayout(customer_layout)
         main_layout.addWidget(customer_group)
@@ -221,17 +218,17 @@ class QuoteTab(QWidget):
         self.product_info = product_info
 
         # Update product summary label
-        model = product_info.get("model", "")
-        application = product_info.get("application", "")
+        model = product_info.get('model', '')
+        application = product_info.get('application', '')
 
         if model:
-            self.product_summary.setFont(QFont("Arial", 10))
+            self.product_summary.setFont(QFont('Arial', 10))
             self.product_summary.setText(
-                f"<b>{model}</b><br>Application: {application}"
+                f'<b>{model}</b><br>Application: {application}'
             )
         else:
-            self.product_summary.setFont(QFont("Arial", 10))
-            self.product_summary.setText("No product selected")
+            self.product_summary.setFont(QFont('Arial', 10))
+            self.product_summary.setText('No product selected')
 
         # Update pricing
         self.update_pricing()
@@ -253,21 +250,21 @@ class QuoteTab(QWidget):
 
         # Group configuration items by category
         config_categories = {
-            "Essential Properties": [
-                "voltage",
-                "material",
-                "material_type",
-                "viscosity",
+            'Essential Properties': [
+                'voltage',
+                'material',
+                'material_type',
+                'viscosity',
             ],
-            "Dimensions": ["probe_length", "indicator_length", "cable_length"],
-            "Connections": ["connection", "mounting"],
-            "Material Options": ["exotic_metals", "oring"],
-            "Housing": ["housing"],
-            "Additional Features": [
-                "high_temp",
-                "extended_probe",
-                "remote_display",
-                "output_type",
+            'Dimensions': ['probe_length', 'indicator_length', 'cable_length'],
+            'Connections': ['connection', 'mounting'],
+            'Material Options': ['exotic_metals', 'oring'],
+            'Housing': ['housing'],
+            'Additional Features': [
+                'high_temp',
+                'extended_probe',
+                'remote_display',
+                'output_type',
             ],
         }
 
@@ -283,12 +280,12 @@ class QuoteTab(QWidget):
                         category_added = True
 
                     # Convert internal name to display name
-                    display_name = name.replace("_", " ").title()
+                    display_name = name.replace('_', ' ').title()
 
                     # Format value for display
                     value = specs[name]
                     if isinstance(value, bool):
-                        display_value = "Yes" if value else "No"
+                        display_value = 'Yes' if value else 'No'
                     else:
                         display_value = str(value)
 
@@ -311,7 +308,7 @@ class QuoteTab(QWidget):
         category_item = QTableWidgetItem(category_name)
         category_item.setBackground(Qt.lightGray)
 
-        font = QFont("Arial", 9)
+        font = QFont('Arial', 9)
         font.setBold(True)
         category_item.setFont(font)
 
@@ -331,10 +328,10 @@ class QuoteTab(QWidget):
         self.specs_table.insertRow(row)
 
         # Add indent to name for better visual hierarchy
-        name_item = QTableWidgetItem("    " + name)
+        name_item = QTableWidgetItem('    ' + name)
         value_item = QTableWidgetItem(value)
 
-        font = QFont("Arial", 9)
+        font = QFont('Arial', 9)
         name_item.setFont(font)
         value_item.setFont(font)
 
@@ -350,23 +347,23 @@ class QuoteTab(QWidget):
         if hasattr(self, 'current_config') and self.current_config:
             # Calculate options price based on selected options
             selected_options = self.current_config.selected_options
-            
+
             # Length adjustment
-            if "Probe Length" in selected_options:
+            if 'Probe Length' in selected_options:
                 options_price += 112.0  # $112 for length adjustment
-            
+
             # Connection adjustment
-            if "Connection Type" in selected_options:
+            if 'Connection Type' in selected_options:
                 options_price += 150.0  # $150 for connection
-            
+
             # Material adjustment
-            if "Material" in selected_options:
+            if 'Material' in selected_options:
                 options_price += 110.0  # $110 for material
-            
+
             # Cable length adjustment
-            if "Cable Length" in selected_options:
+            if 'Cable Length' in selected_options:
                 options_price += 200.0  # $200 for cable length
-            
+
             # Complex configuration has all options
             if len(selected_options) > 3:
                 options_price = 372.0  # Total options price for complex config
@@ -376,15 +373,15 @@ class QuoteTab(QWidget):
 
         # Update pricing data
         self.pricing = {
-            "base_price": base_price,
-            "options_price": options_price,
-            "total_price": total_price,
+            'base_price': base_price,
+            'options_price': options_price,
+            'total_price': total_price,
         }
 
         # Update the UI with formatted prices (without commas)
-        self.base_price_label.setText(f"${base_price:.2f}")
-        self.options_price_label.setText(f"${options_price:.2f}")
-        self.total_price_label.setText(f"Total Price: ${total_price:.2f}")
+        self.base_price_label.setText(f'${base_price:.2f}')
+        self.options_price_label.setText(f'${options_price:.2f}')
+        self.total_price_label.setText(f'Total Price: ${total_price:.2f}')
 
         # Update items table prices
         self.update_items_table_prices()
@@ -397,9 +394,9 @@ class QuoteTab(QWidget):
             if unit_price_item:
                 try:
                     price = float(
-                        unit_price_item.text().replace("$", "").replace(",", "")
+                        unit_price_item.text().replace('$', '').replace(',', '')
                     )
-                    unit_price_item.setText(f"${price:,.2f}")
+                    unit_price_item.setText(f'${price:,.2f}')
                 except ValueError:
                     pass
 
@@ -408,17 +405,17 @@ class QuoteTab(QWidget):
             if total_price_item:
                 try:
                     price = float(
-                        total_price_item.text().replace("$", "").replace(",", "")
+                        total_price_item.text().replace('$', '').replace(',', '')
                     )
-                    total_price_item.setText(f"${price:,.2f}")
+                    total_price_item.setText(f'${price:,.2f}')
                 except ValueError:
                     pass
 
     def update_total_pricing(self):
         """Update total pricing including spare parts."""
         # Calculate base product price from current pricing
-        base_price = self.pricing.get("base_price", 0.0)
-        options_price = self.pricing.get("options_price", 0.0)
+        self.pricing.get('base_price', 0.0)
+        self.pricing.get('options_price', 0.0)
 
         # Calculate additional items price
         items_price = 0.0
@@ -426,7 +423,7 @@ class QuoteTab(QWidget):
             total_item = self.items_table.item(row, 3)
             if total_item:
                 try:
-                    price = float(total_item.text().replace("$", "").replace(",", ""))
+                    price = float(total_item.text().replace('$', '').replace(',', ''))
                     items_price += price
                 except ValueError:
                     pass
@@ -435,16 +432,16 @@ class QuoteTab(QWidget):
         total_price = items_price  # Only use items price for total pricing test
 
         # Update total price label (without commas)
-        self.total_price_label.setText(f"Total Price: ${total_price:.2f}")
+        self.total_price_label.setText(f'Total Price: ${total_price:.2f}')
 
     def on_customer_info_changed(self):
         """Handle changes to customer information."""
         customer_data = {
-            "name": self.customer_name.text(),
-            "contact": self.contact_name.text(),
-            "email": self.email.text(),
-            "phone": self.phone.text(),
-            "notes": self.notes.toPlainText(),
+            'name': self.customer_name.text(),
+            'contact': self.contact_name.text(),
+            'email': self.email.text(),
+            'phone': self.phone.text(),
+            'notes': self.notes.toPlainText(),
         }
 
         # Emit signal with updated customer info
@@ -453,44 +450,44 @@ class QuoteTab(QWidget):
     def get_quote_data(self):
         """Get all data for the current quote."""
         return {
-            "product": self.product_info,
-            "specifications": self.specs,
-            "pricing": self.pricing,
-            "customer": {
-                "name": self.customer_name.text(),
-                "contact": self.contact_name.text(),
-                "email": self.email.text(),
-                "phone": self.phone.text(),
-                "notes": self.notes.toPlainText(),
+            'product': self.product_info,
+            'specifications': self.specs,
+            'pricing': self.pricing,
+            'customer': {
+                'name': self.customer_name.text(),
+                'contact': self.contact_name.text(),
+                'email': self.email.text(),
+                'phone': self.phone.text(),
+                'notes': self.notes.toPlainText(),
             },
         }
 
     def add_spare_part_to_quote(self, part_info):
         """Add a spare part or product to the quote."""
         # Check item type (product or spare part)
-        item_type = part_info.get("type", "spare_part")
+        item_type = part_info.get('type', 'spare_part')
 
         # Create a description string
-        if item_type == "product":
-            description = part_info["description"]
-            item_name = part_info["name"]
-            notification_text = f"Added product: {item_name}"
+        if item_type == 'product':
+            description = part_info['description']
+            item_name = part_info['name']
+            notification_text = f'Added product: {item_name}'
 
             # If it's a product, also update the product summary and specifications
             product_info = {
-                "model": part_info["name"],
-                "category": (
-                    part_info["description"].split(" - ")[1]
-                    if " - " in part_info["description"]
-                    else ""
+                'model': part_info['name'],
+                'category': (
+                    part_info['description'].split(' - ')[1]
+                    if ' - ' in part_info['description']
+                    else ''
                 ),
-                "application": part_info.get("application", "General Purpose"),
+                'application': part_info.get('application', 'General Purpose'),
             }
             self.update_product_info(product_info)
 
             # Update specifications if they're included
-            if "specifications" in part_info:
-                self.update_specifications(part_info["specifications"])
+            if 'specifications' in part_info:
+                self.update_specifications(part_info['specifications'])
         else:
             description = f"{part_info['name']} - {part_info['part_number']}"
             notification_text = f"Added spare part: {part_info['name']}"
@@ -501,12 +498,12 @@ class QuoteTab(QWidget):
 
         # Set the item description and price
         desc_item = QTableWidgetItem(description)
-        qty_item = QTableWidgetItem("1")  # Quantity
+        qty_item = QTableWidgetItem('1')  # Quantity
         unit_price_item = QTableWidgetItem(f"${part_info['price']:.2f}")
         total_price_item = QTableWidgetItem(f"${part_info['price']:.2f}")
 
         # Use standard font to avoid DirectWrite font issues
-        font = QFont("Arial", 9)
+        font = QFont('Arial', 9)
         desc_item.setFont(font)
         qty_item.setFont(font)
         unit_price_item.setFont(font)
@@ -525,4 +522,4 @@ class QuoteTab(QWidget):
 
         # Show a brief notification
         self.status_label.setText(notification_text)
-        QTimer.singleShot(3000, lambda: self.status_label.setText(""))
+        QTimer.singleShot(3000, lambda: self.status_label.setText(''))

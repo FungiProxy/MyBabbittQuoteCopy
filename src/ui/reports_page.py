@@ -17,8 +17,8 @@ class ReportsPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
 
-        label = QLabel("Custom Reports Generation Coming Soon!")
-        label.setObjectName("placeholderLabel")
-        label.setStyleSheet("font-size: 24px; color: #888;")
+        label = QLabel('Custom Reports Generation Coming Soon!')
+        label.setObjectName('placeholderLabel')
+        label.setStyleSheet('font-size: 24px; color: #888;')
 
         layout.addWidget(label)
