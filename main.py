@@ -6,10 +6,14 @@ Babbitt Quote Generator - Main Application Entry Point
 import os
 import sys
 import traceback
+import logging
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from src.core.services.settings_service import SettingsService
+
+# Set global logging level to INFO
+logging.basicConfig(level=logging.INFO)
 
 # Print debug information
 print("Starting Babbitt Quote Generator...")

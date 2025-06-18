@@ -311,81 +311,123 @@ class ProductSelectionDialog(QDialog):
 
         # Build Material dropdown from Option (with adders)
         if material_option and isinstance(material_option.get("choices"), list):
+            material_choices = material_option["choices"]
+            adders = material_option.get("adders", {})
+            # Handle both dict and string cases for choices
+            if material_choices and isinstance(material_choices[0], dict):
+                display_names = {
+                    opt["code"]: opt["display_name"] for opt in material_choices
+                }
+                material_codes = [opt["code"] for opt in material_choices]
+            else:
+                display_names = {code: code for code in material_choices}
+                material_codes = material_choices
+        else:
+            # fallback to old method if no material_option found
+            try:
+                material_options = (
+                    self.product_service.get_available_materials_for_product(
+                        self.db, product["name"]
+                    )
+                )
+                logger.debug(f"Material options: {material_options}")
+                if material_options:
+                    material_codes = [opt["code"] for opt in material_options]
+                    adders = {
+                        opt["code"]: opt.get("adder", 0) for opt in material_options
+                    }
+                    display_names = {
+                        opt["code"]: opt["display_name"] for opt in material_options
+                    }
+                else:
+                    material_codes = []
+                    adders = {}
+                    display_names = {}
+            except Exception as e:
+                logger.error(
+                    f"Error fetching material options: {str(e)}", exc_info=True
+                )
+                material_codes = []
+                adders = {}
+                display_names = {}
+
+        if material_codes:
             material_combo = QComboBox()
             material_combo.setObjectName("option_Material")
-            adders = material_option.get("adders", {})
-            for choice in material_option["choices"]:
-                price_adder = adders.get(choice, 0) if isinstance(adders, dict) else 0
-                if price_adder:
-                    display_text = f"{choice} (+${price_adder:.2f})"
-                else:
-                    display_text = str(choice)
-                material_combo.addItem(display_text, choice)
-
-                # Fix: Use a proper method to handle the option change
-                def on_material_changed():
-                    value = material_combo.currentData()
-                    logger.debug(f"Material changed to: {value}")
-                    self._on_option_changed("Material", value)
-
-                material_combo.currentIndexChanged.connect(on_material_changed)
-                form_layout.addRow("Material:", material_combo)
-                self.option_widgets["Material"] = material_combo
-                logger.debug("Added material options to form (from Option)")
-
-                # Add probe length customization (both boxes always visible, integer only)
-                probe_length_layout = QHBoxLayout()
-                probe_length_spin = QSpinBox()
-                probe_length_spin.setObjectName("option_Probe Length Spin")
-                probe_length_spin.setRange(1, 120)
-                probe_length_spin.setSuffix('"')
-                if product.get("base_length"):
-                    probe_length_spin.setValue(int(product["base_length"]))
-                probe_length_spin.setFixedWidth(70)
-
-                probe_length_edit = QLineEdit()
-                probe_length_edit.setObjectName("option_Probe Length Edit")
-                probe_length_edit.setPlaceholderText("Manual (1-120)")
-                probe_length_edit.setFixedWidth(90)
-                probe_length_edit.setText(str(probe_length_spin.value()))
-                validator = QIntValidator(1, 120)
-                probe_length_edit.setValidator(validator)
-
-                probe_length_spin.partner = probe_length_edit
-                probe_length_edit.partner = probe_length_spin
-
-                # Sync: Spin -> Edit
-                def on_spin_changed(val):
-                    probe_length_edit.setText(str(val))
-                    self._on_option_changed("Probe Length", val)
-                probe_length_spin.valueChanged.connect(on_spin_changed)
-
-                # Sync: Edit -> Spin (integer only)
-                def on_edit_changed():
-                    text = probe_length_edit.text()
-                    try:
-                        val = int(text)
-                        val = max(1, min(120, val))
-                        probe_length_edit.blockSignals(True)
-                        probe_length_edit.setText(str(val))
-                        probe_length_edit.blockSignals(False)
-                        probe_length_spin.blockSignals(True)
-                        probe_length_spin.setValue(val)
-                        probe_length_spin.blockSignals(False)
-                        self._on_option_changed("Probe Length", val)
-                    except Exception:
-                        pass
-                probe_length_edit.editingFinished.connect(on_edit_changed)
-
-                probe_length_layout.addWidget(probe_length_spin)
-                probe_length_layout.addSpacing(8)
-                probe_length_layout.addWidget(probe_length_edit)
-                form_layout.addRow("Probe Length:", probe_length_layout)
-                self.option_widgets["Probe Length Spin"] = probe_length_spin
-                self.option_widgets["Probe Length Edit"] = probe_length_edit
-                logger.debug(
-                    f"Added probe length spin and edit with default value: {product.get('base_length')}"
+            for code in material_codes:
+                price_adder = adders.get(code, 0) if isinstance(adders, dict) else 0
+                display_text = (
+                    display_names[code] if code in display_names else str(code)
                 )
+                if price_adder:
+                    display_text = f"{display_text} (+${price_adder:.2f})"
+                material_combo.addItem(display_text, code)
+
+            def on_material_changed():
+                value = material_combo.currentData()
+                logger.debug(f"Material changed to: {value}")
+                self._on_option_changed("Material", value)
+
+            material_combo.currentIndexChanged.connect(on_material_changed)
+            form_layout.addRow("Material:", material_combo)
+            self.option_widgets["Material"] = material_combo
+            logger.debug("Added material options to form (unified logic)")
+
+            # Add probe length customization (both boxes always visible, integer only)
+            probe_length_layout = QHBoxLayout()
+            probe_length_spin = QSpinBox()
+            probe_length_spin.setObjectName("option_Probe Length Spin")
+            probe_length_spin.setRange(1, 120)
+            probe_length_spin.setSuffix('"')
+            if product.get("base_length"):
+                probe_length_spin.setValue(int(product["base_length"]))
+            probe_length_spin.setFixedWidth(70)
+
+            probe_length_edit = QLineEdit()
+            probe_length_edit.setObjectName("option_Probe Length Edit")
+            probe_length_edit.setPlaceholderText("Manual (1-120)")
+            probe_length_edit.setFixedWidth(90)
+            probe_length_edit.setText(str(probe_length_spin.value()))
+            validator = QIntValidator(1, 120)
+            probe_length_edit.setValidator(validator)
+
+            probe_length_spin.partner = probe_length_edit
+            probe_length_edit.partner = probe_length_spin
+
+            # Sync: Spin -> Edit
+            def on_spin_changed(val):
+                probe_length_edit.setText(str(val))
+                self._on_option_changed("Probe Length", val)
+
+            probe_length_spin.valueChanged.connect(on_spin_changed)
+
+            # Sync: Edit -> Spin (integer only)
+            def on_edit_changed():
+                text = probe_length_edit.text()
+                try:
+                    val = int(text)
+                    val = max(1, min(120, val))
+                    probe_length_edit.blockSignals(True)
+                    probe_length_edit.setText(str(val))
+                    probe_length_edit.blockSignals(False)
+                    probe_length_spin.blockSignals(True)
+                    probe_length_spin.setValue(val)
+                    probe_length_spin.blockSignals(False)
+                    self._on_option_changed("Probe Length", val)
+                except Exception:
+                    pass
+
+            probe_length_edit.editingFinished.connect(on_edit_changed)
+
+            probe_length_layout.addWidget(probe_length_spin)
+            probe_length_layout.addSpacing(8)
+            probe_length_layout.addWidget(probe_length_edit)
+            form_layout.addRow("Probe Length:", probe_length_layout)
+            self.option_widgets["Probe Length Spin"] = probe_length_spin
+            self.option_widgets["Probe Length Edit"] = probe_length_edit
+            logger.debug(
+                f"Added probe length spin and edit with default value: {product.get('base_length')}"
+            )
         else:
             # fallback to old method if no material_option found
             try:
@@ -432,6 +474,7 @@ class ProductSelectionDialog(QDialog):
                     def on_spin_changed(val):
                         probe_length_edit.setText(str(val))
                         self._on_option_changed("Probe Length", val)
+
                     probe_length_spin.valueChanged.connect(on_spin_changed)
 
                     def on_edit_changed():
@@ -448,6 +491,7 @@ class ProductSelectionDialog(QDialog):
                             self._on_option_changed("Probe Length", val)
                         except Exception:
                             pass
+
                     probe_length_edit.editingFinished.connect(on_edit_changed)
 
                     probe_length_layout.addWidget(probe_length_spin)
@@ -513,15 +557,19 @@ class ProductSelectionDialog(QDialog):
             # Skip mechanical options from core options UI
             if option["name"] in {
                 "Stainless Steel Tag",
-                "Cable Probe",
                 "Bent Probe",
                 "Teflon Insulator",
                 "Material",
             }:
                 continue
             # Remove 'Extra Static Protection' as a standalone option for LS2000
-            if product.get("name", "").startswith("LS2000") and option["name"] == "Extra Static Protection":
-                logger.debug("Hiding 'Extra Static Protection' from core options for LS2000 (mechanical option)")
+            if (
+                product.get("name", "").startswith("LS2000")
+                and option["name"] == "Extra Static Protection"
+            ):
+                logger.debug(
+                    "Hiding 'Extra Static Protection' from core options for LS2000 (mechanical option)"
+                )
                 continue
             # Hide '3/4" Diameter Probe x 10"' for LS6000 only (core options only)
             if (
@@ -774,9 +822,7 @@ class ProductSelectionDialog(QDialog):
         connection_types = sorted({opt.type for opt in options})
         for conn_type in connection_types:
             # Find the first option with this type to get its price
-            price = next(
-                (opt.price for opt in options if opt.type == conn_type), 0
-            )
+            price = next((opt.price for opt in options if opt.type == conn_type), 0)
             price_val = price or 0  # Treat None as 0 for comparison/formatting
             display_text = (
                 f"{conn_type} (+${price_val:.2f})" if price_val > 0 else conn_type
@@ -819,12 +865,19 @@ class ProductSelectionDialog(QDialog):
         type_options = [opt for opt in all_options if opt.type == selected_type]
 
         # Add rating options if available
-        ratings = sorted({opt.rating for opt in type_options if getattr(opt, 'rating', None)})
+        ratings = sorted(
+            {opt.rating for opt in type_options if getattr(opt, "rating", None)}
+        )
         if ratings:
             rating_combo = QComboBox()
             for rating in ratings:
                 price = next(
-                    (opt.price for opt in type_options if getattr(opt, 'rating', None) == rating), 0
+                    (
+                        opt.price
+                        for opt in type_options
+                        if getattr(opt, "rating", None) == rating
+                    ),
+                    0,
                 )
                 price_val = price or 0
                 display_text = (
@@ -838,12 +891,17 @@ class ProductSelectionDialog(QDialog):
             )
 
         # Add size options if available
-        sizes = sorted({opt.size for opt in type_options if getattr(opt, 'size', None)})
+        sizes = sorted({opt.size for opt in type_options if getattr(opt, "size", None)})
         if sizes:
             size_combo = QComboBox()
             for size in sizes:
                 price = next(
-                    (opt.price for opt in type_options if getattr(opt, 'size', None) == size), 0
+                    (
+                        opt.price
+                        for opt in type_options
+                        if getattr(opt, "size", None) == size
+                    ),
+                    0,
                 )
                 price_val = price or 0
                 display_text = f"{size} (+${price_val:.2f})" if price_val > 0 else size
@@ -958,14 +1016,12 @@ class ProductSelectionDialog(QDialog):
         # Define mechanical options based on product family
         if product_family == "LS2100":
             mechanical_options = [
-                ("Cable Probe", 80.00),
                 ("Bent Probe", 50.00),
                 ("Stainless Steel Tag", 30.00),
             ]
         elif product_family == "LS6000":
             mechanical_options = [
                 ("Stainless Steel Tag", 30.00),
-                ("Cable Probe", 80.00),
                 ("Bent Probe", 50.00),
                 ("Teflon Insulator", 40.00),
                 ('3/4" Diameter Probe x 10"', 175.00),
@@ -974,7 +1030,6 @@ class ProductSelectionDialog(QDialog):
             mechanical_options = [
                 ('3/4" Diameter Probe x 10"', 175.00),
                 ("Stainless Steel Housing (NEMA 4X)", 285.00),
-                ("Cable Probe", 80.00),
                 ("Bent Probe", 50.00),
                 ("Stainless Steel Tag", 30.00),
             ]
@@ -985,7 +1040,6 @@ class ProductSelectionDialog(QDialog):
                 ("22 AWG, Twisted Shielded Pair", 0.70),  # Price per foot
                 ('8" x 6" x 3.5" NEMA 4 Metal Enclosure for Receiver', 245.00),
                 ("GRE EXP PROOF HOUSING FOR RECEIVER", 590.00),
-                ("Cable Probe", 80.00),
                 ("Bent Probe", 50.00),
                 ("Stainless Steel Tag", 30.00),
             ]
@@ -1003,7 +1057,6 @@ class ProductSelectionDialog(QDialog):
         else:  # Default options for other models
             mechanical_options = [
                 ("Stainless Steel Tag", 30.00),
-                ("Cable Probe", 80.00),
                 ("Bent Probe", 50.00),
                 ("Teflon Insulator", 40.00),
             ]
