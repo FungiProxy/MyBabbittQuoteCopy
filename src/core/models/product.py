@@ -14,7 +14,8 @@ The Product model supports:
 - Categorization and searching
 """
 
-from sqlalchemy import Column, Float, Integer, String, Text
+from sqlalchemy import Column, Float, Integer, String, Text, ForeignKey
+from sqlalchemy.orm import relationship
 
 from src.core.database import Base
 
@@ -40,6 +41,7 @@ class Product(Base):
                 - "H": Halar Coated
                 - "U": UHMWPE
                 - "T": Teflon
+        product_family_id (int): Foreign key to the product family this product belongs to
 
     Note:
         - Product variants (specific configurations) are handled by the ProductVariant model
@@ -55,11 +57,12 @@ class Product(Base):
         ...     base_price=450.00,
         ...     base_length=10.0,
         ...     voltage="115VAC",
-        ...     material="S"
+        ...     material="S",
+        ...     product_family_id=1
         ... )
     """
 
-    __tablename__ = 'products'
+    __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
     model_number = Column(
@@ -75,6 +78,12 @@ class Product(Base):
     # Configuration options
     voltage = Column(String)  # e.g., "115VAC", "24VDC"
     material = Column(String)  # e.g., "S", "H", "U", "T"
+
+    # Product family relationship
+    product_family_id = Column(
+        Integer, ForeignKey("product_families.id"), nullable=False
+    )
+    product_family = relationship("ProductFamily", back_populates="products")
 
     def __repr__(self) -> str:
         """

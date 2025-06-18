@@ -1,59 +1,45 @@
 """
-Connection option model for storing product connection configurations.
+ConnectionOption model for managing specific connection configurations.
 
-This module defines the ConnectionOption model for Babbitt International's quoting system.
-It stores information about available connection types (flanges and tri-clamps) and their
-pricing for different product families.
+This module defines the ConnectionOption model which represents specific configurations
+of connection types for products. It extends the base Connection model with additional
+properties and specifications needed for product-specific configurations.
 
 Supports:
-- Flange connections (150# and 300# ratings)
-- Tri-Clamp connections
-- Size-specific pricing
-- Product family compatibility
+- Product-specific connection configurations
+- Connection specifications and dimensions
+- Connection validation and constraints
 """
 
-from sqlalchemy import Column, Float, ForeignKey, Integer, String
+from datetime import datetime
+from typing import List, Optional, Dict, Union
+from sqlalchemy import Column, String, Boolean, JSON, Integer, ForeignKey, Float
+from sqlalchemy.orm import relationship
+from pydantic import BaseModel as PydanticBaseModel, Field, validator
 
+from src.core.models.base_model import BaseModel
 from src.core.database import Base
 
 
 class ConnectionOption(Base):
-    """
-    SQLAlchemy model representing a product connection option.
+    """Model for connection options."""
 
-    Stores information about connection types (flanges and tri-clamps), their sizes,
-    ratings (for flanges), and pricing. Each connection option can be associated with
-    multiple product families.
-
-    Attributes:
-        id (int): Primary key
-        type (str): Connection type ("Flange" or "Tri-Clamp")
-        rating (str): Pressure rating for flanges ("150#", "300#"), None for Tri-Clamp
-        size (str): Connection size (e.g., '1"', '1.5"', '2"', '3"', '4"')
-        price (float): Additional cost for this connection option
-        product_family_id (int): Foreign key to product family
-
-    Example:
-        >>> conn = ConnectionOption(type="Flange", rating="150#", size='2"', price=75.0)
-        >>> print(conn)
-    """
-
-    __tablename__ = 'connection_options'
+    __tablename__ = "connection_options"
 
     id = Column(Integer, primary_key=True)
-    type = Column(String, nullable=False)  # "Flange" or "Tri-Clamp"
-    rating = Column(String, nullable=True)  # "150#", "300#", or None for Tri-Clamp
-    size = Column(String, nullable=False)  # e.g., '1"', '1.5"', '2"', '3"', '4"'
+    code = Column(String(10), unique=True, nullable=False)
+    name = Column(String(50), nullable=False)
+    connection_type = Column(String(50), nullable=False)
+    rating = Column(String(20))
+    size = Column(String(20))
     price = Column(Float, default=0.0)
-    product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
-    )
+    is_available = Column(Boolean, default=True)
+    product_family_id = Column(Integer, ForeignKey("product_families.id"))
+    connection_id = Column(Integer, ForeignKey("connections.id"))
+
+    # Relationships
+    product_family = relationship("ProductFamily", back_populates="connection_options")
+    connection = relationship("Connection", back_populates="options")
 
     def __repr__(self):
-        """
-        Return a string representation of the ConnectionOption.
-        Returns:
-            str: A string showing the connection type, rating (if applicable), and size
-        """
-        rating_str = f", rating='{self.rating}'" if self.rating else ''
-        return f"<ConnectionOption(type='{self.type}'{rating_str}, size='{self.size}')>"
+        return f"<ConnectionOption(code='{self.code}', name='{self.name}', connection_type='{self.connection_type}', price={self.price})>"

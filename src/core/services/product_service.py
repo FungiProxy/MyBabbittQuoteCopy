@@ -11,6 +11,8 @@ implements business logic for:
 - Option management and compatibility
 - Material management and availability
 - Material pricing rules and compatibility
+- Cable and enclosure management
+- Electrical protection management
 
 The service follows the Repository pattern and provides a clean interface
 for interacting with product-related data and business rules.
@@ -26,12 +28,19 @@ from src.core.models import (
     MaterialOption,
     Option,
     Product,
+    ProductFamily,
     VoltageOption,
+    Cable,
+    Enclosure,
+    ElectricalProtection,
+    MaterialAvailability,
+    StandardLength,
 )
 from src.core.models.connection_option import ConnectionOption
-from src.core.models.product_variant import ProductFamily, ProductVariant
+from src.core.models.product_variant import ProductVariant
 from src.core.pricing import calculate_product_price
 from src.utils.db_utils import get_all, get_by_id
+from src.core.services.validation_service import ValidationService
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -52,709 +61,512 @@ class ProductService:
     - Product options and pricing
     - Material-specific pricing rules
     - Length-based calculations
-
-    The service is implemented using static methods for simplicity and statelessness,
-    making it easy to use across different parts of the application without
-    managing instance state.
+    - Cable and enclosure management
+    - Electrical protection management
 
     Example:
         >>> db = SessionLocal()
+        >>> service = ProductService(db)
         >>> # Product-related operations
-        >>> products = ProductService.get_products(db, material="S", category="Level Switch")
-        >>> product, price = ProductService.configure_product(db, product_id=1, length=24)
+        >>> products = service.get_products(material="S", category="Level Switch")
+        >>> product, price = service.configure_product(product_id=1, length=24)
         >>>
         >>> # Material-related operations
-        >>> materials = ProductService.get_available_materials(db)
-        >>> product_materials = ProductService.get_available_materials_for_product(db, "LS2000")
-        >>> voltages = ProductService.get_available_voltages(db, "LS2000")
+        >>> materials = service.get_available_materials()
+        >>> product_materials = service.get_available_materials_for_product("LS2000")
+        >>> voltages = service.get_available_voltages("LS2000")
     """
 
-    @staticmethod
+    def __init__(self, session: Session):
+        """Initialize the service with a database session."""
+        self.session = session
+        self.validator = ValidationService(session)
+        logger.debug("ProductService initialized")
+
     def get_products(
-        db: Session,
+        self,
         material: Optional[str] = None,
-        voltage: Optional[str] = None,
         category: Optional[str] = None,
+        voltage: Optional[str] = None,
+        connection: Optional[str] = None,
+        cable: Optional[str] = None,
+        enclosure: Optional[str] = None,
+        electrical_protection: Optional[str] = None,
     ) -> List[Product]:
         """
-        Retrieve products with optional filtering by material, voltage, or category.
-
-        This method allows flexible querying of the product catalog with multiple
-        filter criteria. All filters are optional and can be combined.
+        Get products matching the specified criteria.
 
         Args:
-            db: SQLAlchemy database session
-            material: Optional material code to filter by (e.g., "S", "H", "U", "T")
-            voltage: Optional voltage to filter by (e.g., "115VAC", "24VDC")
-            category: Optional category to filter by (e.g., "Level Switch", "Transmitter")
-
-        Returns:
-            List[Product]: List of Product objects matching the filter criteria
-
-        Example:
-            >>> # Get all stainless steel level switches
-            >>> products = ProductService.get_products(
-            ...     db,
-            ...     material="S",
-            ...     category="Level Switch"
-            ... )
-            >>> # Get all 24VDC products
-            >>> products = ProductService.get_products(db, voltage="24VDC")
-        """
-        query = db.query(Product)
-
-        if material is not None:
-            query = query.filter(Product.material == material)
-
-        if voltage is not None:
-            query = query.filter(Product.voltage == voltage)
-
-        if category is not None:
-            query = query.filter(Product.category == category)
-
-        return query.all()
-
-    @staticmethod
-    def get_available_materials(db: Session) -> List[Material]:
-        """
-        Retrieve all available materials from the database.
-
-        This method returns all materials that can be used in product configurations,
-        including their properties and pricing rules.
-
-        Args:
-            db: SQLAlchemy database session
-
-        Returns:
-            List[Material]: List of all available Material objects
-
-        Example:
-            >>> materials = ProductService.get_available_materials(db)
-            >>> for material in materials:
-            ...     print(f"{material.code}: {material.description}")
-        """
-        return get_all(db, Material)
-
-    @staticmethod
-    def get_available_voltages(db: Session, product_family: str) -> List[str]:
-        """
-        Retrieve available voltage options for a specific product family.
-
-        This method returns all valid voltage configurations for a given product
-        family, considering compatibility and availability rules.
-
-        Args:
-            db: SQLAlchemy database session
-            product_family: Product family identifier (e.g., "LS2000", "LS7000")
-
-        Returns:
-            List[str]: List of available voltage options (e.g., ["115VAC", "24VDC"])
-
-        Example:
-            >>> voltages = ProductService.get_available_voltages(db, "LS2000")
-            >>> print(f"Available voltages for LS2000: {', '.join(voltages)}")
-        """
-        voltages = (
-            db.query(VoltageOption)
-            .filter(
-                VoltageOption.product_family == product_family,
-                VoltageOption.is_available == 1,
-            )
-            .all()
-        )
-
-        return [v.voltage for v in voltages]
-
-    @staticmethod
-    def get_available_materials_for_product(
-        db: Session, product_family: str
-    ) -> List[Dict[str, Any]]:
-        """
-        Retrieve available materials and their properties for a specific product family.
-
-        This method returns detailed material information including display names
-        and base prices for materials compatible with the specified product family.
-
-        Args:
-            db: SQLAlchemy database session
-            product_family: Product family identifier (e.g., "LS2000", "LS7000")
-
-        Returns:
-            List[Dict[str, Any]]: List of dictionaries containing:
-                - code (str): Material code (e.g., "S", "H")
-                - display_name (str): Human-readable name
-                - base_price (float): Additional cost for this material
-
-        Example:
-            >>> materials = ProductService.get_available_materials_for_product(db, "LS2000")
-            >>> for material in materials:
-            ...     print(f"{material['display_name']}: ${material['base_price']:.2f}")
-        """
-        # First get the product family ID
-        family = db.query(ProductFamily).filter_by(name=product_family).first()
-        if not family:
-            return []
-
-        materials = (
-            db.query(MaterialOption)
-            .filter(
-                MaterialOption.product_family_id == family.id,
-                MaterialOption.is_available == 1,
-            )
-            .all()
-        )
-
-        return [
-            {
-                'code': m.material_code,
-                'display_name': m.display_name,
-                'base_price': m.base_price,
-            }
-            for m in materials
-        ]
-
-    @staticmethod
-    def get_product_options(
-        db: Session, product_id: Optional[int] = None
-    ) -> List[Option]:
-        """
-        Retrieve available options, optionally filtered by product compatibility.
-
-        This method returns product options, considering any exclusion rules if a
-        specific product is specified. It handles compatibility checking to ensure
-        only valid options are returned.
-
-        Args:
-            db: SQLAlchemy database session
-            product_id: Optional product ID to filter compatible options
-
-        Returns:
-            List[Option]: List of compatible Option objects
-
-        Example:
-            >>> # Get all options
-            >>> all_options = ProductService.get_product_options(db)
-            >>> # Get options compatible with a specific product
-            >>> product_options = ProductService.get_product_options(db, product_id=1)
-        """
-        query = db.query(Option)
-
-        if product_id is not None:
-            # Get the product to check compatibility
-            product = get_by_id(db, Product, product_id)
-            if product and product.model_number:
-                query = query.filter(
-                    ~Option.excluded_products.contains(product.model_number)
-                )
-
-        return query.all()
-
-    @staticmethod
-    def configure_product(
-        db: Session,
-        product_id: int,
-        length: Optional[float] = None,
-        material_override: Optional[str] = None,
-    ) -> Tuple[Product, float]:
-        """
-        Configure a product with specified parameters and calculate its price.
-
-        This method handles product configuration and pricing, applying business
-        rules for material compatibility and length-based pricing adjustments.
-
-        Args:
-            db: SQLAlchemy database session
-            product_id: Unique identifier of the product to configure
-            length: Optional length in inches (if applicable)
-            material_override: Optional material code to override product's default
-
-        Returns:
-            Tuple[Product, float]: Tuple containing:
-                - Product: The configured product object
-                - float: Calculated price including all adjustments
-
-        Raises:
-            ValueError: If the product is not found
-
-        Example:
-            >>> # Configure a 24-inch stainless steel product
-            >>> product, price = ProductService.configure_product(
-            ...     db,
-            ...     product_id=1,
-            ...     length=24.0,
-            ...     material_override="S"
-            ... )
-            >>> print(f"Configured price: ${price:.2f}")
-        """
-        # Get product
-        product = get_by_id(db, Product, product_id)
-        if not product:
-            raise ValueError(f'Product with ID {product_id} not found')
-
-        # Calculate price
-        price = calculate_product_price(
-            db=db,
-            product_id=product_id,
-            length=length,
-            material_override=material_override,
-        )
-
-        return product, price
-
-    @staticmethod
-    def search_products(db: Session, search_term: str) -> List[Product]:
-        """
-        Search for products by model number or description.
-
-        This method performs a case-insensitive search across product model numbers
-        and descriptions, using partial matching for flexibility.
-
-        Args:
-            db: SQLAlchemy database session
-            search_term: Search term to match against product fields
+            material: Optional material code to filter by
+            category: Optional product category to filter by
+            voltage: Optional voltage option to filter by
+            connection: Optional connection type to filter by
+            cable: Optional cable type to filter by
+            enclosure: Optional enclosure type to filter by
+            electrical_protection: Optional electrical protection type to filter by
 
         Returns:
             List[Product]: List of matching Product objects
-
-        Example:
-            >>> # Search for level switches
-            >>> products = ProductService.search_products(db, "level switch")
-            >>> # Search by model number
-            >>> products = ProductService.search_products(db, "LS2000")
         """
-        search_pattern = f'%{search_term}%'
+        try:
+            query = self.session.query(Product)
 
-        return (
-            db.query(Product)
-            .filter(
-                (Product.description.ilike(search_pattern))
-                | (Product.model_number.ilike(search_pattern))
+            if material:
+                query = query.filter(Product.material == material)
+            if category:
+                query = query.filter(Product.category == category)
+            if voltage:
+                query = query.filter(Product.voltage == voltage)
+            if connection:
+                query = query.filter(Product.connection == connection)
+            if cable:
+                query = query.filter(Product.cable == cable)
+            if enclosure:
+                query = query.filter(Product.enclosure == enclosure)
+            if electrical_protection:
+                query = query.filter(
+                    Product.electrical_protection == electrical_protection
+                )
+
+            return query.all()
+        except Exception as e:
+            logger.error(f"Error getting products: {e!s}", exc_info=True)
+            return []
+
+    def get_available_materials(self) -> List[Material]:
+        """Get all available materials."""
+        try:
+            return (
+                self.session.query(Material)
+                .join(MaterialAvailability)
+                .filter(MaterialAvailability.is_available == True)
+                .all()
             )
-            .all()
-        )
+        except Exception as e:
+            logger.error(f"Error getting available materials: {e!s}", exc_info=True)
+            return []
 
-    def get_product_families(self, db: Session) -> List[Dict]:
-        """
-        Fetch all product families from the database.
-        Returns: List of dicts with id, name, description, category.
-        """
-        logger.debug('Fetching all product families')
-        families = db.query(ProductFamily).all()
-        result = [
-            {
-                'id': f.id,
-                'name': f.name,
-                'description': f.description,
-                'category': f.category,
-            }
-            for f in families
-        ]
-        logger.debug(
-            f"Found {len(result)} product families: {[f['name'] for f in result]}"
-        )
-        return result
+    def get_available_materials_for_product(
+        self, product_family: str
+    ) -> List[Material]:
+        """Get available materials for a specific product family."""
+        try:
+            return (
+                self.session.query(Material)
+                .join(MaterialAvailability)
+                .filter(
+                    MaterialAvailability.product_type == product_family,
+                    MaterialAvailability.is_available == True,
+                )
+                .all()
+            )
+        except Exception as e:
+            logger.error(
+                f"Error getting available materials for product {product_family}: {e!s}",
+                exc_info=True,
+            )
+            return []
 
-    def get_variants_for_family(self, db: Session, family_id: int) -> List[Dict]:
-        """
-        Fetch all product variants for a given family.
-        Returns: List of dicts with id, model_number, description, base_price, etc.
-        """
-        logger.debug(f'Fetching variants for family ID: {family_id}')
-        variants = (
-            db.query(ProductVariant)
-            .filter(ProductVariant.product_family_id == family_id)
-            .all()
-        )
-        result = [
-            {
-                'id': v.id,
-                'model_number': v.model_number,
-                'description': v.description,
-                'base_price': v.base_price,
-                'base_length': v.base_length,
-                'voltage': v.voltage,
-                'material': v.material,
-            }
-            for v in variants
-        ]
-        logger.debug(f'Found {len(result)} variants for family {family_id}')
-        return result
-
-    @staticmethod
-    def get_material_options(db, product_family_id: int) -> List[MaterialOption]:
-        """Get available material options for a product family."""
-        return db.query(MaterialOption).filter_by(product_family_id=product_family_id).all()
-
-    @staticmethod
-    def get_voltage_options(db, product_family_id: int) -> List[VoltageOption]:
+    def get_available_voltages(self, product_family: str) -> List[VoltageOption]:
         """Get available voltage options for a product family."""
-        return db.query(VoltageOption).filter_by(product_family_id=product_family_id).all()
-
-    @staticmethod
-    def get_connection_options(db, product_family_id: int) -> List[ConnectionOption]:
-        """Get available connection options for a product family."""
-        return db.query(ConnectionOption).filter_by(product_family_id=product_family_id).all()
-
-    def get_additional_options(self, db, family_name: str) -> list:
-        """
-        Fetch additional configurable options (add-ons) for a product family by name.
-        Returns: List of dicts with name, description, price, price_type, category, choices, adders.
-        """
-        logger.debug(f'Fetching additional options for family: {family_name}')
-        from src.core.models.option import Option
-
-        # Query options that either have no product_families (NULL) or include this family
-        options = (
-            db.query(Option)
-            .filter(
-                (
-                    Option.product_families.is_(None)
-                )  # Include options with no family restrictions
-                | (
-                    Option.product_families.like(f'%{family_name}%')
-                )  # Include options for this family
+        try:
+            return (
+                self.session.query(VoltageOption)
+                .filter(
+                    VoltageOption.product_family_id == product_family,
+                    VoltageOption.is_available == True,
+                )
+                .all()
             )
-            .all()
-        )
-        logger.debug(f'Found {len(options)} raw options for {family_name}')
+        except Exception as e:
+            logger.error(
+                f"Error getting available voltages for product {product_family}: {e!s}",
+                exc_info=True,
+            )
+            return []
 
-        # Log raw options before filtering
-        for opt in options:
-            logger.debug(f'Raw option: {opt.name}')
-            logger.debug(f'  Product Families: {opt.product_families}')
-            logger.debug(f'  Excluded Products: {opt.excluded_products}')
-            logger.debug(f'  Choices: {opt.choices}')
-            logger.debug(f'  Category: {opt.category}')
+    def get_available_connections(self) -> List[ConnectionOption]:
+        """Get all available connection options."""
+        try:
+            return (
+                self.session.query(ConnectionOption)
+                .filter(ConnectionOption.is_available == True)
+                .all()
+            )
+        except Exception as e:
+            logger.error(f"Error getting available connections: {e!s}", exc_info=True)
+            return []
 
-        # Exclude options where family_name is in excluded_products
-        filtered = [
-            o
-            for o in options
-            if not o.excluded_products
-            or family_name not in o.excluded_products.split(',')
-        ]
-        logger.debug(f'After filtering exclusions: {len(filtered)} options')
+    def get_available_cables(self) -> List[Cable]:
+        """Get all available cable types."""
+        try:
+            return self.session.query(Cable).filter(Cable.is_available == True).all()
+        except Exception as e:
+            logger.error(f"Error getting available cables: {e!s}", exc_info=True)
+            return []
 
-        result = [
-            {
-                'name': o.name,
-                'description': o.description,
-                'price': o.price,
-                'price_type': o.price_type,
-                'category': o.category,
-                'choices': o.choices,
-                'adders': o.adders,
-            }
-            for o in filtered
-        ]
+    def get_available_enclosures(self) -> List[Enclosure]:
+        """Get all available enclosure types."""
+        try:
+            return (
+                self.session.query(Enclosure)
+                .filter(Enclosure.is_available == True)
+                .all()
+            )
+        except Exception as e:
+            logger.error(f"Error getting available enclosures: {e!s}", exc_info=True)
+            return []
 
-        # Log details of each option
-        for opt in result:
-            logger.debug(f"Option {opt['name']}:")
-            logger.debug(f"  - Choices: {opt['choices']}")
-            logger.debug(f"  - Adders: {opt['adders']}")
-            logger.debug(f"  - Category: {opt['category']}")
+    def get_available_electrical_protection(self) -> List[ElectricalProtection]:
+        """Get all available electrical protection types."""
+        try:
+            return (
+                self.session.query(ElectricalProtection)
+                .filter(ElectricalProtection.is_available == True)
+                .all()
+            )
+        except Exception as e:
+            logger.error(
+                f"Error getting available electrical protection: {e!s}", exc_info=True
+            )
+            return []
 
-        return result
-
-    def search_products(self, db: Session, query: str) -> List[Dict]:
+    def configure_product(
+        self,
+        product_id: int,
+        length: Optional[float] = None,
+        material_override: Optional[str] = None,
+        voltage: Optional[str] = None,
+        connection: Optional[str] = None,
+        cable: Optional[str] = None,
+        enclosure: Optional[str] = None,
+        electrical_protection: Optional[str] = None,
+        options: Optional[Dict[str, str]] = None,
+    ) -> Tuple[Optional[ProductVariant], Optional[float], Optional[str]]:
         """
-        Search product families and variants by name or description.
-        Returns: List of matching product families/variants.
+        Configure a product with the specified options.
+
+        Args:
+            product_id: ID of the product to configure
+            length: Optional length override
+            material_override: Optional material code override
+            voltage: Optional voltage override
+            connection: Optional connection type override
+            cable: Optional cable type override
+            enclosure: Optional enclosure type override
+            electrical_protection: Optional electrical protection type override
+            options: Optional dictionary of additional options
+
+        Returns:
+            Tuple[Optional[ProductVariant], Optional[float], Optional[str]]:
+            Tuple containing:
+            - Configured product variant
+            - Calculated price
+            - Error message if any
         """
-        # Search families
+        try:
+            # Get the base product
+            product = (
+                self.session.query(Product).filter(Product.id == product_id).first()
+            )
+            if not product:
+                return None, None, f"Product with ID {product_id} not found"
+
+            # Validate material if provided
+            if material_override:
+                material = (
+                    self.session.query(Material)
+                    .filter(Material.code == material_override)
+                    .first()
+                )
+                if not material:
+                    return None, None, f"Invalid material code: {material_override}"
+                if not material.is_available_for_product(
+                    product.model_number.split("-")[0]
+                ):
+                    return (
+                        None,
+                        None,
+                        f"Material {material_override} not available for this product",
+                    )
+
+            # Validate length if provided
+            if length is not None:
+                if length <= 0:
+                    return None, None, "Length must be greater than 0"
+                if material_override:
+                    material = (
+                        self.session.query(Material)
+                        .filter(Material.code == material_override)
+                        .first()
+                    )
+                    if not material.is_standard_length(length):
+                        return (
+                            None,
+                            None,
+                            f"Length {length} is not a standard length for material {material_override}",
+                        )
+
+            # Create product variant
+            variant = ProductVariant(
+                product_id=product_id,
+                length=length or product.base_length,
+                material=material_override or product.material,
+                voltage=voltage or product.voltage,
+                connection=connection,
+                cable=cable,
+                enclosure=enclosure,
+                electrical_protection=electrical_protection,
+                options=options or {},
+            )
+
+            # Calculate price
+            price = calculate_product_price(
+                self.session,
+                variant,
+                length=length,
+                material_override=material_override,
+                voltage=voltage,
+                connection=connection,
+                cable=cable,
+                enclosure=enclosure,
+                electrical_protection=electrical_protection,
+                options=options,
+            )
+
+            return variant, price, None
+
+        except Exception as e:
+            logger.error(f"Error configuring product: {e!s}", exc_info=True)
+            return None, None, str(e)
+
+    def search_products(self, query: str) -> List[Dict]:
+        """Search for products by name or model number."""
         families = (
-            db.query(ProductFamily)
-            .filter(
-                (ProductFamily.name.ilike(f'%{query}%'))
-                | (ProductFamily.description.ilike(f'%{query}%'))
-            )
+            self.session.query(ProductFamily)
+            .filter(ProductFamily.name.ilike(f"%{query}%"))
             .all()
         )
-        # Search variants
         variants = (
-            db.query(ProductVariant)
-            .filter(
-                (ProductVariant.model_number.ilike(f'%{query}%'))
-                | (ProductVariant.description.ilike(f'%{query}%'))
-            )
+            self.session.query(ProductVariant)
+            .filter(ProductVariant.model_number.ilike(f"%{query}%"))
             .all()
         )
-        results = [
-            {
-                'type': 'family',
-                'id': f.id,
-                'name': f.name,
-                'description': f.description,
-                'category': f.category,
-            }
-            for f in families
-        ] + [
-            {
-                'type': 'variant',
-                'id': v.id,
-                'model_number': v.model_number,
-                'description': v.description,
-                'base_price': v.base_price,
-                'base_length': v.base_length,
-                'voltage': v.voltage,
-                'material': v.material,
-                'family_id': v.product_family_id,
-            }
-            for v in variants
-        ]
+        results = []
+        for f in families:
+            results.append(
+                {
+                    "id": f.id,
+                    "name": f.name,
+                    "description": f.description,
+                    "category": f.category,
+                    "type": "family",
+                }
+            )
+        for v in variants:
+            results.append(
+                {
+                    "id": v.id,
+                    "model_number": v.model_number,
+                    "description": v.description,
+                    "base_price": v.base_price,
+                    "type": "variant",
+                }
+            )
         return results
 
-    def get_variant_by_id(self, db: Session, variant_id: int) -> Optional[Dict]:
-        """
-        Fetch a single product variant by its ID.
-        Returns: Dict with all variant details, or None if not found.
-        """
+    def get_variant_by_id(self, variant_id: int) -> Optional[Dict]:
+        """Get a variant by its ID."""
         variant = (
-            db.query(ProductVariant).filter(ProductVariant.id == variant_id).first()
+            self.session.query(ProductVariant)
+            .filter(ProductVariant.id == variant_id)
+            .first()
         )
         if not variant:
             return None
         return {
-            'id': variant.id,
-            'model_number': variant.model_number,
-            'description': variant.description,
-            'base_price': variant.base_price,
-            'base_length': variant.base_length,
-            'voltage': variant.voltage,
-            'material': variant.material,
-            'family_id': variant.product_family_id,
+            "id": variant.id,
+            "model_number": variant.model_number,
+            "description": variant.description,
+            "base_price": variant.base_price,
         }
 
-    @staticmethod
-    def get_product_variants(db: Session) -> list:
-        """Fetch all product variants (actual sellable products)."""
-        from src.core.models.product_variant import ProductVariant
+    def get_product_families(self) -> List[Dict]:
+        """Get all product families."""
+        families = self.session.query(ProductFamily).all()
+        return [
+            {
+                "id": f.id,
+                "name": f.name,
+                "description": f.description,
+                "category": f.category,
+            }
+            for f in families
+        ]
 
-        return db.query(ProductVariant).all()
-
-    @staticmethod
-    def get_all_additional_options(db: Session) -> list:
-        """
-        Retrieve all configurable options that have choices and adders defined.
-        Returns a list of Option objects.
-        """
-        return (
-            db.query(Option)
-            .filter(Option.choices.isnot(None), Option.adders.isnot(None))
+    def get_variants_for_family(self, family_id: int) -> List[Dict]:
+        """Get all variants for a product family."""
+        variants = (
+            self.session.query(ProductVariant)
+            .filter(ProductVariant.product_family_id == family_id)
             .all()
         )
+        return [
+            {
+                "id": v.id,
+                "model_number": v.model_number,
+                "description": v.description,
+                "base_price": v.base_price,
+            }
+            for v in variants
+        ]
+
+    def get_material_options(self, product_family_id: int) -> List[Dict]:
+        """Get material options for a product family."""
+        options = (
+            self.session.query(MaterialOption)
+            .filter(
+                MaterialOption.product_family_id == product_family_id,
+                MaterialOption.is_available == 1,
+            )
+            .all()
+        )
+        return [
+            {
+                "material_code": o.material_code,
+                "display_name": o.display_name,
+                "base_price": o.base_price,
+            }
+            for o in options
+        ]
+
+    def get_voltage_options(self, product_family_id: int) -> List[Dict]:
+        """Get voltage options for a product family."""
+        options = (
+            self.session.query(VoltageOption)
+            .filter(
+                VoltageOption.product_family_id == product_family_id,
+                VoltageOption.is_available == 1,
+            )
+            .all()
+        )
+        return [{"voltage": o.voltage, "is_available": o.is_available} for o in options]
+
+    def get_connection_options(self, product_family_id: int) -> List[Dict]:
+        """Get connection options for a product family."""
+        options = (
+            self.session.query(ConnectionOption)
+            .filter(ConnectionOption.product_family_id == product_family_id)
+            .all()
+        )
+        return [
+            {
+                "code": o.code,
+                "name": o.name,
+                "connection_type": o.connection_type,
+                "rating": o.rating,
+                "size": o.size,
+                "price": o.price,
+            }
+            for o in options
+        ]
+
+    def get_additional_options(self, product_family: str) -> List[Dict]:
+        """Get additional options for a product family."""
+        options = (
+            self.session.query(Option)
+            .filter(Option.product_families.like(f"%{product_family}%"))
+            .all()
+        )
+        return [
+            {
+                "name": o.name,
+                "description": o.description,
+                "price": o.price,
+                "price_type": o.price_type,
+                "category": o.category,
+            }
+            for o in options
+        ]
 
     def get_valid_options_for_selection(
-        self, db, family_id: int, selected_options: dict
+        self, family_id: int, selected_options: dict
     ) -> dict:
-        """
-        Given a product family and a dict of selected options, return valid values for each remaining option.
-        This supports dynamic option filtering in the UI as the user makes selections.
+        """Get valid options for selection based on current selections."""
+        try:
+            # Get all options for the family
+            options = (
+                self.session.query(Option)
+                .filter(Option.product_family_id == family_id)
+                .all()
+            )
 
-        Args:
-            db: SQLAlchemy database session
-            family_id: ID of the product family
-            selected_options: Dict of currently selected options (e.g., {'material': 'S', 'voltage': '115VAC'})
+            # Filter options based on compatibility
+            valid_options = {}
+            for option in options:
+                if option.is_compatible_with(selected_options):
+                    valid_options[option.name] = option.choices
 
-        Returns:
-            Dict mapping option names to lists of valid values for each remaining option.
-            Example: {'material': ['S', 'H'], 'voltage': ['115VAC', '24VDC']}
-        """
-        # Fetch all variants for the family
-        variants = self.get_variants_for_family(db, family_id)
-        # Filter variants by selected options
-        for opt, val in selected_options.items():
-            variants = [v for v in variants if v.get(opt) == val]
-        # Determine all option keys present in variants
-        option_keys = set()
-        for v in variants:
-            option_keys.update(v.keys())
-        # Exclude keys that are not configuration options
-        exclude_keys = {
-            'id',
-            'model_number',
-            'description',
-            'base_price',
-            'base_length',
-            'family_id',
-            'category',
-        }
-        option_keys = option_keys - exclude_keys
-        # For each remaining option, get unique valid values from filtered variants
-        valid_options = {}
-        for opt in option_keys:
-            if opt not in selected_options:
-                valid_options[opt] = sorted(
-                    {v[opt] for v in variants if v.get(opt) is not None}
-                )
-        return valid_options
+            return valid_options
+        except Exception as e:
+            logger.error(f"Error getting valid options: {e!s}", exc_info=True)
+            return {}
 
     def get_standard_lengths(self, product_family: str) -> List[int]:
-        """
-        Get the list of standard lengths for a product family.
-
-        Args:
-            product_family: Product family identifier (e.g., "LS2000")
-
-        Returns:
-            List[int]: List of standard lengths in inches
-        """
-        if product_family == 'LS2000':
-            return [6, 8, 10, 12, 16, 24, 36, 48, 60, 72]
-        return []
+        """Get standard lengths for a product family."""
+        try:
+            lengths = (
+                self.session.query(StandardLength)
+                .join(Material)
+                .filter(Material.product_family == product_family)
+                .all()
+            )
+            return [length.length for length in lengths]
+        except Exception as e:
+            logger.error(f"Error getting standard lengths: {e!s}", exc_info=True)
+            return []
 
     def validate_length(
         self, product_family: str, material_code: str, length: float
     ) -> Tuple[bool, str]:
-        """
-        Validate a length for a specific product and material.
+        """Validate a length for a product family and material."""
+        try:
+            # Get material
+            material = (
+                self.session.query(Material)
+                .filter(Material.code == material_code)
+                .first()
+            )
+            if not material:
+                return False, f"Material {material_code} not found"
 
-        Args:
-            product_family: Product family identifier (e.g., "LS2000")
-            material_code: Material code (e.g., "S", "H", "U", "T", "TS")
-            length: Length in inches
-
-        Returns:
-            Tuple[bool, str]: (is_valid, error_message)
-        """
-        if product_family == 'LS2000':
             # Check minimum length
-            if length < 4:
-                return False, 'Length cannot be less than 4 inches'
-
-            # Check Halar length limit
-            if material_code == 'H' and length > 72:
+            if length < material.min_length:
                 return (
                     False,
-                    'Halar coated probes cannot exceed 72 inches. Please select Teflon Sleeve for longer lengths.',
+                    f"Length {length} is less than minimum {material.min_length}",
                 )
 
-            # Check if length is standard
-            standard_lengths = self.get_standard_lengths(product_family)
-            if length not in standard_lengths and material_code != 'TS':
-                return True, 'Non-standard length will add $300 to the price'
+            # Check standard lengths
+            standard_lengths = (
+                self.session.query(StandardLength)
+                .filter(
+                    StandardLength.material_code == material_code,
+                    StandardLength.product_family == product_family,
+                )
+                .all()
+            )
 
-        return True, ''
+            # If no standard lengths, any length is valid
+            if not standard_lengths:
+                return True, ""
 
-    def calculate_length_price(
-        self, product_family: str, material_code: str, length: float
-    ) -> float:
-        """
-        Calculate the price adder for a specific length and material.
+            # Check if length is within tolerance of any standard length
+            for std_length in standard_lengths:
+                if abs(length - std_length.length) <= std_length.tolerance:
+                    return True, ""
 
-        Args:
-            product_family: Product family identifier (e.g., "LS2000")
-            material_code: Material code (e.g., "S", "H", "U", "T", "TS")
-            length: Length in inches
-
-        Returns:
-            float: Price adder for the length
-        """
-        if product_family == 'LS2000':
-            # Define base lengths and adders
-            if material_code in ['U', 'T']:
-                base_length = 4.0
-                if length > base_length:
-                    extra_length = length - base_length
-                    adder = (
-                        40.0 if material_code == 'U' else 50.0
-                    )  # $40/inch for U, $50/inch for T
-                    return extra_length * adder
-            else:
-                base_length = 10.0
-                if length > base_length:
-                    extra_length = length - base_length
-                    adder = (
-                        3.75 if material_code == 'S' else 9.17
-                    )  # $45/foot for S, $110/foot for H/TS
-                    return extra_length * adder
-
-            # Add non-standard length surcharge
-            standard_lengths = self.get_standard_lengths(product_family)
-            if length not in standard_lengths and material_code != 'TS':
-                return 300.0  # $300 adder for non-standard lengths
-
-        return 0.0
-
-    def find_variant(
-        self, db: Session, family_id: int, options: dict
-    ) -> Optional[ProductVariant]:
-        """
-        Find a specific product variant based on a set of selected options.
-
-        Args:
-            db: The database session.
-            family_id: The ID of the product family.
-            options: A dictionary of selected options, e.g., {"Voltage": "115VAC", "Material": "S"}.
-
-        Returns:
-            The matching ProductVariant object, or None if not found.
-        """
-        # Get the product family name
-        family = db.query(ProductFamily).filter_by(id=family_id).first()
-        if not family:
-            return None
-
-        # For LS8000/2, we need exact matches for core attributes
-        if family.name == 'LS8000/2':
-            query = db.query(ProductVariant).filter_by(product_family_id=family_id)
-
-            # Filter by core attributes
-            if options.get('Voltage'):
-                query = query.filter_by(voltage=options['Voltage'])
-            if options.get('Material'):
-                query = query.filter_by(material=options['Material'])
-
-            # Get all matching variants
-            variants = query.all()
-
-            # Find the variant that matches all selected options
-            for variant in variants:
-                # Check probe type match (if specified)
-                if options.get('Probe Type') and not variant.model_number.endswith('-3/4"'):
-                    continue
-                # Check housing match (if specified)
-                if options.get('Housing') == 'Stainless Steel (NEMA 4X)' and not variant.model_number.endswith('-SS'):
-                    continue
-                # If we get here, we have a match
-                return variant
-
-            return None
-
-        # For other products, use the scoring system
-        query = db.query(ProductVariant).filter_by(product_family_id=family_id)
-
-        # Filter by core attributes present in the options dictionary
-        if options.get('Voltage'):
-            query = query.filter_by(voltage=options['Voltage'])
-        if options.get('Material'):
-            query = query.filter_by(material=options['Material'])
-
-        # Get all variants for this family
-        variants = query.all()
-
-        # Find the variant that best matches the selected options
-        best_match = None
-        best_match_score = 0
-
-        for variant in variants:
-            score = 0
-            # Check voltage match
-            if options.get('Voltage') == variant.voltage:
-                score += 1
-            # Check material match
-            if options.get('Material') == variant.material:
-                score += 1
-            # Check probe type match (if specified)
-            if options.get('Probe Type') and variant.model_number.endswith('-3/4"'):
-                score += 1
-            # Check housing match (if specified)
-            if options.get('Housing') == 'Stainless Steel (NEMA 4X)' and variant.model_number.endswith('-SS'):
-                score += 1
-
-            if score > best_match_score:
-                best_match = variant
-                best_match_score = score
-
-        return best_match
+            return False, f"Length {length} is not a standard length"
+        except Exception as e:
+            logger.error(f"Error validating length: {e!s}", exc_info=True)
+            return False, f"Error validating length: {str(e)}"

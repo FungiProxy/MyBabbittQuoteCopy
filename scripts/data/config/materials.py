@@ -1,179 +1,90 @@
 """
-Material options configuration.
-Defines material options and pricing for all product families.
+Materials configuration and initialization.
 """
 
-from src.core.models.option import Option
+from src.core.models.material import Material
+from src.core.database import DatabaseService
 
 
-def init_material_options(db):
-    """Initialize material options for all product families."""
-    options = [
-        # Material Options for LS2000
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['S', 'H', 'TS', 'U', 'T', 'C'],
-            adders={
-                'S': 0,  # 316 Stainless Steel
-                'H': 110,  # Halar Coated
-                'TS': 110,  # Teflon Sleeve
-                'U': 20,  # UHMWPE Blind End
-                'T': 60,  # Teflon Blind End
-                'C': 80,  # Cable
-            },
-            product_families='LS2000',
-        ),
-        # Material Options for LS2100
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['S', 'H', 'TS', 'U', 'T', 'C'],
-            adders={
-                'S': 0,  # 316 Stainless Steel
-                'H': 110,  # Halar Coated
-                'TS': 110,  # Teflon Sleeve
-                'U': 20,  # UHMWPE Blind End
-                'T': 60,  # Teflon Blind End
-                'C': 80,  # Cable
-            },
-            product_families='LS2100',
-        ),
-        # Material Options for LS6000
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['S', 'H', 'TS', 'U', 'T', 'C', 'CPVC'],
-            adders={
-                'S': 0,  # 316 Stainless Steel
-                'H': 110,  # Halar Coated
-                'TS': 110,  # Teflon Sleeve
-                'U': 20,  # UHMWPE Blind End
-                'T': 60,  # Teflon Blind End
-                'C': 80,  # Cable
-                'CPVC': 400,  # CPVC Blind End
-            },
-            product_families='LS6000',
-        ),
-        # Material Options for LS7000
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['S', 'H', 'TS', 'T', 'U', 'CPVC'],
-            adders={
-                'S': 0,  # 316 Stainless Steel
-                'H': 110,  # Halar Coated
-                'TS': 110,  # Teflon Sleeve
-                'U': 20,  # UHMWPE Blind End
-                'T': 60,  # Teflon Blind End
-                'C': 80,  # Cable
-                'CPVC': 400,  # CPVC Blind End
-            },
-            product_families='LS7000',
-        ),
-        # Material Options for LS7000/2
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['H', 'TS'],
-            adders={
-                'H': 0,  # Halar Coated
-                'TS': 0,  # Teflon Sleeve
-            },
-            product_families='LS7000/2',
-        ),
-        # Material Options for LS8000
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['S', 'H', 'TS', 'C'],
-            adders={
-                'S': 0,  # 316 Stainless Steel
-                'H': 110,  # Halar Coated
-                'TS': 110,  # Teflon Sleeve
-                'C': 80,  # Cable
-            },
-            product_families='LS8000',
-        ),
-        # Material Options for LS8000/2
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['H', 'TS'],
-            adders={
-                'H': 110,  # Halar Coated
-                'TS': 110,  # Teflon Sleeve
-            },
-            product_families='LS8000/2',
-        ),
-        # Material Options for LT9000
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['H', 'TS'],
-            adders={
-                'H': 0,  # Halar Coated
-                'TS': 0,  # Teflon Sleeve
-            },
-            product_families='LT9000',
-        ),
-        # Material Options for FS10000
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['S'],
-            adders={
-                'S': 0,  # 316 Stainless Steel
-            },
-            product_families='FS10000',
-        ),
-        # Material Options for Presence/Absence Switches
-        Option(
-            name='Material',
-            description='Probe material selection',
-            price=0.0,
-            price_type='fixed',
-            category='Material',
-            choices=['S'],
-            adders={
-                'S': 0,  # 316 Stainless Steel
-            },
-            product_families='LS7500,LS8500',
-        ),
+def init_material_options(db: DatabaseService):
+    """Initialize materials in the database."""
+
+    # Define materials
+    materials = [
+        {
+            "name": "316SS",
+            "description": "316 Stainless Steel",
+            "base_price": 0.00,
+            "is_available": True,
+            "price_per_foot": 45.00,
+        },
+        {
+            "name": "Halar",
+            "description": "Halar Coated",
+            "base_price": 0.00,
+            "is_available": True,
+            "price_per_foot": 110.00,
+        },
+        {
+            "name": "CPVC",
+            "description": "Chlorinated Polyvinyl Chloride",
+            "base_price": 0.00,
+            "is_available": True,
+            "price_per_foot": 50.00,
+        },
+        {
+            "name": "UHMW",
+            "description": "Ultra High Molecular Weight Polyethylene",
+            "base_price": 0.00,
+            "is_available": True,
+            "price_per_foot": 45.00,
+        },
+        {
+            "name": "Cable",
+            "description": "Standard Cable",
+            "base_price": 0.00,
+            "is_available": True,
+            "price_per_foot": 45.00,
+        },
+        {
+            "name": "Alloy 20",
+            "description": "Alloy 20",
+            "base_price": 295.00,
+            "is_available": True,
+            "price_per_foot": 75.00,
+        },
+        {
+            "name": "Hastelloy-C-276",
+            "description": "Hastelloy C-276",
+            "base_price": 495.00,
+            "is_available": True,
+            "price_per_foot": 125.00,
+        },
+        {
+            "name": "Hastelloy-B",
+            "description": "Hastelloy B",
+            "base_price": 495.00,
+            "is_available": True,
+            "price_per_foot": 125.00,
+        },
+        {
+            "name": "Titanium",
+            "description": "Titanium",
+            "base_price": 695.00,
+            "is_available": True,
+            "price_per_foot": 175.00,
+        },
     ]
 
-    for option in options:
-        exists = (
-            db.query(Option)
-            .filter_by(name=option.name, category=option.category)
-            .first()
+    # Create materials
+    for material in materials:
+        material_obj = Material(
+            name=material["name"],
+            description=material["description"],
+            base_price=material["base_price"],
+            is_available=material["is_available"],
+            price_per_foot=material["price_per_foot"],
         )
-        if not exists:
-            db.add(option)
+        db.add(material_obj)
+
+    db.commit()

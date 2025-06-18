@@ -1,27 +1,28 @@
 """
 Database initialization orchestrator.
-This script coordinates the initialization of both business configuration and sample data.
+This script coordinates the initialization of business configuration.
 """
 
-from init_sample_data import init_sample_data
+import os
+import sys
+from pathlib import Path
+
+# Add both the project root and src directory to the Python path
+project_root = Path(__file__).resolve().parent.parent
+src_dir = project_root / "src"
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(src_dir))
 
 from scripts.data.init.init_business_config import init_business_config
 
 
 def init_database():
-    """Initialize the database with both business configuration and sample data."""
-    print('Initializing database...')
-
-    # First initialize business configuration
-    print('\nInitializing business configuration...')
+    """Initialize the database with business configuration."""
+    print("Initializing database...")
+    print("\nInitializing business configuration...")
     init_business_config()
-
-    # Then initialize sample data
-    print('\nInitializing sample data...')
-    init_sample_data()
-
-    print('\nDatabase initialization complete!')
+    print("\nDatabase initialization complete!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_database()

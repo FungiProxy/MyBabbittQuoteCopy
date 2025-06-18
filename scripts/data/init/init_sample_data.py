@@ -6,9 +6,9 @@ This includes development and testing data such as sample customers, product var
 import sys
 from pathlib import Path
 
-# Add the project root to the Python path
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+# Ensure the scripts directory is in the path
+scripts_dir = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(scripts_dir))
 
 from scripts.data.seeds.customers import seed_customers
 from scripts.data.seeds.options import seed_options
@@ -26,26 +26,26 @@ def init_sample_data():
 
     try:
         # Seed product variants
-        print('\nSeeding product variants...')
+        print("\nSeeding product variants...")
         seed_all_product_variants(db)
 
         # Seed options
-        print('\nSeeding options...')
+        print("\nSeeding options...")
         seed_options(db)
 
         # Seed customers
-        print('\nSeeding customers...')
+        print("\nSeeding customers...")
         seed_customers(db)
 
-        print('\nSample data initialized successfully!')
+        print("\nSample data initialized successfully!")
 
     except Exception as e:
         db.rollback()
-        print(f'Error initializing sample data: {e}')
+        print(f"Error initializing sample data: {e}")
         raise
     finally:
         db.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_sample_data()
