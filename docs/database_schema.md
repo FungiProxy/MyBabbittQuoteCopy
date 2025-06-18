@@ -1,7 +1,7 @@
 # Database Schema Documentation
 
 ## Overview
-This document describes the database schema for the MyBabbittQuote system. The schema is designed to support product configuration, quoting, and customer management for Babbitt International's industrial products.
+This document describes the database schema for the MyBabbittQuote system. The schema is designed to support product configuration, quoting, and customer management for Babbitt International's industrial products. The system uses SQLite as the database engine with SQLAlchemy ORM for data access.
 
 ## Entity Relationship Diagram
 
@@ -21,307 +21,219 @@ erDiagram
     ProductFamily ||--o{ ConnectionOption : supports
 ```
 
-## Tables
+## Core Tables
 
-### Product-Related Tables
-
-#### ProductFamily
+### ProductFamily
 Represents a family of related products (e.g., LS2000 series).
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| name | String | Family name (e.g., "LS2000") |
-| description | Text | Family description |
-| category | String | Product category |
+| Column      | Type    | Description                  | Usage                  |
+| ----------- | ------- | ---------------------------- | ---------------------- |
+| id          | Integer | Primary key                  | Internal reference     |
+| name        | String  | Family name (e.g., "LS2000") | Display and filtering  |
+| description | Text    | Family description           | Product documentation  |
+| category    | String  | Product category             | Grouping and filtering |
 
 Indexes:
 - Primary Key: `id`
-- Index: `name`
-- Index: `category`
+- Index: `name` (frequently used in searches)
+- Index: `category` (used in product filtering)
 
-#### ProductVariant
+### ProductVariant
 Specific product configurations within a family.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| product_family_id | Integer | Foreign key to ProductFamily |
-| model_number | String | Unique model number |
-| description | Text | Variant description |
-| base_price | Float | Base price |
-| base_length | Float | Base length in inches |
-| voltage | String | Voltage configuration |
-| material | String | Material code |
+| Column            | Type    | Description                  | Usage                  |
+| ----------------- | ------- | ---------------------------- | ---------------------- |
+| id                | Integer | Primary key                  | Internal reference     |
+| product_family_id | Integer | Foreign key to ProductFamily | Relationship mapping   |
+| model_number      | String  | Unique model number          | Product identification |
+| description       | Text    | Variant description          | Product documentation  |
+| base_price        | Float   | Base price                   | Quote calculations     |
+| base_length       | Float   | Base length in inches        | Length calculations    |
+| voltage           | String  | Voltage configuration        | Product specification  |
+| material          | String  | Material code                | Material selection     |
 
 Indexes:
 - Primary Key: `id`
-- Foreign Key: `product_family_id`
-- Index: `model_number`
+- Foreign Key: `product_family_id` (frequently joined)
+- Index: `model_number` (used in searches)
 
-### Material-Related Tables
-
-#### Material
+### Material
 Defines materials and their pricing rules.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| code | String | Material code (e.g., "S", "H") |
-| name | String | Material name |
-| description | Text | Material description |
-| base_length | Float | Standard base length |
-| length_adder_per_inch | Float | Cost per inch |
-| length_adder_per_foot | Float | Cost per foot |
-| has_nonstandard_length_surcharge | Boolean | If surcharge applies |
-| nonstandard_length_surcharge | Float | Surcharge amount |
-| base_price_adder | Float | Base price addition |
+| Column                           | Type    | Description                    | Usage               |
+| -------------------------------- | ------- | ------------------------------ | ------------------- |
+| id                               | Integer | Primary key                    | Internal reference  |
+| code                             | String  | Material code (e.g., "S", "H") | Material selection  |
+| name                             | String  | Material name                  | Display purposes    |
+| description                      | Text    | Material description           | Documentation       |
+| base_length                      | Float   | Standard base length           | Length calculations |
+| length_adder_per_inch            | Float   | Cost per inch                  | Price calculations  |
+| length_adder_per_foot            | Float   | Cost per foot                  | Price calculations  |
+| has_nonstandard_length_surcharge | Boolean | If surcharge applies           | Price calculations  |
+| nonstandard_length_surcharge     | Float   | Surcharge amount               | Price calculations  |
+| base_price_adder                 | Float   | Base price addition            | Price calculations  |
 
 Indexes:
 - Primary Key: `id`
-- Unique Index: `code`
+- Unique Index: `code` (used in material selection)
 
-#### StandardLength
-Standard lengths for materials (affects pricing).
+## Quote Management
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| material_code | String | Foreign key to Material |
-| length | Float | Standard length in inches |
-
-Indexes:
-- Primary Key: `id`
-- Index: `material_code`
-
-#### MaterialAvailability
-Maps which materials are available for which products.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| material_code | String | Foreign key to Material |
-| product_type | String | Product type identifier |
-| is_available | Boolean | Availability flag |
-| notes | Text | Additional notes |
-
-Indexes:
-- Primary Key: `id`
-- Index: `material_code`
-- Index: `product_type`
-
-### Configuration Tables
-
-#### VoltageOption
-Available voltage configurations by product family.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| product_family | String | Product family identifier |
-| voltage | String | Voltage specification |
-| is_available | Integer | Availability flag |
-
-Indexes:
-- Primary Key: `id`
-
-#### ConnectionOption
-Connection types and their pricing.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| type | String | Connection type |
-| rating | String | Pressure rating |
-| size | String | Connection size |
-| price | Float | Additional cost |
-| product_families | String | Compatible families |
-
-Indexes:
-- Primary Key: `id`
-
-#### MaterialOption
-Material configurations by product family.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| product_family | String | Product family identifier |
-| material_code | String | Material code |
-| display_name | String | Display name |
-| base_price | Float | Additional cost |
-| is_available | Integer | Availability flag |
-
-Indexes:
-- Primary Key: `id`
-
-### Quote-Related Tables
-
-#### Customer
-Customer information.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| name | String | Customer name |
-| company | String | Company name |
-| email | String | Email address |
-| phone | String | Phone number |
-| address | String | Street address |
-| city | String | City |
-| state | String | State/province |
-| zip_code | String | Postal code |
-| notes | String | Additional notes |
-
-Indexes:
-- Primary Key: `id`
-- Index: `name`
-
-#### Quote
+### Quote
 Quote header information.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| quote_number | String | Unique quote number |
-| customer_id | Integer | Foreign key to Customer |
-| date_created | DateTime | Creation timestamp |
-| expiration_date | DateTime | Expiration date |
-| status | String | Quote status |
-| notes | Text | Additional notes |
+| Column          | Type     | Description             | Usage                |
+| --------------- | -------- | ----------------------- | -------------------- |
+| id              | Integer  | Primary key             | Internal reference   |
+| quote_number    | String   | Unique quote number     | Quote identification |
+| customer_id     | Integer  | Foreign key to Customer | Customer reference   |
+| date_created    | DateTime | Creation timestamp      | Audit trail          |
+| expiration_date | DateTime | Expiration date         | Quote validity       |
+| status          | String   | Quote status            | Workflow management  |
+| notes           | Text     | Additional notes        | Documentation        |
 
 Indexes:
 - Primary Key: `id`
-- Unique Index: `quote_number`
-- Foreign Key: `customer_id`
+- Unique Index: `quote_number` (used in searches)
+- Foreign Key: `customer_id` (frequently joined)
 
-#### QuoteItem
+### QuoteItem
 Individual line items in a quote.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| quote_id | Integer | Foreign key to Quote |
-| product_id | Integer | Foreign key to ProductVariant |
-| quantity | Integer | Quantity |
-| unit_price | Float | Price per unit |
-| length | Float | Length in inches |
-| material | String | Material code |
-| voltage | String | Voltage spec |
-| description | Text | Line item description |
-| discount_percent | Float | Discount percentage |
+| Column           | Type    | Description                   | Usage                 |
+| ---------------- | ------- | ----------------------------- | --------------------- |
+| id               | Integer | Primary key                   | Internal reference    |
+| quote_id         | Integer | Foreign key to Quote          | Quote reference       |
+| product_id       | Integer | Foreign key to ProductVariant | Product reference     |
+| quantity         | Integer | Quantity                      | Order calculations    |
+| unit_price       | Float   | Price per unit                | Price calculations    |
+| length           | Float   | Length in inches              | Length calculations   |
+| material         | String  | Material code                 | Material reference    |
+| voltage          | String  | Voltage spec                  | Product specification |
+| description      | Text    | Line item description         | Documentation         |
+| discount_percent | Float   | Discount percentage           | Price calculations    |
 
 Indexes:
 - Primary Key: `id`
-- Foreign Key: `quote_id`
-- Foreign Key: `product_id`
+- Foreign Key: `quote_id` (frequently joined)
+- Foreign Key: `product_id` (frequently joined)
 
-#### Option
+## Configuration Tables
+
+### Option
 Product options and add-ons.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| name | String | Option name |
-| description | Text | Option description |
-| price | Float | Option price |
-| price_type | String | Pricing type |
-| category | String | Option category |
-| product_families | String | Compatible families |
-| excluded_products | String | Excluded products |
+| Column            | Type    | Description         | Usage                  |
+| ----------------- | ------- | ------------------- | ---------------------- |
+| id                | Integer | Primary key         | Internal reference     |
+| name              | String  | Option name         | Display and selection  |
+| description       | Text    | Option description  | Documentation          |
+| price             | Float   | Option price        | Price calculations     |
+| price_type        | String  | Pricing type        | Price calculations     |
+| category          | String  | Option category     | Grouping and filtering |
+| product_families  | String  | Compatible families | Option validation      |
+| excluded_products | String  | Excluded products   | Option validation      |
 
 Indexes:
 - Primary Key: `id`
-- Index: `name`
-- Index: `category`
+- Index: `name` (used in searches)
+- Index: `category` (used in filtering)
 
-#### QuoteItemOption
-Options selected for quote items.
+## Implementation Details
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| quote_item_id | Integer | Foreign key to QuoteItem |
-| option_id | Integer | Foreign key to Option |
-| quantity | Integer | Option quantity |
-| price | Float | Price at quote time |
+### Data Access Layer
+- SQLAlchemy ORM for database operations
+- Repository pattern for data access
+- Unit of Work pattern for transactions
+- Caching layer for frequently accessed data
 
-Indexes:
-- Primary Key: `id`
-- Foreign Key: `quote_item_id`
-- Foreign Key: `option_id`
+### Common Queries
+1. Product Search:
+```sql
+SELECT * FROM ProductVariant 
+WHERE model_number LIKE :search_term 
+OR description LIKE :search_term;
+```
 
-### Spare Parts
+2. Quote Generation:
+```sql
+SELECT q.*, qi.*, p.* 
+FROM Quote q 
+JOIN QuoteItem qi ON q.id = qi.quote_id 
+JOIN ProductVariant p ON qi.product_id = p.id 
+WHERE q.quote_number = :quote_number;
+```
 
-#### SparePart
-Spare parts catalog.
+3. Material Pricing:
+```sql
+SELECT m.*, sl.* 
+FROM Material m 
+LEFT JOIN StandardLength sl ON m.code = sl.material_code 
+WHERE m.code = :material_code;
+```
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | Integer | Primary key |
-| part_number | String | Unique part number |
-| name | String | Part name |
-| description | Text | Part description |
-| price | Float | Part price |
-| product_family_id | Integer | Foreign key to ProductFamily |
-| category | String | Part category |
+### Performance Optimizations
+1. Indexed Fields:
+   - Product model numbers (frequent searches)
+   - Quote numbers (lookup operations)
+   - Customer names (search operations)
+   - Material codes (pricing calculations)
 
-Indexes:
-- Primary Key: `id`
-- Index: `part_number`
-- Index: `category`
-- Foreign Key: `product_family_id`
+2. Caching Strategy:
+   - Product catalog (frequently accessed)
+   - Material pricing (calculation intensive)
+   - Standard lengths (reference data)
 
-## Key Business Rules
+3. Query Optimization:
+   - Eager loading for quote generation
+   - Lazy loading for option lists
+   - Batch operations for quote items
 
-### Material Pricing Rules
-1. Materials can have per-inch or per-foot pricing
-2. Non-standard lengths may incur surcharges
-3. Some materials add to the base price
-4. Material availability varies by product family
+### Data Validation
+1. Input Validation:
+   - Length constraints
+   - Price range validation
+   - Material compatibility
+   - Voltage requirements
 
-### Product Configuration Rules
-1. Products must have compatible material and voltage
-2. Connection options depend on product family
-3. Some options are mutually exclusive
-4. Length-based pricing applies to certain products
+2. Business Rules:
+   - Material availability checks
+   - Option compatibility validation
+   - Price calculation rules
+   - Quote expiration handling
 
-### Quote Rules
-1. Quotes have an expiration date
-2. Line items can have individual discounts
-3. Options can be priced fixed or by length
-4. Quote status follows a specific workflow
+### Security Measures
+1. Data Protection:
+   - Input sanitization
+   - SQL injection prevention
+   - Parameterized queries
+   - Access control
 
-### Spare Parts Rules
-1. Parts are associated with product families
-2. Parts are categorized for easy lookup
-3. Pricing is fixed per part
+2. Audit Trail:
+   - Quote modifications
+   - Price changes
+   - Customer updates
+   - Configuration changes
 
-## Database Migrations
-Migrations are managed using Alembic. Key migration files:
-- Initial schema creation
-- Product variant support
-- Material pricing rules
-- Connection options
-- Spare parts catalog
+## Migration Strategy
+1. Version Control:
+   - Alembic migrations
+   - Schema version tracking
+   - Rollback procedures
 
-## Performance Considerations
-1. Indexed fields for frequent queries:
-   - Product model numbers
-   - Customer names
-   - Quote numbers
-   - Part numbers
+2. Data Integrity:
+   - Foreign key constraints
+   - Unique constraints
+   - Default values
+   - Not null constraints
 
-2. Denormalized fields for performance:
-   - Cached prices in quote items
-   - Material and voltage in product variants
+## Backup and Recovery
+1. Regular Backups:
+   - Daily full backups
+   - Transaction logs
+   - Point-in-time recovery
 
-3. Relationship loading strategies:
-   - Lazy loading for large collections
-   - Eager loading for critical paths
-
-## Security Considerations
-1. No sensitive data stored in clear text
-2. Audit trail for quote changes
-3. Soft deletes for historical records
-4. Input validation at database level 
+2. Recovery Procedures:
+   - Database restoration
+   - Data validation
+   - Integrity checks 

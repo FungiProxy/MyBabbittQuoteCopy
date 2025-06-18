@@ -56,7 +56,9 @@ class ProductSelectionDialog(QDialog):
         self.product_to_edit = product_to_edit
         self.is_edit_mode = self.product_to_edit is not None
 
-        title = "Edit Product" if self.is_edit_mode else "Add Product to Quote"
+        title = (
+            "Edit Product" if self.is_edit_mode else "Select Product Family & Configure"
+        )
         self.setWindowTitle(title)
 
         self.resize(900, 600)
@@ -88,22 +90,14 @@ class ProductSelectionDialog(QDialog):
             family_objs = self.product_service.get_product_families()
             products = []
             for fam in family_objs:
-                variants = self.product_service.get_variants_for_family(
-                    self.db, fam["id"]
-                )
-                if variants:
-                    variant = variants[0]
-                    product_info = {
-                        "id": fam["id"],
-                        "name": fam["name"],
-                        "description": fam.get("description", ""),
-                        "category": fam.get("category", ""),
-                        "base_price": variant["base_price"],
-                        "base_length": variant["base_length"],
-                        "voltage": variant["voltage"],
-                        "material": variant["material"],
-                    }
-                    products.append(product_info)
+                # For the left panel, we just need the family info, not variant details
+                product_info = {
+                    "id": fam["id"],
+                    "name": fam["name"],
+                    "description": fam.get("description", ""),
+                    "category": fam.get("category", ""),
+                }
+                products.append(product_info)
             self.products = products
         except Exception as e:
             logger.error(
@@ -119,7 +113,7 @@ class ProductSelectionDialog(QDialog):
         left_panel.setFixedWidth(340)
         left_layout = QVBoxLayout(left_panel)
         self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText("Search products...")
+        self.search_bar.setPlaceholderText("Search product families...")
         self.search_bar.textChanged.connect(self._filter_products)
         left_layout.addWidget(self.search_bar)
         self.product_list = QListWidget()
@@ -160,13 +154,21 @@ class ProductSelectionDialog(QDialog):
             self._show_select_product()
 
     def _populate_product_list(self, filter_text=""):
-        """Populate the product list, optionally filtering by search text."""
+        """Populate the product families list, optionally filtering by search text."""
         self.product_list.clear()
         filtered_products = [
-            p for p in self.products if filter_text.lower() in p["name"].lower()
+            p
+            for p in self.products
+            if filter_text.lower() in p["name"].lower()
+            or filter_text.lower() in p.get("category", "").lower()
         ]
         for product in filtered_products:
-            item = QListWidgetItem(f"{product['name']}")
+            # Display family name and category for clarity
+            display_text = f"{product['name']}"
+            if product.get("category"):
+                display_text += f" ({product['category']})"
+
+            item = QListWidgetItem(display_text)
             item.setData(Qt.UserRole, product)
             self.product_list.addItem(item)
 
@@ -201,7 +203,9 @@ class ProductSelectionDialog(QDialog):
 
     def _show_select_product(self):
         self._clear_config_panel()
-        prompt = QLabel("<b>Select a Product</b><br>Choose a product to configure.")
+        prompt = QLabel(
+            "<b>Select a Product Family</b><br>Choose a product family from the left panel to configure its options."
+        )
         prompt.setAlignment(Qt.AlignCenter)
         self.config_layout.addWidget(prompt)
 
@@ -328,8 +332,19 @@ class ProductSelectionDialog(QDialog):
                 probe_length_spin.setObjectName("option_Probe Length Spin")
                 probe_length_spin.setRange(1, 120)
                 probe_length_spin.setSuffix('"')
-                if product.get("base_length"):
-                    probe_length_spin.setValue(int(product["base_length"]))
+
+                # Get default length from the first variant of this family
+                default_length = 10  # Fallback default
+                try:
+                    variants = self.product_service.get_variants_for_family(
+                        product["id"]
+                    )
+                    if variants and len(variants) > 0:
+                        default_length = int(variants[0].get("base_length", 10))
+                except Exception as e:
+                    logger.debug(f"Could not get default length from variants: {e}")
+
+                probe_length_spin.setValue(default_length)
                 probe_length_spin.setFixedWidth(70)
 
                 probe_length_edit = QLineEdit()
@@ -375,7 +390,7 @@ class ProductSelectionDialog(QDialog):
                 self.option_widgets["Probe Length Spin"] = probe_length_spin
                 self.option_widgets["Probe Length Edit"] = probe_length_edit
                 logger.debug(
-                    f"Added probe length spin and edit with default value: {product.get('base_length')}"
+                    f"Added probe length spin and edit with default value: {default_length}"
                 )
         else:
             # fallback to old method if no material_option found
@@ -405,8 +420,19 @@ class ProductSelectionDialog(QDialog):
                     probe_length_spin.setObjectName("option_Probe Length Spin")
                     probe_length_spin.setRange(1, 120)
                     probe_length_spin.setSuffix('"')
-                    if product.get("base_length"):
-                        probe_length_spin.setValue(int(product["base_length"]))
+
+                    # Get default length from the first variant of this family
+                    default_length = 10  # Fallback default
+                    try:
+                        variants = self.product_service.get_variants_for_family(
+                            product["id"]
+                        )
+                        if variants and len(variants) > 0:
+                            default_length = int(variants[0].get("base_length", 10))
+                    except Exception as e:
+                        logger.debug(f"Could not get default length from variants: {e}")
+
+                    probe_length_spin.setValue(default_length)
                     probe_length_spin.setFixedWidth(70)
 
                     probe_length_edit = QLineEdit()
@@ -450,7 +476,7 @@ class ProductSelectionDialog(QDialog):
                     self.option_widgets["Probe Length Spin"] = probe_length_spin
                     self.option_widgets["Probe Length Edit"] = probe_length_edit
                     logger.debug(
-                        f"Added probe length spin and edit with default value: {product.get('base_length')}"
+                        f"Added probe length spin and edit with default value: {default_length}"
                     )
             except Exception as e:
                 logger.error(f"Error fetching material options: {e!s}", exc_info=True)
@@ -1123,7 +1149,15 @@ class ProductSelectionDialog(QDialog):
         if isinstance(probe_length_widget, QSpinBox):
             probe_length = probe_length_widget.value()
         if not probe_length:
-            probe_length = product.get("base_length", "PENDING")
+            # Get default from first variant if available
+            try:
+                variants = self.product_service.get_variants_for_family(product["id"])
+                if variants and len(variants) > 0:
+                    probe_length = variants[0].get("base_length", 10)
+                else:
+                    probe_length = 10
+            except Exception:
+                probe_length = "PENDING"
 
         # Format probe length with inch symbol
         probe_length_str = (
