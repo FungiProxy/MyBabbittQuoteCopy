@@ -8,7 +8,7 @@ It stores which housing types are available for each product family, along with 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+from ..database import Base
 
 
 class HousingTypeOption(Base):

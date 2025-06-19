@@ -3,7 +3,7 @@ HousingType model for storing available housing types.
 """
 
 from sqlalchemy import Column, Integer, String
-from core.database import Base
+from ..database import Base
 
 
 class HousingType(Base):

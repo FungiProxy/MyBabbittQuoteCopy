@@ -21,14 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from src.core.models import (
-    Material,
-    MaterialOption,
-    Option,
-    Product,
-    VoltageOption,
-)
-from src.core.models.connection_option import ConnectionOption
+from src.core.models import Option
 from src.core.models.product_variant import ProductFamily, ProductVariant
 from src.core.pricing import calculate_product_price
 from src.utils.db_utils import get_all, get_by_id
@@ -39,11 +32,11 @@ logger = logging.getLogger(__name__)
 
 class ProductService:
     """
-    Service class for managing Babbitt International products, configurations, and materials.
+    Service class for managing Babbitt International products, configurations, and options.
 
     This service provides methods for retrieving, configuring, and pricing products,
-    as well as managing product options, materials, and voltages. It encapsulates
-    all product and material-related business logic and data access.
+    as well as managing product options. It encapsulates all product and option-related
+    business logic and data access using the new unified options structure.
 
     The service handles:
     - Product retrieval and configuration
@@ -75,178 +68,104 @@ class ProductService:
         material: Optional[str] = None,
         voltage: Optional[str] = None,
         category: Optional[str] = None,
-    ) -> List[Product]:
+    ) -> List[ProductVariant]:
         """
-        Retrieve products with optional filtering by material, voltage, or category.
-
-        This method allows flexible querying of the product catalog with multiple
-        filter criteria. All filters are optional and can be combined.
-
-        Args:
-            db: SQLAlchemy database session
-            material: Optional material code to filter by (e.g., "S", "H", "U", "T")
-            voltage: Optional voltage to filter by (e.g., "115VAC", "24VDC")
-            category: Optional category to filter by (e.g., "Level Switch", "Transmitter")
-
-        Returns:
-            List[Product]: List of Product objects matching the filter criteria
-
-        Example:
-            >>> # Get all stainless steel level switches
-            >>> products = ProductService.get_products(
-            ...     db,
-            ...     material="S",
-            ...     category="Level Switch"
-            ... )
-            >>> # Get all 24VDC products
-            >>> products = ProductService.get_products(db, voltage="24VDC")
+        Retrieve product variants with optional filtering by material, voltage, or category.
         """
-        query = db.query(Product)
-
+        query = db.query(ProductVariant)
         if material is not None:
-            query = query.filter(Product.material == material)
-
+            query = query.filter(ProductVariant.material == material)
         if voltage is not None:
-            query = query.filter(Product.voltage == voltage)
-
+            query = query.filter(ProductVariant.voltage == voltage)
         if category is not None:
-            query = query.filter(Product.category == category)
-
+            query = query.join(ProductFamily).filter(ProductFamily.category == category)
         return query.all()
 
     @staticmethod
-    def get_available_materials(db: Session) -> List[Material]:
-        """
-        Retrieve all available materials from the database.
-
-        This method returns all materials that can be used in product configurations,
-        including their properties and pricing rules.
-
-        Args:
-            db: SQLAlchemy database session
-
-        Returns:
-            List[Material]: List of all available Material objects
-
-        Example:
-            >>> materials = ProductService.get_available_materials(db)
-            >>> for material in materials:
-            ...     print(f"{material.code}: {material.description}")
-        """
-        return get_all(db, Material)
-
-    @staticmethod
-    def get_available_voltages(db: Session, product_family: str) -> List[str]:
-        """
-        Retrieve available voltage options for a specific product family.
-
-        This method returns all valid voltage configurations for a given product
-        family, considering compatibility and availability rules.
-
-        Args:
-            db: SQLAlchemy database session
-            product_family: Product family identifier (e.g., "LS2000", "LS7000")
-
-        Returns:
-            List[str]: List of available voltage options (e.g., ["115VAC", "24VDC"])
-
-        Example:
-            >>> voltages = ProductService.get_available_voltages(db, "LS2000")
-            >>> print(f"Available voltages for LS2000: {', '.join(voltages)}")
-        """
-        voltages = (
-            db.query(VoltageOption)
-            .filter(
-                VoltageOption.product_family == product_family,
-                VoltageOption.is_available == 1,
-            )
-            .all()
-        )
-
-        return [v.voltage for v in voltages]
-
-    @staticmethod
-    def get_available_materials_for_product(
-        db: Session, product_family: str
+    def get_available_materials(
+        db: Session, family_name: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
-        Retrieve available materials and their properties for a specific product family.
-
-        This method returns detailed material information including display names
-        and base prices for materials compatible with the specified product family.
-
-        Args:
-            db: SQLAlchemy database session
-            product_family: Product family identifier (e.g., "LS2000", "LS7000")
-
-        Returns:
-            List[Dict[str, Any]]: List of dictionaries containing:
-                - code (str): Material code (e.g., "S", "H")
-                - display_name (str): Human-readable name
-                - base_price (float): Additional cost for this material
-
-        Example:
-            >>> materials = ProductService.get_available_materials_for_product(db, "LS2000")
-            >>> for material in materials:
-            ...     print(f"{material['display_name']}: ${material['base_price']:.2f}")
+        Retrieve all available material options for a product family (or all families if not specified).
+        Returns a list of dicts with name, description, price, choices, adders, etc.
         """
-        # First get the product family ID
-        family = db.query(ProductFamily).filter_by(name=product_family).first()
-        if not family:
-            return []
-
-        materials = (
-            db.query(MaterialOption)
-            .filter(
-                MaterialOption.product_family_id == family.id,
-                MaterialOption.is_available == 1,
-            )
-            .all()
-        )
-
+        query = db.query(Option).filter(Option.category == "Material")
+        if family_name:
+            family = db.query(ProductFamily).filter_by(name=family_name).first()
+            if family:
+                query = query.join(Option.family_associations).filter(
+                    Option.family_associations.any(
+                        product_family_id=family.id, is_available=1
+                    )
+                )
+        materials = query.all()
         return [
             {
-                "code": m.material_code,
-                "display_name": m.display_name,
-                "base_price": m.base_price,
+                "name": o.name,
+                "description": o.description,
+                "price": o.price,
+                "price_type": o.price_type,
+                "choices": o.choices,
+                "adders": o.adders,
             }
-            for m in materials
+            for o in materials
         ]
 
     @staticmethod
+    def get_available_voltages(db: Session, family_name: str) -> List[str]:
+        """
+        Retrieve available voltage options for a specific product family using the unified options structure.
+        Returns a list of voltage names.
+        """
+        family = db.query(ProductFamily).filter_by(name=family_name).first()
+        if not family:
+            return []
+        options = (
+            db.query(Option)
+            .filter(Option.category == "Voltage")
+            .join(Option.family_associations)
+            .filter(
+                Option.family_associations.any(
+                    product_family_id=family.id, is_available=1
+                )
+            )
+            .all()
+        )
+        voltages = []
+        for o in options:
+            if o.choices:
+                voltages.extend(o.choices)
+            else:
+                voltages.append(o.name)
+        return sorted(set(voltages))
+
+    @staticmethod
+    def get_available_materials_for_product(
+        db: Session, family_name: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve available materials and their properties for a specific product family using the unified options structure.
+        Returns a list of dicts with name, description, price, choices, adders, etc.
+        """
+        return ProductService.get_available_materials(db, family_name=family_name)
+
+    @staticmethod
     def get_product_options(
-        db: Session, product_id: Optional[int] = None
+        db: Session, family_name: Optional[str] = None
     ) -> List[Option]:
         """
-        Retrieve available options, optionally filtered by product compatibility.
-
-        This method returns product options, considering any exclusion rules if a
-        specific product is specified. It handles compatibility checking to ensure
-        only valid options are returned.
-
-        Args:
-            db: SQLAlchemy database session
-            product_id: Optional product ID to filter compatible options
-
-        Returns:
-            List[Option]: List of compatible Option objects
-
-        Example:
-            >>> # Get all options
-            >>> all_options = ProductService.get_product_options(db)
-            >>> # Get options compatible with a specific product
-            >>> product_options = ProductService.get_product_options(db, product_id=1)
+        Retrieve available options, optionally filtered by product family compatibility.
+        Returns a list of Option objects.
         """
         query = db.query(Option)
-
-        if product_id is not None:
-            # Get the product to check compatibility
-            product = get_by_id(db, Product, product_id)
-            if product and product.model_number:
-                query = query.filter(
-                    ~Option.excluded_products.contains(product.model_number)
+        if family_name:
+            family = db.query(ProductFamily).filter_by(name=family_name).first()
+            if family:
+                query = query.join(Option.family_associations).filter(
+                    Option.family_associations.any(
+                        product_family_id=family.id, is_available=1
+                    )
                 )
-
         return query.all()
 
     @staticmethod
@@ -255,83 +174,91 @@ class ProductService:
         product_id: int,
         length: Optional[float] = None,
         material_override: Optional[str] = None,
-    ) -> Tuple[Product, float]:
+    ) -> Tuple[ProductVariant, float]:
         """
-        Configure a product with specified parameters and calculate its price.
-
-        This method handles product configuration and pricing, applying business
-        rules for material compatibility and length-based pricing adjustments.
-
-        Args:
-            db: SQLAlchemy database session
-            product_id: Unique identifier of the product to configure
-            length: Optional length in inches (if applicable)
-            material_override: Optional material code to override product's default
-
-        Returns:
-            Tuple[Product, float]: Tuple containing:
-                - Product: The configured product object
-                - float: Calculated price including all adjustments
-
-        Raises:
-            ValueError: If the product is not found
-
-        Example:
-            >>> # Configure a 24-inch stainless steel product
-            >>> product, price = ProductService.configure_product(
-            ...     db,
-            ...     product_id=1,
-            ...     length=24.0,
-            ...     material_override="S"
-            ... )
-            >>> print(f"Configured price: ${price:.2f}")
+        Configure a product variant and calculate its price, supporting length and material overrides.
         """
-        # Get product
-        product = get_by_id(db, Product, product_id)
+        product = get_by_id(db, ProductVariant, product_id)
         if not product:
-            raise ValueError(f"Product with ID {product_id} not found")
-
-        # Calculate price
-        price = calculate_product_price(
-            db=db,
-            product_id=product_id,
-            length=length,
-            material_override=material_override,
-        )
-
+            raise ValueError(f"ProductVariant with id {product_id} not found")
+        # Pricing logic can be updated here to use adders from options if needed
+        price = product.base_price
+        # Example: apply material override adder if provided
+        if material_override:
+            material_option = (
+                db.query(Option)
+                .filter(Option.category == "Material", Option.name == material_override)
+                .first()
+            )
+            if material_option and material_option.adders:
+                price += material_option.adders.get(material_override, 0)
+        # Example: apply length-based adder if needed (not implemented here)
         return product, price
 
-    @staticmethod
-    def search_products(db: Session, search_term: str) -> List[Product]:
+    def get_additional_options(self, db, family_name: str) -> list:
         """
-        Search for products by model number or description.
-
-        This method performs a case-insensitive search across product model numbers
-        and descriptions, using partial matching for flexibility.
-
-        Args:
-            db: SQLAlchemy database session
-            search_term: Search term to match against product fields
-
-        Returns:
-            List[Product]: List of matching Product objects
-
-        Example:
-            >>> # Search for level switches
-            >>> products = ProductService.search_products(db, "level switch")
-            >>> # Search by model number
-            >>> products = ProductService.search_products(db, "LS2000")
+        Fetch additional configurable options (add-ons) for a product family by name.
+        Returns: List of dicts with name, description, price, price_type, category, choices, adders.
         """
-        search_pattern = f"%{search_term}%"
+        logger.debug(f"Fetching additional options for family: {family_name}")
+        from src.core.models.option import Option
+        from src.core.models.product_variant import ProductFamily
 
-        return (
-            db.query(Product)
+        # Get the product family
+        family = db.query(ProductFamily).filter_by(name=family_name).first()
+        if not family:
+            logger.warning(f"Product family '{family_name}' not found")
+            return []
+
+        # Query options that are associated with this product family
+        # Use the new many-to-many relationship through ProductFamilyOption
+        options = (
+            db.query(Option)
+            .join(Option.family_associations)
             .filter(
-                (Product.description.ilike(search_pattern))
-                | (Product.model_number.ilike(search_pattern))
+                Option.family_associations.any(
+                    product_family_id=family.id, is_available=1
+                )
             )
             .all()
         )
+
+        logger.debug(f"Found {len(options)} options for {family_name}")
+
+        # Log raw options before filtering
+        for opt in options:
+            logger.debug(f"Raw option: {opt.name}")
+            logger.debug(f"  Excluded Products: {opt.excluded_products}")
+            logger.debug(f"  Choices: {opt.choices}")
+            logger.debug(f"  Category: {opt.category}")
+
+        # Don't exclude entire options based on excluded_products
+        # The excluded_products field is used for adder exclusion only
+        filtered = options
+        logger.debug(f"After filtering exclusions: {len(filtered)} options")
+
+        result = [
+            {
+                "name": o.name,
+                "description": o.description,
+                "price": o.price,
+                "price_type": o.price_type,
+                "category": o.category,
+                "choices": o.choices,
+                "adders": o.adders,
+                "excluded_products": o.excluded_products,
+            }
+            for o in filtered
+        ]
+
+        # Log details of each option
+        for opt in result:
+            logger.debug(f"Option {opt['name']}:")
+            logger.debug(f"  - Choices: {opt['choices']}")
+            logger.debug(f"  - Adders: {opt['adders']}")
+            logger.debug(f"  - Category: {opt['category']}")
+
+        return result
 
     def get_product_families(self, db: Session) -> List[Dict]:
         """
@@ -379,131 +306,6 @@ class ProductService:
         ]
         logger.debug(f"Found {len(result)} variants for family {family_id}")
         return result
-
-    @staticmethod
-    def get_material_options(db, product_family_id: int) -> List[MaterialOption]:
-        """Get available material options for a product family."""
-        return db.query(MaterialOption).filter_by(product_family_id=product_family_id).all()
-
-    @staticmethod
-    def get_voltage_options(db, product_family_id: int) -> List[VoltageOption]:
-        """Get available voltage options for a product family."""
-        return db.query(VoltageOption).filter_by(product_family_id=product_family_id).all()
-
-    @staticmethod
-    def get_connection_options(db, product_family_id: int) -> List[ConnectionOption]:
-        """Get available connection options for a product family."""
-        return db.query(ConnectionOption).filter_by(product_family_id=product_family_id).all()
-
-    def get_additional_options(self, db, family_name: str) -> list:
-        """
-        Fetch additional configurable options (add-ons) for a product family by name.
-        Returns: List of dicts with name, description, price, price_type, category, choices, adders.
-        """
-        logger.debug(f"Fetching additional options for family: {family_name}")
-        from src.core.models.option import Option
-
-        # Query options that either have no product_families (NULL) or include this family
-        options = (
-            db.query(Option)
-            .filter(
-                (
-                    Option.product_families.is_(None)
-                )  # Include options with no family restrictions
-                | (
-                    Option.product_families.like(f"%{family_name}%")
-                )  # Include options for this family
-            )
-            .all()
-        )
-        logger.debug(f"Found {len(options)} raw options for {family_name}")
-
-        # Log raw options before filtering
-        for opt in options:
-            logger.debug(f"Raw option: {opt.name}")
-            logger.debug(f"  Product Families: {opt.product_families}")
-            logger.debug(f"  Excluded Products: {opt.excluded_products}")
-            logger.debug(f"  Choices: {opt.choices}")
-            logger.debug(f"  Category: {opt.category}")
-
-        # Exclude options where family_name is in excluded_products
-        filtered = [
-            o
-            for o in options
-            if not o.excluded_products
-            or family_name not in o.excluded_products.split(",")
-        ]
-        logger.debug(f"After filtering exclusions: {len(filtered)} options")
-
-        result = [
-            {
-                "name": o.name,
-                "description": o.description,
-                "price": o.price,
-                "price_type": o.price_type,
-                "category": o.category,
-                "choices": o.choices,
-                "adders": o.adders,
-            }
-            for o in filtered
-        ]
-
-        # Log details of each option
-        for opt in result:
-            logger.debug(f"Option {opt['name']}:")
-            logger.debug(f"  - Choices: {opt['choices']}")
-            logger.debug(f"  - Adders: {opt['adders']}")
-            logger.debug(f"  - Category: {opt['category']}")
-
-        return result
-
-    def search_products(self, db: Session, query: str) -> List[Dict]:
-        """
-        Search product families and variants by name or description.
-        Returns: List of matching product families/variants.
-        """
-        # Search families
-        families = (
-            db.query(ProductFamily)
-            .filter(
-                (ProductFamily.name.ilike(f"%{query}%"))
-                | (ProductFamily.description.ilike(f"%{query}%"))
-            )
-            .all()
-        )
-        # Search variants
-        variants = (
-            db.query(ProductVariant)
-            .filter(
-                (ProductVariant.model_number.ilike(f"%{query}%"))
-                | (ProductVariant.description.ilike(f"%{query}%"))
-            )
-            .all()
-        )
-        results = [
-            {
-                "type": "family",
-                "id": f.id,
-                "name": f.name,
-                "description": f.description,
-                "category": f.category,
-            }
-            for f in families
-        ] + [
-            {
-                "type": "variant",
-                "id": v.id,
-                "model_number": v.model_number,
-                "description": v.description,
-                "base_price": v.base_price,
-                "base_length": v.base_length,
-                "voltage": v.voltage,
-                "material": v.material,
-                "family_id": v.product_family_id,
-            }
-            for v in variants
-        ]
-        return results
 
     def get_variant_by_id(self, db: Session, variant_id: int) -> Optional[Dict]:
         """
@@ -699,29 +501,35 @@ class ProductService:
         # For LS8000/2, we need exact matches for core attributes
         if family.name == "LS8000/2":
             query = db.query(ProductVariant).filter_by(product_family_id=family_id)
-            
+
             # Filter by core attributes
             if options.get("Voltage"):
                 query = query.filter_by(voltage=options["Voltage"])
             if options.get("Material"):
                 query = query.filter_by(material=options["Material"])
-            
+
             # Get all matching variants
             variants = query.all()
-            
+
             # Find the variant that matches all selected options
             for variant in variants:
                 # Check probe type match (if specified)
-                if options.get("Probe Type") and not variant.model_number.endswith('-3/4"'):
+                if options.get("Probe Type") and not variant.model_number.endswith(
+                    '-3/4"'
+                ):
                     continue
                 # Check housing match (if specified)
-                if options.get("Housing") == "Stainless Steel (NEMA 4X)" and not variant.model_number.endswith("-SS"):
+                if options.get(
+                    "Housing"
+                ) == "Stainless Steel (NEMA 4X)" and not variant.model_number.endswith(
+                    "-SS"
+                ):
                     continue
                 # If we get here, we have a match
                 return variant
-            
+
             return None
-        
+
         # For other products, use the scoring system
         query = db.query(ProductVariant).filter_by(product_family_id=family_id)
 
@@ -733,11 +541,11 @@ class ProductService:
 
         # Get all variants for this family
         variants = query.all()
-        
+
         # Find the variant that best matches the selected options
         best_match = None
         best_match_score = 0
-        
+
         for variant in variants:
             score = 0
             # Check voltage match
@@ -750,11 +558,61 @@ class ProductService:
             if options.get("Probe Type") and variant.model_number.endswith('-3/4"'):
                 score += 1
             # Check housing match (if specified)
-            if options.get("Housing") == "Stainless Steel (NEMA 4X)" and variant.model_number.endswith("-SS"):
+            if options.get(
+                "Housing"
+            ) == "Stainless Steel (NEMA 4X)" and variant.model_number.endswith("-SS"):
                 score += 1
-            
+
             if score > best_match_score:
                 best_match = variant
                 best_match_score = score
-        
+
         return best_match
+
+    def search_products(self, db: Session, query: str) -> List[Dict]:
+        """
+        Search product families and variants by name or description.
+        Returns: List of matching product families/variants.
+        """
+        # Search families
+        families = (
+            db.query(ProductFamily)
+            .filter(
+                (ProductFamily.name.ilike(f"%{query}%"))
+                | (ProductFamily.description.ilike(f"%{query}%"))
+            )
+            .all()
+        )
+        # Search variants
+        variants = (
+            db.query(ProductVariant)
+            .filter(
+                (ProductVariant.model_number.ilike(f"%{query}%"))
+                | (ProductVariant.description.ilike(f"%{query}%"))
+            )
+            .all()
+        )
+        results = [
+            {
+                "type": "family",
+                "id": f.id,
+                "name": f.name,
+                "description": f.description,
+                "category": f.category,
+            }
+            for f in families
+        ] + [
+            {
+                "type": "variant",
+                "id": v.id,
+                "model_number": v.model_number,
+                "description": v.description,
+                "base_price": v.base_price,
+                "base_length": v.base_length,
+                "voltage": v.voltage,
+                "material": v.material,
+                "family_id": v.product_family_id,
+            }
+            for v in variants
+        ]
+        return results

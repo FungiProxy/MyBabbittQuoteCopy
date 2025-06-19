@@ -8,9 +8,6 @@ from src.core.models.configuration import Configuration
 from src.core.pricing import calculate_product_price
 from src.core.services.product_service import ProductService
 from src.core.models.option import Option
-from src.core.models.material_option import MaterialOption
-from src.core.models.voltage_option import VoltageOption
-from src.core.models.connection_option import ConnectionOption
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -158,12 +155,25 @@ class ConfigurationService:
             return None
 
     def _get_option_price(self, option_name: str, value: any) -> float:
-        """Get the price for a given option and its selected value."""
+        """Get the price for a given option and its selected value using the unified options structure."""
         if not self.current_config:
             return 0.0
 
         try:
-            # Get the option price from the configuration
+            # Get all options for this product family
+            all_options = self.product_service.get_additional_options(
+                self.db, self.current_config.product_family_name
+            )
+
+            # Find the specific option
+            for option in all_options:
+                if option.get("name") == option_name:
+                    adders = option.get("adders", {})
+                    if isinstance(adders, dict) and value in adders:
+                        return float(adders[value])
+                    break
+
+            # Fallback to configuration's get_option_price method
             price = self.current_config.get_option_price(option_name, value)
             # logger.debug(f"Price for {option_name}={value}: ${price:,.2f}")
             return price
@@ -201,7 +211,7 @@ class ConfigurationService:
             return default
 
     def _update_price(self):
-        """Update the price based on the current configuration."""
+        """Update the price based on the current configuration using the unified options structure."""
         try:
             variant = self._get_current_variant()
             if not variant:
@@ -229,72 +239,49 @@ class ConfigurationService:
             # Calculate final price starting with base price
             final_price = base_price
 
-            # Handle material adder
-            material_code = self.current_config.selected_options.get("Material")
-            if material_code:
-                material = (
-                    self.db.query(MaterialOption)
-                    .filter_by(material_code=material_code)
-                    .first()
-                )
-                variant_material = getattr(variant, "material", None)
-                print(
-                    f"DEBUG: code={material_code}, variant={variant_material}, base_price={getattr(material, 'base_price', None)}"
-                )
-                if material and variant_material != material_code:
-                    material_adder = self._to_float(
-                        getattr(material, "base_price", 0.0)
-                    )
-                    final_price += material_adder
-                    # logger.debug(
-                    #     f"Material adder applied: code={material_code}, variant={variant_material}, base_price={material_adder}"
-                    # )
-                else:
-                    pass
-
-            # Handle voltage multiplier
-            voltage = self.current_config.selected_options.get("Voltage")
-            if voltage:
-                voltage_option = (
-                    self.db.query(VoltageOption).filter_by(voltage=voltage).first()
-                )
-                if voltage_option:
-                    voltage_multiplier = self._to_float(
-                        getattr(voltage_option, "price_multiplier", 1.0)
-                    )
-                    final_price *= voltage_multiplier
-                    # logger.debug(f"Applied voltage multiplier: {voltage_multiplier}")
-
-            # Handle connection price
-            connection_type = self.current_config.selected_options.get(
-                "Connection Type"
+            # Get all options for this product family
+            all_options = self.product_service.get_additional_options(
+                self.db, self.current_config.product_family_name
             )
-            if connection_type:
-                connection = (
-                    self.db.query(ConnectionOption)
-                    .filter_by(
-                        type=connection_type,
-                        rating=self.current_config.selected_options.get(
-                            "Flange Rating"
-                        ),
-                        size=self.current_config.selected_options.get("Flange Size"),
-                    )
-                    .first()
-                )
-                if connection:
-                    connection_price = self._to_float(getattr(connection, "price", 0.0))
-                    final_price += connection_price
-                    # logger.debug(f"Applied connection price: {connection_price}")
 
-            # Handle O-ring price (hardcoded for Kalrez)
-            oring_material = self.current_config.selected_options.get("O-Rings")
-            if oring_material == "Kalrez":
-                final_price += 295.0
-                # logger.debug("Applied hardcoded Kalrez O-ring adder: 295.0")
-            else:
-                # logger.debug(f"No O-ring adder applied for material: {oring_material}")
-                pass
+            # Apply option adders using the unified structure
+            for (
+                option_name,
+                selected_value,
+            ) in self.current_config.selected_options.items():
+                if selected_value is None:
+                    continue
 
+                # Find the option in the unified structure
+                # Check all options since multiple options can have the same name (e.g., Material)
+                for option in all_options:
+                    if option.get("name") == option_name:
+                        adders = option.get("adders", {})
+                        if isinstance(adders, dict) and selected_value in adders:
+                            # Check if this product family is excluded from adders
+                            excluded_products = option.get("excluded_products", "")
+                            if excluded_products is None:
+                                excluded_products = ""
+                            excluded_list = [
+                                f.strip()
+                                for f in excluded_products.split(",")
+                                if f.strip()
+                            ]
+                            is_excluded = (
+                                self.current_config.product_family_name in excluded_list
+                            )
+
+                            if not is_excluded:
+                                adder_value = float(adders[selected_value])
+                                final_price += adder_value
+                                # logger.debug(f"Applied {option_name} adder: {adder_value}")
+                            else:
+                                # logger.debug(f"Skipped {option_name} adder for excluded family: {self.current_config.product_family_name}")
+                                pass
+                            # Found the matching option, no need to check other options with same name
+                            break
+
+            # Handle special cases that might not be in the unified structure yet
             # Handle extra length price
             specified_length = self._to_float(
                 self.current_config.selected_options.get("Probe Length")
@@ -306,6 +293,7 @@ class ConfigurationService:
 
             if specified_length > base_length:
                 # For S material with 10" base length, use hard-coded thresholds
+                material_code = self.current_config.selected_options.get("Material")
                 if material_code == "S" and base_length == 10.0:
                     thresholds = {
                         24: 45.0,  # $45 for 24"

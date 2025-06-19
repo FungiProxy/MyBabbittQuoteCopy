@@ -4,7 +4,8 @@ import logging
 
 from sqlalchemy.orm import Session
 
-from core.models.option import Option
+from .option import Option
+from src.core.models.product_variant import ProductFamily
 
 logger = logging.getLogger(__name__)
 
@@ -42,20 +43,13 @@ class Configuration:
         logger.debug(f"Getting price for {option_name}={option_value}")
         logger.debug(f"Product family: {self.product_family_name}")
 
-        # Filter options by name and product family
+        # Legacy fallback: only filter by option name (should be removed in future)
         option_details = (
-            self.db.query(Option)
-            .filter(
-                Option.name == option_name,
-                Option.product_families == self.product_family_name,
-            )
-            .first()
+            self.db.query(Option).filter(Option.name == option_name).first()
         )
 
         if not option_details:
-            logger.warning(
-                f"No option found for {option_name} in {self.product_family_name}"
-            )
+            logger.warning(f"No option found for {option_name} (legacy fallback)")
             return 0.0
 
         logger.debug(f"Found option: {option_details.name}")

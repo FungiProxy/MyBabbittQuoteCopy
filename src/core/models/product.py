@@ -17,8 +17,8 @@ The Product model supports:
 from sqlalchemy import Column, Float, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
-from core.database import Base
-from core.models.product_variant import ProductVariant
+from ..database import Base
+from .product_variant import ProductVariant
 
 
 class Product(Base):

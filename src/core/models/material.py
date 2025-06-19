@@ -16,7 +16,7 @@ Supports:
 from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+from ..database import Base
 
 
 class Material(Base):

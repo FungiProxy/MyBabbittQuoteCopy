@@ -20,7 +20,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.types import JSON
 from sqlalchemy.ext.associationproxy import association_proxy
 
-from core.database import Base
+from ..database import Base
 
 
 class Option(Base):

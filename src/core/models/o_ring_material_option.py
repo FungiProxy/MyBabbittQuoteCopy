@@ -7,7 +7,7 @@ It stores which O-Ring materials are available for each product family, along wi
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 
-from core.database import Base
+from ..database import Base
 
 
 class O_RingMaterialOption(Base):

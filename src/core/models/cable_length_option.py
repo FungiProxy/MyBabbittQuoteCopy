@@ -7,7 +7,7 @@ It stores which cable lengths are available for each product family, along with 
 
 from sqlalchemy import Column, Float, ForeignKey, Integer
 
-from core.database import Base
+from ..database import Base
 
 
 class CableLengthOption(Base):

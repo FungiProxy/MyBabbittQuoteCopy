@@ -2,20 +2,20 @@
 Database models for the application.
 """
 
-from core.models.cable_length_option import CableLengthOption
-from core.models.connection_option import ConnectionOption
-from core.models.customer import Customer
-from core.models.housing_type import HousingType
-from core.models.housing_type_option import HousingTypeOption
-from core.models.material import Material, MaterialAvailability, StandardLength
-from core.models.material_option import MaterialOption
-from core.models.o_ring_material_option import O_RingMaterialOption
-from core.models.option import Option, QuoteItemOption
-from core.models.product import Product
-from core.models.product_variant import ProductFamily, ProductVariant
-from core.models.quote import Quote, QuoteItem
-from core.models.spare_part import SparePart
-from core.models.voltage_option import VoltageOption
+from .cable_length_option import CableLengthOption
+from .connection_option import ConnectionOption
+from .customer import Customer
+from .housing_type import HousingType
+from .housing_type_option import HousingTypeOption
+from .material import Material, MaterialAvailability, StandardLength
+from .material_option import MaterialOption
+from .o_ring_material_option import O_RingMaterialOption
+from .option import Option, QuoteItemOption
+from .product import Product
+from .product_variant import ProductFamily, ProductVariant
+from .quote import Quote, QuoteItem
+from .spare_part import SparePart
+from .voltage_option import VoltageOption
 
 __all__ = [
     "CableLengthOption",

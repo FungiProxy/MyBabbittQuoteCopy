@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.core.database import Base
+from src.core.database import Base, SessionLocal
 from src.core.models.connection_option import ConnectionOption
 from src.core.models.material_option import MaterialOption
 from src.core.models.option import Option
@@ -20,6 +20,20 @@ def db_session():
     yield session
     session.close()
     Base.metadata.drop_all(engine)
+
+
+@pytest.fixture(scope="module")
+def db():
+    db = SessionLocal()
+    yield db
+    db.close()
+
+
+@pytest.fixture(scope="module")
+def known_family_name(db):
+    family = db.query(ProductFamily).first()
+    assert family is not None, "No product families found in the database."
+    return family.name
 
 
 def test_get_product_families(db_session):
@@ -72,11 +86,7 @@ def test_get_material_options(db_session):
 
 def test_get_voltage_options(db_session):
     """Test getting voltage options for a product family."""
-    vo = VoltageOption(
-        product_family_id=1,
-        voltage="24VDC",
-        is_available=1
-    )
+    vo = VoltageOption(product_family_id=1, voltage="24VDC", is_available=1)
     db_session.add(vo)
     db_session.commit()
 
@@ -88,11 +98,7 @@ def test_get_voltage_options(db_session):
 def test_get_connection_options(db_session):
     """Test getting connection options for a product family."""
     co = ConnectionOption(
-        type="Flange",
-        rating="150#",
-        size='2"',
-        price=75.0,
-        product_family_id=1
+        type="Flange", rating="150#", size='2"', price=75.0, product_family_id=1
     )
     db_session.add(co)
     db_session.commit()
@@ -317,3 +323,43 @@ def test_get_valid_options_for_selection(db_session):
         db_session, family.id, {"material": "U", "voltage": "24VDC"}
     )
     assert result == {}
+
+
+def test_get_available_materials(db, known_family_name):
+    materials = ProductService.get_available_materials(
+        db, family_name=known_family_name
+    )
+    assert isinstance(materials, list)
+    assert materials, "No materials returned."
+    for m in materials:
+        assert "name" in m
+        assert "choices" in m
+        assert "adders" in m
+
+
+def test_get_available_voltages(db, known_family_name):
+    voltages = ProductService.get_available_voltages(db, family_name=known_family_name)
+    assert isinstance(voltages, list)
+    assert voltages, "No voltages returned."
+    assert all(isinstance(v, str) for v in voltages)
+
+
+def test_get_product_options(db, known_family_name):
+    options = ProductService.get_product_options(db, family_name=known_family_name)
+    assert isinstance(options, list)
+    assert options, "No options returned."
+    for o in options:
+        assert hasattr(o, "name")
+        assert hasattr(o, "category")
+
+
+def test_get_additional_options(db, known_family_name):
+    service = ProductService()
+    options = service.get_additional_options(db, family_name=known_family_name)
+    assert isinstance(options, list)
+    assert options, "No additional options returned."
+    for o in options:
+        assert "name" in o
+        assert "category" in o
+        assert "choices" in o
+        assert "adders" in o

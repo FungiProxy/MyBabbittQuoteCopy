@@ -16,7 +16,7 @@ from sqlalchemy import Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import association_proxy
 
-from core.database import Base
+from ..database import Base
 
 
 class ProductFamily(Base):
