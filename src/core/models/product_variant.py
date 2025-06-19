@@ -9,12 +9,14 @@ Supports:
 - Product family grouping and categorization
 - Product variant configuration and pricing
 - Relationships to spare parts and quote items
+- Many-to-many relationships with options for dynamic configuration
 """
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.associationproxy import association_proxy
 
-from src.core.database import Base
+from core.database import Base
 
 
 class ProductFamily(Base):
@@ -22,7 +24,7 @@ class ProductFamily(Base):
     SQLAlchemy model representing a product family (group of related products).
 
     Stores information about a product family, including its name, description,
-    category, and relationships to variants and spare parts.
+    category, and relationships to variants, spare parts, and options.
 
     Attributes:
         id (int): Primary key
@@ -31,6 +33,8 @@ class ProductFamily(Base):
         category (str): Category (e.g., "Level Switch")
         variants (List[ProductVariant]): List of product variants in this family
         spare_parts (List[SparePart]): List of spare parts for this family
+        options (List[Option]): List of available options for this family (association_proxy)
+        option_associations (List[ProductFamilyOption]): Detailed option associations
 
     Example:
         >>> pf = ProductFamily(name="LS2000", category="Level Switch")
@@ -47,6 +51,12 @@ class ProductFamily(Base):
     # Relationships
     variants = relationship("ProductVariant", back_populates="product_family")
     spare_parts = relationship("SparePart", back_populates="product_family")
+    option_associations = relationship(
+        "ProductFamilyOption",
+        back_populates="product_family",
+        cascade="all, delete-orphan",
+    )
+    options = association_proxy("option_associations", "option")
 
     def __repr__(self):
         """

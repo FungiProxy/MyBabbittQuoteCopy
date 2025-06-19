@@ -14,7 +14,7 @@ Supports:
 from sqlalchemy import Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from src.core.database import Base
+from core.database import Base
 
 
 class SparePart(Base):

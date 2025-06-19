@@ -10,7 +10,7 @@ Supports:
 
 from sqlalchemy import Column, ForeignKey, Integer, String
 
-from src.core.database import Base
+from core.database import Base
 
 
 class VoltageOption(Base):
