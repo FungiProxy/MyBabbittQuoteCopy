@@ -5,6 +5,7 @@ Database models for the application.
 from src.core.models.cable_length_option import CableLengthOption
 from src.core.models.connection_option import ConnectionOption
 from src.core.models.customer import Customer
+from src.core.models.housing_type import HousingType
 from src.core.models.housing_type_option import HousingTypeOption
 from src.core.models.material import Material, MaterialAvailability, StandardLength
 from src.core.models.material_option import MaterialOption
@@ -20,6 +21,7 @@ __all__ = [
     "CableLengthOption",
     "ConnectionOption",
     "Customer",
+    "HousingType",
     "HousingTypeOption",
     "Material",
     "MaterialAvailability",

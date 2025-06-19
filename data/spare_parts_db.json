@@ -1,0 +1,416 @@
+[
+    {
+        "category": null,
+        "description": null,
+        "id": 1,
+        "name": "LS2000-Electronics",
+        "part_number": "ls2000-electronics-specify-voltage",
+        "price": 265.0,
+        "product_family_id": 1
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 2,
+        "name": "LS2000-U-ProbeAssembly-4\"",
+        "part_number": "ls2000-u-probe-assembly-4",
+        "price": 210.0,
+        "product_family_id": 1
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 3,
+        "name": "LS2000-T-ProbeAssembly-4\"",
+        "part_number": "ls2000-t-probe-assembly-4",
+        "price": 250.0,
+        "product_family_id": 1
+    },
+    {
+        "category": "",
+        "description": null,
+        "id": 4,
+        "name": "LS2000-S-ProbeAssembly-10\"",
+        "part_number": "ls2000-s-probe-assembly-10",
+        "price": 195.0,
+        "product_family_id": 1
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 5,
+        "name": "LS2000-H-ProbeAssembly-10\"",
+        "part_number": "ls2000-h-probe-assembly-10",
+        "price": 320.0,
+        "product_family_id": 1
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 6,
+        "name": "LS2000-HOUSING",
+        "part_number": "ls2000-housing",
+        "price": 100.0,
+        "product_family_id": 1
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 7,
+        "name": "LS2100-Electronics",
+        "part_number": "ls2100-electronics",
+        "price": 290.0,
+        "product_family_id": 2
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 8,
+        "name": "LS2100-S-ProbeAssembly-10\"",
+        "part_number": "ls2100-s-probe-assembly-10",
+        "price": 230.0,
+        "product_family_id": 2
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 9,
+        "name": "LS2100-H-ProbeAssembly-10\"",
+        "part_number": "ls2100-h-probe-assembly-10",
+        "price": 360.0,
+        "product_family_id": 2
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 10,
+        "name": "LS2100-Housing",
+        "part_number": "ls2100-housing",
+        "price": 100.0,
+        "product_family_id": 2
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 11,
+        "name": "LS6000-Electronics",
+        "part_number": "ls6000-electronics",
+        "price": 295.0,
+        "product_family_id": 3
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 12,
+        "name": "LS6000-S-ProbeAssembly-10\"",
+        "part_number": "ls6000-s-probe-assembly-10",
+        "price": 240.0,
+        "product_family_id": 3
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 13,
+        "name": "LS6000-H-ProbeAssembly-10\"",
+        "part_number": "ls6000-h-probe-assembly-10",
+        "price": 370.0,
+        "product_family_id": 3
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 14,
+        "name": "LS6000-Housing",
+        "part_number": "ls6000-housing",
+        "price": 140.0,
+        "product_family_id": 3
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 15,
+        "name": "LS7000-PS-Powersupply",
+        "part_number": "ls7000-ps-power-supply-specify-voltage",
+        "price": 230.0,
+        "product_family_id": 4
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 16,
+        "name": "LS7000-SC-SensingCard",
+        "part_number": "ls7000-sc-sensing-card",
+        "price": 235.0,
+        "product_family_id": 4
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 17,
+        "name": "LS7000-S-ProbeAssembly-10\"",
+        "part_number": "ls7000-s-probe-assembly-10",
+        "price": 280.0,
+        "product_family_id": 4
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 18,
+        "name": "LS7000-H-ProbeAssembly-10\"",
+        "part_number": "ls7000-h-probe-assembly-10",
+        "price": 370.0,
+        "product_family_id": 4
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 19,
+        "name": "LS7000-HOUSING",
+        "part_number": "ls7000-housing",
+        "price": 140.0,
+        "product_family_id": 4
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 20,
+        "name": "FUSE(1/2AMP)",
+        "part_number": "fuse-1-2-amp",
+        "price": 10.0,
+        "product_family_id": 4
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 21,
+        "name": "LS7000-PS-Powersupply",
+        "part_number": "ls7000-ps-power-supply-specify-voltage",
+        "price": 230.0,
+        "product_family_id": 5
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 22,
+        "name": "LS7000/2-DP-DualPointCard",
+        "part_number": "ls7000-2-dp-dual-point-card",
+        "price": 255.0,
+        "product_family_id": 5
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 23,
+        "name": "LS7000-H-ProbeAssembly-10\"",
+        "part_number": "ls7000-h-probe-assembly-10",
+        "price": 370.0,
+        "product_family_id": 5
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 24,
+        "name": "LS7000-Housing",
+        "part_number": "ls7000-housing",
+        "price": 140.0,
+        "product_family_id": 5
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 25,
+        "name": "FUSE(1/2AMP)",
+        "part_number": "fuse-1-2-amp",
+        "price": 10.0,
+        "product_family_id": 5
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 26,
+        "name": "LS8000-R-ReceiverCard",
+        "part_number": "ls8000-r-receiver-card-specify-voltage",
+        "price": 305.0,
+        "product_family_id": 6
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 27,
+        "name": "LS8000-T-Transmitter",
+        "part_number": "ls8000-t-transmitter-specify-size-sensitivity",
+        "price": 285.0,
+        "product_family_id": 6
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 28,
+        "name": "LS8000-S-ProbeAssembly-10\"",
+        "part_number": "ls8000-s-probe-assembly-10",
+        "price": 230.0,
+        "product_family_id": 6
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 29,
+        "name": "LS8000-H-ProbeAssembly-10\"",
+        "part_number": "ls8000-h-probe-assembly-10",
+        "price": 320.0,
+        "product_family_id": 6
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 30,
+        "name": "LS8000-Housing",
+        "part_number": "ls8000-housing",
+        "price": 100.0,
+        "product_family_id": 6
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 31,
+        "name": "FUSE(1/2AMP)",
+        "part_number": "fuse-1-2-amp",
+        "price": 10.0,
+        "product_family_id": 6
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 32,
+        "name": "LS8000/2-R-ReceiverCard",
+        "part_number": "ls8000-2-r-receiver-card-specify-voltage",
+        "price": 385.0,
+        "product_family_id": 7
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 33,
+        "name": "LS8000-T-Transmitter",
+        "part_number": "ls8000-t-transmitter-specify-size-sensitivity",
+        "price": 285.0,
+        "product_family_id": 7
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 34,
+        "name": "LS8000-H-ProbeAssembly-10\"",
+        "part_number": "ls8000-h-probe-assembly-10",
+        "price": 320.0,
+        "product_family_id": 7
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 35,
+        "name": "LS8000-Housing",
+        "part_number": "ls8000-housing",
+        "price": 100.0,
+        "product_family_id": 7
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 36,
+        "name": "FUSE(1/2AMP)",
+        "part_number": "fuse-1-2-amp",
+        "price": 10.0,
+        "product_family_id": 7
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 37,
+        "name": "LT9000-MA-PluginCard",
+        "part_number": "lt9000-ma-plug-in-card",
+        "price": 295.0,
+        "product_family_id": 8
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 38,
+        "name": "LT9000-BB-PowerSupply",
+        "part_number": "lt9000-bb-power-supply-specify-voltage",
+        "price": 295.0,
+        "product_family_id": 8
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 39,
+        "name": "LT9000-H-ProbeAssembly-10\"",
+        "part_number": "lt9000-h-probe-assembly-10",
+        "price": 370.0,
+        "product_family_id": 8
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 40,
+        "name": "LT9000-Housing",
+        "part_number": "lt9000-housing",
+        "price": 140.0,
+        "product_family_id": 8
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 41,
+        "name": "FUSE(1/2AMP)",
+        "part_number": "fuse-1-2-amp",
+        "price": 10.0,
+        "product_family_id": 8
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 42,
+        "name": "FS10000-Electronics",
+        "part_number": "fs10000-electronics-specify-voltage",
+        "price": 1440.0,
+        "product_family_id": 9
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 43,
+        "name": "FS10000-ProbeAssembly-6\"",
+        "part_number": "fs10000-probe-assembly-6-specify-length",
+        "price": 200.0,
+        "product_family_id": 9
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 44,
+        "name": "FS10000-NEMA-4X-WindowedEnclosure",
+        "part_number": "fs10000-nema-4x-windowed-enclosure",
+        "price": 300.0,
+        "product_family_id": 9
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 45,
+        "name": "FS10000-REDDOT-GALB-2-OR(ALUM.PROBEHOUSING)",
+        "part_number": "fs10000-reddot-galb-2-or-alum-probe-housing",
+        "price": 100.0,
+        "product_family_id": 9
+    },
+    {
+        "category": null,
+        "description": null,
+        "id": 46,
+        "name": "FS10000-15'CoaxialCable-w/Connectors",
+        "part_number": "15-feet-coaxial-cable-w-connectors",
+        "price": 100.0,
+        "product_family_id": 9
+    }
+]

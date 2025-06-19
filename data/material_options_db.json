@@ -1,0 +1,314 @@
+[
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 1,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 1
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "H - Halar Coated",
+        "id": 2,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 1
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 3,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 1
+    },
+    {
+        "base_price": 20.0,
+        "display_name": "U - UHMWPE Blind End",
+        "id": 4,
+        "is_available": 1,
+        "material_code": "U",
+        "product_family_id": 1
+    },
+    {
+        "base_price": 60.0,
+        "display_name": "T - Teflon Blind End",
+        "id": 5,
+        "is_available": 1,
+        "material_code": "T",
+        "product_family_id": 1
+    },
+    {
+        "base_price": 80.0,
+        "display_name": "C - Cable",
+        "id": 6,
+        "is_available": 1,
+        "material_code": "C",
+        "product_family_id": 1
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 7,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 2
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "H - Halar Coated",
+        "id": 8,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 2
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 9,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 2
+    },
+    {
+        "base_price": 20.0,
+        "display_name": "U - UHMWPE Blind End",
+        "id": 10,
+        "is_available": 1,
+        "material_code": "U",
+        "product_family_id": 2
+    },
+    {
+        "base_price": 60.0,
+        "display_name": "T - Teflon Blind End",
+        "id": 11,
+        "is_available": 1,
+        "material_code": "T",
+        "product_family_id": 2
+    },
+    {
+        "base_price": 80.0,
+        "display_name": "C - Cable",
+        "id": 12,
+        "is_available": 1,
+        "material_code": "C",
+        "product_family_id": 2
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 13,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 3
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "H - Halar Coated",
+        "id": 14,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 3
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 15,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 3
+    },
+    {
+        "base_price": 20.0,
+        "display_name": "U - UHMWPE Blind End",
+        "id": 16,
+        "is_available": 0,
+        "material_code": "U",
+        "product_family_id": 3
+    },
+    {
+        "base_price": 60.0,
+        "display_name": "T - Teflon Blind End",
+        "id": 17,
+        "is_available": 0,
+        "material_code": "T",
+        "product_family_id": 3
+    },
+    {
+        "base_price": 80.0,
+        "display_name": "C - Cable",
+        "id": 18,
+        "is_available": 1,
+        "material_code": "C",
+        "product_family_id": 3
+    },
+    {
+        "base_price": 400.0,
+        "display_name": "CPVC - CPVC Blind End",
+        "id": 19,
+        "is_available": 1,
+        "material_code": "CPVC",
+        "product_family_id": 3
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 20,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 4
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "H - Halar Coated",
+        "id": 21,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 4
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 22,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 4
+    },
+    {
+        "base_price": 20.0,
+        "display_name": "U - UHMWPE Blind End",
+        "id": 23,
+        "is_available": 0,
+        "material_code": "U",
+        "product_family_id": 4
+    },
+    {
+        "base_price": 60.0,
+        "display_name": "T - Teflon Blind End",
+        "id": 24,
+        "is_available": 0,
+        "material_code": "T",
+        "product_family_id": 4
+    },
+    {
+        "base_price": 400.0,
+        "display_name": "CPVC - CPVC Blind End",
+        "id": 25,
+        "is_available": 1,
+        "material_code": "CPVC",
+        "product_family_id": 4
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "H - Halar Coated",
+        "id": 26,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 5
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 27,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 5
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 28,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 6
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "H - Halar Coated",
+        "id": 29,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 6
+    },
+    {
+        "base_price": 110.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 30,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 6
+    },
+    {
+        "base_price": 80.0,
+        "display_name": "C - Cable",
+        "id": 31,
+        "is_available": 1,
+        "material_code": "C",
+        "product_family_id": 6
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "H - Halar Coated",
+        "id": 32,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 7
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 33,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 7
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "H - Halar Coated",
+        "id": 34,
+        "is_available": 1,
+        "material_code": "H",
+        "product_family_id": 8
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "TS - Teflon Sleeve",
+        "id": 35,
+        "is_available": 1,
+        "material_code": "TS",
+        "product_family_id": 8
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 36,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 9
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 37,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 10
+    },
+    {
+        "base_price": 0.0,
+        "display_name": "S - 316 Stainless Steel",
+        "id": 38,
+        "is_available": 1,
+        "material_code": "S",
+        "product_family_id": 11
+    },
+    {
+        "base_price": 80.0,
+        "display_name": "C - Cable",
+        "id": 39,
+        "is_available": 1,
+        "material_code": "C",
+        "product_family_id": 4
+    }
+]

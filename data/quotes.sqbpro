@@ -1,1 +1,273 @@
-<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="quotes.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="1"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="2256"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="materials" custom_title="0" dock_id="1" table="4,9:mainmaterials"/><dock_state state="000000ff00000000fd0000000100000002000002910000024ffc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000002910000011e00ffffff0000026f0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="alembic_version" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="103"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="material_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="113"/><column index="3" value="90"/><column index="4" value="191"/><column index="5" value="70"/><column index="6" value="75"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="materials" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="39"/><column index="3" value="159"/><column index="4" value="300"/><column index="5" value="78"/><column index="6" value="140"/><column index="7" value="140"/><column index="8" value="214"/><column index="9" value="187"/><column index="10" value="110"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="271"/><column index="3" value="300"/><column index="4" value="47"/><column index="5" value="71"/><column index="6" value="127"/><column index="7" value="207"/><column index="8" value="116"/><column index="9" value="300"/><column index="10" value="300"/><column index="11" value="300"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="product_families" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="207"/><column index="3" value="300"/><column index="4" value="207"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="voltage_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort><column index="3" mode="1"/></sort><column_widths><column index="1" value="35"/><column index="2" value="113"/><column index="3" value="55"/><column index="4" value="75"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1"></sql><current_tab id="0"/></tab_sql></sqlb_project>
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="quotes.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="browser pragmas query" current="0"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="2256"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="o_ring_material_options" custom_title="0" dock_id="1" table="4,23:maino_ring_material_options"/><dock_state state="000000ff00000000fd0000000100000002000002910000024ffc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000002910000012300ffffff0000026f0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="alembic_version" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="103"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="cable_length_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="113"/><column index="3" value="44"/><column index="4" value="36"/><column index="5" value="75"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="connection_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="79"/><column index="3" value="42"/><column index="4" value="39"/><column index="5" value="47"/><column index="6" value="113"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="customers" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="87"/><column index="3" value="127"/><column index="4" value="215"/><column index="5" value="103"/><column index="6" value="95"/><column index="7" value="95"/><column index="8" value="39"/><column index="9" value="58"/><column index="10" value="40"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="material_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="113"/><column index="3" value="90"/><column index="4" value="191"/><column index="5" value="70"/><column index="6" value="75"/></column_widths><filter_values/><conditional_formats><column index="6"/></conditional_formats><row_id_formats/><display_formats><column index="6" value=""/></display_formats><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="materials" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="39"/><column index="3" value="159"/><column index="4" value="300"/><column index="5" value="78"/><column index="6" value="140"/><column index="7" value="140"/><column index="8" value="214"/><column index="9" value="187"/><column index="10" value="110"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="o_ring_material_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="113"/><column index="3" value="89"/><column index="4" value="58"/><column index="5" value="75"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="271"/><column index="3" value="300"/><column index="4" value="47"/><column index="5" value="71"/><column index="6" value="127"/><column index="7" value="207"/><column index="8" value="116"/><column index="9" value="300"/><column index="10" value="300"/><column index="11" value="300"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="product_families" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="71"/><column index="3" value="271"/><column index="4" value="231"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="product_variants" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="39"/><column index="2" value="113"/><column index="3" value="255"/><column index="4" value="300"/><column index="5" value="70"/><column index="6" value="78"/><column index="7" value="55"/><column index="8" value="56"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="products" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="175"/><column index="3" value="300"/><column index="4" value="207"/><column index="5" value="70"/><column index="6" value="78"/><column index="7" value="55"/><column index="8" value="56"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="quote_item_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort><column index="0" mode="0"/></sort><column_widths><column index="1" value="35"/><column index="2" value="93"/><column index="3" value="63"/><column index="4" value="56"/><column index="5" value="36"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="quote_items" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="60"/><column index="3" value="71"/><column index="4" value="56"/><column index="5" value="65"/><column index="6" value="44"/><column index="7" value="56"/><column index="8" value="51"/><column index="9" value="71"/><column index="10" value="107"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="quotes" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="92"/><column index="3" value="81"/><column index="4" value="85"/><column index="5" value="99"/><column index="6" value="44"/><column index="7" value="40"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="spare_parts" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="300"/><column index="3" value="300"/><column index="4" value="71"/><column index="5" value="55"/><column index="6" value="113"/><column index="7" value="59"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="standard_lengths" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="90"/><column index="3" value="44"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="voltage_options" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="113"/><column index="3" value="55"/><column index="4" value="75"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- =================================================================
+-- COMPREHENSIVE OPTIONS TABLE POPULATION SCRIPT
+-- Clears and repopulates the entire options table with all product configurations
+-- =================================================================
+
+-- Clear existing options
+DELETE FROM options;
+
+-- =================================================================
+-- MATERIAL OPTIONS (by Product Family)
+-- =================================================================
+
+-- LS2000 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS2000', 
+ '[&quot;S&quot;, &quot;H&quot;, &quot;TS&quot;, &quot;U&quot;, &quot;T&quot;, &quot;C&quot;]', 
+ '{&quot;S&quot;: 0, &quot;H&quot;: 110, &quot;TS&quot;: 110, &quot;U&quot;: 20, &quot;T&quot;: 60, &quot;C&quot;: 80}');
+
+-- LS2100 Material Options  
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS2100', 
+ '[&quot;S&quot;, &quot;H&quot;, &quot;TS&quot;, &quot;U&quot;, &quot;T&quot;, &quot;C&quot;]', 
+ '{&quot;S&quot;: 0, &quot;H&quot;: 110, &quot;TS&quot;: 110, &quot;U&quot;: 20, &quot;T&quot;: 60, &quot;C&quot;: 80}');
+
+-- LS6000 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS6000', 
+ '[&quot;S&quot;, &quot;H&quot;, &quot;TS&quot;, &quot;U&quot;, &quot;T&quot;, &quot;C&quot;, &quot;CPVC&quot;]', 
+ '{&quot;S&quot;: 0, &quot;H&quot;: 110, &quot;TS&quot;: 110, &quot;U&quot;: 20, &quot;T&quot;: 60, &quot;C&quot;: 80, &quot;CPVC&quot;: 400}');
+
+-- LS7000 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS7000', 
+ '[&quot;S&quot;, &quot;H&quot;, &quot;TS&quot;, &quot;T&quot;, &quot;U&quot;, &quot;CPVC&quot;]', 
+ '{&quot;S&quot;: 0, &quot;H&quot;: 110, &quot;TS&quot;: 110, &quot;U&quot;: 20, &quot;T&quot;: 60, &quot;CPVC&quot;: 400}');
+
+-- LS7000/2 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS7000/2', 
+ '[&quot;H&quot;, &quot;TS&quot;]', 
+ '{&quot;H&quot;: 0, &quot;TS&quot;: 0}');
+
+-- LS8000 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS8000', 
+ '[&quot;S&quot;, &quot;H&quot;, &quot;TS&quot;, &quot;C&quot;]', 
+ '{&quot;S&quot;: 0, &quot;H&quot;: 110, &quot;TS&quot;: 110, &quot;C&quot;: 80}');
+
+-- LS8000/2 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS8000/2', 
+ '[&quot;H&quot;, &quot;TS&quot;]', 
+ '{&quot;H&quot;: 110, &quot;TS&quot;: 110}');
+
+-- LT9000 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LT9000', 
+ '[&quot;H&quot;, &quot;TS&quot;]', 
+ '{&quot;H&quot;: 0, &quot;TS&quot;: 0}');
+
+-- FS10000 Material Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'FS10000', 
+ '[&quot;S&quot;]', 
+ '{&quot;S&quot;: 0}');
+
+-- LS7500, LS8500 Material Options (Presence/Absence Switches)
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Material', 'Probe material selection', 0.0, 'fixed', 'Material', 'LS7500,LS8500', 
+ '[&quot;S&quot;]', 
+ '{&quot;S&quot;: 0}');
+
+-- =================================================================
+-- VOLTAGE OPTIONS (by Product Family)
+-- =================================================================
+
+-- LS2000 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS2000', 
+ '[&quot;115VAC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- LS2100 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS2100', 
+ '[&quot;24VDC&quot;]', 
+ '{&quot;24VDC&quot;: 0}');
+
+-- LS6000 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS6000', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;, &quot;12VDC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0, &quot;12VDC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- LS7000 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS7000', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;, &quot;12VDC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0, &quot;12VDC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- LS7000/2 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS7000/2', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;, &quot;12VDC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0, &quot;12VDC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- LS8000 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS8000', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;, &quot;12VDC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0, &quot;12VDC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- LS8000/2 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS8000/2', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;, &quot;12VDC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0, &quot;12VDC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- LT9000 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LT9000', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- FS10000 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'FS10000', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0}');
+
+-- LS7500, LS8500 Voltage Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Voltage', 'Supply voltage selection', 0.0, 'fixed', 'Electrical', 'LS7500,LS8500', 
+ '[&quot;115VAC&quot;, &quot;230VAC&quot;, &quot;12VDC&quot;, &quot;24VDC&quot;]', 
+ '{&quot;115VAC&quot;: 0, &quot;230VAC&quot;: 0, &quot;12VDC&quot;: 0, &quot;24VDC&quot;: 0}');
+
+-- =================================================================
+-- O-RING MATERIAL OPTIONS (All Families)
+-- =================================================================
+
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('O-Rings', 'O-Ring material selection', 0.0, 'fixed', 'O-ring Material', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;Viton&quot;, &quot;Silicon&quot;, &quot;Buna-N&quot;, &quot;EPDM&quot;, &quot;PTFE&quot;, &quot;Kalrez&quot;]', 
+ '{&quot;Viton&quot;: 0, &quot;Silicon&quot;: 0, &quot;Buna-N&quot;: 0, &quot;EPDM&quot;: 0, &quot;PTFE&quot;: 0, &quot;Kalrez&quot;: 295}');
+
+-- =================================================================
+-- EXOTIC METAL OPTIONS (All Families)
+-- =================================================================
+
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Exotic Metal', 'Exotic metal material selection', 0.0, 'fixed', 'Exotic Metal', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;None&quot;, &quot;Alloy 20&quot;, &quot;Hastelloy-C-276&quot;, &quot;Hastelloy-B&quot;, &quot;Titanium&quot;]', 
+ '{&quot;None&quot;: 0, &quot;Alloy 20&quot;: 0, &quot;Hastelloy-C-276&quot;: 0, &quot;Hastelloy-B&quot;: 0, &quot;Titanium&quot;: 0}');
+
+-- =================================================================
+-- CONNECTION OPTIONS (All Families)
+-- =================================================================
+
+-- Primary Connection Type Selection
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Connection Type', 'Primary connection type selection', 0.0, 'fixed', 'Mechanical', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;NPT&quot;, &quot;Flange&quot;, &quot;Tri-clamp&quot;]', 
+ '{&quot;NPT&quot;: 0, &quot;Flange&quot;: 0, &quot;Tri-clamp&quot;: 0}');
+
+-- NPT Size Options for LS2000, LS2100, FS10000 (3/4&quot; Standard)
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('NPT Size', 'NPT connection size selection', 0.0, 'fixed', 'Mechanical', 'LS2000,LS2100,FS10000', 
+ '[&quot;3/4\&quot;&quot;]', 
+ '{&quot;3/4\&quot;&quot;: 0}');
+
+-- NPT Size Options for LS6000, LS7000, LS7000/2, LT9000 (1&quot; Standard with free 3/4&quot;)
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('NPT Size', 'NPT connection size selection', 0.0, 'fixed', 'Mechanical', 'LS6000,LS7000,LS7000/2,LT9000', 
+ '[&quot;1\&quot;&quot;, &quot;3/4\&quot;&quot;]', 
+ '{&quot;1\&quot;&quot;: 0, &quot;3/4\&quot;&quot;: 0}');
+
+-- NPT Size Options for LS8000, LS8000/2 (3/4&quot; Standard with free 1&quot;)
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('NPT Size', 'NPT connection size selection', 0.0, 'fixed', 'Mechanical', 'LS8000,LS8000/2', 
+ '[&quot;3/4\&quot;&quot;, &quot;1\&quot;&quot;]', 
+ '{&quot;3/4\&quot;&quot;: 0, &quot;1\&quot;&quot;: 0}');
+
+-- Flange Type Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Flange Type', 'Flange type selection', 0.0, 'fixed', 'Mechanical', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;150#&quot;, &quot;300#&quot;]', 
+ '{&quot;150#&quot;: 0, &quot;300#&quot;: 0}');
+
+-- Flange Size Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Flange Size', 'Flange size selection', 0.0, 'fixed', 'Mechanical', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;1\&quot;&quot;, &quot;1.5\&quot;&quot;, &quot;2\&quot;&quot;, &quot;3\&quot;&quot;, &quot;4\&quot;&quot;]', 
+ '{&quot;1\&quot;&quot;: 0, &quot;1.5\&quot;&quot;: 0, &quot;2\&quot;&quot;: 0, &quot;3\&quot;&quot;: 0, &quot;4\&quot;&quot;: 0}');
+
+-- Tri-clamp Options
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Tri-clamp', 'Tri-clamp selection', 0.0, 'fixed', 'Mechanical', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;1.5\&quot; Tri-clamp Process Connection&quot;, &quot;1.5\&quot; Tri-clamp Spud&quot;, &quot;2\&quot; Tri-clamp Process Connection&quot;, &quot;2\&quot; Tri-clamp Spud&quot;]', 
+ '{&quot;1.5\&quot; Tri-clamp Process Connection&quot;: 280.0, &quot;1.5\&quot; Tri-clamp Spud&quot;: 170.0, &quot;2\&quot; Tri-clamp Process Connection&quot;: 330.0, &quot;2\&quot; Tri-clamp Spud&quot;: 220.0}');
+
+-- =================================================================
+-- MISCELLANEOUS OPTIONS
+-- =================================================================
+
+-- Extra Static Protection (LS2000 only)
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Extra Static Protection', 'Additional static protection for plastic pellets and resins', 30.0, 'fixed', 'Electrical', 'LS2000', 
+ '[&quot;Yes&quot;, &quot;No&quot;]', 
+ '{&quot;Yes&quot;: 30, &quot;No&quot;: 0}');
+
+-- Bent Probe
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Bent Probe', 'Bent probe configuration', 50.0, 'fixed', 'Mechanical', 'LS2000,LS2100,LS6000,LS7000,LS8000', 
+ '[&quot;Yes&quot;, &quot;No&quot;]', 
+ '{&quot;Yes&quot;: 50, &quot;No&quot;: 0}');
+
+-- Stainless Steel Tag
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Stainless Steel Tag', 'Stainless steel identification tag', 30.0, 'fixed', 'Mechanical', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000', 
+ '[&quot;Yes&quot;, &quot;No&quot;]', 
+ '{&quot;Yes&quot;: 30, &quot;No&quot;: 0}');
+
+-- 3/4&quot; Diameter Probe (LS6000, LS7000 only)
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('3/4&quot; Diameter Probe', '3/4&quot; diameter probe x 10&quot;', 175.0, 'fixed', 'Mechanical', 'LS6000,LS7000', 
+ '[&quot;Yes&quot;, &quot;No&quot;]', 
+ '{&quot;Yes&quot;: 175, &quot;No&quot;: 0}');
+
+-- Twisted Shielded Pair (LS8000, LS8000/2)
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Twisted Shielded Pair', '22 AWG, twisted shielded pair', 0.0, 'per_unit', 'Electrical', 'LS8000,LS8000/2', 
+ '[&quot;Yes&quot;, &quot;No&quot;]', 
+ '{&quot;Yes&quot;: 0.70, &quot;No&quot;: 0}');
+
+-- LS7000 Enclosure
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('LS7000 Enclosure', 'Enclosure selection for LS7000', 0.0, 'fixed', 'Mechanical', 'LS7000', 
+ '[&quot;Standard&quot;, &quot;Stainless Steel NEMA 4X&quot;]', 
+ '{&quot;Standard&quot;: 0, &quot;Stainless Steel NEMA 4X&quot;: 285.0}');
+
+-- LS8000 Enclosure
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('LS8000 Enclosure', 'Enclosure selection for LS8000', 0.0, 'fixed', 'Mechanical', 'LS8000', 
+ '[&quot;Standard&quot;, &quot;NEMA 4 Metal 8x6x3.5&quot;, &quot;GRE Exp Proof&quot;]', 
+ '{&quot;Standard&quot;: 0, &quot;NEMA 4 Metal 8x6x3.5&quot;: 245.0, &quot;GRE Exp Proof&quot;: 590.0}');
+
+-- LS8000/2 Enclosure
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('LS8000/2 Enclosure', 'Enclosure selection for LS8000/2', 0.0, 'fixed', 'Mechanical', 'LS8000/2', 
+ '[&quot;Standard&quot;, &quot;NEMA 4 Metal 10x8x4&quot;, &quot;GRK Exp Proof&quot;]', 
+ '{&quot;Standard&quot;: 0, &quot;NEMA 4 Metal 10x8x4&quot;: 420.0, &quot;GRK Exp Proof&quot;: 1030.0}');
+
+-- =================================================================
+-- PROBE LENGTH PRICING RULES
+-- =================================================================
+
+-- Probe Length Pricing
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Probe Length', 'Probe length pricing rules', 0.0, 'per_unit', 'Pricing', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;Standard&quot;, &quot;Non-Standard&quot;]', 
+ '{&quot;Standard&quot;: 0, &quot;Non-Standard&quot;: 300}');
+
+-- Material-specific Length Adders
+INSERT INTO options (name, description, price, price_type, category, product_families, choices, adders) VALUES
+('Length Adder', 'Per-foot length adder by material', 0.0, 'per_unit', 'Pricing', 'LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500', 
+ '[&quot;S&quot;, &quot;H&quot;, &quot;CPVC&quot;, &quot;U&quot;, &quot;C&quot;]', 
+ '{&quot;S&quot;: 45, &quot;H&quot;: 110, &quot;CPVC&quot;: 50, &quot;U&quot;: 45, &quot;C&quot;: 45}');
+
+-- =================================================================
+-- VERIFICATION: Show record count
+-- =================================================================
+
+SELECT 'Options table populated successfully. Total records: ' || COUNT(*) AS result FROM options;</sql><current_tab id="0"/></tab_sql></sqlb_project>

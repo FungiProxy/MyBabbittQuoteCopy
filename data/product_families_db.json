@@ -1,0 +1,68 @@
+[
+    {
+        "category": "Point Level Switch",
+        "description": "LS2000 Level Switch",
+        "id": 1,
+        "name": "LS2000"
+    },
+    {
+        "category": "Point Level Switch",
+        "description": "LS2100 Level Switch",
+        "id": 2,
+        "name": "LS2100"
+    },
+    {
+        "category": "Point Level Switch",
+        "description": "LS6000 Level Switch",
+        "id": 3,
+        "name": "LS6000"
+    },
+    {
+        "category": "Point Level Switch",
+        "description": "LS7000 Level Switch",
+        "id": 4,
+        "name": "LS7000"
+    },
+    {
+        "category": "Multi-Point Level Switch",
+        "description": "LS7000/2 Dual Point Level Switch",
+        "id": 5,
+        "name": "LS7000/2"
+    },
+    {
+        "category": "Point Level Switch",
+        "description": "LS8000 Level Switch",
+        "id": 6,
+        "name": "LS8000"
+    },
+    {
+        "category": "Multi-Point Level Switch",
+        "description": "LS8000/2 Dual Point Level Switch",
+        "id": 7,
+        "name": "LS8000/2"
+    },
+    {
+        "category": "Continuous Level Transmitter",
+        "description": "LT9000 Level Transmitter",
+        "id": 8,
+        "name": "LT9000"
+    },
+    {
+        "category": "Flow Switch",
+        "description": "FS10000 Flow Switch",
+        "id": 9,
+        "name": "FS10000"
+    },
+    {
+        "category": "Presence/Absence Switch",
+        "description": "LS7500 Integral Flange Sensor",
+        "id": 10,
+        "name": "LS7500"
+    },
+    {
+        "category": "Presence/Absence Switch",
+        "description": "LS8500 Remote Mount Flange Sensor",
+        "id": 11,
+        "name": "LS8500"
+    }
+]
