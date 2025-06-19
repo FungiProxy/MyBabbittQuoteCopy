@@ -93,23 +93,22 @@ class ProductSelectionDialog(QDialog):
             family_objs = self.product_service.get_product_families(self.db)
             products = []
             for fam in family_objs:
-                variants = self.product_service.get_variants_for_family(
-                    self.db, fam["id"]
-                )
-                if variants:
-                    variant = variants[0]
-                    product_info = {
-                        "id": fam["id"],
-                        "name": fam["name"],
-                        "description": fam.get("description", ""),
-                        "category": fam.get("category", ""),
-                        "base_price": variant["base_price"],
-                        "base_length": variant["base_length"],
-                        "voltage": variant["voltage"],
-                        "material": variant["material"],
-                    }
-                    products.append(product_info)
+                # Use the base configuration from the product family instead of variants
+                product_info = {
+                    "id": fam["id"],
+                    "name": fam["name"],
+                    "description": fam.get("description", ""),
+                    "category": fam.get("category", ""),
+                    "base_price": fam.get("base_price", 0.0),
+                    "base_model_number": fam.get("base_model_number", ""),
+                    # Set default values for dynamic configuration
+                    "base_length": 10,  # Default 10" probe length
+                    "voltage": "115VAC",  # Default voltage
+                    "material": "S",  # Default material (316SS)
+                }
+                products.append(product_info)
             self.products = products
+            logger.info(f"Loaded {len(products)} product families")
         except Exception as e:
             logger.error(
                 f"A critical error occurred while fetching product families: {e}",

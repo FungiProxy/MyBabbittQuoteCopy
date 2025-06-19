@@ -263,7 +263,7 @@ class ProductService:
     def get_product_families(self, db: Session) -> List[Dict]:
         """
         Fetch all product families from the database.
-        Returns: List of dicts with id, name, description, category.
+        Returns: List of dicts with id, name, description, category, base_model_number, base_price.
         """
         logger.debug("Fetching all product families")
         families = db.query(ProductFamily).all()
@@ -273,6 +273,8 @@ class ProductService:
                 "name": f.name,
                 "description": f.description,
                 "category": f.category,
+                "base_model_number": f.base_model_number,
+                "base_price": f.base_price,
             }
             for f in families
         ]
