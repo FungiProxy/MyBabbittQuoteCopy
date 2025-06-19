@@ -31,6 +31,8 @@ class ProductFamily(Base):
         name (str): Product family name (e.g., "LS2000")
         description (str): Description of the product family
         category (str): Category (e.g., "Level Switch")
+        base_model_number (str): Base model number for the family (e.g., "LS2000-115VAC-S-10"")
+        base_price (float): Base price for the family before adders
         variants (List[ProductVariant]): List of product variants in this family
         spare_parts (List[SparePart]): List of spare parts for this family
         options (List[Option]): List of available options for this family (association_proxy)
@@ -47,6 +49,10 @@ class ProductFamily(Base):
     name = Column(String, nullable=False, index=True)  # e.g., "LS2000", "LS7000"
     description = Column(Text)
     category = Column(String, index=True)  # e.g., "Level Switch", "Transmitter"
+
+    # Base configuration for dynamic pricing
+    base_model_number = Column(String)  # e.g., "LS2000-115VAC-S-10""
+    base_price = Column(Float)  # Base price before adders
 
     # Relationships
     variants = relationship("ProductVariant", back_populates="product_family")

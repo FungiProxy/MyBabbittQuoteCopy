@@ -99,6 +99,7 @@ def seed_ls8000_2_variants():
                 voltage="230VAC",
                 material="TS",
             ),
+            # TRAN-EX variants (extra probe, housing, and transmitter for two probe applications)
             ProductVariant(
                 product_family_id=ls8000_2.id,
                 model_number='LS8000/2-TRAN-EX-S-10"',
@@ -111,7 +112,7 @@ def seed_ls8000_2_variants():
             ProductVariant(
                 product_family_id=ls8000_2.id,
                 model_number='LS8000/2-TRAN-EX-H-10"',
-                description='LS8000/2 remote mounted two probe system with 10" Teflon Sleeve probe',
+                description='LS8000/2 remote mounted two probe system with 10" Halar coated probe',
                 base_price=650.0,
                 base_length=10.0,
                 voltage="115VAC",

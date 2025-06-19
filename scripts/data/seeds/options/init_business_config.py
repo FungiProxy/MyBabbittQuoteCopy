@@ -3,16 +3,17 @@ Database initialization script for business configuration data.
 This includes essential business rules, materials, standard lengths, and pricing configurations.
 """
 
+import os
 import sys
 from pathlib import Path
 
-# Add the project root to the Python path
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+# Add the project root to the path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+sys.path.insert(0, project_root)
 
 from src.core.database import SessionLocal, init_db
-from src.core.models.standard_length import StandardLength
-from src.core.models.product_family import ProductFamily
+from src.core.models.material import StandardLength
+from src.core.models.product_variant import ProductFamily
 from src.core.models.option import Option
 
 
@@ -90,7 +91,7 @@ def init_business_config():
             # Material Options for LS2000
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -105,15 +106,14 @@ def init_business_config():
                 },
                 product_families="LS2000",
             ),
-
             # Material Options for LS2100
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
-                choices=["S", "H", "TS",  "U", "T", "C"],
+                choices=["S", "H", "TS", "U", "T", "C"],
                 adders={
                     "S": 0,  # 316 Stainless Steel
                     "H": 110,  # Halar Coated
@@ -124,11 +124,10 @@ def init_business_config():
                 },
                 product_families="LS2100",
             ),
-
             # Material Options for LS6000
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -144,11 +143,10 @@ def init_business_config():
                 },
                 product_families="LS6000",
             ),
-
             # Material Options for LS7000
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -164,11 +162,10 @@ def init_business_config():
                 },
                 product_families="LS7000",
             ),
-
             # Material Options for LS7000/2
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -179,11 +176,10 @@ def init_business_config():
                 },
                 product_families="LS7000/2",
             ),
-
             # Material Options for LS8000
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -196,11 +192,10 @@ def init_business_config():
                 },
                 product_families="LS8000",
             ),
-
             # Material Options for LS8000/2
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -211,11 +206,10 @@ def init_business_config():
                 },
                 product_families="LS8000/2",
             ),
-
             # Material Options for LT9000
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -226,11 +220,10 @@ def init_business_config():
                 },
                 product_families="LT9000",
             ),
-
             # Material Options for FS10000
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -240,11 +233,10 @@ def init_business_config():
                 },
                 product_families="FS10000",
             ),
-
             # Material Options for Presence/Absence Switches
             Option(
                 name="Material",
-                description="Probe material selection", 
+                description="Probe material selection",
                 price=0.0,
                 price_type="fixed",
                 category="Material",
@@ -254,7 +246,6 @@ def init_business_config():
                 },
                 product_families="LS7500,LS8500",
             ),
-
             # O-Ring Materials
             Option(
                 name="O-Rings",
@@ -273,7 +264,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             # Exotic Metals
             Option(
                 name="Exotic Metal",
@@ -281,7 +271,13 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Exotic Metal",
-                choices=["None", "Alloy 20", "Hastelloy-C-276", "Hastelloy-B", "Titanium"],
+                choices=[
+                    "None",
+                    "Alloy 20",
+                    "Hastelloy-C-276",
+                    "Hastelloy-B",
+                    "Titanium",
+                ],
                 adders={
                     "None": 0,
                     "Alloy 20": 0,
@@ -291,8 +287,7 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
-            # Voltage Options for LS2000, 
+            # Voltage Options for LS2000,
             Option(
                 name="Voltage",
                 description="Supply voltage selection",
@@ -306,7 +301,6 @@ def init_business_config():
                 },
                 product_families="LS2000",
             ),
-            
             # Voltage Options for LS2100
             Option(
                 name="Voltage",
@@ -320,7 +314,6 @@ def init_business_config():
                 },
                 product_families="LS2100",
             ),
-            
             # Voltage Options for LS6000
             Option(
                 name="Voltage",
@@ -337,7 +330,6 @@ def init_business_config():
                 },
                 product_families="LS6000",
             ),
-            
             # Voltage Options for LS7000
             Option(
                 name="Voltage",
@@ -354,7 +346,6 @@ def init_business_config():
                 },
                 product_families="LS7000",
             ),
-            
             # Voltage Options for LS7000/2
             Option(
                 name="Voltage",
@@ -371,7 +362,6 @@ def init_business_config():
                 },
                 product_families="LS7000/2",
             ),
-            
             # Voltage Options for LS8000
             Option(
                 name="Voltage",
@@ -388,7 +378,6 @@ def init_business_config():
                 },
                 product_families="LS8000",
             ),
-            
             # Voltage Options for LS8000/2
             Option(
                 name="Voltage",
@@ -405,7 +394,6 @@ def init_business_config():
                 },
                 product_families="LS8000/2",
             ),
-            
             # Voltage Options for LT9000
             Option(
                 name="Voltage",
@@ -421,14 +409,13 @@ def init_business_config():
                 },
                 product_families="LT9000",
             ),
-
-            # Voltage Options for FS10000   
+            # Voltage Options for FS10000
             Option(
                 name="Voltage",
                 description="Supply voltage selection",
                 price=0.0,
                 price_type="fixed",
-                category="Electrical",  
+                category="Electrical",
                 choices=["115VAC", "230VAC"],
                 adders={
                     "115VAC": 0,
@@ -436,11 +423,10 @@ def init_business_config():
                 },
                 product_families="FS10000",
             ),
-
             # Voltage Options for LS7500, LS8500
             Option(
                 name="Voltage",
-                description="Supply voltage selection", 
+                description="Supply voltage selection",
                 price=0.0,
                 price_type="fixed",
                 category="Electrical",
@@ -453,7 +439,6 @@ def init_business_config():
                 },
                 product_families="LS7500, LS8500",
             ),
-
             # Connection Types
             Option(
                 name="Connection Type",
@@ -469,7 +454,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-            
             # NPT Sizes for LS2000, LS2100
             Option(
                 name="NPT Size",
@@ -477,13 +461,12 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Mechanical",
-                choices=["3/4\""],
+                choices=['3/4"'],
                 adders={
-                    "3/4\"": 0,
+                    '3/4"': 0,
                 },
                 product_families="LS2000,LS2100",
             ),
-            
             # NPT Sizes for LS6000, LS7000
             Option(
                 name="NPT Size",
@@ -491,14 +474,13 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Mechanical",
-                choices=["1\"", "3/4\""],
+                choices=['1"', '3/4"'],
                 adders={
-                    "1\"": 0,
-                    "3/4\"": 0,
+                    '1"': 0,
+                    '3/4"': 0,
                 },
                 product_families="LS6000,LS7000",
             ),
-            
             # Flange Types
             Option(
                 name="Flange Type",
@@ -513,7 +495,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-            
             # Flange Sizes
             Option(
                 name="Flange Size",
@@ -521,17 +502,16 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Mechanical",
-                choices=["1\"", "1-1/2\"", "2\"", "3\"", "4\""],
+                choices=['1"', '1-1/2"', '2"', '3"', '4"'],
                 adders={
-                    "1\"": 0,
-                    "1-1/2\"": 0,
-                    "2\"": 0,
-                    "3\"": 0,
-                    "4\"": 0,
+                    '1"': 0,
+                    '1-1/2"': 0,
+                    '2"': 0,
+                    '3"': 0,
+                    '4"': 0,
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-            
             # Tri-clamp
             Option(
                 name="Tri-clamp",
@@ -539,16 +519,20 @@ def init_business_config():
                 price=0.0,
                 price_type="fixed",
                 category="Mechanical",
-                choices=["1-1/2\" Tri-clamp Process Connection", "1-1/2\" Tri-clamp Spud", "2\" Tri-clamp Process Connection", "2\" Tri-clamp Spud"],
+                choices=[
+                    '1-1/2" Tri-clamp Process Connection',
+                    '1-1/2" Tri-clamp Spud',
+                    '2" Tri-clamp Process Connection',
+                    '2" Tri-clamp Spud',
+                ],
                 adders={
-                    "1-1/2\" Tri-clamp Process Connection": 280.0,
-                    "1-1/2\" Tri-clamp Spud": 170.0,
-                    "2\" Tri-clamp Process Connection": 330.0,
-                    "2\" Tri-clamp Spud": 220.0,
+                    '1-1/2" Tri-clamp Process Connection': 280.0,
+                    '1-1/2" Tri-clamp Spud': 170.0,
+                    '2" Tri-clamp Process Connection': 330.0,
+                    '2" Tri-clamp Spud': 220.0,
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             # Insulator Options
             Option(
                 name="Insulator",
@@ -565,7 +549,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             # Probe Length Pricing
             Option(
                 name="Probe Length",
@@ -580,7 +563,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             # Material-specific Length Adders
             Option(
                 name="Length Adder",
@@ -596,7 +578,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             # Miscellaneous Options
             Option(
                 name="Extra Static Protection",
@@ -611,7 +592,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             Option(
                 name="Bent Probe",
                 description="Bent probe configuration",
@@ -625,7 +605,6 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             Option(
                 name="Stainless Steel Tag",
                 description="Stainless steel identification tag",
@@ -639,10 +618,9 @@ def init_business_config():
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),
-
             Option(
-                name="3/4\" Diameter Probe",
-                description="3/4\" diameter probe x 10\"",
+                name='3/4" Diameter Probe',
+                description='3/4" diameter probe x 10"',
                 price=175.0,
                 price_type="fixed",
                 category="Mechanical",
@@ -653,7 +631,6 @@ def init_business_config():
                 },
                 product_families="LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000",
             ),
-
             Option(
                 name="Twisted Shielded Pair",
                 description="22 AWG, twisted shielded pair",
@@ -667,10 +644,9 @@ def init_business_config():
                 },
                 product_families="LS8000,LS8000/2",
             ),
-
             Option(
                 name="NEMA 4 Enclosure",
-                description="8\" x 6\" x 3.5\" NEMA 4 metal enclosure for receiver",
+                description='8" x 6" x 3.5" NEMA 4 metal enclosure for receiver',
                 price=245.0,
                 price_type="fixed",
                 category="Mechanical",
@@ -681,7 +657,6 @@ def init_business_config():
                 },
                 product_families="LS8000,LS8000/2",
             ),
-
             Option(
                 name="Additional Coaxial Cable",
                 description="Additional coaxial cable",
@@ -695,7 +670,6 @@ def init_business_config():
                 },
                 product_families="FS10000",
             ),
-
             Option(
                 name="GRK Exp Proof Enclosure",
                 description="GRK explosion proof enclosure for receiver",
@@ -710,7 +684,7 @@ def init_business_config():
                 product_families="LS8000,LS8000/2,FS10000",
             ),
         ]
-        
+
         # Add all options
         for option in options:
             # Check if option already exists
@@ -749,4 +723,4 @@ def init_business_config():
 
 
 if __name__ == "__main__":
-    init_business_config() 
+    init_business_config()
