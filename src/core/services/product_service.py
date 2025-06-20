@@ -201,7 +201,7 @@ class ProductService:
 
     def get_product_families_by_category(self, db: Session) -> List[Dict]:
         """
-        Retrieves all product families, organized by category.
+        Retrieves all product families, organized by category in the specified order.
         """
         families = db.query(ProductFamily).order_by(ProductFamily.category, ProductFamily.name).all()
         
@@ -216,8 +216,28 @@ class ProductService:
                 'description': family.description,
                 'category': family.category
             })
-            
-        return list(categories.values())
+        
+        # Define the custom order for categories
+        category_order = [
+            "Point Level Switch",
+            "Multi-Point Level Switch", 
+            "Continuous Level Transmitter",
+            "Flow Switch",
+            "Presence/Absence Switch"
+        ]
+        
+        # Return categories in the specified order
+        ordered_categories = []
+        for category_name in category_order:
+            if category_name in categories:
+                ordered_categories.append(categories[category_name])
+        
+        # Add any remaining categories that weren't in the order list
+        for category_name, category_data in categories.items():
+            if category_name not in category_order:
+                ordered_categories.append(category_data)
+        
+        return ordered_categories
 
     def get_products_by_family(self, db: Session, family_name: str) -> List[Dict]:
         """
