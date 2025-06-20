@@ -23,7 +23,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.ui.theme.babbitt_theme import BabbittTheme
+from src.core.services.settings_service import SettingsService
+from src.ui.theme.theme_manager import ThemeManager
 from src.ui.views.customers_page import CustomersPage
 from src.ui.views.dashboard_redesign import DashboardRedesign
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
@@ -45,8 +46,11 @@ class MainWindowRedesign(QMainWindow):
         self.setWindowTitle('MyBabbittQuote - Babbitt International')
         self.resize(1400, 800)
 
-        # Apply theme
-        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
+        # Initialize settings service
+        self.settings_service = SettingsService()
+
+        # Apply theme on startup
+        self._apply_saved_theme()
 
         # Initialize UI
         self._setup_ui()
@@ -56,6 +60,17 @@ class MainWindowRedesign(QMainWindow):
         self._show_dashboard()
 
         logger.info('MainWindowRedesign initialized successfully')
+
+    def _apply_saved_theme(self):
+        """Apply the saved theme from settings."""
+        try:
+            saved_theme = self.settings_service.get_theme('Babbitt Theme')
+            ThemeManager.apply_theme(saved_theme)
+            logger.info(f'Applied saved theme: {saved_theme}')
+        except Exception as e:
+            logger.error(f'Failed to apply saved theme: {e}')
+            # Fallback to Babbitt theme
+            ThemeManager.apply_theme('Babbitt Theme')
 
     def _setup_ui(self):
         """Set up the main UI layout."""
@@ -222,9 +237,13 @@ class MainWindowRedesign(QMainWindow):
     @Slot(str)
     def _apply_theme(self, theme_name):
         """Apply a theme to the application."""
-        # For now, we only have the Babbitt theme
-        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
-        logger.info(f'Applied theme: {theme_name}')
+        try:
+            ThemeManager.apply_theme(theme_name)
+            logger.info(f'Applied theme: {theme_name}')
+        except Exception as e:
+            logger.error(f'Failed to apply theme {theme_name}: {e}')
+            # Fallback to Babbitt theme
+            ThemeManager.apply_theme('Babbitt Theme')
 
     def show_notification(self, message, message_type='info'):
         """Show a notification message."""
@@ -265,6 +284,6 @@ class MainWindowRedesign(QMainWindow):
 
 
 # Utility function for easy theme application
-def apply_babbitt_theme(app: QApplication):
-    """Apply the Babbitt theme to the entire application."""
-    app.setStyleSheet(BabbittTheme.get_main_stylesheet())
+def apply_theme(theme_name: str, app: QApplication = None):
+    """Apply a theme to the entire application."""
+    ThemeManager.apply_theme(theme_name, app)

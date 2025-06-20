@@ -9,6 +9,9 @@ import traceback
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
+from src.core.services.settings_service import SettingsService
+from src.ui.theme.theme_manager import ThemeManager
+
 # Print debug information
 print('Starting Babbitt Quote Generator...')
 print(f'Current directory: {os.getcwd()}')
@@ -31,8 +34,19 @@ def main():
     try:
         print('Creating QApplication...')
 
-        # Create application. The theme is now applied within MainWindowRedesign.
+        # Create application
         app = QApplication(sys.argv)
+
+        # Initialize settings and apply theme
+        settings = SettingsService()
+        saved_theme = settings.get_theme('Babbitt Theme')
+        
+        try:
+            ThemeManager.apply_theme(saved_theme, app)
+            print(f'Applied theme: {saved_theme}')
+        except Exception as e:
+            print(f'Failed to apply saved theme, using default: {e}')
+            ThemeManager.apply_theme('Babbitt Theme', app)
 
         print('Creating MainWindowRedesign...')
         # Create and show main window

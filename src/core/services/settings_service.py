@@ -18,7 +18,7 @@ class SettingsService:
     def __init__(self, company='BabbittInternational', app='QuoteGenerator'):
         self.settings = QSettings(company, app)
 
-    def get_theme(self, default='Default Light'):
+    def get_theme(self, default='Babbitt Theme'):
         """Retrieves the application theme."""
         return self.settings.value('theme', defaultValue=default)
 

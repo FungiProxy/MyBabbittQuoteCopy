@@ -23,9 +23,68 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QFrame,
+    QGridLayout,
 )
 
 from src.core.services.settings_service import SettingsService
+from src.ui.theme.theme_manager import ThemeManager
+
+
+class ThemePreviewWidget(QFrame):
+    """Widget for displaying theme previews."""
+    
+    def __init__(self, theme_info, parent=None):
+        super().__init__(parent)
+        self.theme_info = theme_info
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """Set up the preview UI."""
+        self.setFixedSize(120, 80)
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color: {self.theme_info['background_color']};
+                border: 2px solid #E5E7EB;
+                border-radius: 8px;
+            }}
+        """)
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
+        
+        # Theme name
+        name_label = QLabel(self.theme_info['name'])
+        name_label.setStyleSheet(f"""
+            QLabel {{
+                color: {self.theme_info['primary_color']};
+                font-weight: 600;
+                font-size: 10px;
+            }}
+        """)
+        layout.addWidget(name_label)
+        
+        # Color preview
+        color_frame = QFrame()
+        color_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {self.theme_info['primary_color']};
+                border-radius: 4px;
+                min-height: 20px;
+            }}
+        """)
+        layout.addWidget(color_frame)
+        
+        # Accent color
+        accent_frame = QFrame()
+        accent_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {self.theme_info['accent_color']};
+                border-radius: 4px;
+                min-height: 8px;
+            }}
+        """)
+        layout.addWidget(accent_frame)
 
 
 class SettingsPage(QWidget):
@@ -49,12 +108,30 @@ class SettingsPage(QWidget):
         general_layout = QFormLayout(general_group)
         general_layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
-        # Simplified theme selection - we now have a single Babbitt theme
+        # Theme selection with preview
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(['Babbitt Theme'])  # Only one theme option now
-        self.theme_combo.setEnabled(False)  # Disable since it's the only option
-
-        general_layout.addRow('Application Theme:', self.theme_combo)
+        self.theme_combo.addItems(ThemeManager.get_available_themes())
+        self.theme_combo.setEnabled(True)  # Enable theme selection
+        
+        # Create theme preview section
+        theme_preview_layout = QVBoxLayout()
+        theme_preview_layout.addWidget(self.theme_combo)
+        
+        # Theme previews
+        preview_frame = QFrame()
+        preview_layout = QGridLayout(preview_frame)
+        preview_layout.setSpacing(10)
+        
+        self.preview_widgets = {}
+        for i, theme_name in enumerate(ThemeManager.get_available_themes()):
+            theme_info = ThemeManager.get_theme_preview_info(theme_name)
+            if theme_info:
+                preview_widget = ThemePreviewWidget(theme_info)
+                self.preview_widgets[theme_name] = preview_widget
+                preview_layout.addWidget(preview_widget, i // 2, i % 2)
+        
+        theme_preview_layout.addWidget(preview_frame)
+        general_layout.addRow('Application Theme:', theme_preview_layout)
 
         self.startup_page_combo = QComboBox()
         self.startup_page_combo.addItems(['Dashboard', 'Quote Creation', 'Customers'])
@@ -110,12 +187,47 @@ class SettingsPage(QWidget):
         self.save_btn.clicked.connect(self.save_settings)
         self.browse_export_path_btn.clicked.connect(self.browse_for_export_path)
         self.reseed_btn.clicked.connect(self.reseed_database)
-        self.theme_combo.currentTextChanged.connect(self.theme_changed.emit)
+        self.theme_combo.currentTextChanged.connect(self._on_theme_changed)
+
+    def _on_theme_changed(self, theme_name):
+        """Handle theme selection change."""
+        # Emit signal for theme change
+        self.theme_changed.emit(theme_name)
+        
+        # Update preview selection
+        self._update_preview_selection(theme_name)
+
+    def _update_preview_selection(self, selected_theme):
+        """Update the visual selection of theme previews."""
+        for theme_name, preview_widget in self.preview_widgets.items():
+            if theme_name == selected_theme:
+                preview_widget.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {preview_widget.theme_info['background_color']};
+                        border: 3px solid #3B82F6;
+                        border-radius: 8px;
+                    }}
+                """)
+            else:
+                preview_widget.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {preview_widget.theme_info['background_color']};
+                        border: 2px solid #E5E7EB;
+                        border-radius: 8px;
+                    }}
+                """)
 
     def load_settings(self):
         """Load settings from storage and populate the UI fields."""
-        # Always use Babbitt theme now
-        self.theme_combo.setCurrentText('Babbitt Theme')
+        # Load current theme
+        current_theme = self.settings_service.get_theme('Babbitt Theme')
+        if current_theme in ThemeManager.get_available_themes():
+            self.theme_combo.setCurrentText(current_theme)
+        else:
+            # Fallback to Babbitt theme if saved theme is not available
+            self.theme_combo.setCurrentText('Babbitt Theme')
+        
+        self._update_preview_selection(self.theme_combo.currentText())
 
         startup_page = self.settings_service.get_startup_page()
         self.startup_page_combo.setCurrentText(startup_page)
@@ -135,8 +247,10 @@ class SettingsPage(QWidget):
 
     def save_settings(self):
         """Save the current settings from the UI to storage."""
-        # Always save Babbitt theme
-        self.settings_service.set_theme('Babbitt Theme')
+        # Save selected theme
+        selected_theme = self.theme_combo.currentText()
+        self.settings_service.set_theme(selected_theme)
+        
         self.settings_service.set_startup_page(self.startup_page_combo.currentText())
         self.settings_service.set_confirm_on_delete(
             self.confirm_on_delete_check.isChecked()
@@ -165,41 +279,24 @@ class SettingsPage(QWidget):
             self.default_export_path_input.setText(directory)
 
     def reseed_database(self):
-        """Triggers the database seeding script."""
+        """Reseed the database with initial data."""
         reply = QMessageBox.question(
             self,
-            'Reseed Database',
-            'This will delete all existing data and re-seed the database with default values. Are you sure you want to continue?',
+            'Confirm Database Reseed',
+            'This will reset the database to its initial state. All current data will be lost. Continue?',
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
+            QMessageBox.No
         )
 
         if reply == QMessageBox.Yes:
             try:
-                # Assuming the script is in a 'scripts' folder at the project root
-                script_path = os.path.join(os.getcwd(), 'scripts', 'seed_database.py')
-                if not os.path.exists(script_path):
-                    QMessageBox.critical(
-                        self, 'Error', f'Seeding script not found at {script_path}'
-                    )
-                    return
-
-                # Use the same python executable that is running the app
-                python_executable = sys.executable
-                subprocess.run(
-                    [python_executable, script_path],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
+                # Import and run reseed script
+                from scripts.data.init.init_sample_data import init_sample_data
+                init_sample_data()
                 QMessageBox.information(
-                    self, 'Success', 'Database has been re-seeded successfully.'
-                )
-            except subprocess.CalledProcessError as e:
-                QMessageBox.critical(
-                    self, 'Error', f'Failed to re-seed database:\n{e.stderr}'
+                    self, 'Success', 'Database has been reseeded successfully.'
                 )
             except Exception as e:
                 QMessageBox.critical(
-                    self, 'Error', f'An unexpected error occurred: {e}'
+                    self, 'Error', f'Failed to reseed database: {str(e)}'
                 )
