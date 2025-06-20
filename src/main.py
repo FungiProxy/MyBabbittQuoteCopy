@@ -18,10 +18,9 @@ print(f"Python version: {sys.version}")
 
 try:
     # Import main window
-    print("Importing MainWindow...")
-    from src.ui.main_window import MainWindow
-
-    print("MainWindow imported successfully")
+    print("Importing MainWindowRedesign...")
+    from src.ui.main_window_redesign import MainWindowRedesign
+    print("MainWindowRedesign imported successfully")
 except Exception as e:
     print(f"Error during initialization: {e}")
     traceback.print_exc()
@@ -34,18 +33,12 @@ def main():
     try:
         print("Creating QApplication...")
 
-        # Create application and apply theme
+        # Create application. The theme is now applied within MainWindowRedesign.
         app = QApplication(sys.argv)
 
-        settings = SettingsService()
-
-        print("Creating MainWindow...")
+        print("Creating MainWindowRedesign...")
         # Create and show main window
-        window = MainWindow()
-
-        # Apply theme on startup
-        theme = settings.get_theme()
-        window.apply_theme(theme)
+        window = MainWindowRedesign()
 
         print("Showing window...")
         window.show()

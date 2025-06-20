@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.core.services.settings_service import SettingsService
-from src.ui.views.themes import THEMES
+from src.ui.theme.babbitt_theme import BabbittTheme
 
 
 class SettingsPage(QWidget):
@@ -50,8 +50,10 @@ class SettingsPage(QWidget):
         general_layout = QFormLayout(general_group)
         general_layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
+        # Simplified theme selection - we now have a single Babbitt theme
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(THEMES.keys())
+        self.theme_combo.addItems(["Babbitt Theme"])  # Only one theme option now
+        self.theme_combo.setEnabled(False)  # Disable since it's the only option
 
         general_layout.addRow("Application Theme:", self.theme_combo)
 
@@ -113,10 +115,8 @@ class SettingsPage(QWidget):
 
     def load_settings(self):
         """Load settings from storage and populate the UI fields."""
-        theme = self.settings_service.get_theme()
-        if theme not in THEMES:
-            theme = "Default Light"
-        self.theme_combo.setCurrentText(theme)
+        # Always use Babbitt theme now
+        self.theme_combo.setCurrentText("Babbitt Theme")
 
         startup_page = self.settings_service.get_startup_page()
         self.startup_page_combo.setCurrentText(startup_page)
@@ -136,7 +136,8 @@ class SettingsPage(QWidget):
 
     def save_settings(self):
         """Save the current settings from the UI to storage."""
-        self.settings_service.set_theme(self.theme_combo.currentText())
+        # Always save Babbitt theme
+        self.settings_service.set_theme("Babbitt Theme")
         self.settings_service.set_startup_page(self.startup_page_combo.currentText())
         self.settings_service.set_confirm_on_delete(
             self.confirm_on_delete_check.isChecked()
