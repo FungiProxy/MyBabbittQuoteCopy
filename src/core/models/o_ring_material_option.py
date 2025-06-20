@@ -26,11 +26,11 @@ class O_RingMaterialOption(Base):
         >>> print(ormo)
     """
 
-    __tablename__ = 'o_ring_material_options'
+    __tablename__ = "o_ring_material_options"
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
     material_type = Column(String, nullable=False)  # Type of O-Ring material
     price = Column(Float, default=0.0)  # Additional cost for this material

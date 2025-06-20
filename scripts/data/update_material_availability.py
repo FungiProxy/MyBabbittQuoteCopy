@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from src.core.database import SessionLocal
 from src.core.models.material_option import MaterialOption
@@ -9,19 +9,19 @@ from src.core.models.product_variant import ProductFamily
 
 # Define material availability for each product family
 MATERIAL_AVAILABILITY = {
-    'LS2000': ['S', 'H', 'U', 'T', 'TS'],
-    'LS2100': ['S', 'H', 'T', 'TS', 'U'],
-    'LS6000': ['S', 'H', 'TS', 'CPVC'],
-    'LS7000': ['S', 'H', 'TS', 'T', 'U', 'CPVC'],
-    'LS7000/2': ['H', 'TS'],
-    'LS8000': ['S', 'H', 'TS'],
-    'LS8000/2': ['H', 'TS'],
-    'LT9000': ['S', 'H', 'TS', 'T', 'U', 'CPVC'],
-    'FS10000': ['S', 'H', 'TS', 'CPVC'],
-    'Presence/Absence Switches': ['S'],
-    'LS7500': ['S'],
-    'LS8500': ['S'],
-    'FT10000': ['S', 'H', 'TS', 'T', 'U', 'CPVC'],
+    "LS2000": ["S", "H", "U", "T", "TS"],
+    "LS2100": ["S", "H", "T", "TS", "U"],
+    "LS6000": ["S", "H", "TS", "CPVC"],
+    "LS7000": ["S", "H", "TS", "T", "U", "CPVC"],
+    "LS7000/2": ["H", "TS"],
+    "LS8000": ["S", "H", "TS"],
+    "LS8000/2": ["H", "TS"],
+    "LT9000": ["S", "H", "TS", "T", "U", "CPVC"],
+    "FS10000": ["S", "H", "TS", "CPVC"],
+    "Presence/Absence Switches": ["S"],
+    "LS7500": ["S"],
+    "LS8500": ["S"],
+    "FT10000": ["S", "H", "TS", "T", "U", "CPVC"],
 }
 
 
@@ -31,10 +31,10 @@ def update_material_availability():
         for family_name, available_materials in MATERIAL_AVAILABILITY.items():
             family = db.query(ProductFamily).filter_by(name=family_name).first()
             if not family:
-                print(f'Family {family_name} not found')
+                print(f"Family {family_name} not found")
                 continue
 
-            print(f'\nProcessing {family_name} (ID: {family.id})')
+            print(f"\nProcessing {family_name} (ID: {family.id})")
 
             # Get all material options for this family
             options = (
@@ -51,13 +51,13 @@ def update_material_availability():
                     )
 
         db.commit()
-        print('\nMaterial availability updated for all product families.')
+        print("\nMaterial availability updated for all product families.")
     except Exception as e:
-        print(f'Error: {e}')
+        print(f"Error: {e}")
         db.rollback()
     finally:
         db.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     update_material_availability()

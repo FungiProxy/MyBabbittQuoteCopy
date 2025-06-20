@@ -49,10 +49,10 @@ class MainWindow(QMainWindow):
     def __init__(self):
         """Initialize the main window and set up the UI components."""
         super().__init__()
-        self.setWindowTitle('Babbitt')
+        self.setWindowTitle("Babbitt")
         self.resize(1300, 700)
 
-        print('MainWindow.__init__() called')
+        print("MainWindow.__init__() called")
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -69,27 +69,27 @@ class MainWindow(QMainWindow):
         self._show_dashboard_content()
         self._connect_sidebar_signals()
 
-        print('MainWindow initialization complete')
+        print("MainWindow initialization complete")
 
     def _create_sidebar(self):
         """Creates the sidebar navigation panel."""
         self.sidebar_frame = QFrame()
-        self.sidebar_frame.setObjectName('sidebarFrame')
+        self.sidebar_frame.setObjectName("sidebarFrame")
         self.sidebar_frame.setFixedWidth(220)
 
         self.sidebar_layout = QVBoxLayout(self.sidebar_frame)
         self.sidebar_layout.setContentsMargins(10, 10, 10, 10)
         self.sidebar_layout.setSpacing(10)
 
-        self.logo_label = QLabel('Babbitt')
-        self.logo_label.setObjectName('logoLabel')
+        self.logo_label = QLabel("Babbitt")
+        self.logo_label.setObjectName("logoLabel")
         self.logo_label.setAlignment(Qt.AlignCenter)
         self.sidebar_layout.addWidget(self.logo_label)
 
         self.nav_list = QListWidget()
-        self.nav_list.setObjectName('navList')
+        self.nav_list.setObjectName("navList")
 
-        nav_items = ['Dashboard', 'Quote Creation', 'Customers']
+        nav_items = ["Dashboard", "Quote Creation", "Customers"]
         for item_text in nav_items:
             self.nav_list.addItem(QListWidgetItem(item_text))
 
@@ -97,14 +97,14 @@ class MainWindow(QMainWindow):
         self.sidebar_layout.addWidget(self.nav_list)
         self.sidebar_layout.addStretch()
 
-        self.settings_button = QPushButton('Settings')
-        self.settings_button.setObjectName('settingsButton')
+        self.settings_button = QPushButton("Settings")
+        self.settings_button.setObjectName("settingsButton")
         self.sidebar_layout.addWidget(self.settings_button)
 
     def _create_content_area(self):
         """Creates the main content area where different views will be displayed."""
         self.content_area_frame = QFrame()
-        self.content_area_frame.setObjectName('contentAreaFrame')
+        self.content_area_frame.setObjectName("contentAreaFrame")
 
         self.content_layout = QVBoxLayout(self.content_area_frame)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
@@ -132,31 +132,31 @@ class MainWindow(QMainWindow):
     def _create_content_header(self):
         """Creates the header part of the content area."""
         self.content_header_frame = QFrame()
-        self.content_header_frame.setObjectName('contentHeaderFrame')
+        self.content_header_frame.setObjectName("contentHeaderFrame")
         self.content_header_frame.setFixedHeight(60)
 
         header_layout = QHBoxLayout(self.content_header_frame)
         header_layout.setContentsMargins(20, 0, 20, 0)
 
-        self.current_view_title = QLabel('Dashboard')
-        self.current_view_title.setObjectName('currentViewTitle')
+        self.current_view_title = QLabel("Dashboard")
+        self.current_view_title.setObjectName("currentViewTitle")
         header_layout.addWidget(self.current_view_title)
         header_layout.addStretch()
 
-        self.bell_button = QPushButton('🔔')
+        self.bell_button = QPushButton("🔔")
         self.bell_button.setFixedSize(30, 30)
-        self.bell_button.setObjectName('iconButton')
+        self.bell_button.setObjectName("iconButton")
         self.bell_button.clicked.connect(self.show_notifications)
         header_layout.addWidget(self.bell_button)
 
-        self.user_profile_button = QPushButton('👤 John Smith')
-        self.user_profile_button.setObjectName('userProfileButton')
+        self.user_profile_button = QPushButton("👤 John Smith")
+        self.user_profile_button.setObjectName("userProfileButton")
         header_layout.addWidget(self.user_profile_button)
         self.user_profile_button.clicked.connect(self.show_user_profile)
 
     def _show_dashboard_content(self):
         """Populates the dashboard_page with content."""
-        self.current_view_title.setText('Dashboard')
+        self.current_view_title.setText("Dashboard")
         self.stacked_widget.setCurrentWidget(self.dashboard_page)
 
         dashboard_layout = QVBoxLayout(self.dashboard_page)
@@ -164,12 +164,12 @@ class MainWindow(QMainWindow):
         dashboard_layout.setSpacing(20)
 
         dashboard_tabs_layout = QHBoxLayout()
-        self.overview_button = QPushButton('Overview')
-        self.overview_button.setObjectName('dashboardTabButtonSelected')
-        self.analytics_button = QPushButton('Analytics')
-        self.analytics_button.setObjectName('dashboardTabButton')
-        self.reports_button_dash = QPushButton('Reports')
-        self.reports_button_dash.setObjectName('dashboardTabButton')
+        self.overview_button = QPushButton("Overview")
+        self.overview_button.setObjectName("dashboardTabButtonSelected")
+        self.analytics_button = QPushButton("Analytics")
+        self.analytics_button.setObjectName("dashboardTabButton")
+        self.reports_button_dash = QPushButton("Reports")
+        self.reports_button_dash.setObjectName("dashboardTabButton")
 
         dashboard_tabs_layout.addWidget(self.overview_button)
         dashboard_tabs_layout.addWidget(self.analytics_button)
@@ -220,28 +220,28 @@ class MainWindow(QMainWindow):
             stats_layout.setSpacing(20)
 
             card1 = self._create_stat_card(
-                'Total Quotes',
-                str(stats['total_quotes']),
+                "Total Quotes",
+                str(stats["total_quotes"]),
                 f"{stats['quote_change']:+}% from last month",
-                '📄',
+                "📄",
             )
             card2 = self._create_stat_card(
-                'Quote Value',
+                "Quote Value",
                 f"${stats['total_quote_value']:,.2f}",
                 f"{stats['value_change']:+}% from last month",
-                '$',
+                "$",
             )
             card3 = self._create_stat_card(
-                'Customers',
-                str(stats['total_customers']),
-                'Total unique customers',
-                '👥',
+                "Customers",
+                str(stats["total_customers"]),
+                "Total unique customers",
+                "👥",
             )
             card4 = self._create_stat_card(
-                'Products',
-                str(stats['total_products']),
-                'Total unique products quoted',
-                '📦',
+                "Products",
+                str(stats["total_products"]),
+                "Total unique products quoted",
+                "📦",
             )
 
             stats_layout.addWidget(card1)
@@ -253,11 +253,11 @@ class MainWindow(QMainWindow):
             main_content_layout = QHBoxLayout()
             main_content_layout.setSpacing(20)
             recent_quotes_group = self._create_recent_quotes_section(
-                stats.get('recent_quotes', [])
+                stats.get("recent_quotes", [])
             )
             main_content_layout.addWidget(recent_quotes_group)
             sales_category_group = self._create_sales_by_category_section(
-                stats.get('sales_by_category', [])
+                stats.get("sales_by_category", [])
             )
             main_content_layout.addWidget(sales_category_group)
 
@@ -265,30 +265,30 @@ class MainWindow(QMainWindow):
             overview_layout.addStretch()
 
         except Exception as e:
-            logger.error(f'Error getting dashboard statistics: {e}', exc_info=True)
-            overview_layout.addWidget(QLabel('Could not load dashboard statistics.'))
+            logger.error(f"Error getting dashboard statistics: {e}", exc_info=True)
+            overview_layout.addWidget(QLabel("Could not load dashboard statistics."))
         finally:
             db.close()
 
-    def _create_stat_card(self, title_text, value_text, sub_text, icon_text=''):
+    def _create_stat_card(self, title_text, value_text, sub_text, icon_text=""):
         """Creates a styled card for displaying a statistic."""
         card = QFrame()
-        card.setObjectName('statCard')
+        card.setObjectName("statCard")
         card_layout = QVBoxLayout(card)
         top_layout = QHBoxLayout()
         title = QLabel(title_text)
-        title.setObjectName('statTitle')
+        title.setObjectName("statTitle")
         icon = QLabel(icon_text)
-        icon.setObjectName('statIcon')
+        icon.setObjectName("statIcon")
         top_layout.addWidget(title)
         top_layout.addStretch()
         top_layout.addWidget(icon)
         card_layout.addLayout(top_layout)
         value = QLabel(value_text)
-        value.setObjectName('statValue')
+        value.setObjectName("statValue")
         card_layout.addWidget(value)
         sub = QLabel(sub_text)
-        sub.setObjectName('statSubText')
+        sub.setObjectName("statSubText")
         card_layout.addWidget(sub)
         return card
 
@@ -315,11 +315,11 @@ class MainWindow(QMainWindow):
     def on_settings_selected(self):
         """Shows the settings page."""
         self.stacked_widget.setCurrentWidget(self.settings_page)
-        self.current_view_title.setText('Settings')
+        self.current_view_title.setText("Settings")
 
     def show_notifications(self):
         """Shows a placeholder for notifications."""
-        QMessageBox.information(self, 'Notifications', 'You have no new notifications.')
+        QMessageBox.information(self, "Notifications", "You have no new notifications.")
 
     def show_user_profile(self):
         """Shows the user profile dialog."""
@@ -330,7 +330,7 @@ class MainWindow(QMainWindow):
         """Applies the selected theme to the application."""
         if theme_name not in THEMES:
             logger.warning(f"Theme '{theme_name}' not found. Using 'Default Light'.")
-            theme_name = 'Default Light'
+            theme_name = "Default Light"
 
         theme = THEMES[theme_name]
 

@@ -19,9 +19,9 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from src.core.models import (
+    BaseModel,
     Customer,
     ProductFamily,
-    BaseModel,
     Quote,
     QuoteItem,
     QuoteItemOption,
@@ -74,7 +74,7 @@ class QuoteService:
         quote = Quote(
             quote_number=quote_number,
             customer_id=customer_id,
-            status='draft',
+            status="draft",
             expiration_date=expiration_date,
             notes=notes,
         )
@@ -93,7 +93,7 @@ class QuoteService:
         """
         customer = (
             db.query(Customer)
-            .filter(Customer.email == customer_data.get('email'))
+            .filter(Customer.email == customer_data.get("email"))
             .first()
         )
         if not customer:
@@ -103,28 +103,28 @@ class QuoteService:
             db,
             customer_id=customer.id,
             expiration_days=30,
-            notes=quote_details.get('notes'),
+            notes=quote_details.get("notes"),
         )
 
         for product_data in products_data:
             quote_item = QuoteItem(
                 quote_id=quote.id,
-                product_id=product_data.get('product_id'),
-                quantity=product_data.get('quantity', 1),
-                unit_price=product_data.get('base_price', 0),
-                description=product_data.get('part_number'),
+                product_id=product_data.get("product_id"),
+                quantity=product_data.get("quantity", 1),
+                unit_price=product_data.get("base_price", 0),
+                description=product_data.get("part_number"),
             )
             db.add(quote_item)
             db.flush()
 
-            for option_data in product_data.get('options', []):
-                if option_data.get('id'):
+            for option_data in product_data.get("options", []):
+                if option_data.get("id"):
                     db.add(
                         QuoteItemOption(
                             quote_item_id=quote_item.id,
-                            option_id=option_data['id'],
+                            option_id=option_data["id"],
                             quantity=1,
-                            price=option_data.get('price', 0),
+                            price=option_data.get("price", 0),
                         )
                     )
 
@@ -149,11 +149,11 @@ class QuoteService:
 
         return [
             {
-                'id': quote.id,
-                'quote_number': quote.quote_number,
-                'customer_name': quote.customer.name,
-                'date_created': quote.date_created.strftime('%Y-%m-%d'),
-                'total': quote.total,
+                "id": quote.id,
+                "quote_number": quote.quote_number,
+                "customer_name": quote.customer.name,
+                "date_created": quote.date_created.strftime("%Y-%m-%d"),
+                "total": quote.total,
             }
             for quote in quotes
         ]
@@ -183,39 +183,39 @@ class QuoteService:
 
         products_data = [
             {
-                'id': str(uuid.uuid4()),
-                'part_number': item.description,
-                'product_id': item.product.id,
-                'name': item.product.product_family.name,
-                'quantity': item.quantity,
-                'base_price': item.unit_price,
-                'options': [
+                "id": str(uuid.uuid4()),
+                "part_number": item.description,
+                "product_id": item.product.id,
+                "name": item.product.product_family.name,
+                "quantity": item.quantity,
+                "base_price": item.unit_price,
+                "options": [
                     {
-                        'id': item_opt.option.id,
-                        'name': item_opt.option.category,
-                        'selected': item_opt.option.name,
-                        'price': item_opt.price,
-                        'code': item_opt.option.code,
+                        "id": item_opt.option.id,
+                        "name": item_opt.option.category,
+                        "selected": item_opt.option.name,
+                        "price": item_opt.price,
+                        "code": item_opt.option.code,
                     }
                     for item_opt in item.options
                 ],
-                'description': item.product.product_family.description,
+                "description": item.product.product_family.description,
             }
             for item in quote.items
         ]
 
         return {
-            'quote_number': quote.quote_number,
-            'customer': {
-                'name': quote.customer.name,
-                'company': quote.customer.company,
-                'email': quote.customer.email,
-                'phone': quote.customer.phone,
+            "quote_number": quote.quote_number,
+            "customer": {
+                "name": quote.customer.name,
+                "company": quote.customer.company,
+                "email": quote.customer.email,
+                "phone": quote.customer.phone,
             },
-            'products': products_data,
-            'expiration_date': quote.expiration_date,
-            'date_created': quote.date_created,
-            'notes': quote.notes,
+            "products": products_data,
+            "expiration_date": quote.expiration_date,
+            "date_created": quote.date_created,
+            "notes": quote.notes,
         }
 
     @staticmethod
@@ -235,16 +235,16 @@ class QuoteService:
             ValueError: If quote not found or status invalid
         """
         # Validate status
-        valid_statuses = ['draft', 'sent', 'accepted', 'rejected']
+        valid_statuses = ["draft", "sent", "accepted", "rejected"]
         if status not in valid_statuses:
             raise ValueError(
-                f'Invalid status: {status}. Must be one of {valid_statuses}'
+                f"Invalid status: {status}. Must be one of {valid_statuses}"
             )
 
         # Get quote
         quote = get_by_id(db, Quote, quote_id)
         if not quote:
-            raise ValueError(f'Quote with ID {quote_id} not found')
+            raise ValueError(f"Quote with ID {quote_id} not found")
 
         # Update status
         quote.status = status
@@ -315,10 +315,10 @@ class QuoteService:
 
         recent_quotes_data = [
             {
-                'quote_number': quote.quote_number,
-                'customer': quote.customer.name,
-                'total': quote.total,
-                'date': quote.date_created.strftime('%Y-%m-%d'),
+                "quote_number": quote.quote_number,
+                "customer": quote.customer.name,
+                "total": quote.total,
+                "date": quote.date_created.strftime("%Y-%m-%d"),
             }
             for quote in recent_quotes
         ]
@@ -327,7 +327,7 @@ class QuoteService:
         sales_by_category = (
             db.query(
                 ProductFamily.category,
-                func.sum(QuoteItem.unit_price * QuoteItem.quantity).label('total'),
+                func.sum(QuoteItem.unit_price * QuoteItem.quantity).label("total"),
             )
             .join(BaseModel, BaseModel.id == QuoteItem.product_id)
             .join(ProductFamily, ProductFamily.id == BaseModel.product_family_id)
@@ -341,8 +341,8 @@ class QuoteService:
         )  # Avoid division by zero
         sales_by_category_data = [
             {
-                'category': cat.category,
-                'percentage': round((cat.total / total_sales) * 100),
+                "category": cat.category,
+                "percentage": round((cat.total / total_sales) * 100),
             }
             for cat in sales_by_category
         ]
@@ -400,12 +400,12 @@ class QuoteService:
         )
 
         return {
-            'total_quotes': total_quotes,
-            'total_quote_value': total_quote_value,
-            'total_customers': total_customers,
-            'total_products': total_products,
-            'recent_quotes': recent_quotes_data,
-            'sales_by_category': sales_by_category_data,
-            'quote_change': round(quote_change, 1),
-            'value_change': round(value_change, 1),
+            "total_quotes": total_quotes,
+            "total_quote_value": total_quote_value,
+            "total_customers": total_customers,
+            "total_products": total_products,
+            "recent_quotes": recent_quotes_data,
+            "sales_by_category": sales_by_category_data,
+            "quote_change": round(quote_change, 1),
+            "value_change": round(value_change, 1),
         }

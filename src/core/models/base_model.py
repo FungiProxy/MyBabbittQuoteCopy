@@ -43,11 +43,11 @@ class BaseModel(Base):
         ... )
     """
 
-    __tablename__ = 'base_models'
+    __tablename__ = "base_models"
 
     id = Column(Integer, primary_key=True, index=True)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
     model_number = Column(
         String, nullable=False, index=True, unique=True
@@ -61,10 +61,10 @@ class BaseModel(Base):
     material = Column(String, nullable=False)  # e.g., "S", "H"
 
     # Relationships
-    product_family = relationship('ProductFamily', back_populates='base_model')
+    product_family = relationship("ProductFamily", back_populates="base_model")
 
     def __repr__(self):
         return f"<BaseModel(id={self.id}, model_number='{self.model_number}', base_price={self.base_price})>"
 
     def __str__(self):
-        return f"{self.model_number} - ${self.base_price:.2f}" 
+        return f"{self.model_number} - ${self.base_price:.2f}"

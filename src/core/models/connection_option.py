@@ -38,7 +38,7 @@ class ConnectionOption(Base):
         >>> print(conn)
     """
 
-    __tablename__ = 'connection_options'
+    __tablename__ = "connection_options"
 
     id = Column(Integer, primary_key=True)
     type = Column(String, nullable=False)  # "Flange" or "Tri-Clamp"
@@ -46,7 +46,7 @@ class ConnectionOption(Base):
     size = Column(String, nullable=False)  # e.g., '1"', '1.5"', '2"', '3"', '4"'
     price = Column(Float, default=0.0)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
 
     def __repr__(self):
@@ -55,5 +55,5 @@ class ConnectionOption(Base):
         Returns:
             str: A string showing the connection type, rating (if applicable), and size
         """
-        rating_str = f", rating='{self.rating}'" if self.rating else ''
+        rating_str = f", rating='{self.rating}'" if self.rating else ""
         return f"<ConnectionOption(type='{self.type}'{rating_str}, size='{self.size}')>"

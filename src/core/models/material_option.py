@@ -35,11 +35,11 @@ class MaterialOption(Base):
         >>> print(mo)
     """
 
-    __tablename__ = 'material_options'
+    __tablename__ = "material_options"
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
     material_code = Column(String, nullable=False)  # e.g., "S", "H", "A"
     display_name = Column(String, nullable=False)  # e.g., "S - 316 Stainless Steel"

@@ -50,22 +50,22 @@ class CustomersPage(QWidget):
 
         # Search bar
         self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText('Search customers...')
+        self.search_bar.setPlaceholderText("Search customers...")
         self.search_bar.setFixedWidth(300)
         top_layout.addWidget(self.search_bar)
 
         top_layout.addStretch()
 
         # Add Customer button
-        self.add_customer_btn = QPushButton('+ Add Customer')
-        self.add_customer_btn.setObjectName('primaryButton')
+        self.add_customer_btn = QPushButton("+ Add Customer")
+        self.add_customer_btn.setObjectName("primaryButton")
         top_layout.addWidget(self.add_customer_btn)
 
         main_layout.addLayout(top_layout)
 
         # Customers list section
         customers_card = QFrame()
-        customers_card.setObjectName('customersCard')
+        customers_card.setObjectName("customersCard")
 
         customers_layout = QVBoxLayout(customers_card)
         customers_layout.setContentsMargins(12, 12, 12, 12)
@@ -73,14 +73,14 @@ class CustomersPage(QWidget):
 
         # Customers list header
         header_layout = QHBoxLayout()
-        header_title = QLabel('Customers')
-        header_title.setStyleSheet('font-size: 15px; font-weight: bold;')
+        header_title = QLabel("Customers")
+        header_title.setStyleSheet("font-size: 15px; font-weight: bold;")
         header_layout.addWidget(header_title)
         header_layout.addStretch()
 
         # Filter dropdown
         self.filter_combo = QComboBox()
-        self.filter_combo.addItems(['All Customers', 'Active', 'Inactive'])
+        self.filter_combo.addItems(["All Customers", "Active", "Inactive"])
         header_layout.addWidget(self.filter_combo)
 
         customers_layout.addLayout(header_layout)
@@ -94,8 +94,8 @@ class CustomersPage(QWidget):
 
         # Footer
         footer_layout = QHBoxLayout()
-        footer_left = QLabel('Babbitt International Inc.')
-        footer_right = QLabel('© 2025 All rights reserved')
+        footer_left = QLabel("Babbitt International Inc.")
+        footer_right = QLabel("© 2025 All rights reserved")
         footer_layout.addWidget(footer_left)
         footer_layout.addStretch()
         footer_layout.addWidget(footer_right)

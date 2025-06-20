@@ -75,39 +75,39 @@ class ProductTab(QWidget):
         main_layout = QVBoxLayout(self)
 
         # Product model selection
-        self.model_group = QGroupBox('Model Selection')
+        self.model_group = QGroupBox("Model Selection")
         model_layout = QFormLayout()
 
         self.product_model = QComboBox()
 
         # Add available models with their descriptions
         self.models = {
-            'LS2000': 'RF Admittance Level Switch - General Purpose',
-            'LS2100': 'Loop Powered Level Switch',
-            'LS6000': 'RF Admittance Level Switch - Heavy Duty',
-            'LS7000': 'RF Admittance Level Switch - Advanced Features',
-            'LS7000/2': 'Dual Point Level Switch',
-            'LS7500': 'Presence/Absence Level Switch',
-            'LS8000': 'Remote Mounted Level Switch',
-            'LS8000/2': 'Remote Mounted Dual Point Level Switch',
-            'LS8500': 'Presence/Absence Level Switch - Heavy Duty',
-            'LT9000': 'Level Transmitter',
-            'FS10000': 'Flow Switch',
+            "LS2000": "RF Admittance Level Switch - General Purpose",
+            "LS2100": "Loop Powered Level Switch",
+            "LS6000": "RF Admittance Level Switch - Heavy Duty",
+            "LS7000": "RF Admittance Level Switch - Advanced Features",
+            "LS7000/2": "Dual Point Level Switch",
+            "LS7500": "Presence/Absence Level Switch",
+            "LS8000": "Remote Mounted Level Switch",
+            "LS8000/2": "Remote Mounted Dual Point Level Switch",
+            "LS8500": "Presence/Absence Level Switch - Heavy Duty",
+            "LT9000": "Level Transmitter",
+            "FS10000": "Flow Switch",
         }
 
         for model, description in self.models.items():
-            self.product_model.addItem(f'{model} - {description}', model)
+            self.product_model.addItem(f"{model} - {description}", model)
 
-        model_layout.addRow('Select Model:', self.product_model)
+        model_layout.addRow("Select Model:", self.product_model)
         self.model_group.setLayout(model_layout)
 
         # Add to main layout
         main_layout.addWidget(self.model_group)
 
         # Add product info section
-        self.info_group = QGroupBox('Product Information')
+        self.info_group = QGroupBox("Product Information")
         info_layout = QVBoxLayout()
-        self.product_info_label = QLabel('Select a product to view details')
+        self.product_info_label = QLabel("Select a product to view details")
         info_layout.addWidget(self.product_info_label)
         self.info_group.setLayout(info_layout)
 
@@ -149,11 +149,11 @@ class ProductTab(QWidget):
         Args:
             model (str): Model number to display information for
         """
-        info_text = f'<h3>{model}</h3>'
+        info_text = f"<h3>{model}</h3>"
 
         # Add model-specific info
         model_info = {
-            'LS2000': """
+            "LS2000": """
                 <p>General Purpose RF Admittance Level Switch</p>
                 <ul>
                     <li>Available in 115VAC or 24VDC</li>
@@ -162,7 +162,7 @@ class ProductTab(QWidget):
                     <li>Not recommended for plastic pellets without extra static protection</li>
                 </ul>
             """,
-            'LS2100': """
+            "LS2100": """
                 <p>Loop Powered Level Switch</p>
                 <ul>
                     <li>24VDC Loop Powered (16-32VDC)</li>
@@ -170,7 +170,7 @@ class ProductTab(QWidget):
                     <li>8mA to 16mA operation</li>
                 </ul>
             """,
-            'LS6000': """
+            "LS6000": """
                 <p>Heavy Duty RF Admittance Level Switch</p>
                 <ul>
                     <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
@@ -179,7 +179,7 @@ class ProductTab(QWidget):
                     <li>Higher temperature options available</li>
                 </ul>
             """,
-            'LS7000': """
+            "LS7000": """
                 <p>Advanced Features RF Admittance Level Switch</p>
                 <ul>
                     <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
@@ -188,7 +188,7 @@ class ProductTab(QWidget):
                     <li>Higher temperature options available</li>
                 </ul>
             """,
-            'LS7000/2': """
+            "LS7000/2": """
                 <p>Dual Point Level Switch</p>
                 <ul>
                     <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
@@ -197,7 +197,7 @@ class ProductTab(QWidget):
                     <li>Not suitable for dry materials</li>
                 </ul>
             """,
-            'LS7500': """
+            "LS7500": """
                 <p>Presence/Absence Level Switch</p>
                 <ul>
                     <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
@@ -205,7 +205,7 @@ class ProductTab(QWidget):
                     <li>Higher temperature options available</li>
                 </ul>
             """,
-            'LS8000': """
+            "LS8000": """
                 <p>Remote Mounted Level Switch</p>
                 <ul>
                     <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
@@ -214,7 +214,7 @@ class ProductTab(QWidget):
                     <li>Multiple transmitter sensitivities available</li>
                 </ul>
             """,
-            'LS8000/2': """
+            "LS8000/2": """
                 <p>Remote Mounted Dual Point Level Switch</p>
                 <ul>
                     <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
@@ -223,7 +223,7 @@ class ProductTab(QWidget):
                     <li>Requires proper grounding for best performance</li>
                 </ul>
             """,
-            'LS8500': """
+            "LS8500": """
                 <p>Presence/Absence Level Switch - Heavy Duty</p>
                 <ul>
                     <li>Available in 12VDC, 24VDC, 115VAC, or 240VAC</li>
@@ -231,7 +231,7 @@ class ProductTab(QWidget):
                     <li>Higher temperature options available</li>
                 </ul>
             """,
-            'LT9000': """
+            "LT9000": """
                 <p>Level Transmitter</p>
                 <ul>
                     <li>Available in 24VDC and 230VAC</li>
@@ -240,7 +240,7 @@ class ProductTab(QWidget):
                     <li>Requires proper grounding for operation</li>
                 </ul>
             """,
-            'FS10000': """
+            "FS10000": """
                 <p>Flow Switch</p>
                 <ul>
                     <li>Available in 24VDC and 115VAC</li>
@@ -252,7 +252,7 @@ class ProductTab(QWidget):
         }
 
         info_text += model_info.get(
-            model, '<p>No detailed information available for this model.</p>'
+            model, "<p>No detailed information available for this model.</p>"
         )
         self.product_info_label.setText(info_text)
 
@@ -274,23 +274,23 @@ class ProductTab(QWidget):
 
         # Map model to category
         category_map = {
-            'LS2000': 'Level Switch',
-            'LS2100': 'Level Switch',
-            'LS6000': 'Level Switch',
-            'LS7000': 'Level Switch',
-            'LS7000/2': 'Level Switch',
-            'LS7500': 'Level Switch',
-            'LS8000': 'Level Switch',
-            'LS8000/2': 'Level Switch',
-            'LS8500': 'Level Switch',
-            'LT9000': 'Level Transmitter',
-            'FS10000': 'Flow Switch',
+            "LS2000": "Level Switch",
+            "LS2100": "Level Switch",
+            "LS6000": "Level Switch",
+            "LS7000": "Level Switch",
+            "LS7000/2": "Level Switch",
+            "LS7500": "Level Switch",
+            "LS8000": "Level Switch",
+            "LS8000/2": "Level Switch",
+            "LS8500": "Level Switch",
+            "LT9000": "Level Transmitter",
+            "FS10000": "Flow Switch",
         }
 
         return {
-            'model': model,
-            'description': self.models.get(model, ''),
-            'category': category_map.get(model, 'Unknown'),
+            "model": model,
+            "description": self.models.get(model, ""),
+            "category": category_map.get(model, "Unknown"),
         }
 
     def connect_service(self, product_service):

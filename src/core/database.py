@@ -8,12 +8,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # Ensure data directory exists
-DATA_DIR = Path('data')
+DATA_DIR = Path("data")
 if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True)
 
 # Create database engine
-DATABASE_URL = f'sqlite:///{DATA_DIR}/quotes.db'
+DATABASE_URL = f"sqlite:///{DATA_DIR}/quotes.db"
 engine = create_engine(DATABASE_URL)
 
 # Create session factory

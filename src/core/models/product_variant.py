@@ -12,7 +12,7 @@ Supports:
 - Many-to-many relationships with options for dynamic configuration
 """
 
-from sqlalchemy import Column, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 
@@ -41,7 +41,7 @@ class ProductFamily(Base):
         >>> print(pf)
     """
 
-    __tablename__ = 'product_families'
+    __tablename__ = "product_families"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)  # e.g., "LS2000", "LS7000"
@@ -49,14 +49,16 @@ class ProductFamily(Base):
     category = Column(String, index=True)  # e.g., "Level Switch", "Transmitter"
 
     # Relationships
-    base_model = relationship('BaseModel', back_populates='product_family', uselist=False)
-    spare_parts = relationship('SparePart', back_populates='product_family')
-    option_associations = relationship(
-        'ProductFamilyOption',
-        back_populates='product_family',
-        cascade='all, delete-orphan',
+    base_model = relationship(
+        "BaseModel", back_populates="product_family", uselist=False
     )
-    options = association_proxy('option_associations', 'option')
+    spare_parts = relationship("SparePart", back_populates="product_family")
+    option_associations = relationship(
+        "ProductFamilyOption",
+        back_populates="product_family",
+        cascade="all, delete-orphan",
+    )
+    options = association_proxy("option_associations", "option")
 
     def __repr__(self):
         """

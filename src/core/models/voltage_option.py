@@ -31,11 +31,11 @@ class VoltageOption(Base):
         >>> print(vo)
     """
 
-    __tablename__ = 'voltage_options'
+    __tablename__ = "voltage_options"
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
     voltage = Column(String, nullable=False)  # e.g., "24VDC", "115VAC"
     is_available = Column(Integer, default=1)  # 1 for available, 0 for not available

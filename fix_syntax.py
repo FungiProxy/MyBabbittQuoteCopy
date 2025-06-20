@@ -4,7 +4,7 @@
 def fix_syntax_error():
     """Fix the orphaned except block in product_selection_dialog.py"""
 
-    with open('src/ui/product_selection_dialog.py') as f:
+    with open("src/ui/product_selection_dialog.py") as f:
         lines = f.readlines()
 
     # Find and remove the orphaned except block
@@ -25,11 +25,11 @@ def fix_syntax_error():
             new_lines.append(line)
 
     # Write the fixed file
-    with open('src/ui/product_selection_dialog.py', 'w') as f:
+    with open("src/ui/product_selection_dialog.py", "w") as f:
         f.writelines(new_lines)
 
-    print('Fixed syntax error in product_selection_dialog.py')
+    print("Fixed syntax error in product_selection_dialog.py")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fix_syntax_error()

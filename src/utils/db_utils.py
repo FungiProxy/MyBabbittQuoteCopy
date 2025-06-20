@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from src.core.database import Base
 
 # Generic type for SQLAlchemy models
-T = TypeVar('T', bound=Base)
+T = TypeVar("T", bound=Base)
 
 
 def add_and_commit(db: Session, obj: T) -> T:
@@ -68,12 +68,12 @@ def generate_quote_number(db: Session) -> str:
 
     if not latest_quote:
         # Start with 1001 if no quotes exist
-        return 'Q-1001'
+        return "Q-1001"
 
     # Extract the numeric part and increment
     try:
-        num_part = int(latest_quote.quote_number.split('-')[1])
-        return f'Q-{num_part + 1}'
+        num_part = int(latest_quote.quote_number.split("-")[1])
+        return f"Q-{num_part + 1}"
     except (ValueError, IndexError):
         # Fallback if quote number format is unexpected
-        return f'Q-{latest_quote.id + 1001}'
+        return f"Q-{latest_quote.id + 1001}"

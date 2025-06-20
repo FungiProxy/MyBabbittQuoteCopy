@@ -21,16 +21,16 @@ def quick_fix_materials():
 
     try:
         # Get the material option
-        material_option = db.query(Option).filter(Option.name == 'Material').first()
+        material_option = db.query(Option).filter(Option.name == "Material").first()
         if not material_option:
-            print('Material option not found')
+            print("Material option not found")
             return
 
-        print(f'Found material option ID: {material_option.id}')
+        print(f"Found material option ID: {material_option.id}")
 
         # Get all families
         families = db.query(ProductFamily).all()
-        print(f'Found {len(families)} families')
+        print(f"Found {len(families)} families")
 
         # Add material option to all families
         for family in families:
@@ -52,17 +52,17 @@ def quick_fix_materials():
                     is_available=1,
                 )
                 db.add(assoc)
-                print(f'Added material option to {family.name}')
+                print(f"Added material option to {family.name}")
 
         db.commit()
-        print('Fix completed!')
+        print("Fix completed!")
 
     except Exception as e:
-        print(f'Error: {e}')
+        print(f"Error: {e}")
         db.rollback()
     finally:
         db.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     quick_fix_materials()

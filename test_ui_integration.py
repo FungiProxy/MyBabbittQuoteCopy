@@ -18,7 +18,7 @@ from src.ui.views.product_selection_dialog import ProductSelectionDialog
 
 def test_ui_integration():
     """Test that the ProductSelectionDialog can load options from the unified structure."""
-    print('Testing UI integration with unified options structure...')
+    print("Testing UI integration with unified options structure...")
 
     # Create QApplication instance (required for Qt widgets)
     app = QApplication.instance()
@@ -35,11 +35,11 @@ def test_ui_integration():
         dialog = ProductSelectionDialog(product_service)
 
         # Test that dialog initializes without errors
-        print('✅ Dialog created successfully')
+        print("✅ Dialog created successfully")
 
         # Test that product families are loaded
         if dialog.products:
-            print(f'✅ Loaded {len(dialog.products)} product families')
+            print(f"✅ Loaded {len(dialog.products)} product families")
 
             # Test with first product family
             first_product = dialog.products[0]
@@ -47,9 +47,9 @@ def test_ui_integration():
 
             # Test that additional options can be fetched
             additional_options = product_service.get_additional_options(
-                db, first_product['name']
+                db, first_product["name"]
             )
-            print(f'✅ Found {len(additional_options)} additional options')
+            print(f"✅ Found {len(additional_options)} additional options")
 
             # Test option structure
             if additional_options:
@@ -60,14 +60,14 @@ def test_ui_integration():
                 print(f"   Choices: {len(first_option.get('choices', []))} choices")
                 print(f"   Adders: {len(first_option.get('adders', {}))} adders")
 
-            print('✅ UI integration test passed!')
+            print("✅ UI integration test passed!")
             return True
         else:
-            print('❌ No product families loaded')
+            print("❌ No product families loaded")
             return False
 
     except Exception as e:
-        print(f'❌ UI integration test failed: {e}')
+        print(f"❌ UI integration test failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -76,6 +76,6 @@ def test_ui_integration():
         db.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = test_ui_integration()
     sys.exit(0 if success else 1)

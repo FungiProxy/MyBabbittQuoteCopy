@@ -27,17 +27,17 @@ class HousingTypeOption(Base):
         >>> print(hto)
     """
 
-    __tablename__ = 'housing_type_options'
+    __tablename__ = "housing_type_options"
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey('product_families.id'), nullable=False
+        Integer, ForeignKey("product_families.id"), nullable=False
     )
-    housing_type_id = Column(Integer, ForeignKey('housing_types.id'), nullable=False)
+    housing_type_id = Column(Integer, ForeignKey("housing_types.id"), nullable=False)
     price = Column(Float, default=0.0)  # Additional cost for this housing type
     is_available = Column(Integer, default=1)  # 1 for available, 0 for not available
 
-    housing_type = relationship('HousingType')
+    housing_type = relationship("HousingType")
 
     def __repr__(self):
         return f"<HousingTypeOption(product_family_id='{self.product_family_id}', housing_type_id='{self.housing_type_id}', price={self.price})>"

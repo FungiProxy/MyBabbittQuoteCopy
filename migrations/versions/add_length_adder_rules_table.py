@@ -5,33 +5,35 @@ Revises: 806ecdc3a65b
 Create Date: 2024-01-15 10:00:00.000000
 
 """
-from alembic import op
-import sqlalchemy as sa
 
+import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = 'add_length_adder_rules'
-down_revision = '806ecdc3a65b'
+revision = "add_length_adder_rules"
+down_revision = "806ecdc3a65b"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
     # Create length_adder_rules table
-    op.create_table('length_adder_rules',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('product_family', sa.String(), nullable=False),
-        sa.Column('material_code', sa.String(), nullable=False),
-        sa.Column('adder_type', sa.String(), nullable=False),
-        sa.Column('first_threshold', sa.Float(), nullable=False),
-        sa.Column('adder_amount', sa.Float(), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "length_adder_rules",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("product_family", sa.String(), nullable=False),
+        sa.Column("material_code", sa.String(), nullable=False),
+        sa.Column("adder_type", sa.String(), nullable=False),
+        sa.Column("first_threshold", sa.Float(), nullable=False),
+        sa.Column("adder_amount", sa.Float(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
-    
+
     # Insert length adder rules data
-    op.execute("""
-        INSERT INTO length_adder_rules (id, product_family, material_code, adder_type, first_threshold, adder_amount, description) VALUES 
+    op.execute(
+        """
+        INSERT INTO length_adder_rules (id, product_family, material_code, adder_type, first_threshold, adder_amount, description) VALUES
         -- Per-foot adders for most product families (first adder at 24")
         (1,'LS2000','S','per_foot',24.0,45.0,'$45 per foot starting at 24"'),
         (2,'LS2000','H','per_foot',24.0,110.0,'$110 per foot starting at 24"'),
@@ -70,9 +72,10 @@ def upgrade():
         (33,'LS2100','T','per_inch',4.0,50.0,'$50 per inch starting at 4"'),
         (34,'LS6000','CPVC','per_inch',4.0,50.0,'$50 per inch starting at 4"'),
         (35,'LS7000','CPVC','per_inch',4.0,50.0,'$50 per inch starting at 4"')
-    """)
+    """
+    )
 
 
 def downgrade():
     # Drop length_adder_rules table
-    op.drop_table('length_adder_rules') 
+    op.drop_table("length_adder_rules")
