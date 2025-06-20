@@ -5,7 +5,7 @@ File: src/ui/utils/ui_integration.py
 🟢 5 min implementation - Integration helper and usage examples
 """
 
-from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QFrame, QComboBox, QGroupBox
+from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QFrame, QComboBox, QGroupBox, QDialog
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, Property
 from PySide6.QtGui import QColor
 
@@ -149,7 +149,8 @@ class QuickMigrationHelper:
         """
         for combo in parent_widget.findChildren(QComboBox):
             # Set reasonable size constraints
-            combo.setFixedHeight(32)
+            combo.setMaximumHeight(36)
+            combo.setMinimumHeight(32)
             combo.setMaximumWidth(250)  # Prevent super wide dropdowns
             
             # Apply compact styling
@@ -160,7 +161,8 @@ class QuickMigrationHelper:
                     border-radius: 4px;
                     background-color: white;
                     font-size: 13px;
-                    height: 32px;
+                    max-height: 32px;
+                    min-height: 28px;
                 }}
                 QComboBox:focus {{
                     border-color: {ModernBabbittTheme.PRIMARY_BLUE};
@@ -223,7 +225,8 @@ class ValidationHelper:
 ========================================
 
 1. Copy the new files to your project:
-   - src/ui/theme/modern_babbitt_theme.py
+   - src/ui/product_selection_dialog_improved.py
+   - src/ui/theme/modern_babbitt_theme.py 
    - src/ui/utils/ui_integration.py
 
 2. In your main application file, add the theme:
@@ -274,4 +277,130 @@ For each additional dialog/widget that needs improvement:
 3. Optionally replace manual widget creation with factory methods:
    # Instead of: title = QLabel("My Title")
    title = ModernWidgetFactory.create_title_label("My Title")
-""" 
+"""
+
+
+# ===== SAMPLE IMPLEMENTATION =====
+
+class SampleModernDialog(QDialog):
+    """
+    Sample implementation showing how to create a modern dialog from scratch.
+    Use this as a reference for creating new dialogs.
+    """
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Modern Dialog Example")
+        self.resize(600, 400)
+        
+        # Apply modern theme
+        self.setStyleSheet(ModernBabbittTheme.get_application_stylesheet())
+        
+        self._setup_ui()
+    
+    def _setup_ui(self):
+        """Setup UI with modern components."""
+        layout = QVBoxLayout(self)
+        layout.setSpacing(ModernBabbittTheme.get_modern_form_spacing()['section_spacing'])
+        
+        # Modern title
+        title = ModernWidgetFactory.create_title_label("Sample Configuration")
+        layout.addWidget(title)
+        
+        # Modern card container
+        card = ModernWidgetFactory.create_card_frame(elevated=True)
+        card_layout = QVBoxLayout(card)
+        
+        # Subtitle
+        subtitle = ModernWidgetFactory.create_subtitle_label("Select your options:")
+        card_layout.addWidget(subtitle)
+        
+        # Sample options with modern dropdowns
+        options_layout = QGridLayout()
+        
+        # Voltage option
+        voltage_label = QLabel("Voltage:")
+        voltage_combo = QComboBox()
+        voltage_combo.addItems(["115VAC", "230VAC", "24VDC"])
+        QuickMigrationHelper.fix_oversized_dropdowns(voltage_combo.parent() or self)
+        
+        options_layout.addWidget(voltage_label, 0, 0)
+        options_layout.addWidget(voltage_combo, 0, 1)
+        
+        # Material option  
+        material_label = QLabel("Material:")
+        material_combo = QComboBox()
+        material_combo.addItems(["316 Stainless", "Halar", "PTFE"])
+        
+        options_layout.addWidget(material_label, 1, 0)
+        options_layout.addWidget(material_combo, 1, 1)
+        
+        card_layout.addLayout(options_layout)
+        layout.addWidget(card)
+        
+        # Pricing section
+        pricing_card = ModernWidgetFactory.create_card_frame()
+        pricing_layout = QHBoxLayout(pricing_card)
+        
+        base_price = ModernWidgetFactory.create_price_label(425.0, "base")
+        pricing_layout.addWidget(QLabel("Base Price:"))
+        pricing_layout.addWidget(base_price)
+        pricing_layout.addStretch()
+        
+        total_price = ModernWidgetFactory.create_price_label(565.0, "total")
+        pricing_layout.addWidget(QLabel("Total:"))
+        pricing_layout.addWidget(total_price)
+        
+        layout.addWidget(pricing_card)
+        
+        # Action buttons
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        cancel_btn = ModernWidgetFactory.create_secondary_button("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+        
+        add_btn = ModernWidgetFactory.create_primary_button("Add to Quote")
+        add_btn.clicked.connect(self.accept)
+        button_layout.addWidget(add_btn)
+        
+        layout.addLayout(button_layout)
+        
+        # Add entrance animation
+        UIAnimations.fade_in(self, duration=300)
+
+
+# ===== TESTING & VALIDATION =====
+
+def test_modern_ui_improvements():
+    """
+    Test function to validate UI improvements.
+    Call this after implementing changes.
+    """
+    from PySide6.QtWidgets import QApplication
+    import sys
+    
+    app = QApplication(sys.argv)
+    ModernBabbittTheme.apply_modern_theme(app)
+    
+    # Test sample dialog
+    dialog = SampleModernDialog()
+    ValidationHelper.print_validation_report(dialog, "SampleModernDialog")
+    
+    # Show dialog for visual inspection
+    if "--show" in sys.argv:
+        dialog.show()
+        app.exec()
+    
+    print("\n🎯 Key improvements implemented:")
+    print("   ✅ Compact dropdown boxes (max 32px height)")
+    print("   ✅ Modern card-based layout")
+    print("   ✅ Visual pricing feedback")
+    print("   ✅ Better typography and spacing")
+    print("   ✅ Consistent color scheme")
+    print("   ✅ Hover and focus states")
+
+
+if __name__ == "__main__":
+    test_modern_ui_improvements() 

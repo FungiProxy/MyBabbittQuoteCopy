@@ -1,8 +1,8 @@
 """
-Modern UI Styles and Improved Theme System
-File: src/ui/theme/modern_babbitt_theme.py
+Modern Babbitt Theme - Enhanced Professional Industrial Design
 
-🟢 10 min implementation - Enhanced styling for better UX
+Enhanced theme system with modern UI components and better visual hierarchy.
+Focuses on industrial professionalism with improved usability.
 """
 
 from PySide6.QtCore import QObject
@@ -126,7 +126,7 @@ class ModernBabbittTheme(QObject):
             background-color: white;
             font-size: 14px;
             min-height: 20px;
-            height: 32px;
+            max-height: 32px;
             selection-background-color: {ModernBabbittTheme.LIGHT_BLUE};
         }}
         
@@ -325,11 +325,6 @@ class ModernBabbittTheme(QObject):
             border-radius: 0px;
         }}
         
-        QFrame[elevated="true"] {{
-            border: 2px solid {ModernBabbittTheme.PRIMARY_BLUE};
-            background-color: {ModernBabbittTheme.LIGHT_GRAY};
-        }}
-        
         /* === LABEL STYLING === */
         QLabel[labelType="title"] {{
             font-size: 18px;
@@ -461,8 +456,7 @@ class ModernBabbittTheme(QObject):
         
         if elevated:
             base_style += f"""
-                border: 2px solid {ModernBabbittTheme.PRIMARY_BLUE};
-                background-color: {ModernBabbittTheme.LIGHT_GRAY};
+                border: 1px solid {ModernBabbittTheme.SECONDARY_BLUE};
             """
         
         return base_style

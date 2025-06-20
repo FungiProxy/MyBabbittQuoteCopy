@@ -19,14 +19,11 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QVBoxLayout,
     QWidget,
-    QComboBox,
 )
 
 from src.core.config.base_models import BASE_MODELS
 from src.core.database import SessionLocal
 from src.core.services.product_service import ProductService
-from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
-from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +37,6 @@ class ProductSelectionDialog(QDialog):
     - Family-based filtering in left panel
     - Product cards with pricing in main area
     - Clean, professional styling
-    - Modern UI with improved styling
     """
 
     product_selected = Signal(dict)  # Emitted when product is chosen for configuration
@@ -61,10 +57,6 @@ class ProductSelectionDialog(QDialog):
 
         self._setup_ui()
         self._load_default_family()
-        
-        # Apply modern styling fixes
-        QuickMigrationHelper.fix_oversized_dropdowns(self)
-        QuickMigrationHelper.modernize_existing_dialog(self)
 
     def __del__(self):
         """Clean up database connection."""

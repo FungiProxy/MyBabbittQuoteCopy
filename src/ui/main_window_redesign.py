@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
 
 from src.core.services.settings_service import SettingsService
 from src.ui.theme.theme_manager import ThemeManager
+from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
 from src.ui.views.customers_page import CustomersPage
 from src.ui.views.dashboard_redesign import DashboardRedesign
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
@@ -58,6 +60,9 @@ class MainWindowRedesign(QMainWindow):
 
         # Show dashboard by default
         self._show_dashboard()
+        
+        # Apply modern UI integration helpers
+        self._apply_modern_ui_helpers()
 
         logger.info('MainWindowRedesign initialized successfully')
 
@@ -71,6 +76,26 @@ class MainWindowRedesign(QMainWindow):
             logger.error(f'Failed to apply saved theme: {e}')
             # Fallback to Babbitt theme
             ThemeManager.apply_theme('Babbitt Theme')
+
+    def _apply_modern_ui_helpers(self):
+        """Apply modern UI integration helpers for consistent styling."""
+        try:
+            # Apply modern styling to the main window
+            QuickMigrationHelper.modernize_existing_dialog(self)
+            
+            # Fix any oversized dropdowns
+            QuickMigrationHelper.fix_oversized_dropdowns(self)
+            
+            # Apply to all child pages
+            for i in range(self.stacked_widget.count()):
+                page = self.stacked_widget.widget(i)
+                if page:
+                    QuickMigrationHelper.fix_oversized_dropdowns(page)
+                    QuickMigrationHelper.modernize_existing_dialog(page)
+            
+            logger.info('Modern UI helpers applied successfully')
+        except Exception as e:
+            logger.error(f'Failed to apply modern UI helpers: {e}')
 
     def _setup_ui(self):
         """Set up the main UI layout."""

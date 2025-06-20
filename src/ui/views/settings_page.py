@@ -183,7 +183,7 @@ class SettingsPage(QWidget):
         self.load_settings()
         self._connect_signals()
         
-        # Apply modern styling fixes
+        # Apply compact styling fixes
         self._apply_compact_styling()
 
     def _apply_compact_styling(self):
@@ -233,13 +233,24 @@ class SettingsPage(QWidget):
         self._update_preview_selection(theme_name)
 
     def _update_preview_selection(self, selected_theme):
-        """Update the visual selection state of theme previews."""
+        """Update the visual selection of theme previews."""
         for theme_name, preview_widget in self.preview_widgets.items():
-            is_selected = theme_name == selected_theme
-            preview_widget.setProperty('selected', is_selected)
-            # Force style refresh
-            preview_widget.style().unpolish(preview_widget)
-            preview_widget.style().polish(preview_widget)
+            if theme_name == selected_theme:
+                preview_widget.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {preview_widget.theme_info['background_color']};
+                        border: 3px solid #3B82F6;
+                        border-radius: 8px;
+                    }}
+                """)
+            else:
+                preview_widget.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {preview_widget.theme_info['background_color']};
+                        border: 2px solid #E5E7EB;
+                        border-radius: 8px;
+                    }}
+                """)
 
     def load_settings(self):
         """Load settings from storage and populate the UI fields."""

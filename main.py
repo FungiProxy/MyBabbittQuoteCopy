@@ -22,11 +22,11 @@ print(f'Current directory: {os.getcwd()}')
 print(f'Python version: {sys.version}')
 
 try:
-    # Import main window
-    print('Importing MainWindow...')
-    from src.ui.views.main_window import MainWindow
+    # Import redesigned main window
+    print('Importing MainWindowRedesign...')
+    from src.ui.main_window_redesign import MainWindowRedesign
 
-    print('MainWindow imported successfully')
+    print('MainWindowRedesign imported successfully')
 except Exception as e:
     print(f'Error during initialization: {e}')
     traceback.print_exc()
@@ -42,15 +42,15 @@ def main():
         # Create application and apply modern theme
         app = QApplication(sys.argv)
         
-        # Apply modern Babbitt theme
+        # Apply modern theme to the entire application
         ModernBabbittTheme.apply_modern_theme(app)
         print('Modern Babbitt theme applied successfully')
 
         settings = SettingsService()
 
-        print('Creating MainWindow...')
-        # Create and show main window
-        window = MainWindow()
+        print('Creating MainWindowRedesign...')
+        # Create and show redesigned main window
+        window = MainWindowRedesign()
 
         # Apply additional theme settings if needed
         theme = settings.get_theme()

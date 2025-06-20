@@ -185,26 +185,28 @@ class CorporateTheme(QObject):
         QFrame.card {{
             background-color: {CorporateTheme.CARD_BG};
             border: 1px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }}
 
         QFrame.card:hover {{
             border-color: {CorporateTheme.ACCENT_RED};
-            background-color: {CorporateTheme.HOVER_BG};
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
         }}
 
         QFrame.productCard {{
             background-color: {CorporateTheme.CARD_BG};
             border: 1px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 20px;
             margin: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }}
 
         QFrame.productCard:hover {{
             border-color: {CorporateTheme.ACCENT_RED};
-            background-color: {CorporateTheme.HOVER_BG};
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
         }}
 
         QFrame.familyCard {{

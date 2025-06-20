@@ -25,14 +25,15 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
+    QFormLayout,
+    QGridLayout,
 )
 
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
 from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
-from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
+from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory, UIAnimations
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,6 @@ class ConfigurationWizard(QDialog):
     - Material, voltage, and connection options
     - Length calculations and validation
     - Live quote summary
-    - Modern UI with improved styling
     """
 
     configuration_completed = Signal(dict)  # Emitted when configuration is finished
@@ -85,13 +85,130 @@ class ConfigurationWizard(QDialog):
         self._update_pricing()
         
         # Apply modern styling fixes
-        QuickMigrationHelper.fix_oversized_dropdowns(self)
-        QuickMigrationHelper.modernize_existing_dialog(self)
+        self._apply_compact_styling()
+        self._apply_modern_dialog_styling()
+        
+        # Apply modern UI integration helpers
+        self._apply_modern_ui_helpers()
+        
+        # Add entrance animation
+        UIAnimations.fade_in(self, duration=300)
 
     def __del__(self):
         """Clean up database connection."""
         if hasattr(self, 'db') and self.db:
             self.db.close()
+
+    def _apply_modern_ui_helpers(self):
+        """Apply modern UI integration helpers for consistent styling."""
+        try:
+            # Apply modern styling to the dialog
+            QuickMigrationHelper.modernize_existing_dialog(self)
+            
+            # Fix any oversized dropdowns
+            QuickMigrationHelper.fix_oversized_dropdowns(self)
+            
+            logger.info('Modern UI helpers applied to configuration wizard')
+        except Exception as e:
+            logger.error(f'Failed to apply modern UI helpers: {e}')
+
+    def _apply_compact_styling(self):
+        """🔴 CRITICAL: Fix oversized dropdown boxes."""
+        # Apply to all combo boxes in the dialog
+        for combo in self.findChildren(QComboBox):
+            combo.setMaximumHeight(32)
+            combo.setMinimumHeight(28) 
+            combo.setStyleSheet("""
+                QComboBox {
+                    padding: 6px 10px;
+                    border: 1px solid #e0e4e7;
+                    border-radius: 4px;
+                    background-color: white;
+                    font-size: 13px;
+                    max-height: 32px;
+                    min-height: 28px;
+                }
+                QComboBox:focus {
+                    border-color: #2C3E50;
+                }
+                QComboBox::drop-down {
+                    width: 20px;
+                    border: none;
+                }
+                QComboBox QAbstractItemView {
+                    border: 1px solid #e0e4e7;
+                    border-radius: 4px;
+                    background-color: white;
+                    selection-background-color: #e3f2fd;
+                    max-height: 200px;
+                }
+            """)
+
+    def _apply_modern_dialog_styling(self):
+        """Apply modern styling to the entire dialog."""
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #f8f9fa;
+            }
+            
+            QGroupBox {
+                font-weight: 600;
+                color: #2C3E50;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 8px;
+                background-color: white;
+            }
+            
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 8px;
+                background-color: white;
+            }
+            
+            QPushButton {
+                padding: 10px 20px;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 600;
+                background-color: #2C3E50;
+                color: white;
+                min-height: 20px;
+            }
+            
+            QPushButton:hover {
+                background-color: #34495E;
+            }
+            
+            QPushButton:disabled {
+                background-color: #6C757D;
+            }
+            
+            QSpinBox {
+                padding: 6px 8px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                background-color: white;
+                font-size: 13px;
+                max-height: 32px;
+            }
+            
+            QLineEdit {
+                padding: 6px 8px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                background-color: white;
+                font-size: 13px;
+                max-height: 32px;
+            }
+            
+            QLineEdit:focus, QSpinBox:focus {
+                border-color: #2C3E50;
+            }
+        """)
 
     def _setup_ui(self):
         """Set up the configuration wizard UI."""
@@ -415,7 +532,7 @@ class ConfigurationWizard(QDialog):
             self.config_layout.addWidget(section)
 
     def _create_option_widget(self, section: QGroupBox, option_data: Dict):
-        """Create a widget for a single dynamic option."""
+        """Create improved option widget with better spacing and pricing display."""
         name = option_data.get('name')
         choices = option_data.get('choices', [])
         adders = option_data.get('adders', {})
@@ -423,26 +540,106 @@ class ConfigurationWizard(QDialog):
         if not choices:
             return
 
-        label = QLabel(f'{name}:')
-        label.setProperty('class', 'formLabel')
-
+        # Create container with modern styling
+        container = QFrame()
+        container.setStyleSheet("""
+            QFrame {
+                background-color: white;
+                border: 1px solid #e0e4e7;
+                border-radius: 6px;
+                margin: 4px 0;
+                padding: 12px;
+            }
+            QFrame:hover {
+                border-color: #2C3E50;
+            }
+        """)
+        
+        layout = QVBoxLayout(container)
+        layout.setSpacing(8)
+        layout.setContentsMargins(12, 8, 12, 8)
+        
+        # Option title with better typography
+        title_label = QLabel(f"{name}:")
+        title_label.setStyleSheet("""
+            font-weight: 600;
+            font-size: 13px;
+            color: #2C3E50;
+            margin-bottom: 4px;
+        """)
+        layout.addWidget(title_label)
+        
+        # Create compact dropdown
         combo = QComboBox()
-        for choice in choices:
-            # Handle both simple strings and dicts for choices
-            code = choice if isinstance(choice, str) else choice.get('code', '')
-            display = choice if isinstance(choice, str) else choice.get('display_name', code)
-            adder = adders.get(code, 0)
-
-            display_text = f'{display} (+${adder})' if adder > 0 else display
-            combo.addItem(display_text, code)
-
-        combo.currentTextChanged.connect(
-            lambda text, opt_name=name: self._on_dynamic_option_changed(opt_name, combo.currentData())
+        combo.setObjectName(f"option_{name}")
+        combo.setMaximumHeight(32)
+        combo.setStyleSheet("""
+            QComboBox {
+                padding: 6px 10px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                background-color: white;
+                font-size: 13px;
+                max-height: 32px;
+            }
+            QComboBox:focus {
+                border-color: #2C3E50;
+            }
+        """)
+        
+        # Handle different choice formats
+        if isinstance(choices[0], dict):
+            codes = [choice.get("code", "") for choice in choices]
+            display_names = {choice.get("code", ""): choice.get("display_name", "") for choice in choices}
+        else:
+            codes = choices
+            display_names = {code: code for code in codes}
+        
+        # Add items to combo
+        for code in codes:
+            display_name = display_names.get(code, code)
+            combo.addItem(display_name, code)
+        
+        layout.addWidget(combo)
+        
+        # Add pricing indicator
+        price_label = QLabel("")
+        price_label.setStyleSheet("""
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-top: 4px;
+        """)
+        
+        def update_price_display():
+            """Update price display when selection changes."""
+            code = combo.currentData()
+            price_adder = adders.get(code, 0) if isinstance(adders, dict) else 0
+            
+            if price_adder > 0:
+                price_label.setText(f"+${price_adder:.2f}")
+                price_label.setStyleSheet(price_label.styleSheet() + "background-color: #28A745; color: white;")
+            elif price_adder < 0:
+                price_label.setText(f"${price_adder:.2f}")
+                price_label.setStyleSheet(price_label.styleSheet() + "background-color: #DC3545; color: white;")
+            else:
+                price_label.setText("Standard")
+                price_label.setStyleSheet(price_label.styleSheet() + "background-color: #6C757D; color: white;")
+        
+        # Connect signals
+        combo.currentIndexChanged.connect(update_price_display)
+        combo.currentIndexChanged.connect(
+            lambda: self._on_dynamic_option_changed(name, combo.currentData())
         )
-
-        # Add to section layout
-        section.layout().addWidget(label)
-        section.layout().addWidget(combo)
+        
+        # Initial price update
+        update_price_display()
+        
+        layout.addWidget(price_label)
+        
+        # Add the container to section layout
+        section.layout().addWidget(container)
 
     def _create_config_section(self, title: str) -> QGroupBox:
         """Create a configuration section with title."""

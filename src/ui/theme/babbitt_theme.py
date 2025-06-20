@@ -313,215 +313,55 @@ class BabbittTheme(QObject):
 
         /* Custom styles for Product Selection */
         #progressIndicator {{
-            background-color: white;
-            border-bottom: 1px solid #E9ECEF;
-            padding: 20px;
+            background-color: {BabbittTheme.CARD_BG};
+            border-bottom: 1px solid {BabbittTheme.BORDER_COLOR};
+            min-height: 100px;
+            max-height: 100px;
         }}
+        
         #progressLine {{
-            min-width: 40px;
-            max-width: 40px;
-            min-height: 2px;
-            max-height: 2px;
-            background-color: #E9ECEF;
+            background-color: {BabbittTheme.BORDER_COLOR};
             border: none;
+            border-radius: 1px;
         }}
-        .stepLabel {{
-            color: #6C757D;
-            font-size: 12px;
-            font-weight: 500;
+        
+        #progressLine[completed="true"] {{
+            background-color: {BabbittTheme.SUCCESS_GREEN};
         }}
-        #familiesPanel {{
-            background-color: #F8F9FA;
-            border-right: 1px solid #E9ECEF;
-        }}
-        #productsPanel {{
-            background-color: white;
-        }}
-        #categoryHeader {{
+        
+        .stepNumber {{
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background-color: {BabbittTheme.SURFACE_BG};
+            color: {BabbittTheme.MUTED_TEXT};
+            font-weight: 600;
             font-size: 14px;
-            font-weight: 600;
-            color: #2C3E50;
-            margin: 10px 0 5px 0;
-            padding: 5px 0;
-            border-bottom: 1px solid #E9ECEF;
+            border: 2px solid {BabbittTheme.BORDER_COLOR};
         }}
-
-        /* Custom styles for Configuration Wizard */
-        #configPanel {{
-            background-color: white;
-            border-right: 1px solid #E9ECEF;
-        }}
-        #summaryPanel {{
-            background-color: #F8F9FA;
-        }}
-        .formLabel {{
-            font-weight: 500;
-            color: #495057;
-            margin-bottom: 8px;
-        }}
-        #summaryTotalFrame {{
-            border-top: 2px solid #E9ECEF;
-            padding-top: 15px;
-            margin-top: 15px;
-        }}
-        #summaryTotalLabel, #summaryTotalPriceLabel {{
-            font-size: 18px;
-            font-weight: 600;
-            color: #2C3E50;
-        }}
-
-        /* Statistics Cards */
-        QFrame.statCard {{
-            background-color: {BabbittTheme.WHITE};
-            border: 1px solid {BabbittTheme.CARD_BORDER};
-            border-radius: 8px;
-            padding: 20px;
-            margin: 10px;
-        }}
-
-        QLabel.statTitle {{
-            color: {BabbittTheme.MEDIUM_GRAY};
-            font-size: 14px;
-            font-weight: 500;
-        }}
-
-        QLabel.statValue {{
-            color: {BabbittTheme.PRIMARY_BLUE};
-            font-size: 28px;
-            font-weight: 600;
-            margin: 5px 0;
-        }}
-
-        QLabel.statSubtitle {{
-            color: {BabbittTheme.MEDIUM_GRAY};
-            font-size: 12px;
-        }}
-
-        QLabel.statIcon {{
-            color: {BabbittTheme.PRIMARY_BLUE};
-            font-size: 20px;
-        }}
-
-        /* Product Labels */
-        QLabel.productName {{
-            font-size: 18px;
-            font-weight: 600;
-            color: {BabbittTheme.PRIMARY_BLUE};
-            margin-bottom: 8px;
-        }}
-
-        QLabel.productDescription {{
-            color: {BabbittTheme.MEDIUM_GRAY};
-            font-size: 14px;
-            margin-bottom: 15px;
-        }}
-
-        QLabel.productPrice {{
-            font-size: 16px;
-            font-weight: 600;
-            color: {BabbittTheme.SUCCESS_GREEN};
-            margin-bottom: 15px;
-        }}
-
-        QLabel.familyName {{
-            font-size: 16px;
-            font-weight: 600;
-            color: {BabbittTheme.PRIMARY_BLUE};
-        }}
-
-        QLabel.familyDescription {{
-            font-size: 12px;
-            color: {BabbittTheme.MEDIUM_GRAY};
-        }}
-
-        /* Form Controls */
-        QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {{
-            padding: 8px 12px;
-            border: 1px solid {BabbittTheme.CARD_BORDER};
-            border-radius: 4px;
-            font-size: 14px;
-            background-color: {BabbittTheme.WHITE};
-        }}
-
-        QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {{
-            border-color: {BabbittTheme.PRIMARY_BLUE};
-            outline: none;
-        }}
-
-        QLabel.formLabel {{
-            font-weight: 500;
-            color: {BabbittTheme.DARK_GRAY};
-            margin-bottom: 5px;
-        }}
-
-        QLabel.sectionTitle {{
-            font-size: 16px;
-            font-weight: 600;
-            color: {BabbittTheme.PRIMARY_BLUE};
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid {BabbittTheme.CARD_BORDER};
-        }}
-
-        /* Progress and Status */
-        QProgressBar {{
-            border-radius: 4px;
-            height: 8px;
-            background-color: {BabbittTheme.CARD_BORDER};
-            text-align: center;
-        }}
-
-        QProgressBar::chunk {{
-            background-color: {BabbittTheme.PRIMARY_BLUE};
-            border-radius: 4px;
-        }}
-
-        QLabel.validationSuccess {{
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-        }}
-
-        QLabel.validationError {{
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-        }}
-
-        QLabel.validationWarning {{
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-        }}
-
-        /* Step Indicator */
-        QLabel.stepNumber {{
-            width: 30px;
-            height: 30px;
-            border-radius: 15px;
-            background-color: {BabbittTheme.CARD_BORDER};
-            color: {BabbittTheme.MEDIUM_GRAY};
-            font-weight: 600;
-            text-align: center;
-        }}
-
-        QLabel.stepNumber[active="true"] {{
+        
+        .stepNumber[active="true"] {{
             background-color: {BabbittTheme.PRIMARY_BLUE};
             color: white;
+            border-color: {BabbittTheme.PRIMARY_BLUE};
         }}
-
-        QLabel.stepNumber[completed="true"] {{
+        
+        .stepNumber[completed="true"] {{
             background-color: {BabbittTheme.SUCCESS_GREEN};
             color: white;
+            border-color: {BabbittTheme.SUCCESS_GREEN};
+        }}
+        
+        .stepLabel {{
+            color: {BabbittTheme.SECONDARY_TEXT};
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }}
+        
+        .stepLabel[active="true"] {{
+            color: {BabbittTheme.PRIMARY_TEXT};
+            font-weight: 600;
         }}
 
         /* Tables */
@@ -623,7 +463,7 @@ class BabbittTheme(QObject):
             subcontrol-origin: margin;
             left: 10px;
             padding: 0 8px 0 8px;
-            background-color: {BabbittTheme.WHITE};
+            background-color: {BabbittTheme.CARD_BG};
         }}
         """
 
