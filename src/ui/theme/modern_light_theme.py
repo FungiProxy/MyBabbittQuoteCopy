@@ -186,28 +186,26 @@ class ModernLightTheme(QObject):
         QFrame.card {{
             background-color: {ModernLightTheme.CARD_BG};
             border: 1px solid {ModernLightTheme.BORDER_COLOR};
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }}
 
         QFrame.card:hover {{
             border-color: {ModernLightTheme.ACCENT_MINT};
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+            background-color: {ModernLightTheme.HOVER_BG};
         }}
 
         QFrame.productCard {{
             background-color: {ModernLightTheme.CARD_BG};
             border: 1px solid {ModernLightTheme.BORDER_COLOR};
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 20px;
             margin: 5px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }}
 
         QFrame.productCard:hover {{
             border-color: {ModernLightTheme.ACCENT_MINT};
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+            background-color: {ModernLightTheme.HOVER_BG};
         }}
 
         QFrame.familyCard {{

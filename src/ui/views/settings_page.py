@@ -182,6 +182,41 @@ class SettingsPage(QWidget):
 
         self.load_settings()
         self._connect_signals()
+        
+        # Apply modern styling fixes
+        self._apply_compact_styling()
+
+    def _apply_compact_styling(self):
+        """🔴 CRITICAL: Fix oversized dropdown boxes."""
+        # Apply to all combo boxes in the dialog
+        for combo in self.findChildren(QComboBox):
+            combo.setMaximumHeight(32)
+            combo.setMinimumHeight(28) 
+            combo.setStyleSheet("""
+                QComboBox {
+                    padding: 6px 10px;
+                    border: 1px solid #e0e4e7;
+                    border-radius: 4px;
+                    background-color: white;
+                    font-size: 13px;
+                    max-height: 32px;
+                    min-height: 28px;
+                }
+                QComboBox:focus {
+                    border-color: #2C3E50;
+                }
+                QComboBox::drop-down {
+                    width: 20px;
+                    border: none;
+                }
+                QComboBox QAbstractItemView {
+                    border: 1px solid #e0e4e7;
+                    border-radius: 4px;
+                    background-color: white;
+                    selection-background-color: #e3f2fd;
+                    max-height: 200px;
+                }
+            """)
 
     def _connect_signals(self):
         self.save_btn.clicked.connect(self.save_settings)
@@ -198,24 +233,13 @@ class SettingsPage(QWidget):
         self._update_preview_selection(theme_name)
 
     def _update_preview_selection(self, selected_theme):
-        """Update the visual selection of theme previews."""
+        """Update the visual selection state of theme previews."""
         for theme_name, preview_widget in self.preview_widgets.items():
-            if theme_name == selected_theme:
-                preview_widget.setStyleSheet(f"""
-                    QFrame {{
-                        background-color: {preview_widget.theme_info['background_color']};
-                        border: 3px solid #3B82F6;
-                        border-radius: 8px;
-                    }}
-                """)
-            else:
-                preview_widget.setStyleSheet(f"""
-                    QFrame {{
-                        background-color: {preview_widget.theme_info['background_color']};
-                        border: 2px solid #E5E7EB;
-                        border-radius: 8px;
-                    }}
-                """)
+            is_selected = theme_name == selected_theme
+            preview_widget.setProperty('selected', is_selected)
+            # Force style refresh
+            preview_widget.style().unpolish(preview_widget)
+            preview_widget.style().polish(preview_widget)
 
     def load_settings(self):
         """Load settings from storage and populate the UI fields."""

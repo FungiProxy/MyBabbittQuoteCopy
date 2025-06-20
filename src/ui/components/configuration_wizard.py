@@ -25,11 +25,14 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
+from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +47,7 @@ class ConfigurationWizard(QDialog):
     - Material, voltage, and connection options
     - Length calculations and validation
     - Live quote summary
+    - Modern UI with improved styling
     """
 
     configuration_completed = Signal(dict)  # Emitted when configuration is finished
@@ -79,6 +83,10 @@ class ConfigurationWizard(QDialog):
         self._setup_ui()
         self._load_available_options()
         self._update_pricing()
+        
+        # Apply modern styling fixes
+        QuickMigrationHelper.fix_oversized_dropdowns(self)
+        QuickMigrationHelper.modernize_existing_dialog(self)
 
     def __del__(self):
         """Clean up database connection."""

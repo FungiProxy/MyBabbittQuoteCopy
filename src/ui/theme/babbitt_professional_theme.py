@@ -188,12 +188,11 @@ class BabbittProfessionalTheme(QObject):
             border: 1px solid {BabbittProfessionalTheme.BORDER_COLOR};
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }}
 
         QFrame.card:hover {{
             border-color: {BabbittProfessionalTheme.ACCENT_GOLD};
-            box-shadow: 0 4px 12px rgba(214, 158, 46, 0.15);
+            background-color: {BabbittProfessionalTheme.HOVER_BG};
         }}
 
         QFrame.productCard {{
@@ -202,12 +201,11 @@ class BabbittProfessionalTheme(QObject):
             border-radius: 8px;
             padding: 20px;
             margin: 5px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }}
 
         QFrame.productCard:hover {{
             border-color: {BabbittProfessionalTheme.ACCENT_GOLD};
-            box-shadow: 0 4px 12px rgba(214, 158, 46, 0.15);
+            background-color: {BabbittProfessionalTheme.HOVER_BG};
         }}
 
         QFrame.familyCard {{

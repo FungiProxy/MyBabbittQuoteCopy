@@ -11,6 +11,7 @@ import traceback
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from src.core.services.settings_service import SettingsService
+from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
 
 # Set global logging level to INFO
 logging.basicConfig(level=logging.INFO)
@@ -38,8 +39,12 @@ def main():
     try:
         print('Creating QApplication...')
 
-        # Create application and apply theme
+        # Create application and apply modern theme
         app = QApplication(sys.argv)
+        
+        # Apply modern Babbitt theme
+        ModernBabbittTheme.apply_modern_theme(app)
+        print('Modern Babbitt theme applied successfully')
 
         settings = SettingsService()
 
@@ -47,7 +52,7 @@ def main():
         # Create and show main window
         window = MainWindow()
 
-        # Apply theme on startup
+        # Apply additional theme settings if needed
         theme = settings.get_theme()
         window.apply_theme(theme)
 
