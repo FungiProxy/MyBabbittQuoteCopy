@@ -85,37 +85,39 @@ class ConfigurationService:
             option_name (str): The name of the option (e.g., "Material", "Length").
             value (any): The selected value for the option.
         """
-        if not self.current_config:
-            # logger.warning("No current configuration when trying to select option")
-            return
+        print(f"DEBUG: select_option called with {option_name}={value}")
 
-        # logger.debug(f"Selecting option: {option_name} = {value}")
+        if not self.current_config:
+            print("DEBUG: No current configuration")
+            return
 
         # Store the current material before updating options
         current_material = self.current_config.selected_options.get("Material")
         if not current_material:
             current_material = self.current_config.base_product.get("material")
-            # logger.debug(f"Using base product material: {current_material}")
 
         # Update the selected option
         if option_name == "Material":
+            print(f"DEBUG: Processing material selection: {value}")
             # If the value is a number (like a length), don't update it
             if str(value).isdigit():
-                # logger.debug(
-                #     f"Material value {value} is numeric, keeping current material: {current_material}"
-                # )
+                print(
+                    f"DEBUG: Material value {value} is numeric, keeping current material: {current_material}"
+                )
                 self.current_config.selected_options["Material"] = current_material
             else:
-                # logger.debug(f"Updating material to: {value}")
+                print(f"DEBUG: Updating material to: {value}")
                 self.current_config.selected_options["Material"] = value
         else:
-            # logger.debug(f"Updating option {option_name} to: {value}")
+            print(f"DEBUG: Updating option {option_name} to: {value}")
             self.current_config.selected_options[option_name] = value
 
+        print(f"DEBUG: About to call _update_price()")
         # Update the model number and price
         self._update_model_number()
         self._update_price()
-        # logger.debug(f"Updated configuration: {self.current_config.selected_options}")
+        print(f"DEBUG: Finished _update_price()")
+        print(f"DEBUG: Final configuration: {self.current_config.selected_options}")
 
     def _update_model_number(self):
         """Update the model number based on selected options."""
@@ -212,21 +214,90 @@ class ConfigurationService:
 
     def _update_price(self):
         """Update the price based on the current configuration using the unified options structure."""
+        print("DEBUG: _update_price() called")
         try:
-            variant = self._get_current_variant()
+            print("DEBUG: Getting current variant...")
+            try:
+                variant = self._get_current_variant()
+                print(f"DEBUG: Got variant: {variant}")
+            except Exception as e:
+                print(f"DEBUG: Exception in _get_current_variant(): {e}")
+                variant = None
             if not variant:
-                # logger.error("No variant found for current configuration")
+                print(
+                    "DEBUG: No variant found, using fallback pricing WITH option adders"
+                )
                 # Fallback to base product price
                 base_price = self._to_float(
                     self.current_config.base_product.get("base_price", 0.0)
                 )
                 if base_price == 0.0:
-                    base_price = 500.0
-                self.current_config.final_price = base_price
+                    base_price = 425.0  # Use the current fallback price
+
+                # Calculate final price starting with base price
+                final_price = base_price
+                print(
+                    f"DEBUG: Starting fallback calculation with base price: {base_price}"
+                )
+
+                # Get all options for this product family and apply adders
+                all_options = self.product_service.get_additional_options(
+                    self.db, self.current_config.product_family_name
+                )
+                print(f"DEBUG: Got {len(all_options)} options for fallback pricing")
+
+                # Apply option adders
+                for (
+                    option_name,
+                    selected_value,
+                ) in self.current_config.selected_options.items():
+                    if selected_value is None:
+                        continue
+
+                    print(
+                        f"DEBUG: Processing fallback option: {option_name}={selected_value}"
+                    )
+
+                    # Handle exotic metal override pricing
+                    if option_name == "Exotic Metal Override":
+                        override_value = self._to_float(selected_value)
+                        if override_value > 0:
+                            final_price += override_value
+                            print(
+                                f"DEBUG: Applied exotic metal override: {override_value}, new total: {final_price}"
+                            )
+                        continue
+
+                    # Find the option in the unified structure
+                    for option in all_options:
+                        if option.get("name") == option_name:
+                            adders = option.get("adders", {})
+                            selected_value_str = str(selected_value).strip()
+                            print(
+                                f"DEBUG: Checking adders for {option_name}: {list(adders.keys())}"
+                            )
+
+                            if (
+                                isinstance(adders, dict)
+                                and selected_value_str in adders
+                            ):
+                                adder_value = float(adders[selected_value_str])
+                                final_price += adder_value
+                                print(
+                                    f"DEBUG: Applied {option_name} adder: {adder_value}, new total: {final_price}"
+                                )
+                            else:
+                                print(
+                                    f"DEBUG: No adder found for {selected_value_str} in {option_name}"
+                                )
+                            break
+
+                self.current_config.final_price = final_price
                 self.current_config.model_number = ""
-                # logger.info(f"Using fallback base price: {base_price}")
+                print(f"DEBUG: Set final fallback price to: {final_price}")
                 return
 
+            print("DEBUG: Using variant pricing...")
             # Use the variant's base price
             base_price = self._to_float(getattr(variant, "base_price", 0.0))
             if base_price == 0.0:
@@ -234,15 +305,18 @@ class ConfigurationService:
                     self.current_config.base_product.get("base_price", 0.0)
                 )
             self.current_config.model_number = str(getattr(variant, "model_number", ""))
-            # logger.info(f"Base price from variant: {base_price}")
+            print(f"DEBUG: Base price from variant: {base_price}")
 
             # Calculate final price starting with base price
             final_price = base_price
+            print(f"DEBUG: Starting final_price calculation with: {final_price}")
 
+            print("DEBUG: Getting additional options...")
             # Get all options for this product family
             all_options = self.product_service.get_additional_options(
                 self.db, self.current_config.product_family_name
             )
+            print(f"DEBUG: Got {len(all_options)} options")
 
             # Print all options and adders for diagnosis
             print("--- OPTIONS DIAG ---")
@@ -284,11 +358,11 @@ class ConfigurationService:
                     if option.get("name") == option_name:
                         adders = option.get("adders", {})
                         selected_value_str = str(selected_value).strip()
-                        logger.info(f"Adders keys: {list(adders.keys())}")
-                        logger.info(f"Selected value: '{selected_value_str}'")
+                        print(f"DEBUG: Adders keys: {list(adders.keys())}")
+                        print(f"DEBUG: Selected value: '{selected_value_str}'")
                         if isinstance(adders, dict) and selected_value_str in adders:
-                            logger.debug(
-                                f"Found adder for {selected_value_str}: {adders[selected_value_str]}"
+                            print(
+                                f"DEBUG: Found adder for {selected_value_str}: {adders[selected_value_str]}"
                             )
                             # Check if this product family is excluded from adders
                             excluded_products = option.get("excluded_products", "")
@@ -306,18 +380,18 @@ class ConfigurationService:
                             if not is_excluded:
                                 adder_value = float(adders[selected_value_str])
                                 final_price += adder_value
-                                logger.debug(
-                                    f"Applied {option_name} adder: {adder_value}, new total: {final_price}"
+                                print(
+                                    f"DEBUG: Applied {option_name} adder: {adder_value}, new total: {final_price}"
                                 )
                             else:
-                                logger.debug(
-                                    f"Skipped {option_name} adder for excluded family: {self.current_config.product_family_name}"
+                                print(
+                                    f"DEBUG: Skipped {option_name} adder for excluded family: {self.current_config.product_family_name}"
                                 )
                                 pass
                             break
                         else:
-                            logger.debug(
-                                f"No adder found for {selected_value_str} in {adders}"
+                            print(
+                                f"DEBUG: No adder found for {selected_value_str} in {adders}"
                             )
 
             # Handle special cases that might not be in the unified structure yet

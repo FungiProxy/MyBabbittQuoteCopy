@@ -1,6 +1,5 @@
 import os
 import sys
-
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -8,127 +7,75 @@ from sqlalchemy.orm import Session
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.core.database import SessionLocal
-from src.core.models.option import Option
+from src.core.models.option import Option, ProductFamilyOption
+from src.core.models.product_variant import ProductFamily
 
 
 def seed_options(db: Session):
-    """Seeds the database with product options."""
+    """
+    Seeds the database with consolidated and corrected product options.
+    This script uses an "upsert" logic: it updates existing options or creates them if they don't exist.
+    """
+    print("Starting to seed product options...")
 
+    # --- Cleanup Phase ---
+    # Delete old, fragmented material-related options to prevent conflicts and duplicates.
+    print("Cleaning up old material-related options...")
+    db.query(Option).filter(Option.category == "Exotic Metal").delete(
+        synchronize_session=False
+    )
+    db.query(Option).filter(
+        Option.name == "CPVC", Option.category == "Material"
+    ).delete(synchronize_session=False)
+    # Also delete any old top-level material option that might conflict with our new unified one.
+    db.query(Option).filter(
+        Option.name == "Material", Option.category == "specifications"
+    ).delete(synchronize_session=False)
+    db.commit()
+    print("Cleanup complete.")
+
+    # --- Data Definition Phase ---
+    # Define all product options in a structured way.
     options_data = [
-        # O-Ring Materials
         {
-            "name": "Viton",
-            "description": "Viton O-ring",
+            "name": "Material",
+            "description": "Defines the wetted materials of the probe and housing.",
             "price": 0.0,
             "price_type": "fixed",
-            "category": "O-ring Material",
-            "choices": ["Viton"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
+            "category": "Material",
+            "excluded_products": "",  # Remove exclusions - all families should have material pricing
+            "choices": [
+                {"code": "S", "display_name": "S - 316 Stainless Steel"},
+                {"code": "H", "display_name": "H - Halar Coated"},
+                {"code": "TS", "display_name": "TS - Teflon Sleeve"},
+                {"code": "T", "display_name": "T - Teflon"},
+                {"code": "U", "display_name": "U - UHMWPE"},
+                {"code": "CPVC", "display_name": "CPVC"},
+                {
+                    "code": "HC",
+                    "display_name": "HC - Hastelloy C-276 (Consult Factory)",
+                },
+                {"code": "HB", "display_name": "HB - Hastelloy B (Consult Factory)"},
+                {"code": "TI", "display_name": "TI - Titanium (Consult Factory)"},
+                {"code": "A20", "display_name": "A20 - Alloy 20 (Consult Factory)"},
+                {"code": "M", "display_name": "M - Monel (Consult Factory)"},
+                {"code": "I", "display_name": "I - Inconel (Consult Factory)"},
+            ],
+            "adders": {
+                "S": 0.0,
+                "H": 110.0,
+                "TS": 110.0,
+                "T": 60.0,
+                "U": 20.0,
+                "CPVC": 400.0,
+                "HC": 0.0,  # Price requires factory consultation
+                "HB": 0.0,  # Price requires factory consultation
+                "TI": 0.0,  # Price requires factory consultation
+                "A20": 0.0,  # Price requires factory consultation
+                "M": 0.0,  # Price requires factory consultation
+                "I": 0.0,  # Price requires factory consultation
+            },
         },
-        {
-            "name": "Silicon",
-            "description": "Silicon O-ring",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "O-ring Material",
-            "choices": ["Silicon"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "Buna-N",
-            "description": "Buna-N O-ring",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "O-ring Material",
-            "choices": ["Buna-N"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "EPDM",
-            "description": "EPDM O-ring",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "O-ring Material",
-            "choices": ["EPDM"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "PTFE",
-            "description": "PTFE O-ring",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "O-ring Material",
-            "choices": ["PTFE"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "Kalrez",
-            "description": "Kalrez O-ring",
-            "price": 295.0,
-            "price_type": "fixed",
-            "category": "O-ring Material",
-            "choices": ["Kalrez"],
-            "adders": {"Kalrez": 295.0},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        # Exotic Metals
-        {
-            "name": "None",
-            "description": "No exotic metal",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "Exotic Metal",
-            "choices": ["None"],
-            "adders": {},
-            
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "Alloy 20",
-            "description": "Alloy 20 (Consult Factory)",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "Exotic Metal",
-            "choices": ["Alloy 20"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "Hastelloy-C-276",
-            "description": "Hastelloy-C-276 (Consult Factory)",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "Exotic Metal",
-            "choices": ["Hastelloy-C-276"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "Hastelloy-B",
-            "description": "Hastelloy-B (Consult Factory)",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "Exotic Metal",
-            "choices": ["Hastelloy-B"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        {
-            "name": "Titanium",
-            "description": "Titanium (Consult Factory)",
-            "price": 0.0,
-            "price_type": "fixed",
-            "category": "Exotic Metal",
-            "choices": ["Titanium"],
-            "adders": {},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        # O-Rings
         {
             "name": "O-Rings",
             "description": "O-Ring material selection",
@@ -137,95 +84,83 @@ def seed_options(db: Session):
             "category": "O-ring Material",
             "choices": ["Viton", "Silicon", "Buna-N", "EPDM", "PTFE", "Kalrez"],
             "adders": {
-                "Viton": 0,
-                "Silicon": 0,
-                "Buna-N": 0,
-                "EPDM": 0,
-                "PTFE": 0,
-                "Kalrez": 295,
+                "Viton": 0.0,
+                "Silicon": 0.0,
+                "Buna-N": 0.0,
+                "EPDM": 0.0,
+                "PTFE": 0.0,
+                "Kalrez": 295.0,
             },
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
-        },
-        # CPVC Option
-        {
-            "name": "CPVC",
-            "description": "CPVC Material Option",
-            "price": 400.0,
-            "price_type": "fixed",
-            "category": "Material",
-            "choices": ["CPVC"],
-            "adders": {"CPVC": 400.0},
-            "product_families": "LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000",
         },
     ]
 
+    # --- Upsert Phase ---
+    print("Upserting core product options...")
     for data in options_data:
-        # Check if an option with the same name and category already exists
-        exists = (
+        option = (
             db.query(Option)
             .filter_by(name=data["name"], category=data["category"])
             .first()
         )
-        if not exists:
+        if option:
+            print(f"Updating existing option: {data['name']}")
+            option.description = data["description"]
+            option.price = data["price"]
+            option.price_type = data["price_type"]
+            option.choices = data["choices"]
+            option.adders = data["adders"]
+        else:
+            print(f"Creating new option: {data['name']}")
             option = Option(**data)
             db.add(option)
+    db.commit()
+    print("Upsert complete.")
+
+    # --- Association Phase ---
+    # This ensures that the core options are available for all product families.
+    print("Associating options with product families...")
+    all_families = db.query(ProductFamily).all()
+    material_option = db.query(Option).filter_by(name="Material").first()
+    oring_option = db.query(Option).filter_by(name="O-Rings").first()
+
+    for family in all_families:
+        # Associate Material option
+        if material_option:
+            assoc_exists = (
+                db.query(ProductFamilyOption)
+                .filter_by(product_family_id=family.id, option_id=material_option.id)
+                .first()
+            )
+            if not assoc_exists:
+                db.add(
+                    ProductFamilyOption(
+                        product_family_id=family.id, option_id=material_option.id
+                    )
+                )
+                print(f"  Associated 'Material' with '{family.name}'")
+
+        # Associate O-Rings option
+        if oring_option:
+            assoc_exists = (
+                db.query(ProductFamilyOption)
+                .filter_by(product_family_id=family.id, option_id=oring_option.id)
+                .first()
+            )
+            if not assoc_exists:
+                db.add(
+                    ProductFamilyOption(
+                        product_family_id=family.id, option_id=oring_option.id
+                    )
+                )
+                print(f"  Associated 'O-Rings' with '{family.name}'")
 
     db.commit()
-    print("Successfully seeded product options.")
-
-    # Remove duplicate material options for LS2100, LS6000, and LS7000
-    for model in ["LS2100", "LS6000", "LS7000"]:
-        duplicate_materials = [
-            {
-                "name": "Material",
-                "description": "Probe material",
-                "price": 0.0,
-                "price_type": "adder",
-                "category": "specifications",
-                "choices": ["316SS", "Hastelloy C276", "Titanium", "Monel", "Inconel 600", "Inconel 625"],
-                "adders": {
-                    "316SS": 0.0,
-                    "Hastelloy C276": 0.0,
-                    "Titanium": 0.0,
-                    "Monel": 0.0,
-                    "Inconel 600": 0.0,
-                    "Inconel 625": 0.0
-                },
-                "product_families": [model]
-            }
-        ]
-        for material in duplicate_materials:
-            db.query(Option).filter_by(name=material["name"], product_families=model).delete()
-
-    # Remove duplicate probe length options for LS2100, LS6000, and LS7000
-    for model in ["LS2100", "LS6000", "LS7000"]:
-        duplicate_lengths = [
-            {
-                "name": "Probe Length",
-                "description": "Probe length in inches",
-                "price": 0.0,
-                "price_type": "adder",
-                "category": "specifications",
-                "choices": ["1", "2", "3", "4", "5", "6"],
-                "adders": {
-                    "1": 0.0,
-                    "2": 0.0,
-                    "3": 0.0,
-                    "4": 0.0,
-                    "5": 0.0,
-                    "6": 0.0
-                },
-                "product_families": [model]
-            }
-        ]
-        for length in duplicate_lengths:
-            db.query(Option).filter_by(name=length["name"], product_families=model).delete()
+    print("Successfully seeded and associated product options.")
 
 
 if __name__ == "__main__":
     db = SessionLocal()
     try:
-        # For SQLite, it's helpful to enable foreign key constraints
         if db.bind.dialect.name == "sqlite":
             db.execute(text("PRAGMA foreign_keys = ON;"))
         seed_options(db)

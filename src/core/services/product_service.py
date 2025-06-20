@@ -237,8 +237,9 @@ class ProductService:
         filtered = options
         logger.debug(f"After filtering exclusions: {len(filtered)} options")
 
-        result = [
-            {
+        result = []
+        for o in filtered:
+            option_dict = {
                 "name": o.name,
                 "description": o.description,
                 "price": o.price,
@@ -248,14 +249,51 @@ class ProductService:
                 "adders": o.adders,
                 "excluded_products": o.excluded_products,
             }
-            for o in filtered
-        ]
+
+            # Apply family-specific filtering for Material options
+            if o.category == "Material" and o.rules and isinstance(o.rules, dict):
+                family_materials = o.rules.get("family_materials", {})
+                if family_name in family_materials:
+                    allowed_materials = family_materials[family_name]
+                    logger.debug(
+                        f"Filtering materials for {family_name}: {allowed_materials}"
+                    )
+
+                    # Filter choices to only include allowed materials for this family
+                    if isinstance(o.choices, list):
+                        # Handle both simple string choices and dict choices
+                        filtered_choices = []
+                        for choice in o.choices:
+                            if isinstance(choice, dict):
+                                # Choice is a dict like {'code': 'S', 'display_name': 'S - 316 Stainless Steel'}
+                                if choice.get("code") in allowed_materials:
+                                    filtered_choices.append(choice)
+                            elif isinstance(choice, str):
+                                # Choice is a simple string like 'S'
+                                if choice in allowed_materials:
+                                    filtered_choices.append(choice)
+                        option_dict["choices"] = filtered_choices
+                        logger.debug(
+                            f"Filtered material choices for {family_name}: {len(filtered_choices)} materials"
+                        )
+
+                    # Filter adders to only include allowed materials
+                    if isinstance(o.adders, dict):
+                        filtered_adders = {
+                            k: v for k, v in o.adders.items() if k in allowed_materials
+                        }
+                        option_dict["adders"] = filtered_adders
+                        logger.debug(
+                            f"Filtered material adders for {family_name}: {list(filtered_adders.keys())}"
+                        )
+
+            result.append(option_dict)
 
         # Log details of each option
         for opt in result:
             logger.debug(f"Option {opt['name']}:")
-            logger.debug(f"  - Choices: {opt['choices']}")
-            logger.debug(f"  - Adders: {opt['adders']}")
+            logger.debug(f"  - Choices: {len(opt['choices']) if opt['choices'] else 0}")
+            logger.debug(f"  - Adders: {len(opt['adders']) if opt['adders'] else 0}")
             logger.debug(f"  - Category: {opt['category']}")
 
         return result
