@@ -6,6 +6,7 @@ color scheme and traditional styling for business applications.
 """
 
 from PySide6.QtCore import QObject
+from .dashboard_styles import get_dashboard_stylesheet
 
 
 class CorporateTheme(QObject):
@@ -187,7 +188,7 @@ class CorporateTheme(QObject):
             background-color: {CorporateTheme.CARD_BG};
             border: 1px solid {CorporateTheme.BORDER_COLOR};
             border-radius: 8px;
-            padding: 20px;
+            padding: 16px;
         }}
 
         QFrame.card:hover {{
@@ -227,12 +228,55 @@ class CorporateTheme(QObject):
         }}
 
         /* Custom classes for Dashboard */
+        .metricCard {{
+            background-color: {CorporateTheme.CARD_BG};
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
+            border-radius: 8px;
+            padding: 16px;
+        }}
+        .metricCard:hover {{
+            border-color: {CorporateTheme.ACCENT_RED};
+        }}
+        .metricIcon {{
+            font-size: 20px;
+            color: {CorporateTheme.PRIMARY_NAVY};
+        }}
+        .metricLabel {{
+            font-size: 13px;
+            color: {CorporateTheme.SECONDARY_TEXT};
+            font-weight: 500;
+        }}
+        .metricValue {{
+            font-size: 22px;
+            font-weight: 600;
+            color: {CorporateTheme.PRIMARY_TEXT};
+        }}
+        .metricSubtext {{
+            font-size: 12px;
+            color: {CorporateTheme.MUTED_TEXT};
+        }}
+        .recentQuotesCard {{
+            padding: 16px;
+        }}
+        .recentQuotesTitle {{
+            font-size: 18px;
+            font-weight: 600;
+            color: {CorporateTheme.ACCENT_TEXT};
+            margin-bottom: 8px;
+        }}
+        .noQuotesLabel {{
+            font-size: 14px;
+            color: {CorporateTheme.MUTED_TEXT};
+            padding: 40px;
+            border: 2px dashed {CorporateTheme.BORDER_COLOR};
+            border-radius: 6px;
+        }}
         .quoteItemCard {{
             background-color: {CorporateTheme.CARD_BG};
             border: 1px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 4px;
-            padding: 15px;
-            margin: 5px 0;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 4px 0;
         }}
         .quoteItemCard:hover {{
             border-color: {CorporateTheme.ACCENT_RED};
@@ -250,241 +294,41 @@ class CorporateTheme(QObject):
             background-color: {CorporateTheme.SUCCESS_GREEN};
             color: white;
             padding: 4px 8px;
-            border-radius: 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }}
+        .status-pending {{
+            background-color: {CorporateTheme.WARNING_ORANGE};
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
             font-size: 11px;
             font-weight: 500;
         }}
         .status-draft {{
-            background-color: {CorporateTheme.WARNING_ORANGE};
+            background-color: {CorporateTheme.MUTED_TEXT};
             color: white;
             padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }}
-        .status-default {{
-            background-color: {CorporateTheme.SURFACE_BG};
-            color: {CorporateTheme.PRIMARY_TEXT};
-            padding: 4px 8px;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 11px;
             font-weight: 500;
         }}
         .placeholderText {{
             color: {CorporateTheme.MUTED_TEXT};
             font-size: 14px;
-            padding: 40px;
+            font-style: italic;
         }}
-        #sectionTitle {{
-            font-size: 18px;
-            font-weight: 600;
-            color: {CorporateTheme.ACCENT_TEXT};
-            margin-bottom: 15px;
-        }}
+        """ + get_dashboard_stylesheet(CorporateTheme)
 
-        /* Custom classes for Quote Creation */
-        .quoteSubtitle {{
-            color: {CorporateTheme.SECONDARY_TEXT};
-            font-size: 14px;
-        }}
-        #quoteTotalLabel {{
-            color: {CorporateTheme.ACCENT_TEXT};
-            font-weight: 600;
-            font-size: 18px;
-        }}
-        .placeholderCard {{
-            color: {CorporateTheme.MUTED_TEXT};
-            font-size: 14px;
-            padding: 40px;
-            background-color: {CorporateTheme.SURFACE_BG};
-            border-radius: 4px;
-            border: 1px dashed {CorporateTheme.BORDER_COLOR};
-        }}
-        QPushButton.info.small {{
-            background-color: {CorporateTheme.INFO_BLUE};
-            color: white;
-            border-radius: 2px;
-            padding: 4px 8px;
-            font-size: 11px;
-        }}
-        QPushButton.info.small:hover {{
-            background-color: #1D4ED8;
-        }}
-        QPushButton.danger.small {{
-            background-color: {CorporateTheme.ERROR_RED};
-            color: white;
-            border-radius: 2px;
-            padding: 4px 8px;
-            font-size: 11px;
-        }}
-        QPushButton.danger.small:hover {{
-            background-color: #B91C1C;
-        }}
+    # The STYLES dictionary and related methods are no longer needed
+    # as dashboard styles are handled by get_dashboard_stylesheet.
+    STYLES = {}
 
-        /* Custom styles for Product Selection */
-        #progressIndicator {{
-            background-color: {CorporateTheme.CARD_BG};
-            border-bottom: 1px solid {CorporateTheme.BORDER_COLOR};
-            min-height: 100px;
-            max-height: 100px;
-        }}
-        
-        #progressLine {{
-            background-color: {CorporateTheme.BORDER_COLOR};
-            border: none;
-            border-radius: 1px;
-        }}
-        
-        #progressLine[completed="true"] {{
-            background-color: {CorporateTheme.SUCCESS_GREEN};
-        }}
-        
-        .stepNumber {{
-            width: 36px;
-            height: 36px;
-            border-radius: 18px;
-            background-color: {CorporateTheme.SURFACE_BG};
-            color: {CorporateTheme.MUTED_TEXT};
-            font-weight: 600;
-            font-size: 14px;
-            border: 2px solid {CorporateTheme.BORDER_COLOR};
-        }}
-        
-        .stepNumber[active="true"] {{
-            background-color: {CorporateTheme.PRIMARY_RED};
-            color: white;
-            border-color: {CorporateTheme.PRIMARY_RED};
-        }}
-        
-        .stepNumber[completed="true"] {{
-            background-color: {CorporateTheme.SUCCESS_GREEN};
-            color: white;
-            border-color: {CorporateTheme.SUCCESS_GREEN};
-        }}
-        
-        .stepLabel {{
-            color: {CorporateTheme.SECONDARY_TEXT};
-            font-size: 12px;
-            font-weight: 500;
-            text-align: center;
-        }}
-        
-        .stepLabel[active="true"] {{
-            color: {CorporateTheme.PRIMARY_TEXT};
-            font-weight: 600;
-        }}
-
-        /* Tables */
-        QTableWidget {{
-            background-color: {CorporateTheme.CARD_BG};
-            border: 1px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 4px;
-            gridline-color: {CorporateTheme.BORDER_COLOR};
-            color: {CorporateTheme.PRIMARY_TEXT};
-        }}
-
-        QTableWidget::item {{
-            padding: 8px;
-            border-bottom: 1px solid {CorporateTheme.BORDER_COLOR};
-        }}
-
-        QTableWidget::item:selected {{
-            background-color: {CorporateTheme.HOVER_BG};
-            color: {CorporateTheme.ACCENT_TEXT};
-        }}
-
-        QHeaderView::section {{
-            background-color: {CorporateTheme.SURFACE_BG};
-            color: {CorporateTheme.SECONDARY_TEXT};
-            padding: 10px;
-            border: none;
-            border-bottom: 1px solid {CorporateTheme.BORDER_COLOR};
-            font-weight: 500;
-        }}
-
-        /* Radio Buttons and Checkboxes */
-        QRadioButton, QCheckBox {{
-            color: {CorporateTheme.PRIMARY_TEXT};
-            spacing: 8px;
-        }}
-
-        QRadioButton::indicator, QCheckBox::indicator {{
-            width: 16px;
-            height: 16px;
-        }}
-
-        QRadioButton::indicator:unchecked {{
-            border: 2px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 8px;
-            background-color: {CorporateTheme.CARD_BG};
-        }}
-
-        QRadioButton::indicator:checked {{
-            border: 2px solid {CorporateTheme.ACCENT_RED};
-            border-radius: 8px;
-            background-color: {CorporateTheme.ACCENT_RED};
-        }}
-
-        QCheckBox::indicator:unchecked {{
-            border: 2px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 2px;
-            background-color: {CorporateTheme.CARD_BG};
-        }}
-
-        QCheckBox::indicator:checked {{
-            border: 2px solid {CorporateTheme.ACCENT_RED};
-            border-radius: 2px;
-            background-color: {CorporateTheme.ACCENT_RED};
-        }}
-
-        /* Scroll Areas */
-        QScrollArea {{
-            border: none;
-            background-color: transparent;
-        }}
-
-        QScrollBar:vertical {{
-            border: none;
-            background-color: {CorporateTheme.SURFACE_BG};
-            width: 12px;
-            border-radius: 6px;
-        }}
-
-        QScrollBar::handle:vertical {{
-            background-color: {CorporateTheme.BORDER_COLOR};
-            border-radius: 6px;
-            min-height: 20px;
-        }}
-
-        QScrollBar::handle:vertical:hover {{
-            background-color: {CorporateTheme.ACCENT_RED};
-        }}
-
-        /* Group Boxes */
-        QGroupBox {{
-            font-weight: 600;
-            color: {CorporateTheme.ACCENT_TEXT};
-            border: 2px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 6px;
-            margin-top: 10px;
-            padding-top: 10px;
-        }}
-
-        QGroupBox::title {{
-            subcontrol-origin: margin;
-            left: 10px;
-            padding: 0 8px 0 8px;
-            background-color: {CorporateTheme.CARD_BG};
-        }}
-        """
+    @staticmethod
+    def apply_stylesheet(widget, css_class):
+        pass
 
     @staticmethod
     def apply_property_styles(widget, properties):
-        """Apply style properties to a widget."""
-        style_parts = []
-        for prop, value in properties.items():
-            style_parts.append(f'{prop}: {value};')
-
-        current_style = widget.styleSheet()
-        new_style = ' '.join(style_parts)
-        widget.setStyleSheet(f'{current_style} {new_style}') 
+        pass 

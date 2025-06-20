@@ -310,6 +310,59 @@ class ModernBabbittTheme:
             border-radius: 4px;
         }}
         
+        /* === PROGRESS INDICATOR STYLES === */
+        #progressIndicator {{
+            background-color: {ModernBabbittTheme.WHITE};
+            border-bottom: 1px solid {ModernBabbittTheme.BORDER_GRAY};
+            min-height: 100px;
+            max-height: 100px;
+        }}
+        
+        #progressLine {{
+            background-color: {ModernBabbittTheme.BORDER_GRAY};
+            border: none;
+            border-radius: 1px;
+        }}
+        
+        #progressLine[completed="true"] {{
+            background-color: {ModernBabbittTheme.SUCCESS_GREEN};
+        }}
+        
+        .stepNumber {{
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background-color: {ModernBabbittTheme.LIGHT_GRAY};
+            color: {ModernBabbittTheme.MEDIUM_GRAY};
+            font-weight: 600;
+            font-size: 14px;
+            border: 2px solid {ModernBabbittTheme.BORDER_GRAY};
+        }}
+        
+        .stepNumber[active="true"] {{
+            background-color: {ModernBabbittTheme.PRIMARY_BLUE};
+            color: white;
+            border-color: {ModernBabbittTheme.PRIMARY_BLUE};
+        }}
+        
+        .stepNumber[completed="true"] {{
+            background-color: {ModernBabbittTheme.SUCCESS_GREEN};
+            color: white;
+            border-color: {ModernBabbittTheme.SUCCESS_GREEN};
+        }}
+        
+        .stepLabel {{
+            color: {ModernBabbittTheme.MEDIUM_GRAY};
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }}
+        
+        .stepLabel[active="true"] {{
+            color: {ModernBabbittTheme.DARK_GRAY};
+            font-weight: 600;
+        }}
+        
         /* === FRAME IMPROVEMENTS === */
         QFrame[frameType="card"] {{
             background-color: white;

@@ -6,6 +6,7 @@ the Babbitt International website colors and branding.
 """
 
 from PySide6.QtCore import QObject
+from .dashboard_styles import get_dashboard_stylesheet
 
 
 class BabbittProfessionalTheme(QObject):
@@ -187,7 +188,7 @@ class BabbittProfessionalTheme(QObject):
             background-color: {BabbittProfessionalTheme.CARD_BG};
             border: 1px solid {BabbittProfessionalTheme.BORDER_COLOR};
             border-radius: 8px;
-            padding: 20px;
+            padding: 16px;
         }}
 
         QFrame.card:hover {{
@@ -227,151 +228,18 @@ class BabbittProfessionalTheme(QObject):
         }}
 
         /* Custom classes for Dashboard */
-        .quoteItemCard {{
-            background-color: {BabbittProfessionalTheme.CARD_BG};
-            border: 1px solid {BabbittProfessionalTheme.BORDER_COLOR};
-            border-radius: 6px;
-            padding: 15px;
-            margin: 5px 0;
-        }}
-        .quoteItemCard:hover {{
-            border-color: {BabbittProfessionalTheme.ACCENT_GOLD};
-        }}
-        .quoteItemTitle {{
-            font-weight: 600;
-            color: {BabbittProfessionalTheme.PRIMARY_NAVY};
-            font-size: 14px;
-        }}
-        .quoteItemDetails {{
-            color: {BabbittProfessionalTheme.SECONDARY_TEXT};
-            font-size: 12px;
-        }}
-        .status-sent {{
-            background-color: {BabbittProfessionalTheme.SUCCESS_GREEN};
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }}
-        .status-draft {{
-            background-color: {BabbittProfessionalTheme.WARNING_ORANGE};
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }}
-        .status-default {{
-            background-color: {BabbittProfessionalTheme.SURFACE_BG};
-            color: {BabbittProfessionalTheme.PRIMARY_TEXT};
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }}
-        .placeholderText {{
-            color: {BabbittProfessionalTheme.MUTED_TEXT};
-            font-size: 14px;
-            padding: 40px;
-        }}
-        #sectionTitle {{
-            font-size: 18px;
-            font-weight: 600;
-            color: {BabbittProfessionalTheme.PRIMARY_NAVY};
-            margin-bottom: 15px;
-        }}
+        /* === All dashboard styles have been moved to dashboard_styles.py === */
 
-        /* Custom classes for Quote Creation */
-        .quoteSubtitle {{
-            color: {BabbittProfessionalTheme.SECONDARY_TEXT};
-            font-size: 14px;
-        }}
-        #quoteTotalLabel {{
-            color: {BabbittProfessionalTheme.PRIMARY_NAVY};
+        /* Main Content Headers */
+        QLabel#contentTitle {{
+            font-size: 28px;
             font-weight: 600;
-            font-size: 18px;
-        }}
-        .placeholderCard {{
-            color: {BabbittProfessionalTheme.MUTED_TEXT};
-            font-size: 14px;
-            padding: 40px;
-            background-color: {BabbittProfessionalTheme.SURFACE_BG};
-            border-radius: 6px;
-            border: 1px dashed {BabbittProfessionalTheme.BORDER_COLOR};
-        }}
-        QPushButton.info.small {{
-            background-color: {BabbittProfessionalTheme.INFO_BLUE};
-            color: white;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 11px;
-        }}
-        QPushButton.info.small:hover {{
-            background-color: #2C5282;
-        }}
-        QPushButton.danger.small {{
-            background-color: {BabbittProfessionalTheme.ERROR_RED};
-            color: white;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 11px;
-        }}
-        QPushButton.danger.small:hover {{
-            background-color: #C53030;
-        }}
-
-        /* Custom styles for Product Selection */
-        #progressIndicator {{
-            background-color: {BabbittProfessionalTheme.CARD_BG};
-            border-bottom: 1px solid {BabbittProfessionalTheme.BORDER_COLOR};
-            min-height: 100px;
-            max-height: 100px;
+            color: {BabbittProfessionalTheme.PRIMARY_NAVY};
         }}
         
-        #progressLine {{
+        QFrame#contentDivider {{
             background-color: {BabbittProfessionalTheme.BORDER_COLOR};
-            border: none;
-            border-radius: 1px;
-        }}
-        
-        #progressLine[completed="true"] {{
-            background-color: {BabbittProfessionalTheme.SUCCESS_GREEN};
-        }}
-        
-        .stepNumber {{
-            width: 36px;
-            height: 36px;
-            border-radius: 18px;
-            background-color: {BabbittProfessionalTheme.SURFACE_BG};
-            color: {BabbittProfessionalTheme.MUTED_TEXT};
-            font-weight: 600;
-            font-size: 14px;
-            border: 2px solid {BabbittProfessionalTheme.BORDER_COLOR};
-        }}
-        
-        .stepNumber[active="true"] {{
-            background-color: {BabbittProfessionalTheme.PRIMARY_NAVY};
-            color: white;
-            border-color: {BabbittProfessionalTheme.PRIMARY_NAVY};
-        }}
-        
-        .stepNumber[completed="true"] {{
-            background-color: {BabbittProfessionalTheme.SUCCESS_GREEN};
-            color: white;
-            border-color: {BabbittProfessionalTheme.SUCCESS_GREEN};
-        }}
-        
-        .stepLabel {{
-            color: {BabbittProfessionalTheme.SECONDARY_TEXT};
-            font-size: 12px;
-            font-weight: 500;
-            text-align: center;
-        }}
-        
-        .stepLabel[active="true"] {{
-            color: {BabbittProfessionalTheme.PRIMARY_TEXT};
-            font-weight: 600;
+            height: 1px;
         }}
 
         /* Statistics Cards */
@@ -664,15 +532,120 @@ class BabbittProfessionalTheme(QObject):
             color: {BabbittProfessionalTheme.PRIMARY_TEXT};
             font-weight: 600;
         }}
-        """
+        """ + get_dashboard_stylesheet(BabbittProfessionalTheme)
+
+    STYLES = {
+        "card": {
+            "background-color": CARD_BG,
+            "border": f"1px solid {BORDER_COLOR}",
+            "border-radius": "8px",
+            "padding": "16px",
+        },
+        "metricCard": {
+            "background-color": CARD_BG,
+            "border": f"1px solid {BORDER_COLOR}",
+            "border-radius": "8px",
+            "padding": "16px",
+        },
+        "metricIcon": {
+            "font-size": "20px",
+            "color": ACCENT_GOLD,
+        },
+        "metricLabel": {
+            "font-size": "13px",
+            "color": SECONDARY_TEXT,
+            "font-weight": "500",
+        },
+        "metricValue": {
+            "font-size": "22px",
+            "font-weight": "600",
+            "color": PRIMARY_TEXT,
+        },
+        "metricSubtext": {
+            "font-size": "12px",
+            "color": MUTED_TEXT,
+        },
+        "recentQuotesCard": {
+            "padding": "16px",
+        },
+        "recentQuotesTitle": {
+            "font-size": "18px",
+            "font-weight": "600",
+            "color": PRIMARY_NAVY,
+            "margin-bottom": "8px",
+        },
+        "noQuotesLabel": {
+            "font-size": "14px",
+            "color": MUTED_TEXT,
+            "padding": "40px",
+            "border": f"2px dashed {BORDER_COLOR}",
+            "border-radius": "6px",
+        },
+        "quoteItemCard": {
+            "background-color": CARD_BG,
+            "border": f"1px solid {BORDER_COLOR}",
+            "border-radius": "6px",
+            "padding": "12px",
+            "margin": "4px 0",
+        },
+        "quoteItemTitle": {
+            "font-weight": "600",
+            "color": PRIMARY_NAVY,
+            "font-size": "14px",
+        },
+        "quoteItemDetails": {
+            "color": SECONDARY_TEXT,
+            "font-size": "12px",
+        },
+        "status-sent": {
+            "background-color": SUCCESS_GREEN,
+            "color": "white",
+            "border-radius": "10px",
+            "padding": "4px 8px",
+            "font-size": "11px",
+            "font-weight": "500",
+        },
+        "status-pending": {
+            "background-color": WARNING_ORANGE,
+            "color": "white",
+            "border-radius": "10px",
+            "padding": "4px 8px",
+            "font-size": "11px",
+            "font-weight": "500",
+        },
+        "status-draft": {
+            "background-color": MUTED_TEXT,
+            "color": "white",
+            "border-radius": "10px",
+            "padding": "4px 8px",
+            "font-size": "11px",
+            "font-weight": "500",
+        },
+    }
+
+    @staticmethod
+    def apply_stylesheet(widget, css_class):
+        """Apply a predefined style to a widget."""
+        style = BabbittProfessionalTheme.STYLES.get(css_class, {})
+        style_str = "; ".join([f"{key}: {value}" for key, value in style.items()])
+        widget.setStyleSheet(style_str)
 
     @staticmethod
     def apply_property_styles(widget, properties):
-        """Apply style properties to a widget."""
-        style_parts = []
-        for prop, value in properties.items():
-            style_parts.append(f'{prop}: {value};')
+        """
+        Dynamically applies styles to a widget based on a dictionary of properties.
+        This is useful for applying styles that are not covered by a single css_class.
+        """
+        if not widget or not properties:
+            return
 
         current_style = widget.styleSheet()
-        new_style = ' '.join(style_parts)
-        widget.setStyleSheet(f'{current_style} {new_style}') 
+        new_styles = []
+
+        for prop, value in properties.items():
+            # Convert property from camelCase to kebab-case
+            css_property = ''.join(['-' + c.lower() if c.isupper() else c for c in prop]).lstrip('-')
+            new_styles.append(f"{css_property}: {value};")
+
+        # Combine new styles with existing ones
+        widget.setStyleSheet(current_style + " " + " ".join(new_styles)) 
