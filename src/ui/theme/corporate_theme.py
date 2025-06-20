@@ -1,47 +1,46 @@
 """
-Babbitt International Theme System
+Corporate Theme System
 
-Provides the industrial theme for MyBabbittQuote application with professional
-blue color scheme and consistent styling across all components.
+Provides a professional corporate theme for MyBabbittQuote application with navy/red
+color scheme and traditional styling for business applications.
 """
 
 from PySide6.QtCore import QObject
 
 
-class BabbittTheme(QObject):
+class CorporateTheme(QObject):
     """
-    Theme system for Babbitt International MyBabbittQuote application.
+    Corporate theme system for MyBabbittQuote application.
 
-    Provides a professional industrial color scheme with blue primary colors,
-    gold accents, and clean styling appropriate for business use.
+    Provides a professional corporate color scheme with navy primary colors,
+    red accents, and traditional styling appropriate for business environments.
     """
 
-    # Primary Colors - Industrial Blue Scheme
-    PRIMARY_BLUE = '#2C3E50'      # Deep professional blue
-    SECONDARY_BLUE = '#34495E'    # Lighter blue for hover states
-    ACCENT_GOLD = '#F39C12'       # Gold accent for highlights
+    # Primary Colors - Corporate Navy/Red Scheme
+    PRIMARY_NAVY = '#1E3A8A'      # Deep navy for primary elements
+    SECONDARY_NAVY = '#3B82F6'    # Lighter navy for hover states
+    ACCENT_RED = '#DC2626'        # Red accent for highlights
+    PRIMARY_RED = '#DC2626'       # Primary red (same as accent red)
+    DARK_NAVY = '#1E40AF'         # Darker navy for pressed states
 
     # Status Colors
-    SUCCESS_GREEN = '#28A745'     # Success states, valid configurations
-    WARNING_ORANGE = '#FD7E14'    # Warnings, attention needed
-    ERROR_RED = '#DC3545'         # Errors, invalid states
-    INFO_BLUE = '#17A2B8'         # Information, help text
+    SUCCESS_GREEN = '#059669'     # Success states, valid configurations
+    WARNING_ORANGE = '#D97706'    # Warnings, attention needed
+    ERROR_RED = '#DC2626'         # Errors, invalid states
+    INFO_BLUE = '#2563EB'         # Information, help text
 
-    # Background Colors
-    WHITE = '#FFFFFF'             # Primary background
-    LIGHT_GRAY = '#F8F9FA'        # Secondary backgrounds, panels
-    MEDIUM_GRAY = '#6C757D'       # Secondary text, borders
-    DARK_GRAY = '#343A40'         # Dark text, headers
-    CARD_BORDER = '#E9ECEF'       # Card and component borders
-    
-    # Additional colors for compatibility
-    CARD_BG = WHITE               # Card background
-    SURFACE_BG = LIGHT_GRAY       # Surface background
-    BORDER_COLOR = CARD_BORDER    # Border color
-    HOVER_BG = '#E3F2FD'          # Hover background
-    PRIMARY_TEXT = DARK_GRAY      # Primary text
-    SECONDARY_TEXT = MEDIUM_GRAY  # Secondary text
-    MUTED_TEXT = MEDIUM_GRAY      # Muted text
+    # Background Colors - Corporate Theme
+    LIGHT_BG = '#F8FAFC'          # Primary light background
+    CARD_BG = '#FFFFFF'           # Card and component backgrounds
+    SURFACE_BG = '#F1F5F9'        # Elevated surface backgrounds
+    BORDER_COLOR = '#CBD5E1'      # Borders and dividers
+    HOVER_BG = '#EFF6FF'          # Hover state backgrounds
+
+    # Text Colors
+    PRIMARY_TEXT = '#0F172A'      # Primary text color
+    SECONDARY_TEXT = '#475569'    # Secondary text color
+    MUTED_TEXT = '#64748B'        # Muted text color
+    ACCENT_TEXT = '#1E3A8A'       # Accent text color
 
     @staticmethod
     def get_main_stylesheet():
@@ -49,22 +48,22 @@ class BabbittTheme(QObject):
         return f"""
         /* Main Window and Global Styles */
         QMainWindow {{
-            background-color: {BabbittTheme.LIGHT_GRAY};
-            color: {BabbittTheme.DARK_GRAY};
+            background-color: {CorporateTheme.LIGHT_BG};
+            color: {CorporateTheme.PRIMARY_TEXT};
             font-family: 'Segoe UI', Arial, sans-serif;
             font-size: 14px;
         }}
 
         /* Sidebar Styling */
         QFrame#sidebarFrame {{
-            background-color: {BabbittTheme.PRIMARY_BLUE};
+            background-color: {CorporateTheme.PRIMARY_NAVY};
             border: none;
             min-width: 240px;
             max-width: 240px;
         }}
 
         QLabel#logoLabel {{
-            color: {BabbittTheme.ACCENT_GOLD};
+            color: {CorporateTheme.ACCENT_RED};
             font-size: 24px;
             font-weight: 600;
             padding: 20px 10px;
@@ -91,7 +90,7 @@ class BabbittTheme(QObject):
 
         QListWidget#navList::item:selected {{
             background-color: rgba(255, 255, 255, 0.1);
-            border-left: 3px solid {BabbittTheme.ACCENT_GOLD};
+            border-left: 3px solid {CorporateTheme.ACCENT_RED};
             font-weight: 500;
         }}
 
@@ -111,13 +110,13 @@ class BabbittTheme(QObject):
 
         /* Content Area */
         QFrame#contentAreaFrame {{
-            background-color: {BabbittTheme.WHITE};
+            background-color: {CorporateTheme.LIGHT_BG};
             border: none;
         }}
 
         QFrame#contentHeader {{
-            background-color: {BabbittTheme.WHITE};
-            border-bottom: 1px solid {BabbittTheme.CARD_BORDER};
+            background-color: {CorporateTheme.CARD_BG};
+            border-bottom: 1px solid {CorporateTheme.BORDER_COLOR};
             padding: 20px;
             min-height: 60px;
         }}
@@ -125,7 +124,7 @@ class BabbittTheme(QObject):
         QLabel#pageTitle {{
             font-size: 24px;
             font-weight: 600;
-            color: {BabbittTheme.PRIMARY_BLUE};
+            color: {CorporateTheme.ACCENT_TEXT};
         }}
 
         /* Button Styles */
@@ -139,114 +138,116 @@ class BabbittTheme(QObject):
         }}
 
         QPushButton.primary {{
-            background-color: {BabbittTheme.PRIMARY_BLUE};
+            background-color: {CorporateTheme.PRIMARY_NAVY};
             color: white;
         }}
 
         QPushButton.primary:hover {{
-            background-color: {BabbittTheme.SECONDARY_BLUE};
+            background-color: {CorporateTheme.SECONDARY_NAVY};
         }}
 
         QPushButton.primary:pressed {{
-            background-color: {BabbittTheme.DARK_GRAY};
+            background-color: {CorporateTheme.DARK_NAVY};
         }}
 
         QPushButton.success {{
-            background-color: {BabbittTheme.SUCCESS_GREEN};
+            background-color: {CorporateTheme.SUCCESS_GREEN};
             color: white;
         }}
 
         QPushButton.success:hover {{
-            background-color: #1e7e34;
+            background-color: #047857;
         }}
 
         QPushButton.secondary {{
-            background-color: {BabbittTheme.MEDIUM_GRAY};
-            color: white;
+            background-color: {CorporateTheme.SURFACE_BG};
+            color: {CorporateTheme.PRIMARY_TEXT};
         }}
 
         QPushButton.secondary:hover {{
-            background-color: #545b62;
+            background-color: #E2E8F0;
         }}
 
         QPushButton.warning {{
-            background-color: {BabbittTheme.WARNING_ORANGE};
+            background-color: {CorporateTheme.WARNING_ORANGE};
             color: white;
         }}
 
         QPushButton.warning:hover {{
-            background-color: #e0650e;
+            background-color: #B45309;
         }}
 
         QPushButton:disabled {{
-            background-color: {BabbittTheme.CARD_BORDER};
-            color: {BabbittTheme.MEDIUM_GRAY};
+            background-color: {CorporateTheme.SURFACE_BG};
+            color: {CorporateTheme.MUTED_TEXT};
         }}
 
         /* Card Components */
         QFrame.card {{
-            background-color: {BabbittTheme.WHITE};
-            border: 1px solid {BabbittTheme.CARD_BORDER};
+            background-color: {CorporateTheme.CARD_BG};
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
             border-radius: 8px;
             padding: 20px;
         }}
 
         QFrame.card:hover {{
-            border-color: {BabbittTheme.PRIMARY_BLUE};
+            border-color: {CorporateTheme.ACCENT_RED};
+            background-color: {CorporateTheme.HOVER_BG};
         }}
 
         QFrame.productCard {{
-            background-color: {BabbittTheme.WHITE};
-            border: 1px solid {BabbittTheme.CARD_BORDER};
+            background-color: {CorporateTheme.CARD_BG};
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
             border-radius: 8px;
             padding: 20px;
             margin: 5px;
         }}
 
         QFrame.productCard:hover {{
-            border-color: #2C3E50;
+            border-color: {CorporateTheme.ACCENT_RED};
+            background-color: {CorporateTheme.HOVER_BG};
         }}
 
         QFrame.familyCard {{
-            background-color: {BabbittTheme.WHITE};
-            border: 1px solid {BabbittTheme.CARD_BORDER};
-            border-radius: 6px;
+            background-color: {CorporateTheme.CARD_BG};
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
+            border-radius: 4px;
             padding: 10px;
             margin: 4px 0;
         }}
 
         QFrame.familyCard:hover {{
-            border-color: {BabbittTheme.PRIMARY_BLUE};
-            background-color: #e3f2fd;
+            border-color: {CorporateTheme.ACCENT_RED};
+            background-color: {CorporateTheme.HOVER_BG};
         }}
 
         QFrame.familyCard[selected="true"] {{
-            border-color: {BabbittTheme.PRIMARY_BLUE};
-            background-color: #e3f2fd;
+            border-color: {CorporateTheme.ACCENT_RED};
+            background-color: {CorporateTheme.HOVER_BG};
         }}
 
         /* Custom classes for Dashboard */
         .quoteItemCard {{
-            background-color: white;
-            border: 1px solid #E9ECEF;
-            border-radius: 6px;
+            background-color: {CorporateTheme.CARD_BG};
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
+            border-radius: 4px;
             padding: 15px;
             margin: 5px 0;
         }}
         .quoteItemCard:hover {{
-            border-color: #2C3E50;
+            border-color: {CorporateTheme.ACCENT_RED};
         }}
         .quoteItemTitle {{
             font-weight: 600;
-            color: #2C3E50;
+            color: {CorporateTheme.ACCENT_TEXT};
             font-size: 14px;
         }}
         .quoteItemDetails {{
-            color: #6C757D;
+            color: {CorporateTheme.SECONDARY_TEXT};
             font-size: 12px;
         }}
         .status-sent {{
-            background-color: {BabbittTheme.SUCCESS_GREEN};
+            background-color: {CorporateTheme.SUCCESS_GREEN};
             color: white;
             padding: 4px 8px;
             border-radius: 12px;
@@ -254,7 +255,7 @@ class BabbittTheme(QObject):
             font-weight: 500;
         }}
         .status-draft {{
-            background-color: {BabbittTheme.WARNING_ORANGE};
+            background-color: {CorporateTheme.WARNING_ORANGE};
             color: white;
             padding: 4px 8px;
             border-radius: 12px;
@@ -262,147 +263,148 @@ class BabbittTheme(QObject):
             font-weight: 500;
         }}
         .status-default {{
-            background-color: {BabbittTheme.MEDIUM_GRAY};
-            color: white;
+            background-color: {CorporateTheme.SURFACE_BG};
+            color: {CorporateTheme.PRIMARY_TEXT};
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 500;
         }}
         .placeholderText {{
-            color: #6C757D;
+            color: {CorporateTheme.MUTED_TEXT};
             font-size: 14px;
             padding: 40px;
         }}
         #sectionTitle {{
             font-size: 18px;
             font-weight: 600;
-            color: {BabbittTheme.PRIMARY_BLUE};
+            color: {CorporateTheme.ACCENT_TEXT};
             margin-bottom: 15px;
         }}
 
         /* Custom classes for Quote Creation */
         .quoteSubtitle {{
-            color: #6C757D;
+            color: {CorporateTheme.SECONDARY_TEXT};
             font-size: 14px;
         }}
         #quoteTotalLabel {{
-            color: #2C3E50;
+            color: {CorporateTheme.ACCENT_TEXT};
             font-weight: 600;
             font-size: 18px;
         }}
         .placeholderCard {{
-            color: #6C757D;
+            color: {CorporateTheme.MUTED_TEXT};
             font-size: 14px;
             padding: 40px;
-            background-color: #F8F9FA;
+            background-color: {CorporateTheme.SURFACE_BG};
             border-radius: 4px;
-            border: 1px dashed #E9ECEF;
+            border: 1px dashed {CorporateTheme.BORDER_COLOR};
         }}
         QPushButton.info.small {{
-            background-color: {BabbittTheme.INFO_BLUE};
+            background-color: {CorporateTheme.INFO_BLUE};
             color: white;
             border-radius: 2px;
             padding: 4px 8px;
             font-size: 11px;
         }}
         QPushButton.info.small:hover {{
-            background-color: #138496;
+            background-color: #1D4ED8;
         }}
         QPushButton.danger.small {{
-            background-color: {BabbittTheme.ERROR_RED};
+            background-color: {CorporateTheme.ERROR_RED};
             color: white;
             border-radius: 2px;
             padding: 4px 8px;
             font-size: 11px;
         }}
         QPushButton.danger.small:hover {{
-            background-color: #c82333;
+            background-color: #B91C1C;
         }}
 
         /* Custom styles for Product Selection */
         #progressIndicator {{
-            background-color: {BabbittTheme.CARD_BG};
-            border-bottom: 1px solid {BabbittTheme.BORDER_COLOR};
+            background-color: {CorporateTheme.CARD_BG};
+            border-bottom: 1px solid {CorporateTheme.BORDER_COLOR};
             min-height: 100px;
             max-height: 100px;
         }}
         
         #progressLine {{
-            background-color: {BabbittTheme.BORDER_COLOR};
+            background-color: {CorporateTheme.BORDER_COLOR};
             border: none;
             border-radius: 1px;
         }}
         
         #progressLine[completed="true"] {{
-            background-color: {BabbittTheme.SUCCESS_GREEN};
+            background-color: {CorporateTheme.SUCCESS_GREEN};
         }}
         
         .stepNumber {{
             width: 36px;
             height: 36px;
             border-radius: 18px;
-            background-color: {BabbittTheme.SURFACE_BG};
-            color: {BabbittTheme.MUTED_TEXT};
+            background-color: {CorporateTheme.SURFACE_BG};
+            color: {CorporateTheme.MUTED_TEXT};
             font-weight: 600;
             font-size: 14px;
-            border: 2px solid {BabbittTheme.BORDER_COLOR};
+            border: 2px solid {CorporateTheme.BORDER_COLOR};
         }}
         
         .stepNumber[active="true"] {{
-            background-color: {BabbittTheme.PRIMARY_BLUE};
+            background-color: {CorporateTheme.PRIMARY_RED};
             color: white;
-            border-color: {BabbittTheme.PRIMARY_BLUE};
+            border-color: {CorporateTheme.PRIMARY_RED};
         }}
         
         .stepNumber[completed="true"] {{
-            background-color: {BabbittTheme.SUCCESS_GREEN};
+            background-color: {CorporateTheme.SUCCESS_GREEN};
             color: white;
-            border-color: {BabbittTheme.SUCCESS_GREEN};
+            border-color: {CorporateTheme.SUCCESS_GREEN};
         }}
         
         .stepLabel {{
-            color: {BabbittTheme.SECONDARY_TEXT};
+            color: {CorporateTheme.SECONDARY_TEXT};
             font-size: 12px;
             font-weight: 500;
             text-align: center;
         }}
         
         .stepLabel[active="true"] {{
-            color: {BabbittTheme.PRIMARY_TEXT};
+            color: {CorporateTheme.PRIMARY_TEXT};
             font-weight: 600;
         }}
 
         /* Tables */
         QTableWidget {{
-            background-color: {BabbittTheme.WHITE};
-            border: 1px solid {BabbittTheme.CARD_BORDER};
+            background-color: {CorporateTheme.CARD_BG};
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
             border-radius: 4px;
-            gridline-color: {BabbittTheme.CARD_BORDER};
+            gridline-color: {CorporateTheme.BORDER_COLOR};
+            color: {CorporateTheme.PRIMARY_TEXT};
         }}
 
         QTableWidget::item {{
             padding: 8px;
-            border-bottom: 1px solid {BabbittTheme.CARD_BORDER};
+            border-bottom: 1px solid {CorporateTheme.BORDER_COLOR};
         }}
 
         QTableWidget::item:selected {{
-            background-color: #e3f2fd;
-            color: {BabbittTheme.PRIMARY_BLUE};
+            background-color: {CorporateTheme.HOVER_BG};
+            color: {CorporateTheme.ACCENT_TEXT};
         }}
 
         QHeaderView::section {{
-            background-color: {BabbittTheme.LIGHT_GRAY};
-            color: {BabbittTheme.MEDIUM_GRAY};
+            background-color: {CorporateTheme.SURFACE_BG};
+            color: {CorporateTheme.SECONDARY_TEXT};
             padding: 10px;
             border: none;
-            border-bottom: 1px solid {BabbittTheme.CARD_BORDER};
+            border-bottom: 1px solid {CorporateTheme.BORDER_COLOR};
             font-weight: 500;
         }}
 
         /* Radio Buttons and Checkboxes */
         QRadioButton, QCheckBox {{
-            color: {BabbittTheme.DARK_GRAY};
+            color: {CorporateTheme.PRIMARY_TEXT};
             spacing: 8px;
         }}
 
@@ -412,27 +414,27 @@ class BabbittTheme(QObject):
         }}
 
         QRadioButton::indicator:unchecked {{
-            border: 2px solid {BabbittTheme.CARD_BORDER};
+            border: 2px solid {CorporateTheme.BORDER_COLOR};
             border-radius: 8px;
-            background-color: {BabbittTheme.WHITE};
+            background-color: {CorporateTheme.CARD_BG};
         }}
 
         QRadioButton::indicator:checked {{
-            border: 2px solid {BabbittTheme.PRIMARY_BLUE};
+            border: 2px solid {CorporateTheme.ACCENT_RED};
             border-radius: 8px;
-            background-color: {BabbittTheme.PRIMARY_BLUE};
+            background-color: {CorporateTheme.ACCENT_RED};
         }}
 
         QCheckBox::indicator:unchecked {{
-            border: 2px solid {BabbittTheme.CARD_BORDER};
+            border: 2px solid {CorporateTheme.BORDER_COLOR};
             border-radius: 2px;
-            background-color: {BabbittTheme.WHITE};
+            background-color: {CorporateTheme.CARD_BG};
         }}
 
         QCheckBox::indicator:checked {{
-            border: 2px solid {BabbittTheme.PRIMARY_BLUE};
+            border: 2px solid {CorporateTheme.ACCENT_RED};
             border-radius: 2px;
-            background-color: {BabbittTheme.PRIMARY_BLUE};
+            background-color: {CorporateTheme.ACCENT_RED};
         }}
 
         /* Scroll Areas */
@@ -443,27 +445,27 @@ class BabbittTheme(QObject):
 
         QScrollBar:vertical {{
             border: none;
-            background-color: {BabbittTheme.LIGHT_GRAY};
+            background-color: {CorporateTheme.SURFACE_BG};
             width: 12px;
             border-radius: 6px;
         }}
 
         QScrollBar::handle:vertical {{
-            background-color: {BabbittTheme.MEDIUM_GRAY};
+            background-color: {CorporateTheme.BORDER_COLOR};
             border-radius: 6px;
             min-height: 20px;
         }}
 
         QScrollBar::handle:vertical:hover {{
-            background-color: {BabbittTheme.PRIMARY_BLUE};
+            background-color: {CorporateTheme.ACCENT_RED};
         }}
 
         /* Group Boxes */
         QGroupBox {{
             font-weight: 600;
-            color: {BabbittTheme.PRIMARY_BLUE};
-            border: 2px solid {BabbittTheme.CARD_BORDER};
-            border-radius: 8px;
+            color: {CorporateTheme.ACCENT_TEXT};
+            border: 2px solid {CorporateTheme.BORDER_COLOR};
+            border-radius: 6px;
             margin-top: 10px;
             padding-top: 10px;
         }}
@@ -472,7 +474,7 @@ class BabbittTheme(QObject):
             subcontrol-origin: margin;
             left: 10px;
             padding: 0 8px 0 8px;
-            background-color: {BabbittTheme.CARD_BG};
+            background-color: {CorporateTheme.CARD_BG};
         }}
         """
 
@@ -485,4 +487,4 @@ class BabbittTheme(QObject):
 
         current_style = widget.styleSheet()
         new_style = ' '.join(style_parts)
-        widget.setStyleSheet(f'{current_style} {new_style}')
+        widget.setStyleSheet(f'{current_style} {new_style}') 

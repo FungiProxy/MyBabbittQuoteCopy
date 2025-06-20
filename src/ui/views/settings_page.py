@@ -9,7 +9,7 @@ import os
 import subprocess
 import sys
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -23,10 +23,85 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QFrame,
+    QGridLayout,
 )
 
 from src.core.services.settings_service import SettingsService
-from src.ui.theme.babbitt_theme import BabbittTheme
+from src.ui.theme.theme_manager import ThemeManager
+
+
+class ThemePreviewWidget(QFrame):
+    """Widget to preview theme colors and styling."""
+    
+    def __init__(self, theme_name, parent=None):
+        super().__init__(parent)
+        self.theme_name = theme_name
+        self.setObjectName("themePreview")
+        self.setFixedSize(200, 120)
+        self.setStyleSheet("""
+            QFrame#themePreview {
+                border: 2px solid #E0E0E0;
+                border-radius: 8px;
+                background-color: white;
+                padding: 8px;
+            }
+            QFrame#themePreview:hover {
+                border-color: #2196F3;
+                background-color: #F5F5F5;
+            }
+        """)
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """Set up the preview UI."""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(5)
+        
+        # Theme name
+        name_label = QLabel(self.theme_name)
+        name_label.setAlignment(Qt.AlignCenter)
+        name_label.setStyleSheet("font-weight: bold; font-size: 12px; color: #333;")
+        layout.addWidget(name_label)
+        
+        # Color preview
+        preview_frame = QFrame()
+        preview_frame.setObjectName("colorPreview")
+        preview_layout = QHBoxLayout(preview_frame)
+        preview_layout.setContentsMargins(5, 5, 5, 5)
+        preview_layout.setSpacing(3)
+        
+        # Get theme info
+        theme_info = ThemeManager.get_theme_preview_info(self.theme_name)
+        if theme_info:
+            # Primary color
+            primary_color = QFrame()
+            primary_color.setFixedSize(30, 30)
+            primary_color.setStyleSheet(f"background-color: {theme_info['primary_color']}; border-radius: 15px; border: 1px solid #ccc;")
+            preview_layout.addWidget(primary_color)
+            
+            # Accent color
+            accent_color = QFrame()
+            accent_color.setFixedSize(30, 30)
+            accent_color.setStyleSheet(f"background-color: {theme_info['accent_color']}; border-radius: 15px; border: 1px solid #ccc;")
+            preview_layout.addWidget(accent_color)
+            
+            # Background color
+            bg_color = QFrame()
+            bg_color.setFixedSize(30, 30)
+            bg_color.setStyleSheet(f"background-color: {theme_info['background_color']}; border-radius: 15px; border: 1px solid #ccc;")
+            preview_layout.addWidget(bg_color)
+        
+        layout.addWidget(preview_frame)
+        
+        # Description
+        if theme_info and theme_info.get('description'):
+            desc_label = QLabel(theme_info['description'])
+            desc_label.setWordWrap(True)
+            desc_label.setAlignment(Qt.AlignCenter)
+            desc_label.setStyleSheet("font-size: 10px; color: #666;")
+            layout.addWidget(desc_label)
 
 
 class SettingsPage(QWidget):
@@ -50,11 +125,10 @@ class SettingsPage(QWidget):
         general_layout = QFormLayout(general_group)
         general_layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
-        # Simplified theme selection - we now have a single Babbitt theme
+        # Theme selection with all available themes
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["Babbitt Theme"])  # Only one theme option now
-        self.theme_combo.setEnabled(False)  # Disable since it's the only option
-
+        available_themes = ThemeManager.get_available_themes()
+        self.theme_combo.addItems(available_themes)
         general_layout.addRow("Application Theme:", self.theme_combo)
 
         self.startup_page_combo = QComboBox()
@@ -65,6 +139,29 @@ class SettingsPage(QWidget):
         general_layout.addRow(self.confirm_on_delete_check)
 
         main_layout.addWidget(general_group)
+
+        # --- Theme Preview ---
+        theme_preview_group = QGroupBox("Theme Preview")
+        theme_preview_layout = QVBoxLayout(theme_preview_group)
+        
+        # Theme preview grid
+        self.theme_preview_widget = QWidget()
+        self.theme_preview_layout = QGridLayout(self.theme_preview_widget)
+        self.theme_preview_layout.setSpacing(10)
+        
+        # Create preview widgets for each theme
+        self.preview_widgets = {}
+        available_themes = ThemeManager.get_available_themes()
+        cols = 3  # Number of columns in the grid
+        for i, theme_name in enumerate(available_themes):
+            row = i // cols
+            col = i % cols
+            preview_widget = ThemePreviewWidget(theme_name)
+            self.preview_widgets[theme_name] = preview_widget
+            self.theme_preview_layout.addWidget(preview_widget, row, col)
+        
+        theme_preview_layout.addWidget(self.theme_preview_widget)
+        main_layout.addWidget(theme_preview_group)
 
         # --- Export Settings ---
         export_group = QGroupBox("Export Settings")
@@ -111,12 +208,23 @@ class SettingsPage(QWidget):
         self.save_btn.clicked.connect(self.save_settings)
         self.browse_export_path_btn.clicked.connect(self.browse_for_export_path)
         self.reseed_btn.clicked.connect(self.reseed_database)
-        self.theme_combo.currentTextChanged.connect(self.theme_changed.emit)
+        self.theme_combo.currentTextChanged.connect(self._on_theme_changed)
+
+    def _on_theme_changed(self, theme_name):
+        """Handle theme selection change and emit signal."""
+        self.theme_changed.emit(theme_name)
 
     def load_settings(self):
         """Load settings from storage and populate the UI fields."""
-        # Always use Babbitt theme now
-        self.theme_combo.setCurrentText("Babbitt Theme")
+        # Load current theme
+        current_theme = self.settings_service.get_theme('Modern Babbitt')  # Default to Modern Babbitt
+        if current_theme in ThemeManager.get_available_themes():
+            self.theme_combo.setCurrentText(current_theme)
+        else:
+            # If saved theme is not available, default to first available theme
+            available_themes = ThemeManager.get_available_themes()
+            if available_themes:
+                self.theme_combo.setCurrentText(available_themes[0])
 
         startup_page = self.settings_service.get_startup_page()
         self.startup_page_combo.setCurrentText(startup_page)
@@ -136,8 +244,10 @@ class SettingsPage(QWidget):
 
     def save_settings(self):
         """Save the current settings from the UI to storage."""
-        # Always save Babbitt theme
-        self.settings_service.set_theme("Babbitt Theme")
+        # Save selected theme
+        selected_theme = self.theme_combo.currentText()
+        self.settings_service.set_theme(selected_theme)
+        
         self.settings_service.set_startup_page(self.startup_page_combo.currentText())
         self.settings_service.set_confirm_on_delete(
             self.confirm_on_delete_check.isChecked()
