@@ -246,68 +246,29 @@ class ProductSelectionDialog(QDialog):
         self._update_model_number_label()
 
     def _setup_core_options(self, form_layout: QFormLayout, product: dict):
-        """Set up the core configuration options for the selected product."""
+        """Set up core product options (Voltage, Material, Probe Length)."""
         logger.debug(f"Setting up core options for product: {product['name']}")
 
-        # Get all additional options for this product family (including voltage and material)
-        try:
-            additional_options = self.product_service.get_additional_options(
-                self.db, product["name"]
-            )
-            logger.debug(f"Additional options for {product['name']}:")
-            for opt in additional_options:
-                logger.debug(f"  Option: {opt['name']}")
-                logger.debug(f"    Category: {opt.get('category', 'No category')}")
-                logger.debug(f"    Choices: {opt.get('choices', 'No choices')}")
-                logger.debug(f"    Adders: {opt.get('adders', 'No adders')}")
-        except Exception as e:
-            logger.error(f"Error fetching additional options: {str(e)}", exc_info=True)
-            additional_options = []
+        # Get material options for this product family
+        material_options = self.product_service.get_available_materials_for_product(
+            self.db, product["name"]
+        )
+        logger.debug(f"Material options: {material_options}")
 
-        # Set up Voltage options from unified structure (aggregate all choices)
-        voltage_choices = []
-        voltage_adders = {}
-        for opt in additional_options:
-            if opt.get("category") == "Voltage" and isinstance(
-                opt.get("choices"), list
-            ):
-                voltage_choices.extend(opt["choices"])
-                if isinstance(opt.get("adders"), dict):
-                    voltage_adders.update(opt["adders"])
-        # Deduplicate while preserving order
-        seen = set()
-        voltage_codes = []
-        for code in voltage_choices:
-            if code not in seen:
-                seen.add(code)
-                voltage_codes.append(code)
-        # Build display names (use code as display name if not a dict)
-        display_names = {code: code for code in voltage_codes}
-        # If any choices are dicts, use their display_name
-        for opt in additional_options:
-            if opt.get("category") == "Voltage" and isinstance(
-                opt.get("choices"), list
-            ):
-                for choice in opt["choices"]:
-                    if (
-                        isinstance(choice, dict)
-                        and "code" in choice
-                        and "display_name" in choice
-                    ):
-                        display_names[choice["code"]] = choice["display_name"]
-        if voltage_codes:
+        # Get voltage options for this product family
+        voltage_options = self.product_service.get_available_voltages(
+            self.db, product["name"]
+        )
+        logger.debug(f"Voltage options: {voltage_options}")
+
+        # Add voltage selection
+        if voltage_options:
             voltage_combo = QComboBox()
             voltage_combo.setObjectName("option_Voltage")
-            for code in voltage_codes:
-                price_adder = (
-                    voltage_adders.get(code, 0)
-                    if isinstance(voltage_adders, dict)
-                    else 0
-                )
-                display_text = display_names.get(code, str(code))
-                if price_adder != 0:
-                    display_text = f"{display_text} (+${price_adder:.2f})"
-                voltage_combo.addItem(display_text, code)
+            for voltage in voltage_options:
+                voltage_combo.addItem(
+                    str(voltage), str(voltage)
+                )  # Use voltage as both display and data
 
             def on_voltage_changed():
                 value = voltage_combo.currentData()
@@ -317,88 +278,121 @@ class ProductSelectionDialog(QDialog):
             voltage_combo.currentIndexChanged.connect(on_voltage_changed)
             form_layout.addRow("Voltage:", voltage_combo)
             self.option_widgets["Voltage"] = voltage_combo
-            logger.debug("Added voltage options to form (unified logic)")
+            logger.debug("Added voltage options to form")
         else:
             logger.warning(f"No voltage options found for {product['name']}")
 
-        # Set up Material options from unified structure (aggregate all choices)
-        material_choices = []
-        material_adders = {}
-        for opt in additional_options:
-            if opt.get("category") == "Material" and isinstance(
-                opt.get("choices"), list
-            ):
-                material_choices.extend(opt["choices"])
-                if isinstance(opt.get("adders"), dict):
-                    material_adders.update(opt["adders"])
-        # Deduplicate while preserving order
-        seen = set()
-        material_codes = []
-        display_names = {}
-        for choice in material_choices:
-            if isinstance(choice, dict):
-                code = choice.get("code")
-                display_name = choice.get("display_name", code)
-            else:
-                code = choice
-                display_name = code
-            if code and code not in seen:
-                seen.add(code)
-                material_codes.append(code)
-                display_names[code] = display_name
-
-        # Sort materials in the correct order for each family
-        family_material_orders = {
-            "LS2000": ["S", "H", "TS", "U", "T", "C"],
-            "LS2100": ["S", "H", "TS", "U", "T", "C"],
-            "LS6000": ["S", "H", "TS", "U", "T", "C", "CPVC"],
-            "LS7000": ["S", "H", "TS", "U", "T", "C", "CPVC"],
-            "LS7000/2": ["H", "TS"],
-            "LS8000/2": ["H", "TS"],
-            "LS8000": ["S", "H", "TS", "U", "T", "C"],
-            "LT9000": ["H", "TS"],
-        }
-
-        # Get the correct order for this family
-        family_name = product.get("name", "")
-        correct_order = family_material_orders.get(family_name, material_codes)
-
-        # Sort materials according to the correct order
-        sorted_material_codes = []
-        for code in correct_order:
-            if code in material_codes:
-                sorted_material_codes.append(code)
-
-        # Add any remaining materials that weren't in the predefined order
-        for code in material_codes:
-            if code not in sorted_material_codes:
-                sorted_material_codes.append(code)
-
-        material_codes = sorted_material_codes
-
-        if material_codes:
+        # Add material selection with exotic metals
+        if material_options:
             material_combo = QComboBox()
             material_combo.setObjectName("option_Material")
-            for code in material_codes:
-                price_adder = (
-                    material_adders.get(code, 0)
-                    if isinstance(material_adders, dict)
-                    else 0
-                )
-                display_text = display_names.get(code, str(code))
-                if price_adder != 0:
-                    display_text = f"{display_text} (+${price_adder:.2f})"
-                material_combo.addItem(display_text, code)
+
+            # Collect all unique materials from all material options
+            all_materials = set()
+            material_adders = {}  # Store adders for each material
+
+            for option in material_options:
+                choices = option.get("choices", [])
+                adders = option.get("adders", {})
+
+                if isinstance(choices, list):
+                    for choice in choices:
+                        if isinstance(choice, dict):
+                            code = choice.get("code", "")
+                            all_materials.add(code)
+                            # Store adder if available
+                            if code in adders:
+                                material_adders[code] = adders[code]
+                        else:
+                            # Fallback for any remaining string format
+                            all_materials.add(str(choice))
+                            # Store adder if available
+                            if str(choice) in adders:
+                                material_adders[str(choice)] = adders[str(choice)]
+
+            # Material display names and descriptions
+            material_descriptions = {
+                "S": "S - 316 Stainless Steel",
+                "H": "H - Halar Coated",
+                "TS": "TS - Teflon Sleeve",
+                "U": "U - UHMWPE Blind End",
+                "T": "T - Teflon Blind End",
+                "C": "C - Cable",
+                "CPVC": "CPVC - CPVC Blind End",
+                "A": "A - Alloy 20",
+                "HC": "HC - Hastelloy-C-276",
+                "HB": "HB - Hastelloy-B",
+                "TT": "TT - Titanium",
+            }
+
+            # Add materials to combo box in a logical order
+            standard_materials = ["S", "H", "TS", "U", "T", "C", "CPVC"]
+            exotic_materials = [
+                "A",
+                "HC",
+                "HB",
+                "TT",
+            ]
+
+            # Add standard materials first with pricing
+            for material in standard_materials:
+                if material in all_materials:
+                    display_name = material_descriptions.get(material, material)
+                    adder = material_adders.get(material, 0)
+                    if adder > 0:
+                        display_name += f" (+${adder})"
+                    material_combo.addItem(display_name, material)
+
+            # Add exotic materials with "(Consult Factory)" suffix
+            for material in exotic_materials:
+                if material in all_materials:
+                    display_name = material_descriptions.get(material, material)
+                    material_combo.addItem(
+                        f"{display_name} (Consult Factory)", material
+                    )
 
             def on_material_changed():
                 value = material_combo.currentData()
                 logger.debug(f"Material changed to: {value}")
                 self._on_option_changed("Material", value)
 
+                # Show/hide manual override for exotic metals
+                self._handle_exotic_metal_override(value)
+
             material_combo.currentIndexChanged.connect(on_material_changed)
             form_layout.addRow("Material:", material_combo)
             self.option_widgets["Material"] = material_combo
-            logger.debug("Added material options to form (unified logic)")
+
+            # Add manual override field for exotic metals (initially hidden)
+            self.exotic_override_layout = QHBoxLayout()
+            self.exotic_override_label = QLabel("Manual Override Price:")
+            self.exotic_override_input = QLineEdit()
+            self.exotic_override_input.setPlaceholderText("Enter price adder")
+            self.exotic_override_input.setValidator(QDoubleValidator(0.0, 99999.0, 2))
+            self.exotic_override_input.setFixedWidth(120)
+
+            def on_override_changed():
+                try:
+                    value = float(self.exotic_override_input.text() or 0)
+                    self._on_option_changed("Exotic Metal Override", value)
+                except ValueError:
+                    pass
+
+            self.exotic_override_input.textChanged.connect(on_override_changed)
+
+            self.exotic_override_layout.addWidget(self.exotic_override_label)
+            self.exotic_override_layout.addWidget(self.exotic_override_input)
+            self.exotic_override_layout.addStretch()
+
+            # Create container widget for override
+            self.exotic_override_widget = QWidget()
+            self.exotic_override_widget.setLayout(self.exotic_override_layout)
+            self.exotic_override_widget.hide()
+
+            form_layout.addRow(self.exotic_override_widget)
+            self.option_widgets["Exotic Metal Override"] = self.exotic_override_input
+
+            logger.debug("Added material options to form (with exotic metals)")
         else:
             logger.warning(f"No material options found for {product['name']}")
 
@@ -457,6 +451,21 @@ class ProductSelectionDialog(QDialog):
 
         # Set default values for this product family
         self._set_default_values(product["name"])
+
+    def _handle_exotic_metal_override(self, material_value):
+        """Show/hide manual override field based on material selection."""
+        exotic_metals = ["A", "HC", "HB", "TT"]  # Use material codes
+
+        if material_value in exotic_metals:
+            self.exotic_override_widget.show()
+            logger.debug(f"Showing manual override for exotic metal: {material_value}")
+        else:
+            self.exotic_override_widget.hide()
+            # Clear the override value when hiding
+            if hasattr(self, "exotic_override_input"):
+                self.exotic_override_input.clear()
+                self._on_option_changed("Exotic Metal Override", 0)
+            logger.debug(f"Hiding manual override for material: {material_value}")
 
     def _set_default_values(self, family_name: str):
         """Set default values for the selected product family."""

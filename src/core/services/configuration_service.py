@@ -244,6 +244,23 @@ class ConfigurationService:
                 self.db, self.current_config.product_family_name
             )
 
+            # Print all options and adders for diagnosis
+            print("--- OPTIONS DIAG ---")
+            for option in all_options:
+                print(
+                    f"Option: {option.get('name')}, Adders: {option.get('adders')}, Choices: {option.get('choices')}"
+                )
+            print("-------------------")
+
+            # Print selected options for diagnosis
+            print("--- SELECTED OPTIONS DIAG ---")
+            for (
+                option_name,
+                selected_value,
+            ) in self.current_config.selected_options.items():
+                print(f"Selected option: {option_name}, Value: {selected_value}")
+            print("----------------------------")
+
             # Apply option adders using the unified structure
             for (
                 option_name,
@@ -252,12 +269,27 @@ class ConfigurationService:
                 if selected_value is None:
                     continue
 
+                # Handle exotic metal override pricing
+                if option_name == "Exotic Metal Override":
+                    # This is a manual override value for exotic metals
+                    override_value = self._to_float(selected_value)
+                    if override_value > 0:
+                        final_price += override_value
+                        # logger.debug(f"Applied exotic metal override: {override_value}")
+                    continue
+
                 # Find the option in the unified structure
                 # Check all options since multiple options can have the same name (e.g., Material)
                 for option in all_options:
                     if option.get("name") == option_name:
                         adders = option.get("adders", {})
-                        if isinstance(adders, dict) and selected_value in adders:
+                        selected_value_str = str(selected_value).strip()
+                        logger.info(f"Adders keys: {list(adders.keys())}")
+                        logger.info(f"Selected value: '{selected_value_str}'")
+                        if isinstance(adders, dict) and selected_value_str in adders:
+                            logger.debug(
+                                f"Found adder for {selected_value_str}: {adders[selected_value_str]}"
+                            )
                             # Check if this product family is excluded from adders
                             excluded_products = option.get("excluded_products", "")
                             if excluded_products is None:
@@ -272,14 +304,21 @@ class ConfigurationService:
                             )
 
                             if not is_excluded:
-                                adder_value = float(adders[selected_value])
+                                adder_value = float(adders[selected_value_str])
                                 final_price += adder_value
-                                # logger.debug(f"Applied {option_name} adder: {adder_value}")
+                                logger.debug(
+                                    f"Applied {option_name} adder: {adder_value}, new total: {final_price}"
+                                )
                             else:
-                                # logger.debug(f"Skipped {option_name} adder for excluded family: {self.current_config.product_family_name}")
+                                logger.debug(
+                                    f"Skipped {option_name} adder for excluded family: {self.current_config.product_family_name}"
+                                )
                                 pass
-                            # Found the matching option, no need to check other options with same name
                             break
+                        else:
+                            logger.debug(
+                                f"No adder found for {selected_value_str} in {adders}"
+                            )
 
             # Handle special cases that might not be in the unified structure yet
             # Handle extra length price
@@ -332,6 +371,24 @@ class ConfigurationService:
                         # logger.debug(
                         #     f"Applied mechanical option '{opt_name}' price: {opt_value}"
                         # )
+
+            # --- DIRECT MATERIAL ADDER FIX ---
+            # Get selected material
+            selected_material = self.current_config.selected_options.get("Material")
+            # Get material adders from the material option
+            material_option = next(
+                (o for o in all_options if o.get("name") == "Material"), None
+            )
+            if material_option:
+                adders = material_option.get("adders", {})
+                selected_material_str = str(selected_material).strip()
+                if selected_material_str in adders:
+                    adder_value = float(adders[selected_material_str])
+                    final_price += adder_value
+                    print(
+                        f"[FIX] Applied material adder for {selected_material_str}: {adder_value}, new total: {final_price}"
+                    )
+            # --- END DIRECT MATERIAL ADDER FIX ---
 
             # Update the final price
             self.current_config.final_price = final_price
