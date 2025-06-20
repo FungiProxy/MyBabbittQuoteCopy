@@ -19,28 +19,28 @@ def check_ls8000_materials():
 
     try:
         # Check LS8000
-        print("LS8000 materials:")
-        materials = ps.get_available_materials_for_product(db, "LS8000")
-        print(f"  {len(materials)} material options")
+        print('LS8000 materials:')
+        materials = ps.get_available_materials_for_product(db, 'LS8000')
+        print(f'  {len(materials)} material options')
         for material in materials:
             print(f"    Name: {material['name']}")
             print(f"    Choices: {material['choices']}")
             print(f"    Adders: {material['adders']}")
 
         # Check LS8000/2
-        print("\nLS8000/2 materials:")
-        materials = ps.get_available_materials_for_product(db, "LS8000/2")
-        print(f"  {len(materials)} material options")
+        print('\nLS8000/2 materials:')
+        materials = ps.get_available_materials_for_product(db, 'LS8000/2')
+        print(f'  {len(materials)} material options')
         for material in materials:
             print(f"    Name: {material['name']}")
             print(f"    Choices: {material['choices']}")
             print(f"    Adders: {material['adders']}")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f'Error: {e}')
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     check_ls8000_materials()

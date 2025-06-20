@@ -30,7 +30,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 # Add the absolute path to the src directory to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 from core.database import SessionLocal
 from core.models.option import Option
@@ -38,7 +38,7 @@ from core.models.product_variant import ProductFamily
 
 # Set up logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -49,16 +49,16 @@ class OptionsMigration:
     def __init__(self, db: Session):
         self.db = db
         self.migration_stats = {
-            "materials": 0,
-            "voltages": 0,
-            "connections": 0,
-            "accessories": 0,
-            "housing_types": 0,
-            "insulators": 0,
-            "exotic_metals": 0,
-            "o_ring_materials": 0,
-            "probe_modifications": 0,
-            "total_options": 0,
+            'materials': 0,
+            'voltages': 0,
+            'connections': 0,
+            'accessories': 0,
+            'housing_types': 0,
+            'insulators': 0,
+            'exotic_metals': 0,
+            'o_ring_materials': 0,
+            'probe_modifications': 0,
+            'total_options': 0,
         }
 
     def get_product_family_names(self) -> Dict[int, str]:
@@ -68,7 +68,7 @@ class OptionsMigration:
 
     def migrate_materials(self):
         """Migrate materials and material_options to unified options table."""
-        logger.info("Migrating materials...")
+        logger.info('Migrating materials...')
 
         # Get all materials with their options using raw SQL
         query = text(
@@ -93,14 +93,14 @@ class OptionsMigration:
         for row in rows:
             code = row.code
             if code not in materials_by_code:
-                materials_by_code[code] = {"material": row, "options": []}
+                materials_by_code[code] = {'material': row, 'options': []}
             if row.product_family_id:
-                materials_by_code[code]["options"].append(row)
+                materials_by_code[code]['options'].append(row)
 
         # Create unified options for each material
         for code, data in materials_by_code.items():
-            material = data["material"]
-            options = data["options"]
+            material = data['material']
+            options = data['options']
 
             # Build choices and adders
             choices = []
@@ -108,9 +108,9 @@ class OptionsMigration:
 
             for opt in options:
                 choice_data = {
-                    "code": material.code,
-                    "display_name": opt.display_name,
-                    "base_price": opt.base_price,
+                    'code': material.code,
+                    'display_name': opt.display_name,
+                    'base_price': opt.base_price,
                 }
                 choices.append(choice_data)
                 adders[material.code] = opt.base_price
@@ -128,12 +128,12 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Material",
-                description=f"Material options for {material.name}",
+                name='Material',
+                description=f'Material options for {material.name}',
                 price=0.0,  # Base price is 0, adders are in the choices
-                price_type="fixed",
-                category="Material",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='Material',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
                 rules=(
@@ -144,14 +144,14 @@ class OptionsMigration:
             )
 
             self.db.add(option)
-            self.migration_stats["materials"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['materials'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created material option: {material.name}")
+            logger.debug(f'Created material option: {material.name}')
 
     def migrate_voltages(self):
         """Migrate voltages and voltage_options to unified options table."""
-        logger.info("Migrating voltages...")
+        logger.info('Migrating voltages...')
 
         # Get all voltages with their options using raw SQL
         query = text(
@@ -173,14 +173,14 @@ class OptionsMigration:
         for row in rows:
             name = row.name
             if name not in voltages_by_name:
-                voltages_by_name[name] = {"voltage": row, "options": []}
+                voltages_by_name[name] = {'voltage': row, 'options': []}
             if row.product_family_id:
-                voltages_by_name[name]["options"].append(row)
+                voltages_by_name[name]['options'].append(row)
 
         # Create unified options for each voltage
         for name, data in voltages_by_name.items():
-            voltage = data["voltage"]
-            options = data["options"]
+            voltage = data['voltage']
+            options = data['options']
 
             # Build choices and adders
             choices = [voltage.name]
@@ -199,25 +199,25 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Voltage",
-                description=f"Voltage options: {voltage.description or voltage.name}",
+                name='Voltage',
+                description=f'Voltage options: {voltage.description or voltage.name}',
                 price=voltage.base_price_adder or 0.0,
-                price_type="fixed",
-                category="Voltage",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='Voltage',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["voltages"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['voltages'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created voltage option: {voltage.name}")
+            logger.debug(f'Created voltage option: {voltage.name}')
 
     def migrate_connections(self):
         """Migrate connections and connection_options to unified options table."""
-        logger.info("Migrating connections...")
+        logger.info('Migrating connections...')
 
         # Get all connections with their options using raw SQL
         query = text(
@@ -239,17 +239,17 @@ class OptionsMigration:
         for row in rows:
             conn_id = row.id
             if conn_id not in connections_by_id:
-                connections_by_id[conn_id] = {"connection": row, "options": []}
+                connections_by_id[conn_id] = {'connection': row, 'options': []}
             if row.product_family_id:
-                connections_by_id[conn_id]["options"].append(row)
+                connections_by_id[conn_id]['options'].append(row)
 
         # Create unified options for each connection
         for conn_id, data in connections_by_id.items():
-            connection = data["connection"]
-            options = data["options"]
+            connection = data['connection']
+            options = data['options']
 
             # Build choices and adders
-            choice_name = f"{connection.type} {connection.size} {connection.rating}"
+            choice_name = f'{connection.type} {connection.size} {connection.rating}'
             choices = [choice_name]
             adders = {choice_name: connection.base_price_adder or 0.0}
 
@@ -266,25 +266,25 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Connection",
-                description=f"Connection options: {connection.description}",
+                name='Connection',
+                description=f'Connection options: {connection.description}',
                 price=connection.base_price_adder or 0.0,
-                price_type="fixed",
-                category="Connection",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='Connection',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["connections"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['connections'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created connection option: {choice_name}")
+            logger.debug(f'Created connection option: {choice_name}')
 
     def migrate_accessories(self):
         """Migrate accessories and accessory_options to unified options table."""
-        logger.info("Migrating accessories...")
+        logger.info('Migrating accessories...')
 
         # Get all accessories with their options using raw SQL
         query = text(
@@ -306,14 +306,14 @@ class OptionsMigration:
         for row in rows:
             acc_id = row.id
             if acc_id not in accessories_by_id:
-                accessories_by_id[acc_id] = {"accessory": row, "options": []}
+                accessories_by_id[acc_id] = {'accessory': row, 'options': []}
             if row.product_family_id:
-                accessories_by_id[acc_id]["options"].append(row)
+                accessories_by_id[acc_id]['options'].append(row)
 
         # Create unified options for each accessory
         for acc_id, data in accessories_by_id.items():
-            accessory = data["accessory"]
-            options = data["options"]
+            accessory = data['accessory']
+            options = data['options']
 
             # Build choices and adders
             choices = [accessory.name]
@@ -332,25 +332,25 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Accessory",
-                description=f"Accessory options: {accessory.description}",
+                name='Accessory',
+                description=f'Accessory options: {accessory.description}',
                 price=accessory.base_price_adder or 0.0,
-                price_type=accessory.price_type or "fixed",
-                category="Accessory",
-                product_families=",".join(family_names) if family_names else None,
+                price_type=accessory.price_type or 'fixed',
+                category='Accessory',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["accessories"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['accessories'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created accessory option: {accessory.name}")
+            logger.debug(f'Created accessory option: {accessory.name}')
 
     def migrate_housing_types(self):
         """Migrate housing_types and housing_type_options to unified options table."""
-        logger.info("Migrating housing types...")
+        logger.info('Migrating housing types...')
 
         # Get all housing types with their options using raw SQL
         query = text(
@@ -372,14 +372,14 @@ class OptionsMigration:
         for row in rows:
             ht_id = row.id
             if ht_id not in housing_types_by_id:
-                housing_types_by_id[ht_id] = {"housing_type": row, "options": []}
+                housing_types_by_id[ht_id] = {'housing_type': row, 'options': []}
             if row.product_family_id:
-                housing_types_by_id[ht_id]["options"].append(row)
+                housing_types_by_id[ht_id]['options'].append(row)
 
         # Create unified options for each housing type
         for ht_id, data in housing_types_by_id.items():
-            housing_type = data["housing_type"]
-            options = data["options"]
+            housing_type = data['housing_type']
+            options = data['options']
 
             # Build choices and adders
             choices = [housing_type.name]
@@ -400,25 +400,25 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Housing Type",
-                description=f"Housing type options: {housing_type.description}",
+                name='Housing Type',
+                description=f'Housing type options: {housing_type.description}',
                 price=0.0,
-                price_type="fixed",
-                category="Housing",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='Housing',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["housing_types"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['housing_types'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created housing type option: {housing_type.name}")
+            logger.debug(f'Created housing type option: {housing_type.name}')
 
     def migrate_insulators(self):
         """Migrate insulators and insulator_options to unified options table."""
-        logger.info("Migrating insulators...")
+        logger.info('Migrating insulators...')
 
         # Get all insulators with their options using raw SQL
         query = text(
@@ -440,14 +440,14 @@ class OptionsMigration:
         for row in rows:
             ins_id = row.id
             if ins_id not in insulators_by_id:
-                insulators_by_id[ins_id] = {"insulator": row, "options": []}
+                insulators_by_id[ins_id] = {'insulator': row, 'options': []}
             if row.product_family_id:
-                insulators_by_id[ins_id]["options"].append(row)
+                insulators_by_id[ins_id]['options'].append(row)
 
         # Create unified options for each insulator
         for ins_id, data in insulators_by_id.items():
-            insulator = data["insulator"]
-            options = data["options"]
+            insulator = data['insulator']
+            options = data['options']
 
             # Build choices and adders
             choices = [insulator.name]
@@ -466,25 +466,25 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Insulator",
-                description=f"Insulator options: {insulator.description}",
+                name='Insulator',
+                description=f'Insulator options: {insulator.description}',
                 price=insulator.base_price_adder or 0.0,
-                price_type="fixed",
-                category="Insulator",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='Insulator',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["insulators"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['insulators'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created insulator option: {insulator.name}")
+            logger.debug(f'Created insulator option: {insulator.name}')
 
     def migrate_exotic_metals(self):
         """Migrate exotic_metals and exotic_metal_options to unified options table."""
-        logger.info("Migrating exotic metals...")
+        logger.info('Migrating exotic metals...')
 
         # Get all exotic metals with their options using raw SQL
         query = text(
@@ -506,14 +506,14 @@ class OptionsMigration:
         for row in rows:
             em_id = row.id
             if em_id not in exotic_metals_by_id:
-                exotic_metals_by_id[em_id] = {"exotic_metal": row, "options": []}
+                exotic_metals_by_id[em_id] = {'exotic_metal': row, 'options': []}
             if row.product_family_id:
-                exotic_metals_by_id[em_id]["options"].append(row)
+                exotic_metals_by_id[em_id]['options'].append(row)
 
         # Create unified options for each exotic metal
         for em_id, data in exotic_metals_by_id.items():
-            exotic_metal = data["exotic_metal"]
-            options = data["options"]
+            exotic_metal = data['exotic_metal']
+            options = data['options']
 
             # Build choices and adders
             choices = [exotic_metal.name]
@@ -532,25 +532,25 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Exotic Metal",
-                description=f"Exotic metal options: {exotic_metal.description}",
+                name='Exotic Metal',
+                description=f'Exotic metal options: {exotic_metal.description}',
                 price=exotic_metal.base_price_adder or 0.0,
-                price_type="fixed",
-                category="Exotic Metal",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='Exotic Metal',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["exotic_metals"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['exotic_metals'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created exotic metal option: {exotic_metal.name}")
+            logger.debug(f'Created exotic metal option: {exotic_metal.name}')
 
     def migrate_o_ring_materials(self):
         """Migrate o_ring_materials and o_ring_material_options to unified options table."""
-        logger.info("Migrating O-ring materials...")
+        logger.info('Migrating O-ring materials...')
 
         # Get all O-ring materials with their options using raw SQL
         query = text(
@@ -572,14 +572,14 @@ class OptionsMigration:
         for row in rows:
             orm_id = row.id
             if orm_id not in o_ring_materials_by_id:
-                o_ring_materials_by_id[orm_id] = {"o_ring_material": row, "options": []}
+                o_ring_materials_by_id[orm_id] = {'o_ring_material': row, 'options': []}
             if row.product_family_id:
-                o_ring_materials_by_id[orm_id]["options"].append(row)
+                o_ring_materials_by_id[orm_id]['options'].append(row)
 
         # Create unified options for each O-ring material
         for orm_id, data in o_ring_materials_by_id.items():
-            o_ring_material = data["o_ring_material"]
-            options = data["options"]
+            o_ring_material = data['o_ring_material']
+            options = data['options']
 
             # Build choices and adders
             choices = [o_ring_material.name]
@@ -598,25 +598,25 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="O-Ring Material",
-                description=f"O-ring material options: {o_ring_material.description}",
+                name='O-Ring Material',
+                description=f'O-ring material options: {o_ring_material.description}',
                 price=o_ring_material.base_price_adder or 0.0,
-                price_type="fixed",
-                category="O-Ring Material",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='O-Ring Material',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["o_ring_materials"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['o_ring_materials'] += 1
+            self.migration_stats['total_options'] += 1
 
-            logger.debug(f"Created O-ring material option: {o_ring_material.name}")
+            logger.debug(f'Created O-ring material option: {o_ring_material.name}')
 
     def migrate_probe_modifications(self):
         """Migrate probe_modifications and probe_modification_options to unified options table."""
-        logger.info("Migrating probe modifications...")
+        logger.info('Migrating probe modifications...')
 
         # Get all probe modifications with their options using raw SQL
         query = text(
@@ -639,16 +639,16 @@ class OptionsMigration:
             pm_id = row.id
             if pm_id not in probe_modifications_by_id:
                 probe_modifications_by_id[pm_id] = {
-                    "probe_modification": row,
-                    "options": [],
+                    'probe_modification': row,
+                    'options': [],
                 }
             if row.product_family_id:
-                probe_modifications_by_id[pm_id]["options"].append(row)
+                probe_modifications_by_id[pm_id]['options'].append(row)
 
         # Create unified options for each probe modification
         for pm_id, data in probe_modifications_by_id.items():
-            probe_modification = data["probe_modification"]
-            options = data["options"]
+            probe_modification = data['probe_modification']
+            options = data['options']
 
             # Build choices and adders
             choices = [probe_modification.name]
@@ -669,32 +669,32 @@ class OptionsMigration:
 
             # Create the unified option
             option = Option(
-                name="Probe Modification",
-                description=f"Probe modification options: {probe_modification.description}",
+                name='Probe Modification',
+                description=f'Probe modification options: {probe_modification.description}',
                 price=probe_modification.base_price_adder or 0.0,
-                price_type="fixed",
-                category="Probe Modification",
-                product_families=",".join(family_names) if family_names else None,
+                price_type='fixed',
+                category='Probe Modification',
+                product_families=','.join(family_names) if family_names else None,
                 choices=choices,
                 adders=adders,
             )
 
             self.db.add(option)
-            self.migration_stats["probe_modifications"] += 1
-            self.migration_stats["total_options"] += 1
+            self.migration_stats['probe_modifications'] += 1
+            self.migration_stats['total_options'] += 1
 
             logger.debug(
-                f"Created probe modification option: {probe_modification.name}"
+                f'Created probe modification option: {probe_modification.name}'
             )
 
     def run_migration(self):
         """Run the complete migration process."""
-        logger.info("Starting migration to unified options table...")
+        logger.info('Starting migration to unified options table...')
 
         try:
             # Clear existing options (if any)
             self.db.query(Option).delete()
-            logger.info("Cleared existing options table")
+            logger.info('Cleared existing options table')
 
             # Run all migrations
             self.migrate_materials()
@@ -710,29 +710,29 @@ class OptionsMigration:
             # Commit all changes
             self.db.commit()
 
-            logger.info("Migration completed successfully!")
+            logger.info('Migration completed successfully!')
             self.print_stats()
 
         except Exception as e:
-            logger.error(f"Migration failed: {e}")
+            logger.error(f'Migration failed: {e}')
             self.db.rollback()
             raise
 
     def print_stats(self):
         """Print migration statistics."""
-        logger.info("=" * 50)
-        logger.info("MIGRATION STATISTICS")
-        logger.info("=" * 50)
+        logger.info('=' * 50)
+        logger.info('MIGRATION STATISTICS')
+        logger.info('=' * 50)
         for category, count in self.migration_stats.items():
-            if category != "total_options":
+            if category != 'total_options':
                 logger.info(f"{category.replace('_', ' ').title()}: {count}")
         logger.info(f"Total Options Created: {self.migration_stats['total_options']}")
-        logger.info("=" * 50)
+        logger.info('=' * 50)
 
 
 def main():
     """Main function to run the migration."""
-    logger.info("Starting Options Migration Script")
+    logger.info('Starting Options Migration Script')
 
     # Create database session
     db = SessionLocal()
@@ -742,15 +742,15 @@ def main():
         migrator = OptionsMigration(db)
         migrator.run_migration()
 
-        logger.info("Migration completed successfully!")
+        logger.info('Migration completed successfully!')
 
     except Exception as e:
-        logger.error(f"Migration failed: {e}")
+        logger.error(f'Migration failed: {e}')
         sys.exit(1)
 
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

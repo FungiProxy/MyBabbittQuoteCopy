@@ -22,19 +22,19 @@ class MaterialAvailabilityStrategy(PricingStrategy):
             return context.price
 
         # Get product type from model number
-        product_type = context.product.model_number.split("-")[0]
+        product_type = context.product.model_number.split('-')[0]
 
         # Handle special cases for dual point switches
-        if product_type == "LS7000" and "/2" in context.product.model_number:
-            product_type = "LS7000/2"
+        if product_type == 'LS7000' and '/2' in context.product.model_number:
+            product_type = 'LS7000/2'
 
         # Get material option for this product type
         material_option = (
             context.db.query(Option)
             .filter(
-                Option.name == "Material",
-                Option.category == "Material",
-                Option.product_families.like(f"%{product_type}%"),
+                Option.name == 'Material',
+                Option.category == 'Material',
+                Option.product_families.like(f'%{product_type}%'),
             )
             .first()
         )
@@ -44,7 +44,7 @@ class MaterialAvailabilityStrategy(PricingStrategy):
             or context.material_override_code not in material_option.choices
         ):
             raise ValueError(
-                f"Material {context.material_override_code} is not available for product type {product_type}"
+                f'Material {context.material_override_code} is not available for product type {product_type}'
             )
 
         return context.price
@@ -56,13 +56,13 @@ class BasePriceStrategy(PricingStrategy):
         material_code = context.material.code
 
         # For exotic materials, price is based on Stainless Steel 'S' version
-        if material_code in ["U", "T"]:
+        if material_code in ['U', 'T']:
             s_material_product = (
                 context.db.query(Product)
                 .filter(
                     Product.model_number == context.product.model_number,
                     Product.voltage == context.product.voltage,
-                    Product.material == "S",
+                    Product.material == 'S',
                 )
                 .first()
             )
@@ -81,16 +81,16 @@ class BasePriceStrategy(PricingStrategy):
 class MaterialPremiumStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
         # Get material option for this product type
-        product_type = context.product.model_number.split("-")[0]
-        if product_type == "LS7000" and "/2" in context.product.model_number:
-            product_type = "LS7000/2"
+        product_type = context.product.model_number.split('-')[0]
+        if product_type == 'LS7000' and '/2' in context.product.model_number:
+            product_type = 'LS7000/2'
 
         material_option = (
             context.db.query(Option)
             .filter(
-                Option.name == "Material",
-                Option.category == "Material",
-                Option.product_families.like(f"%{product_type}%"),
+                Option.name == 'Material',
+                Option.category == 'Material',
+                Option.product_families.like(f'%{product_type}%'),
             )
             .first()
         )
@@ -105,7 +105,7 @@ class ExtraLengthStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
         effective_length = float(context.effective_length_in or 0.0)
         material_code = context.material.code
-        product_family = context.product.model_number.split("-")[0]
+        product_family = context.product.model_number.split('-')[0]
 
         # Get length adder rules from database
         from sqlalchemy import text
@@ -125,7 +125,7 @@ class ExtraLengthStrategy(PricingStrategy):
 
             result = session.execute(
                 query,
-                {"product_family": product_family, "material_code": material_code},
+                {'product_family': product_family, 'material_code': material_code},
             ).fetchone()
 
             if not result:
@@ -137,14 +137,14 @@ class ExtraLengthStrategy(PricingStrategy):
             adder_amount = result.adder_amount
 
             # Handle per-inch adders (U, T, CPVC materials)
-            if adder_type == "per_inch":
+            if adder_type == 'per_inch':
                 if effective_length > first_threshold:
                     extra_length = effective_length - first_threshold
                     context.price += extra_length * adder_amount
                 return context.price
 
             # Handle per-foot adders (S, H, TS, C materials)
-            elif adder_type == "per_foot":
+            elif adder_type == 'per_foot':
                 if effective_length >= first_threshold:
                     # Calculate how many 12-inch increments starting AT the threshold
                     extra_inches = effective_length - first_threshold
@@ -162,7 +162,7 @@ class NonStandardLengthSurchargeStrategy(PricingStrategy):
         effective_length = float(context.effective_length_in or 0.0)
 
         # Special handling for Halar material ONLY
-        if context.material.code == "H":
+        if context.material.code == 'H':
             # Standard lengths for Halar material: 6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96
             standard_lengths = [6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96]
 
@@ -175,7 +175,7 @@ class NonStandardLengthSurchargeStrategy(PricingStrategy):
             # Check Halar length limit
             if effective_length > 96:
                 raise ValueError(
-                    "Halar coated probes cannot exceed 96 inches. Please select Teflon Sleeve for longer lengths."
+                    'Halar coated probes cannot exceed 96 inches. Please select Teflon Sleeve for longer lengths.'
                 )
             return context.price
 
@@ -185,7 +185,7 @@ class NonStandardLengthSurchargeStrategy(PricingStrategy):
 
 class ConnectionOptionStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        connection_type = context.specs.get("connection_type")
+        connection_type = context.specs.get('connection_type')
         if not connection_type:
             return context.price
 
@@ -193,8 +193,8 @@ class ConnectionOptionStrategy(PricingStrategy):
         connection_option = (
             context.db.query(Option)
             .filter(
-                Option.name == "Connection",
-                Option.category == "Connection",
+                Option.name == 'Connection',
+                Option.category == 'Connection',
                 Option.product_families.like(
                     f"%{context.product.model_number.split('-')[0]}%"
                 ),
@@ -206,13 +206,13 @@ class ConnectionOptionStrategy(PricingStrategy):
             return context.price
 
         # Get the specific connection price based on type and size
-        if connection_type == "Flange":
-            rating = context.specs.get("flange_rating")
-            size = context.specs.get("flange_size")
-            key = f"Flange_{rating}_{size}"
-        elif connection_type == "Tri-Clamp":
-            size = context.specs.get("triclamp_size")
-            key = f"TriClamp_{size}"
+        if connection_type == 'Flange':
+            rating = context.specs.get('flange_rating')
+            size = context.specs.get('flange_size')
+            key = f'Flange_{rating}_{size}'
+        elif connection_type == 'Tri-Clamp':
+            size = context.specs.get('triclamp_size')
+            key = f'TriClamp_{size}'
         else:
             return context.price
 

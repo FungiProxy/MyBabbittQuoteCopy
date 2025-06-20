@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "add_length_adder_rules"
-down_revision = "806ecdc3a65b"
+revision = 'add_length_adder_rules'
+down_revision = '806ecdc3a65b'
 branch_labels = None
 depends_on = None
 
@@ -19,15 +19,15 @@ depends_on = None
 def upgrade():
     # Create length_adder_rules table
     op.create_table(
-        "length_adder_rules",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("product_family", sa.String(), nullable=False),
-        sa.Column("material_code", sa.String(), nullable=False),
-        sa.Column("adder_type", sa.String(), nullable=False),
-        sa.Column("first_threshold", sa.Float(), nullable=False),
-        sa.Column("adder_amount", sa.Float(), nullable=False),
-        sa.Column("description", sa.Text(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
+        'length_adder_rules',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('product_family', sa.String(), nullable=False),
+        sa.Column('material_code', sa.String(), nullable=False),
+        sa.Column('adder_type', sa.String(), nullable=False),
+        sa.Column('first_threshold', sa.Float(), nullable=False),
+        sa.Column('adder_amount', sa.Float(), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.PrimaryKeyConstraint('id'),
     )
 
     # Insert length adder rules data
@@ -78,4 +78,4 @@ def upgrade():
 
 def downgrade():
     # Drop length_adder_rules table
-    op.drop_table("length_adder_rules")
+    op.drop_table('length_adder_rules')

@@ -26,26 +26,26 @@ def init_sample_data():
 
     try:
         # Seed product variants
-        print("\nSeeding product variants...")
+        print('\nSeeding product variants...')
         seed_all_product_variants(db)
 
         # Seed options
-        print("\nSeeding options...")
+        print('\nSeeding options...')
         seed_options(db)
 
         # Seed customers
-        print("\nSeeding customers...")
+        print('\nSeeding customers...')
         seed_customers(db)
 
-        print("\nSample data initialized successfully!")
+        print('\nSample data initialized successfully!')
 
     except Exception as e:
         db.rollback()
-        print(f"Error initializing sample data: {e}")
+        print(f'Error initializing sample data: {e}')
         raise
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     init_sample_data()

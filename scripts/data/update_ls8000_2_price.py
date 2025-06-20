@@ -2,7 +2,7 @@ import os
 import sys
 
 # Add project root to Python path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.insert(0, project_root)
 
 from src.core.database import get_db
@@ -16,7 +16,7 @@ def update_ls8000_2_price():
     # Get all LS8000/2 variants
     variants = (
         db.query(ProductVariant)
-        .filter(ProductVariant.model_number.like("LS8000/2%"))
+        .filter(ProductVariant.model_number.like('LS8000/2%'))
         .all()
     )
 
@@ -26,8 +26,8 @@ def update_ls8000_2_price():
 
     # Commit changes
     db.commit()
-    print(f"Updated base price to $740 for {len(variants)} LS8000/2 variants")
+    print(f'Updated base price to $740 for {len(variants)} LS8000/2 variants')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     update_ls8000_2_price()

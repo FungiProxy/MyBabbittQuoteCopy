@@ -93,7 +93,7 @@ class ProductService:
         Retrieve all available material options for a product family (or all families if not specified).
         Returns a list of dicts with name, description, price, choices, adders, etc.
         """
-        query = db.query(Option).filter(Option.category == "Material")
+        query = db.query(Option).filter(Option.category == 'Material')
         if family_name:
             family = db.query(ProductFamily).filter_by(name=family_name).first()
             if family:
@@ -105,12 +105,12 @@ class ProductService:
         materials = query.all()
         return [
             {
-                "name": o.name,
-                "description": o.description,
-                "price": o.price,
-                "price_type": o.price_type,
-                "choices": o.choices,
-                "adders": o.adders,
+                'name': o.name,
+                'description': o.description,
+                'price': o.price,
+                'price_type': o.price_type,
+                'choices': o.choices,
+                'adders': o.adders,
             }
             for o in materials
         ]
@@ -126,7 +126,7 @@ class ProductService:
             return []
         options = (
             db.query(Option)
-            .filter(Option.category == "Voltage")
+            .filter(Option.category == 'Voltage')
             .join(Option.family_associations)
             .filter(
                 Option.family_associations.any(
@@ -184,14 +184,14 @@ class ProductService:
         """
         product = get_by_id(db, BaseModel, product_id)
         if not product:
-            raise ValueError(f"BaseModel with id {product_id} not found")
+            raise ValueError(f'BaseModel with id {product_id} not found')
         # Pricing logic can be updated here to use adders from options if needed
         price = product.base_price
         # Example: apply material override adder if provided
         if material_override:
             material_option = (
                 db.query(Option)
-                .filter(Option.category == "Material", Option.name == material_override)
+                .filter(Option.category == 'Material', Option.name == material_override)
                 .first()
             )
             if material_option and material_option.adders:
@@ -204,7 +204,7 @@ class ProductService:
         Fetch additional configurable options (add-ons) for a product family by name.
         Returns: List of dicts with name, description, price, price_type, category, choices, adders.
         """
-        logger.debug(f"Fetching additional options for family: {family_name}")
+        logger.debug(f'Fetching additional options for family: {family_name}')
         from src.core.models.option import Option
         from src.core.models.product_variant import ProductFamily
 
@@ -227,40 +227,40 @@ class ProductService:
             .all()
         )
 
-        logger.debug(f"Found {len(options)} options for {family_name}")
+        logger.debug(f'Found {len(options)} options for {family_name}')
 
         # Log raw options before filtering
         for opt in options:
-            logger.debug(f"Raw option: {opt.name}")
-            logger.debug(f"  Excluded Products: {opt.excluded_products}")
-            logger.debug(f"  Choices: {opt.choices}")
-            logger.debug(f"  Category: {opt.category}")
+            logger.debug(f'Raw option: {opt.name}')
+            logger.debug(f'  Excluded Products: {opt.excluded_products}')
+            logger.debug(f'  Choices: {opt.choices}')
+            logger.debug(f'  Category: {opt.category}')
 
         # Don't exclude entire options based on excluded_products
         # The excluded_products field is used for adder exclusion only
         filtered = options
-        logger.debug(f"After filtering exclusions: {len(filtered)} options")
+        logger.debug(f'After filtering exclusions: {len(filtered)} options')
 
         result = []
         for o in filtered:
             option_dict = {
-                "name": o.name,
-                "description": o.description,
-                "price": o.price,
-                "price_type": o.price_type,
-                "category": o.category,
-                "choices": o.choices,
-                "adders": o.adders,
-                "excluded_products": o.excluded_products,
+                'name': o.name,
+                'description': o.description,
+                'price': o.price,
+                'price_type': o.price_type,
+                'category': o.category,
+                'choices': o.choices,
+                'adders': o.adders,
+                'excluded_products': o.excluded_products,
             }
 
             # Apply family-specific filtering for Material options
-            if o.category == "Material" and o.rules and isinstance(o.rules, dict):
-                family_materials = o.rules.get("family_materials", {})
+            if o.category == 'Material' and o.rules and isinstance(o.rules, dict):
+                family_materials = o.rules.get('family_materials', {})
                 if family_name in family_materials:
                     allowed_materials = family_materials[family_name]
                     logger.debug(
-                        f"Filtering materials for {family_name}: {allowed_materials}"
+                        f'Filtering materials for {family_name}: {allowed_materials}'
                     )
 
                     # Filter choices to only include allowed materials for this family
@@ -270,15 +270,15 @@ class ProductService:
                         for choice in o.choices:
                             if isinstance(choice, dict):
                                 # Choice is a dict like {'code': 'S', 'display_name': 'S - 316 Stainless Steel'}
-                                if choice.get("code") in allowed_materials:
+                                if choice.get('code') in allowed_materials:
                                     filtered_choices.append(choice)
                             elif isinstance(choice, str):
                                 # Choice is a simple string like 'S'
                                 if choice in allowed_materials:
                                     filtered_choices.append(choice)
-                        option_dict["choices"] = filtered_choices
+                        option_dict['choices'] = filtered_choices
                         logger.debug(
-                            f"Filtered material choices for {family_name}: {len(filtered_choices)} materials"
+                            f'Filtered material choices for {family_name}: {len(filtered_choices)} materials'
                         )
 
                     # Filter adders to only include allowed materials
@@ -286,9 +286,9 @@ class ProductService:
                         filtered_adders = {
                             k: v for k, v in o.adders.items() if k in allowed_materials
                         }
-                        option_dict["adders"] = filtered_adders
+                        option_dict['adders'] = filtered_adders
                         logger.debug(
-                            f"Filtered material adders for {family_name}: {list(filtered_adders.keys())}"
+                            f'Filtered material adders for {family_name}: {list(filtered_adders.keys())}'
                         )
 
             result.append(option_dict)
@@ -307,14 +307,14 @@ class ProductService:
         Fetch all product families from the database.
         Returns: List of dicts with id, name, description, category.
         """
-        logger.debug("Fetching all product families")
+        logger.debug('Fetching all product families')
         families = db.query(ProductFamily).all()
         result = [
             {
-                "id": f.id,
-                "name": f.name,
-                "description": f.description,
-                "category": f.category,
+                'id': f.id,
+                'name': f.name,
+                'description': f.description,
+                'category': f.category,
             }
             for f in families
         ]
@@ -328,23 +328,23 @@ class ProductService:
         Fetch all product variants for a given family.
         Returns: List of dicts with id, model_number, description, base_price, etc.
         """
-        logger.debug(f"Fetching variants for family ID: {family_id}")
+        logger.debug(f'Fetching variants for family ID: {family_id}')
         variants = (
             db.query(BaseModel).filter(BaseModel.product_family_id == family_id).all()
         )
         result = [
             {
-                "id": v.id,
-                "model_number": v.model_number,
-                "description": v.description,
-                "base_price": v.base_price,
-                "base_length": v.base_length,
-                "voltage": v.voltage,
-                "material": v.material,
+                'id': v.id,
+                'model_number': v.model_number,
+                'description': v.description,
+                'base_price': v.base_price,
+                'base_length': v.base_length,
+                'voltage': v.voltage,
+                'material': v.material,
             }
             for v in variants
         ]
-        logger.debug(f"Found {len(result)} variants for family {family_id}")
+        logger.debug(f'Found {len(result)} variants for family {family_id}')
         return result
 
     def get_variant_by_id(self, db: Session, variant_id: int) -> Optional[Dict]:
@@ -356,14 +356,14 @@ class ProductService:
         if not variant:
             return None
         return {
-            "id": variant.id,
-            "model_number": variant.model_number,
-            "description": variant.description,
-            "base_price": variant.base_price,
-            "base_length": variant.base_length,
-            "voltage": variant.voltage,
-            "material": variant.material,
-            "family_id": variant.product_family_id,
+            'id': variant.id,
+            'model_number': variant.model_number,
+            'description': variant.description,
+            'base_price': variant.base_price,
+            'base_length': variant.base_length,
+            'voltage': variant.voltage,
+            'material': variant.material,
+            'family_id': variant.product_family_id,
         }
 
     @staticmethod
@@ -410,13 +410,13 @@ class ProductService:
             option_keys.update(v.keys())
         # Exclude keys that are not configuration options
         exclude_keys = {
-            "id",
-            "model_number",
-            "description",
-            "base_price",
-            "base_length",
-            "family_id",
-            "category",
+            'id',
+            'model_number',
+            'description',
+            'base_price',
+            'base_length',
+            'family_id',
+            'category',
         }
         option_keys = option_keys - exclude_keys
         # For each remaining option, get unique valid values from filtered variants
@@ -455,31 +455,31 @@ class ProductService:
         Returns:
             Tuple[bool, str]: (is_valid, error_message)
         """
-        if product_family == "LS2000":
+        if product_family == 'LS2000':
             # Check minimum length
             if length < 4:
-                return False, "Length cannot be less than 4 inches"
+                return False, 'Length cannot be less than 4 inches'
 
             # Special validation for Halar material
-            if material_code == "H":
+            if material_code == 'H':
                 # Standard lengths for Halar material: 6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96
                 standard_lengths = [6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96]
 
                 if length > 96:
                     return (
                         False,
-                        "Halar coated probes cannot exceed 96 inches. Please select Teflon Sleeve for longer lengths.",
+                        'Halar coated probes cannot exceed 96 inches. Please select Teflon Sleeve for longer lengths.',
                     )
 
                 if length not in standard_lengths:
                     return (
                         True,
-                        "Non-standard length. A $300 surcharge will be applied.",
+                        'Non-standard length. A $300 surcharge will be applied.',
                     )
 
-                return True, "Valid length for Halar material."
+                return True, 'Valid length for Halar material.'
 
-        return True, ""
+        return True, ''
 
     def calculate_length_price(
         self, product_family: str, material_code: str, length: float
@@ -510,7 +510,7 @@ class ProductService:
 
             result = session.execute(
                 query,
-                {"product_family": product_family, "material_code": material_code},
+                {'product_family': product_family, 'material_code': material_code},
             ).fetchone()
 
             if not result:
@@ -521,14 +521,14 @@ class ProductService:
             adder_amount = result.adder_amount
 
             # Handle per-inch adders (U, T, CPVC materials)
-            if adder_type == "per_inch":
+            if adder_type == 'per_inch':
                 if length > first_threshold:
                     extra_length = length - first_threshold
                     return extra_length * adder_amount
                 return 0.0
 
             # Handle per-foot adders (S, H, TS, C materials)
-            elif adder_type == "per_foot":
+            elif adder_type == 'per_foot':
                 if length >= first_threshold:
                     # Calculate how many 12-inch increments starting AT the threshold
                     extra_inches = length - first_threshold
@@ -567,14 +567,14 @@ class ProductService:
 
             params = {}
             if product_family:
-                query = text(query.text + " AND product_family = :product_family")
-                params["product_family"] = product_family
+                query = text(query.text + ' AND product_family = :product_family')
+                params['product_family'] = product_family
 
             if material_code:
-                query = text(query.text + " AND material_code = :material_code")
-                params["material_code"] = material_code
+                query = text(query.text + ' AND material_code = :material_code')
+                params['material_code'] = material_code
 
-            query = text(query.text + " ORDER BY product_family, material_code")
+            query = text(query.text + ' ORDER BY product_family, material_code')
 
             result = session.execute(query, params).fetchall()
             return [dict(row._mapping) for row in result]
@@ -599,14 +599,14 @@ class ProductService:
             return None
 
         # For LS8000/2, we need exact matches for core attributes
-        if family.name == "LS8000/2":
+        if family.name == 'LS8000/2':
             query = db.query(BaseModel).filter_by(product_family_id=family_id)
 
             # Filter by core attributes
-            if options.get("Voltage"):
-                query = query.filter_by(voltage=options["Voltage"])
-            if options.get("Material"):
-                query = query.filter_by(material=options["Material"])
+            if options.get('Voltage'):
+                query = query.filter_by(voltage=options['Voltage'])
+            if options.get('Material'):
+                query = query.filter_by(material=options['Material'])
 
             # Get all matching variants
             variants = query.all()
@@ -614,15 +614,15 @@ class ProductService:
             # Find the variant that matches all selected options
             for variant in variants:
                 # Check probe type match (if specified)
-                if options.get("Probe Type") and not variant.model_number.endswith(
+                if options.get('Probe Type') and not variant.model_number.endswith(
                     '-3/4"'
                 ):
                     continue
                 # Check housing match (if specified)
                 if options.get(
-                    "Housing"
-                ) == "Stainless Steel (NEMA 4X)" and not variant.model_number.endswith(
-                    "-SS"
+                    'Housing'
+                ) == 'Stainless Steel (NEMA 4X)' and not variant.model_number.endswith(
+                    '-SS'
                 ):
                     continue
                 # If we get here, we have a match
@@ -634,10 +634,10 @@ class ProductService:
         query = db.query(BaseModel).filter_by(product_family_id=family_id)
 
         # Filter by core attributes present in the options dictionary
-        if options.get("Voltage"):
-            query = query.filter_by(voltage=options["Voltage"])
-        if options.get("Material"):
-            query = query.filter_by(material=options["Material"])
+        if options.get('Voltage'):
+            query = query.filter_by(voltage=options['Voltage'])
+        if options.get('Material'):
+            query = query.filter_by(material=options['Material'])
 
         # Get all variants for this family
         variants = query.all()
@@ -649,18 +649,18 @@ class ProductService:
         for variant in variants:
             score = 0
             # Check voltage match
-            if options.get("Voltage") == variant.voltage:
+            if options.get('Voltage') == variant.voltage:
                 score += 1
             # Check material match
-            if options.get("Material") == variant.material:
+            if options.get('Material') == variant.material:
                 score += 1
             # Check probe type match (if specified)
-            if options.get("Probe Type") and variant.model_number.endswith('-3/4"'):
+            if options.get('Probe Type') and variant.model_number.endswith('-3/4"'):
                 score += 1
             # Check housing match (if specified)
             if options.get(
-                "Housing"
-            ) == "Stainless Steel (NEMA 4X)" and variant.model_number.endswith("-SS"):
+                'Housing'
+            ) == 'Stainless Steel (NEMA 4X)' and variant.model_number.endswith('-SS'):
                 score += 1
 
             if score > best_match_score:
@@ -678,8 +678,8 @@ class ProductService:
         families = (
             db.query(ProductFamily)
             .filter(
-                (ProductFamily.name.ilike(f"%{query}%"))
-                | (ProductFamily.description.ilike(f"%{query}%"))
+                (ProductFamily.name.ilike(f'%{query}%'))
+                | (ProductFamily.description.ilike(f'%{query}%'))
             )
             .all()
         )
@@ -687,31 +687,31 @@ class ProductService:
         variants = (
             db.query(BaseModel)
             .filter(
-                (BaseModel.model_number.ilike(f"%{query}%"))
-                | (BaseModel.description.ilike(f"%{query}%"))
+                (BaseModel.model_number.ilike(f'%{query}%'))
+                | (BaseModel.description.ilike(f'%{query}%'))
             )
             .all()
         )
         results = [
             {
-                "type": "family",
-                "id": f.id,
-                "name": f.name,
-                "description": f.description,
-                "category": f.category,
+                'type': 'family',
+                'id': f.id,
+                'name': f.name,
+                'description': f.description,
+                'category': f.category,
             }
             for f in families
         ] + [
             {
-                "type": "variant",
-                "id": v.id,
-                "model_number": v.model_number,
-                "description": v.description,
-                "base_price": v.base_price,
-                "base_length": v.base_length,
-                "voltage": v.voltage,
-                "material": v.material,
-                "family_id": v.product_family_id,
+                'type': 'variant',
+                'id': v.id,
+                'model_number': v.model_number,
+                'description': v.description,
+                'base_price': v.base_price,
+                'base_length': v.base_length,
+                'voltage': v.voltage,
+                'material': v.material,
+                'family_id': v.product_family_id,
             }
             for v in variants
         ]
@@ -724,21 +724,21 @@ class ProductService:
         Fetch the base product for a given family name.
         Returns: Dict with base product details, or None if not found.
         """
-        logger.debug(f"Fetching base product for family: {family_name}")
+        logger.debug(f'Fetching base product for family: {family_name}')
         family = db.query(ProductFamily).filter_by(name=family_name).first()
         if not family or not family.base_model:
-            logger.warning(f"No family or base model found for {family_name}")
+            logger.warning(f'No family or base model found for {family_name}')
             return None
 
         base_model = family.base_model
         return {
-            "id": base_model.id,
-            "model_number": base_model.model_number,
-            "description": base_model.description,
-            "base_price": base_model.base_price,
-            "base_length": base_model.base_length,
-            "voltage": base_model.voltage,
-            "material": base_model.material,
-            "family_id": family.id,
-            "name": family.name,  # Include family name for consistency
+            'id': base_model.id,
+            'model_number': base_model.model_number,
+            'description': base_model.description,
+            'base_price': base_model.base_price,
+            'base_length': base_model.base_length,
+            'voltage': base_model.voltage,
+            'material': base_model.material,
+            'family_id': family.id,
+            'name': family.name,  # Include family name for consistency
         }

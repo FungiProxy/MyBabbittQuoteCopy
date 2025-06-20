@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
 )
 
 from src.core.services.settings_service import SettingsService
-from src.ui.theme.babbitt_theme import BabbittTheme
 
 
 class SettingsPage(QWidget):
@@ -38,7 +37,7 @@ class SettingsPage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Settings")
+        self.setWindowTitle('Settings')
         self.settings_service = SettingsService()
 
         main_layout = QVBoxLayout(self)
@@ -46,50 +45,50 @@ class SettingsPage(QWidget):
         main_layout.setSpacing(15)
 
         # --- General Settings ---
-        general_group = QGroupBox("General")
+        general_group = QGroupBox('General')
         general_layout = QFormLayout(general_group)
         general_layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
         # Simplified theme selection - we now have a single Babbitt theme
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["Babbitt Theme"])  # Only one theme option now
+        self.theme_combo.addItems(['Babbitt Theme'])  # Only one theme option now
         self.theme_combo.setEnabled(False)  # Disable since it's the only option
 
-        general_layout.addRow("Application Theme:", self.theme_combo)
+        general_layout.addRow('Application Theme:', self.theme_combo)
 
         self.startup_page_combo = QComboBox()
-        self.startup_page_combo.addItems(["Dashboard", "Quote Creation", "Customers"])
-        general_layout.addRow("Startup Page:", self.startup_page_combo)
+        self.startup_page_combo.addItems(['Dashboard', 'Quote Creation', 'Customers'])
+        general_layout.addRow('Startup Page:', self.startup_page_combo)
 
-        self.confirm_on_delete_check = QCheckBox("Confirm before deleting quotes")
+        self.confirm_on_delete_check = QCheckBox('Confirm before deleting quotes')
         general_layout.addRow(self.confirm_on_delete_check)
 
         main_layout.addWidget(general_group)
 
         # --- Export Settings ---
-        export_group = QGroupBox("Export Settings")
+        export_group = QGroupBox('Export Settings')
         export_layout = QFormLayout(export_group)
 
         self.default_export_path_input = QLineEdit()
-        self.browse_export_path_btn = QPushButton("Browse...")
+        self.browse_export_path_btn = QPushButton('Browse...')
         export_path_layout = QHBoxLayout()
         export_path_layout.addWidget(self.default_export_path_input)
         export_path_layout.addWidget(self.browse_export_path_btn)
-        export_layout.addRow("Default Export Path:", export_path_layout)
+        export_layout.addRow('Default Export Path:', export_path_layout)
 
-        self.export_with_logo_check = QCheckBox("Include company logo in PDF exports")
+        self.export_with_logo_check = QCheckBox('Include company logo in PDF exports')
         export_layout.addRow(self.export_with_logo_check)
 
         main_layout.addWidget(export_group)
 
         # --- Database Settings ---
-        db_group = QGroupBox("Database")
+        db_group = QGroupBox('Database')
         db_layout = QFormLayout(db_group)
 
-        self.db_path_label = QLabel("data/babbitt.db")  # Placeholder
-        db_layout.addRow("Database Path:", self.db_path_label)
+        self.db_path_label = QLabel('data/babbitt.db')  # Placeholder
+        db_layout.addRow('Database Path:', self.db_path_label)
 
-        self.reseed_btn = QPushButton("Reseed Database")
+        self.reseed_btn = QPushButton('Reseed Database')
         db_layout.addWidget(self.reseed_btn)
 
         main_layout.addWidget(db_group)
@@ -98,8 +97,8 @@ class SettingsPage(QWidget):
 
         # --- Save/Cancel Buttons ---
         button_layout = QVBoxLayout()
-        self.save_btn = QPushButton("Save Settings")
-        self.save_btn.setObjectName("saveSettingsButton")
+        self.save_btn = QPushButton('Save Settings')
+        self.save_btn.setObjectName('saveSettingsButton')
         button_layout.addWidget(self.save_btn)
 
         main_layout.addLayout(button_layout)
@@ -116,7 +115,7 @@ class SettingsPage(QWidget):
     def load_settings(self):
         """Load settings from storage and populate the UI fields."""
         # Always use Babbitt theme now
-        self.theme_combo.setCurrentText("Babbitt Theme")
+        self.theme_combo.setCurrentText('Babbitt Theme')
 
         startup_page = self.settings_service.get_startup_page()
         self.startup_page_combo.setCurrentText(startup_page)
@@ -126,7 +125,7 @@ class SettingsPage(QWidget):
         )
 
         export_path = self.settings_service.get_default_export_path(
-            os.path.expanduser("~")
+            os.path.expanduser('~')
         )
         self.default_export_path_input.setText(export_path)
 
@@ -137,7 +136,7 @@ class SettingsPage(QWidget):
     def save_settings(self):
         """Save the current settings from the UI to storage."""
         # Always save Babbitt theme
-        self.settings_service.set_theme("Babbitt Theme")
+        self.settings_service.set_theme('Babbitt Theme')
         self.settings_service.set_startup_page(self.startup_page_combo.currentText())
         self.settings_service.set_confirm_on_delete(
             self.confirm_on_delete_check.isChecked()
@@ -153,14 +152,14 @@ class SettingsPage(QWidget):
         self.settings_service.sync()
 
         QMessageBox.information(
-            self, "Settings Saved", "Your settings have been saved successfully."
+            self, 'Settings Saved', 'Your settings have been saved successfully.'
         )
 
     def browse_for_export_path(self):
         """Open a dialog to select a default export directory."""
         current_path = self.default_export_path_input.text()
         directory = QFileDialog.getExistingDirectory(
-            self, "Select Default Export Path", current_path
+            self, 'Select Default Export Path', current_path
         )
         if directory:
             self.default_export_path_input.setText(directory)
@@ -169,8 +168,8 @@ class SettingsPage(QWidget):
         """Triggers the database seeding script."""
         reply = QMessageBox.question(
             self,
-            "Reseed Database",
-            "This will delete all existing data and re-seed the database with default values. Are you sure you want to continue?",
+            'Reseed Database',
+            'This will delete all existing data and re-seed the database with default values. Are you sure you want to continue?',
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
@@ -178,10 +177,10 @@ class SettingsPage(QWidget):
         if reply == QMessageBox.Yes:
             try:
                 # Assuming the script is in a 'scripts' folder at the project root
-                script_path = os.path.join(os.getcwd(), "scripts", "seed_database.py")
+                script_path = os.path.join(os.getcwd(), 'scripts', 'seed_database.py')
                 if not os.path.exists(script_path):
                     QMessageBox.critical(
-                        self, "Error", f"Seeding script not found at {script_path}"
+                        self, 'Error', f'Seeding script not found at {script_path}'
                     )
                     return
 
@@ -194,13 +193,13 @@ class SettingsPage(QWidget):
                     text=True,
                 )
                 QMessageBox.information(
-                    self, "Success", "Database has been re-seeded successfully."
+                    self, 'Success', 'Database has been re-seeded successfully.'
                 )
             except subprocess.CalledProcessError as e:
                 QMessageBox.critical(
-                    self, "Error", f"Failed to re-seed database:\n{e.stderr}"
+                    self, 'Error', f'Failed to re-seed database:\n{e.stderr}'
                 )
             except Exception as e:
                 QMessageBox.critical(
-                    self, "Error", f"An unexpected error occurred: {e}"
+                    self, 'Error', f'An unexpected error occurred: {e}'
                 )

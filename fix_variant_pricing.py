@@ -8,38 +8,38 @@ def fix_variant_pricing():
     db = SessionLocal()
     try:
         print(
-            "Fixing product variant base prices by removing baked-in material adders..."
+            'Fixing product variant base prices by removing baked-in material adders...'
         )
 
         # Define the base prices for each family (without material adders)
         base_prices = {
-            "LS2000": 425.0,
-            "LS2100": 460.0,
-            "LS6000": 550.0,
-            "LS7000": 680.0,
-            "LS7000/2": 770.0,
-            "LS7500": 800.0,
-            "LS8000": 715.0,
-            "LS8000/2": 850.0,  # Updated from 950.0
-            "LS8500": 1050.0,
-            "LT9000": 1200.0,
-            "FS10000": 1885.0,  # Updated from 1500.0
+            'LS2000': 425.0,
+            'LS2100': 460.0,
+            'LS6000': 550.0,
+            'LS7000': 680.0,
+            'LS7000/2': 770.0,
+            'LS7500': 800.0,
+            'LS8000': 715.0,
+            'LS8000/2': 850.0,  # Updated from 950.0
+            'LS8500': 1050.0,
+            'LT9000': 1200.0,
+            'FS10000': 1885.0,  # Updated from 1500.0
         }
 
         # Material adders that were baked into the base prices
         material_adders = {
-            "S": 0.0,
-            "H": 110.0,
-            "U": 20.0,
-            "T": 60.0,
-            "TS": 110.0,
-            "CPVC": 400.0,
-            "C": 80.0,
+            'S': 0.0,
+            'H': 110.0,
+            'U': 20.0,
+            'T': 60.0,
+            'TS': 110.0,
+            'CPVC': 400.0,
+            'C': 80.0,
         }
 
         # Get all variants
         variants = db.query(ProductVariant).all()
-        print(f"Found {len(variants)} variants to fix")
+        print(f'Found {len(variants)} variants to fix')
 
         fixed_count = 0
         for variant in variants:
@@ -67,14 +67,14 @@ def fix_variant_pricing():
                 variant.base_price = correct_base_price
                 fixed_count += 1
                 print(
-                    f"  Fixed {variant.model_number}: ${expected_total:.2f} -> ${correct_base_price:.2f}"
+                    f'  Fixed {variant.model_number}: ${expected_total:.2f} -> ${correct_base_price:.2f}'
                 )
 
         db.commit()
-        print(f"\n✅ Fixed {fixed_count} variants")
+        print(f'\n✅ Fixed {fixed_count} variants')
 
         # Show some examples
-        print("\n=== SAMPLE FIXED VARIANTS ===")
+        print('\n=== SAMPLE FIXED VARIANTS ===')
         sample_variants = db.query(ProductVariant).limit(10).all()
         for variant in sample_variants:
             family = (
@@ -82,10 +82,10 @@ def fix_variant_pricing():
                 .filter(ProductFamily.id == variant.product_family_id)
                 .first()
             )
-            print(f"  {variant.model_number}: ${variant.base_price:.2f}")
+            print(f'  {variant.model_number}: ${variant.base_price:.2f}')
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f'Error: {e}')
         import traceback
 
         traceback.print_exc()
@@ -94,5 +94,5 @@ def fix_variant_pricing():
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     fix_variant_pricing()

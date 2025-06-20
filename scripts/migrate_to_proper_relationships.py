@@ -16,7 +16,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 # Add the project root to Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 from core.database import SessionLocal
 from core.models.option import Option, ProductFamilyOption
@@ -24,7 +24,7 @@ from core.models.product_variant import ProductFamily
 
 # Set up logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -35,13 +35,13 @@ class RelationshipMigration:
     def __init__(self, db: Session):
         self.db = db
         self.migration_stats = {
-            "product_family_options_created": 0,
-            "options_updated": 0,
+            'product_family_options_created': 0,
+            'options_updated': 0,
         }
 
     def create_product_family_options_table(self):
         """Create the product_family_options table."""
-        logger.info("Creating product_family_options table...")
+        logger.info('Creating product_family_options table...')
 
         # Create the table using raw SQL to ensure it matches our model
         create_table_sql = """
@@ -58,7 +58,7 @@ class RelationshipMigration:
         """
 
         self.db.execute(text(create_table_sql))
-        logger.info("product_family_options table created successfully")
+        logger.info('product_family_options table created successfully')
 
     def get_product_family_map(self) -> dict:
         """Get mapping of product family names to IDs."""
@@ -67,7 +67,7 @@ class RelationshipMigration:
 
     def migrate_relationships(self):
         """Migrate comma-separated product_families to proper relationships using raw SQL."""
-        logger.info("Migrating product family relationships...")
+        logger.info('Migrating product family relationships...')
 
         # Use raw SQL to get all options with product_families data
         result = self.db.execute(
@@ -87,7 +87,7 @@ class RelationshipMigration:
                 continue
             # Parse comma-separated family names
             family_names = [
-                name.strip() for name in product_families.split(",") if name.strip()
+                name.strip() for name in product_families.split(',') if name.strip()
             ]
             # Get the Option object
             option = self.db.query(Option).filter_by(id=option_id).first()
@@ -112,9 +112,9 @@ class RelationshipMigration:
                             notes=None,
                         )
                         self.db.add(pfo)
-                        self.migration_stats["product_family_options_created"] += 1
+                        self.migration_stats['product_family_options_created'] += 1
                         logger.debug(
-                            f"Created relationship: {family_name} -> {option.name}"
+                            f'Created relationship: {family_name} -> {option.name}'
                         )
         logger.info(
             f"Created {self.migration_stats['product_family_options_created']} relationships"
@@ -122,34 +122,34 @@ class RelationshipMigration:
 
     def verify_migration(self):
         """Verify the migration was successful."""
-        logger.info("Verifying migration...")
+        logger.info('Verifying migration...')
 
         # Count total relationships
         total_relationships = self.db.query(ProductFamilyOption).count()
         logger.info(
-            f"Total product_family_options relationships: {total_relationships}"
+            f'Total product_family_options relationships: {total_relationships}'
         )
 
         # Count options with relationships
         options_with_relationships = (
             self.db.query(Option).join(ProductFamilyOption).distinct().count()
         )
-        logger.info(f"Options with relationships: {options_with_relationships}")
+        logger.info(f'Options with relationships: {options_with_relationships}')
 
         # Show sample relationships
         sample_relationships = self.db.query(ProductFamilyOption).limit(5).all()
-        logger.info("Sample relationships:")
+        logger.info('Sample relationships:')
         for rel in sample_relationships:
             family = (
                 self.db.query(ProductFamily).filter_by(id=rel.product_family_id).first()
             )
             option = self.db.query(Option).filter_by(id=rel.option_id).first()
             if family and option:
-                logger.info(f"  {family.name} -> {option.name} ({option.category})")
+                logger.info(f'  {family.name} -> {option.name} ({option.category})')
 
     def run_migration(self):
         """Run the complete migration process."""
-        logger.info("Starting relationship migration...")
+        logger.info('Starting relationship migration...')
 
         try:
             # Create the new table
@@ -164,27 +164,27 @@ class RelationshipMigration:
             # Verify the migration
             self.verify_migration()
 
-            logger.info("Relationship migration completed successfully!")
+            logger.info('Relationship migration completed successfully!')
             self.print_stats()
 
         except Exception as e:
-            logger.error(f"Migration failed: {e}")
+            logger.error(f'Migration failed: {e}')
             self.db.rollback()
             raise
 
     def print_stats(self):
         """Print migration statistics."""
-        logger.info("=" * 50)
-        logger.info("RELATIONSHIP MIGRATION STATISTICS")
-        logger.info("=" * 50)
+        logger.info('=' * 50)
+        logger.info('RELATIONSHIP MIGRATION STATISTICS')
+        logger.info('=' * 50)
         for key, value in self.migration_stats.items():
             logger.info(f"{key.replace('_', ' ').title()}: {value}")
-        logger.info("=" * 50)
+        logger.info('=' * 50)
 
 
 def main():
     """Main function to run the migration."""
-    logger.info("Starting Relationship Migration Script")
+    logger.info('Starting Relationship Migration Script')
 
     # Create database session
     db = SessionLocal()
@@ -194,15 +194,15 @@ def main():
         migrator = RelationshipMigration(db)
         migrator.run_migration()
 
-        logger.info("Relationship migration completed successfully!")
+        logger.info('Relationship migration completed successfully!')
 
     except Exception as e:
-        logger.error(f"Migration failed: {e}")
+        logger.error(f'Migration failed: {e}')
         sys.exit(1)
 
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

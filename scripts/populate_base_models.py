@@ -6,7 +6,7 @@ Populate the base_models table with the immortalized base model data.
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.core.config.base_models import BASE_MODELS
 from src.core.database import SessionLocal
@@ -30,25 +30,25 @@ def populate_base_models():
                 continue
             base_model = BaseModel(
                 product_family_id=family.id,
-                model_number=config["model_number"],
-                description=config["description"],
-                base_price=config["base_price"],
-                base_length=config["base_length"],
-                voltage=config["voltage"],
-                material=config["material"],
+                model_number=config['model_number'],
+                description=config['description'],
+                base_price=config['base_price'],
+                base_length=config['base_length'],
+                voltage=config['voltage'],
+                material=config['material'],
             )
             db.add(base_model)
             print(
                 f"Added base model for {family_name}: {config['model_number']} (${config['base_price']})"
             )
         db.commit()
-        print("\n✅ Base models table populated.")
+        print('\n✅ Base models table populated.')
     except Exception as e:
-        print(f"Error: {e}")
+        print(f'Error: {e}')
         db.rollback()
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     populate_base_models()

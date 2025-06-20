@@ -21,36 +21,36 @@ def debug_material_associations():
 
     try:
         # Check all material options
-        material_options = db.query(Option).filter(Option.name == "Material").all()
-        print(f"Material options found: {len(material_options)}")
+        material_options = db.query(Option).filter(Option.name == 'Material').all()
+        print(f'Material options found: {len(material_options)}')
 
         for opt in material_options:
-            print(f"  ID: {opt.id}, Name: {opt.name}, Category: {opt.category}")
-            print(f"  Choices: {opt.choices}")
-            print(f"  Adders: {opt.adders}")
+            print(f'  ID: {opt.id}, Name: {opt.name}, Category: {opt.category}')
+            print(f'  Choices: {opt.choices}')
+            print(f'  Adders: {opt.adders}')
 
         # Check all product families
         families = db.query(ProductFamily).all()
-        print(f"\nProduct families found: {len(families)}")
+        print(f'\nProduct families found: {len(families)}')
         for family in families:
-            print(f"  ID: {family.id}, Name: {family.name}")
+            print(f'  ID: {family.id}, Name: {family.name}')
 
         # Check all associations
         associations = db.query(ProductFamilyOption).all()
-        print(f"\nAll associations found: {len(associations)}")
+        print(f'\nAll associations found: {len(associations)}')
         for assoc in associations:
             print(
-                f"  Family ID: {assoc.product_family_id}, Option ID: {assoc.option_id}, Available: {assoc.is_available}"
+                f'  Family ID: {assoc.product_family_id}, Option ID: {assoc.option_id}, Available: {assoc.is_available}'
             )
 
         # Check material option associations specifically
         material_associations = (
             db.query(ProductFamilyOption)
             .join(Option)
-            .filter(Option.name == "Material")
+            .filter(Option.name == 'Material')
             .all()
         )
-        print(f"\nMaterial option associations: {len(material_associations)}")
+        print(f'\nMaterial option associations: {len(material_associations)}')
         for assoc in material_associations:
             family = (
                 db.query(ProductFamily)
@@ -62,10 +62,10 @@ def debug_material_associations():
             )
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f'Error: {e}')
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     debug_material_associations()

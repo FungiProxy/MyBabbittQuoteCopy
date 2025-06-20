@@ -40,7 +40,7 @@ class Customer(Base):
         >>> print(customer)
     """
 
-    __tablename__ = "customers"
+    __tablename__ = 'customers'
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
@@ -55,7 +55,7 @@ class Customer(Base):
 
     # Relationship to quotes
     quotes = relationship(
-        "Quote", back_populates="customer", cascade="all, delete-orphan"
+        'Quote', back_populates='customer', cascade='all, delete-orphan'
     )
 
     def __repr__(self):

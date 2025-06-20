@@ -84,11 +84,11 @@ def calculate_option_price(
     Returns:
         float: Calculated option price
     """
-    if option_price_type == "fixed":
+    if option_price_type == 'fixed':
         return option_price
-    elif option_price_type == "per_inch" and length is not None:
+    elif option_price_type == 'per_inch' and length is not None:
         return option_price * length
-    elif option_price_type == "per_foot" and length is not None:
+    elif option_price_type == 'per_foot' and length is not None:
         # Convert inches to feet
         return option_price * (length / 12)
     else:

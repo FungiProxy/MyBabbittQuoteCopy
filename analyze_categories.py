@@ -16,15 +16,15 @@ from src.core.models.option import Option
 
 def analyze_categories():
     """Analyze current categories and suggest better names."""
-    print("=== CATEGORY ANALYSIS AND NAMING SUGGESTIONS ===")
+    print('=== CATEGORY ANALYSIS AND NAMING SUGGESTIONS ===')
 
     db = SessionLocal()
     try:
         # Get all categories
         categories = db.query(Option.category).distinct().all()
 
-        print("Current categories and suggested improvements:")
-        print("-" * 60)
+        print('Current categories and suggested improvements:')
+        print('-' * 60)
 
         for cat in categories:
             category_name = cat[0]
@@ -34,7 +34,7 @@ def analyze_categories():
 
             # Analyze what's in this category
             option_names = [opt.name for opt in options]
-            print(f"  Contains: {option_names}")
+            print(f'  Contains: {option_names}')
 
             # Suggest better name
             suggested_name = suggest_better_category_name(category_name, option_names)
@@ -42,7 +42,7 @@ def analyze_categories():
 
             # Show reasoning
             reasoning = get_category_reasoning(category_name, option_names)
-            print(f"  Reasoning: {reasoning}")
+            print(f'  Reasoning: {reasoning}')
 
     finally:
         db.close()
@@ -53,11 +53,11 @@ def suggest_better_category_name(current_name, option_names):
 
     # Map current names to better names
     category_mapping = {
-        "Material": "Materials",
-        "Electrical": "Voltages",  # Since it's mostly voltage options
-        "Mechanical": "Connections",  # Since it's mostly connection options
-        "Exotic Metal": "Exotic Metals",
-        "O-ring Material": "O-Ring Materials",
+        'Material': 'Materials',
+        'Electrical': 'Voltages',  # Since it's mostly voltage options
+        'Mechanical': 'Connections',  # Since it's mostly connection options
+        'Exotic Metal': 'Exotic Metals',
+        'O-ring Material': 'O-Ring Materials',
     }
 
     # Check if we have a direct mapping
@@ -65,21 +65,21 @@ def suggest_better_category_name(current_name, option_names):
         return category_mapping[current_name]
 
     # Analyze option names to suggest better category
-    if any("voltage" in name.lower() for name in option_names):
-        return "Voltages"
+    if any('voltage' in name.lower() for name in option_names):
+        return 'Voltages'
     elif any(
-        "connection" in name.lower()
-        or "npt" in name.lower()
-        or "flange" in name.lower()
+        'connection' in name.lower()
+        or 'npt' in name.lower()
+        or 'flange' in name.lower()
         for name in option_names
     ):
-        return "Connections"
-    elif any("material" in name.lower() for name in option_names):
-        return "Materials"
-    elif any("o-ring" in name.lower() for name in option_names):
-        return "O-Ring Materials"
-    elif any("exotic" in name.lower() for name in option_names):
-        return "Exotic Metals"
+        return 'Connections'
+    elif any('material' in name.lower() for name in option_names):
+        return 'Materials'
+    elif any('o-ring' in name.lower() for name in option_names):
+        return 'O-Ring Materials'
+    elif any('exotic' in name.lower() for name in option_names):
+        return 'Exotic Metals'
     else:
         return current_name
 
@@ -87,20 +87,20 @@ def suggest_better_category_name(current_name, option_names):
 def get_category_reasoning(current_name, option_names):
     """Get reasoning for the category name suggestion."""
 
-    if current_name == "Electrical":
-        voltage_count = sum(1 for name in option_names if "voltage" in name.lower())
+    if current_name == 'Electrical':
+        voltage_count = sum(1 for name in option_names if 'voltage' in name.lower())
         total_count = len(option_names)
         if voltage_count == total_count:
             return "All options are voltage-related, so 'Voltages' is more specific"
         else:
-            return f"Contains {voltage_count}/{total_count} voltage options, plus other electrical options"
+            return f'Contains {voltage_count}/{total_count} voltage options, plus other electrical options'
 
-    elif current_name == "Mechanical":
+    elif current_name == 'Mechanical':
         connection_count = sum(
             1
             for name in option_names
             if any(
-                x in name.lower() for x in ["connection", "npt", "flange", "tri-clamp"]
+                x in name.lower() for x in ['connection', 'npt', 'flange', 'tri-clamp']
             )
         )
         total_count = len(option_names)
@@ -109,39 +109,39 @@ def get_category_reasoning(current_name, option_names):
                 "All options are connection-related, so 'Connections' is more specific"
             )
         else:
-            return f"Contains {connection_count}/{total_count} connection options, plus other mechanical options"
+            return f'Contains {connection_count}/{total_count} connection options, plus other mechanical options'
 
-    elif current_name == "Material":
+    elif current_name == 'Material':
         return "Should be plural 'Materials' for consistency"
 
-    elif current_name == "Exotic Metal":
+    elif current_name == 'Exotic Metal':
         return "Should be plural 'Exotic Metals' for consistency"
 
-    elif current_name == "O-ring Material":
+    elif current_name == 'O-ring Material':
         return "Should be 'O-Ring Materials' (plural and proper capitalization)"
 
     else:
-        return "No specific reasoning"
+        return 'No specific reasoning'
 
 
 def show_proposed_category_structure():
     """Show the proposed new category structure."""
-    print("\n" + "=" * 60)
-    print("PROPOSED NEW CATEGORY STRUCTURE")
-    print("=" * 60)
+    print('\n' + '=' * 60)
+    print('PROPOSED NEW CATEGORY STRUCTURE')
+    print('=' * 60)
 
     proposed_categories = {
-        "Materials": "Probe material selection (S, H, TS, U, T, C, CPVC)",
-        "Voltages": "Supply voltage selection (115VAC, 24VDC, etc.)",
-        "Connections": "Connection type and size selection (NPT, Flange, Tri-clamp)",
-        "O-Ring Materials": "O-Ring material selection (Viton, Silicon, etc.)",
-        "Exotic Metals": "Exotic metal selection (Alloy 20, Hastelloy, etc.)",
-        "Accessories": "Additional features (Bent Probe, Stainless Steel Tag, etc.)",
+        'Materials': 'Probe material selection (S, H, TS, U, T, C, CPVC)',
+        'Voltages': 'Supply voltage selection (115VAC, 24VDC, etc.)',
+        'Connections': 'Connection type and size selection (NPT, Flange, Tri-clamp)',
+        'O-Ring Materials': 'O-Ring material selection (Viton, Silicon, etc.)',
+        'Exotic Metals': 'Exotic metal selection (Alloy 20, Hastelloy, etc.)',
+        'Accessories': 'Additional features (Bent Probe, Stainless Steel Tag, etc.)',
     }
 
     for category, description in proposed_categories.items():
-        print(f"\n{category}:")
-        print(f"  {description}")
+        print(f'\n{category}:')
+        print(f'  {description}')
 
 
 def main():
@@ -149,9 +149,9 @@ def main():
     analyze_categories()
     show_proposed_category_structure()
 
-    print("\n" + "=" * 60)
-    print("RECOMMENDATIONS:")
-    print("=" * 60)
+    print('\n' + '=' * 60)
+    print('RECOMMENDATIONS:')
+    print('=' * 60)
     print("1. Change 'Electrical' → 'Voltages' (more specific)")
     print("2. Change 'Mechanical' → 'Connections' (more specific)")
     print("3. Change 'Material' → 'Materials' (plural)")
@@ -160,5 +160,5 @@ def main():
     print("6. Consider adding 'Accessories' category for non-core options")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

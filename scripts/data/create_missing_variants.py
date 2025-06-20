@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from src.core.database import SessionLocal
 from src.core.models.material_option import MaterialOption
@@ -12,15 +12,15 @@ def create_missing_variants():
     db = SessionLocal()
     try:
         # Models to process
-        models = ["LS7000/2", "LS8000", "LS8000/2", "LT9000", "FS10000"]
+        models = ['LS7000/2', 'LS8000', 'LS8000/2', 'LT9000', 'FS10000']
 
         for model_name in models:
-            print(f"\nProcessing {model_name}...")
+            print(f'\nProcessing {model_name}...')
 
             # Get the product family
             family = db.query(ProductFamily).filter_by(name=model_name).first()
             if not family:
-                print(f"  {model_name} family not found")
+                print(f'  {model_name} family not found')
                 continue
 
             # Get available material options
@@ -31,20 +31,20 @@ def create_missing_variants():
             )
 
             if not materials:
-                print(f"  No available material options found for {model_name}")
+                print(f'  No available material options found for {model_name}')
                 continue
 
-            print(f"  Found {len(materials)} available material options")
+            print(f'  Found {len(materials)} available material options')
 
             # Get existing variants
             existing_variants = (
                 db.query(ProductVariant).filter_by(product_family_id=family.id).all()
             )
 
-            print(f"  Found {len(existing_variants)} existing variants")
+            print(f'  Found {len(existing_variants)} existing variants')
 
             # Define standard configurations
-            voltages = ["115VAC", "24VDC", "12VDC", "240VAC"]
+            voltages = ['115VAC', '24VDC', '12VDC', '240VAC']
             base_lengths = [10.0]  # Standard length
 
             # Create missing variants
@@ -68,22 +68,22 @@ def create_missing_variants():
                                 material=material.material_code,
                             )
                             new_variants.append(variant)
-                            print(f"  Will create: {model_number}")
+                            print(f'  Will create: {model_number}')
 
             if new_variants:
-                print(f"  Creating {len(new_variants)} new variants...")
+                print(f'  Creating {len(new_variants)} new variants...')
                 db.add_all(new_variants)
                 db.commit()
-                print(f"  Successfully created new variants for {model_name}")
+                print(f'  Successfully created new variants for {model_name}')
             else:
-                print(f"  No new variants needed for {model_name}")
+                print(f'  No new variants needed for {model_name}')
 
     except Exception as e:
-        print(f"Error: {e!s}")
+        print(f'Error: {e!s}')
         db.rollback()
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     create_missing_variants()

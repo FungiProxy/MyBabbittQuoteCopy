@@ -7,29 +7,29 @@ def check_and_create_variants():
     db = SessionLocal()
     try:
         # Get the LS7000/2 family
-        family = db.query(ProductFamily).filter_by(name="LS7000/2").first()
+        family = db.query(ProductFamily).filter_by(name='LS7000/2').first()
         if not family:
-            print("LS7000/2 family not found")
+            print('LS7000/2 family not found')
             return
 
         # Get all material options
         materials = (
             db.query(MaterialOption).filter_by(product_family_id=family.id).all()
         )
-        print(f"Found {len(materials)} material options:")
+        print(f'Found {len(materials)} material options:')
         for m in materials:
-            print(f"- {m.material_code} ({m.display_name})")
+            print(f'- {m.material_code} ({m.display_name})')
 
         # Get existing variants
         existing_variants = (
             db.query(ProductVariant).filter_by(product_family_id=family.id).all()
         )
-        print(f"\nFound {len(existing_variants)} existing variants:")
+        print(f'\nFound {len(existing_variants)} existing variants:')
         for v in existing_variants:
             print(f'- {v.model_number} ({v.voltage}, {v.material}, {v.base_length}")')
 
         # Define standard configurations
-        voltages = ["12VDC", "24VDC", "115VAC", "240VAC"]
+        voltages = ['12VDC', '24VDC', '115VAC', '240VAC']
         base_lengths = [10.0]  # Standard length for LS7000/2
 
         # Create missing variants
@@ -54,22 +54,22 @@ def check_and_create_variants():
                             base_price=material.base_price,
                         )
                         new_variants.append(variant)
-                        print(f"Will create: {model_number}")
+                        print(f'Will create: {model_number}')
 
         if new_variants:
-            print(f"\nCreating {len(new_variants)} new variants...")
+            print(f'\nCreating {len(new_variants)} new variants...')
             db.add_all(new_variants)
             db.commit()
-            print("Successfully created new variants")
+            print('Successfully created new variants')
         else:
-            print("\nNo new variants needed to be created")
+            print('\nNo new variants needed to be created')
 
     except Exception as e:
-        print(f"Error: {e!s}")
+        print(f'Error: {e!s}')
         db.rollback()
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     check_and_create_variants()

@@ -41,7 +41,7 @@ class ProductFamily(Base):
         >>> print(pf)
     """
 
-    __tablename__ = "product_families"
+    __tablename__ = 'product_families'
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)  # e.g., "LS2000", "LS7000"
@@ -50,15 +50,15 @@ class ProductFamily(Base):
 
     # Relationships
     base_model = relationship(
-        "BaseModel", back_populates="product_family", uselist=False
+        'BaseModel', back_populates='product_family', uselist=False
     )
-    spare_parts = relationship("SparePart", back_populates="product_family")
+    spare_parts = relationship('SparePart', back_populates='product_family')
     option_associations = relationship(
-        "ProductFamilyOption",
-        back_populates="product_family",
-        cascade="all, delete-orphan",
+        'ProductFamilyOption',
+        back_populates='product_family',
+        cascade='all, delete-orphan',
     )
-    options = association_proxy("option_associations", "option")
+    options = association_proxy('option_associations', 'option')
 
     def __repr__(self):
         """

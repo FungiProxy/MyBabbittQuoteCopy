@@ -22,15 +22,15 @@ from src.core.models.product_variant import ProductFamily, ProductVariant
 
 def get_available_materials(db) -> List[str]:
     """Get all available material codes from the unified options."""
-    materials = db.query(Option).filter(Option.category == "Material").all()
+    materials = db.query(Option).filter(Option.category == 'Material').all()
     material_codes = set()
 
     for material in materials:
         choices = material.choices
         if isinstance(choices, list):
             for choice in choices:
-                if isinstance(choice, dict) and "code" in choice:
-                    material_codes.add(choice["code"])
+                if isinstance(choice, dict) and 'code' in choice:
+                    material_codes.add(choice['code'])
                 elif isinstance(choice, str):
                     material_codes.add(choice)
 
@@ -39,15 +39,15 @@ def get_available_materials(db) -> List[str]:
 
 def get_available_voltages(db) -> List[str]:
     """Get all available voltages from the unified options."""
-    voltages = db.query(Option).filter(Option.category == "Voltage").all()
+    voltages = db.query(Option).filter(Option.category == 'Voltage').all()
     voltage_values = set()
 
     for voltage in voltages:
         choices = voltage.choices
         if isinstance(choices, list):
             for choice in choices:
-                if isinstance(choice, dict) and "code" in choice:
-                    voltage_values.add(choice["code"])
+                if isinstance(choice, dict) and 'code' in choice:
+                    voltage_values.add(choice['code'])
                 elif isinstance(choice, str):
                     voltage_values.add(choice)
 
@@ -57,10 +57,10 @@ def get_available_voltages(db) -> List[str]:
 def get_base_length_for_material(material: str) -> float:
     """Get the standard base length for a material based on the price list."""
     # Cable material uses 12" base length
-    if material == "C":
+    if material == 'C':
         return 12.0
     # Blind-end materials use 4" base length
-    blind_end_materials = ["U", "T", "CPVC"]
+    blind_end_materials = ['U', 'T', 'CPVC']
     if material in blind_end_materials:
         return 4.0
     else:
@@ -72,24 +72,24 @@ def generate_model_number(
 ) -> str:
     """Generate a model number for a variant."""
     length_str = f'{int(length)}"' if length.is_integer() else f'{length}"'
-    return f"{family_name}-{voltage}-{material}-{length_str}"
+    return f'{family_name}-{voltage}-{material}-{length_str}'
 
 
 def get_base_price_for_family(family_name: str) -> float:
     """Get base price for a product family."""
     # Base prices from the original price list
     base_prices = {
-        "LS2000": 425.0,
-        "LS2100": 460.0,
-        "LS6000": 550.0,
-        "LS7000": 680.0,
-        "LS7000/2": 770.0,
-        "LS7500": 800.0,
-        "LS8000": 715.0,
-        "LS8000/2": 950.0,
-        "LS8500": 1050.0,
-        "LT9000": 1200.0,
-        "FS10000": 1500.0,
+        'LS2000': 425.0,
+        'LS2100': 460.0,
+        'LS6000': 550.0,
+        'LS7000': 680.0,
+        'LS7000/2': 770.0,
+        'LS7500': 800.0,
+        'LS8000': 715.0,
+        'LS8000/2': 950.0,
+        'LS8500': 1050.0,
+        'LT9000': 1200.0,
+        'FS10000': 1500.0,
     }
     return base_prices.get(family_name, 500.0)
 
@@ -98,36 +98,36 @@ def get_material_adder(material: str) -> float:
     """Get the material adder based on the price list."""
     # Material adders from the price list
     material_adders = {
-        "S": 0.0,  # 316SS is base material
-        "H": 110.0,  # Halar coated
-        "U": 20.0,  # UHMWPE blind end
-        "T": 60.0,  # Teflon blind end
-        "TS": 110.0,  # Teflon sleeve
-        "CPVC": 400.0,  # CPVC blind end
-        "C": 80.0,  # Cable probe
+        'S': 0.0,  # 316SS is base material
+        'H': 110.0,  # Halar coated
+        'U': 20.0,  # UHMWPE blind end
+        'T': 60.0,  # Teflon blind end
+        'TS': 110.0,  # Teflon sleeve
+        'CPVC': 400.0,  # CPVC blind end
+        'C': 80.0,  # Cable probe
     }
     return material_adders.get(material, 0.0)
 
 
 def rebuild_product_variants_correct():
     """Rebuild the product variants table with correct base configurations only."""
-    print("Starting product variants rebuild (corrected approach)...")
+    print('Starting product variants rebuild (corrected approach)...')
 
     db = SessionLocal()
     try:
         # Get all product families
         families = db.query(ProductFamily).all()
-        print(f"Found {len(families)} product families")
+        print(f'Found {len(families)} product families')
 
         # Get available materials and voltages
         materials = get_available_materials(db)
         voltages = get_available_voltages(db)
 
-        print(f"Available materials: {materials}")
-        print(f"Available voltages: {voltages}")
+        print(f'Available materials: {materials}')
+        print(f'Available voltages: {voltages}')
 
         # Clear existing variants
-        print("Clearing existing variants...")
+        print('Clearing existing variants...')
         db.query(ProductVariant).delete()
         db.commit()
 
@@ -135,7 +135,7 @@ def rebuild_product_variants_correct():
         total_variants = 0
 
         for family in families:
-            print(f"\nProcessing family: {family.name}")
+            print(f'\nProcessing family: {family.name}')
             base_price = get_base_price_for_family(family.name)
 
             # Create variants for each material and voltage combination
@@ -169,14 +169,14 @@ def rebuild_product_variants_correct():
 
         # Commit all changes
         db.commit()
-        print(f"\n✅ Successfully created {total_variants} base product variants")
+        print(f'\n✅ Successfully created {total_variants} base product variants')
 
         # Verify the results
         final_count = db.query(ProductVariant).count()
-        print(f"Total variants in database: {final_count}")
+        print(f'Total variants in database: {final_count}')
 
         # Show sample of new variants
-        print("\nSample of base variants:")
+        print('\nSample of base variants:')
         sample_variants = db.query(ProductVariant).limit(15).all()
         for variant in sample_variants:
             print(
@@ -186,7 +186,7 @@ def rebuild_product_variants_correct():
         return True
 
     except Exception as e:
-        print(f"❌ Error rebuilding product variants: {e}")
+        print(f'❌ Error rebuilding product variants: {e}')
         import traceback
 
         traceback.print_exc()
@@ -196,6 +196,6 @@ def rebuild_product_variants_correct():
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     success = rebuild_product_variants_correct()
     sys.exit(0 if success else 1)

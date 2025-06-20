@@ -26,16 +26,16 @@ def fix_material_associations():
 
     try:
         # Get the material option
-        material_option = db.query(Option).filter(Option.name == "Material").first()
+        material_option = db.query(Option).filter(Option.name == 'Material').first()
         if not material_option:
-            logger.error("Material option not found")
+            logger.error('Material option not found')
             return
 
-        logger.info(f"Found material option: {material_option.name}")
+        logger.info(f'Found material option: {material_option.name}')
 
         # Get all product families
         families = db.query(ProductFamily).all()
-        logger.info(f"Found {len(families)} product families")
+        logger.info(f'Found {len(families)} product families')
 
         # Check which families already have the material option
         existing_associations = (
@@ -47,7 +47,7 @@ def fix_material_associations():
         existing_family_ids = {
             assoc.product_family_id for assoc in existing_associations
         }
-        logger.info(f"Families with material option: {existing_family_ids}")
+        logger.info(f'Families with material option: {existing_family_ids}')
 
         # Add missing associations
         added_count = 0
@@ -61,14 +61,14 @@ def fix_material_associations():
                 )
                 db.add(association)
                 added_count += 1
-                logger.info(f"Added material option to family: {family.name}")
+                logger.info(f'Added material option to family: {family.name}')
 
         # Commit changes
         db.commit()
-        logger.info(f"Added material option to {added_count} families")
+        logger.info(f'Added material option to {added_count} families')
 
         # Verify the fix
-        logger.info("Verifying fix...")
+        logger.info('Verifying fix...')
         for family in families:
             materials = (
                 db.query(Option)
@@ -82,15 +82,15 @@ def fix_material_associations():
                 )
                 .all()
             )
-            logger.info(f"Family {family.name}: {len(materials)} material options")
+            logger.info(f'Family {family.name}: {len(materials)} material options')
 
     except Exception as e:
-        logger.error(f"Error fixing material associations: {e}")
+        logger.error(f'Error fixing material associations: {e}')
         db.rollback()
         raise
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     fix_material_associations()

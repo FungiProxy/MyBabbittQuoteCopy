@@ -17,7 +17,7 @@ class HousingType(Base):
         description (str): A description of the housing type.
     """
 
-    __tablename__ = "housing_types"
+    __tablename__ = 'housing_types'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)

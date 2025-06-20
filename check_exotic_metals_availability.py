@@ -17,21 +17,21 @@ from src.core.models.product_variant import ProductFamily
 
 def check_current_availability():
     """Check current exotic metals availability across product families."""
-    print("=== CHECKING EXOTIC METALS AVAILABILITY ===")
+    print('=== CHECKING EXOTIC METALS AVAILABILITY ===')
 
     db = SessionLocal()
     try:
         # Get all product families
         product_families = db.query(ProductFamily).all()
-        print(f"Total product families: {len(product_families)}")
+        print(f'Total product families: {len(product_families)}')
 
         # Get all material options
-        material_options = db.query(Option).filter_by(category="Materials").all()
+        material_options = db.query(Option).filter_by(category='Materials').all()
 
-        exotic_codes = ["A", "HB", "HC", "TT"]
+        exotic_codes = ['A', 'HB', 'HC', 'TT']
 
-        print("\nCurrent exotic metals availability:")
-        print(f"Exotic codes: {exotic_codes}")
+        print('\nCurrent exotic metals availability:')
+        print(f'Exotic codes: {exotic_codes}')
 
         for family in product_families:
             # Find material option for this family
@@ -48,9 +48,9 @@ def check_current_availability():
 
                 print(f"  {family.name}: {'✅' if exotic_available else '❌'}")
                 if missing_exotic:
-                    print(f"    Missing: {missing_exotic}")
+                    print(f'    Missing: {missing_exotic}')
             else:
-                print(f"  {family.name}: ❌ (No material option found)")
+                print(f'  {family.name}: ❌ (No material option found)')
 
     finally:
         db.close()
@@ -58,7 +58,7 @@ def check_current_availability():
 
 def update_exotic_metals_availability():
     """Update exotic metals availability for all product families."""
-    print("\n=== UPDATING EXOTIC METALS AVAILABILITY ===")
+    print('\n=== UPDATING EXOTIC METALS AVAILABILITY ===')
 
     db = SessionLocal()
     try:
@@ -66,17 +66,17 @@ def update_exotic_metals_availability():
         product_families = db.query(ProductFamily).all()
 
         # Get all material options
-        material_options = db.query(Option).filter_by(category="Materials").all()
+        material_options = db.query(Option).filter_by(category='Materials').all()
 
-        exotic_codes = ["A", "HB", "HC", "TT"]
+        exotic_codes = ['A', 'HB', 'HC', 'TT']
         exotic_adders = {
-            "A": 250,  # Alloy 20
-            "HB": 350,  # Hastelloy-B
-            "HC": 350,  # Hastelloy-C-276
-            "TT": 400,  # Titanium
+            'A': 250,  # Alloy 20
+            'HB': 350,  # Hastelloy-B
+            'HC': 350,  # Hastelloy-C-276
+            'TT': 400,  # Titanium
         }
 
-        print("Updating exotic metals availability for all families:")
+        print('Updating exotic metals availability for all families:')
 
         for family in product_families:
             # Find material option for this family
@@ -105,19 +105,19 @@ def update_exotic_metals_availability():
                     material_option.choices = updated_choices
                     material_option.adders = updated_adders
                     print(
-                        f"  ✅ Updated {family.name}: {len(current_choices)} → {len(updated_choices)} choices"
+                        f'  ✅ Updated {family.name}: {len(current_choices)} → {len(updated_choices)} choices'
                     )
                 else:
-                    print(f"  ⚠️  {family.name}: Already has all exotic metals")
+                    print(f'  ⚠️  {family.name}: Already has all exotic metals')
             else:
-                print(f"  ❌ {family.name}: No material option found")
+                print(f'  ❌ {family.name}: No material option found')
 
         db.commit()
-        print("\n✅ Exotic metals availability updated successfully!")
+        print('\n✅ Exotic metals availability updated successfully!')
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Error updating exotic metals availability: {e}")
+        print(f'❌ Error updating exotic metals availability: {e}')
         raise
     finally:
         db.close()
@@ -125,7 +125,7 @@ def update_exotic_metals_availability():
 
 def verify_updated_availability():
     """Verify that exotic metals are now available for all families."""
-    print("\n=== VERIFYING UPDATED AVAILABILITY ===")
+    print('\n=== VERIFYING UPDATED AVAILABILITY ===')
 
     db = SessionLocal()
     try:
@@ -133,11 +133,11 @@ def verify_updated_availability():
         product_families = db.query(ProductFamily).all()
 
         # Get all material options
-        material_options = db.query(Option).filter_by(category="Materials").all()
+        material_options = db.query(Option).filter_by(category='Materials').all()
 
-        exotic_codes = ["A", "HB", "HC", "TT"]
+        exotic_codes = ['A', 'HB', 'HC', 'TT']
 
-        print("Verifying exotic metals availability:")
+        print('Verifying exotic metals availability:')
 
         all_families_have_exotic = True
 
@@ -155,20 +155,20 @@ def verify_updated_availability():
                 missing_exotic = [code for code in exotic_codes if code not in choices]
 
                 if exotic_available:
-                    print(f"  ✅ {family.name}: All exotic metals available")
+                    print(f'  ✅ {family.name}: All exotic metals available')
                 else:
-                    print(f"  ❌ {family.name}: Missing {missing_exotic}")
+                    print(f'  ❌ {family.name}: Missing {missing_exotic}')
                     all_families_have_exotic = False
             else:
-                print(f"  ❌ {family.name}: No material option found")
+                print(f'  ❌ {family.name}: No material option found')
                 all_families_have_exotic = False
 
-        print("\n" + "=" * 50)
+        print('\n' + '=' * 50)
         if all_families_have_exotic:
-            print("✅ ALL PRODUCT FAMILIES HAVE EXOTIC METALS AVAILABLE")
+            print('✅ ALL PRODUCT FAMILIES HAVE EXOTIC METALS AVAILABLE')
         else:
-            print("❌ SOME PRODUCT FAMILIES MISSING EXOTIC METALS")
-        print("=" * 50)
+            print('❌ SOME PRODUCT FAMILIES MISSING EXOTIC METALS')
+        print('=' * 50)
 
     finally:
         db.close()
@@ -176,28 +176,28 @@ def verify_updated_availability():
 
 def main():
     """Run the complete exotic metals availability check and update."""
-    print("EXOTIC METALS AVAILABILITY UPDATE")
-    print("=" * 50)
+    print('EXOTIC METALS AVAILABILITY UPDATE')
+    print('=' * 50)
 
     check_current_availability()
 
     # Confirm before proceeding
     response = (
-        input("\nUpdate exotic metals availability for all families? (y/N): ")
+        input('\nUpdate exotic metals availability for all families? (y/N): ')
         .strip()
         .lower()
     )
-    if response != "y":
-        print("Update cancelled.")
+    if response != 'y':
+        print('Update cancelled.')
         return
 
     update_exotic_metals_availability()
     verify_updated_availability()
 
-    print("\n" + "=" * 50)
-    print("EXOTIC METALS AVAILABILITY UPDATE COMPLETE")
-    print("=" * 50)
+    print('\n' + '=' * 50)
+    print('EXOTIC METALS AVAILABILITY UPDATE COMPLETE')
+    print('=' * 50)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

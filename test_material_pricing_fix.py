@@ -29,58 +29,58 @@ def test_material_pricing():
         families = product_service.get_product_families(db)
         ls8000_family = None
         for family in families:
-            if family["name"] == "LS8000":
+            if family['name'] == 'LS8000':
                 ls8000_family = family
                 break
 
         if not ls8000_family:
-            logger.error("No LS8000 family found")
+            logger.error('No LS8000 family found')
             return
 
         logger.info(f"Testing with family: {ls8000_family['name']}")
 
         # Start configuration with base product info
         base_product_info = {
-            "id": ls8000_family["id"],
-            "name": ls8000_family["name"],
-            "base_price": 500.0,  # Default base price
-            "base_length": 10.0,
-            "voltage": "115VAC",
-            "material": "S",
+            'id': ls8000_family['id'],
+            'name': ls8000_family['name'],
+            'base_price': 500.0,  # Default base price
+            'base_length': 10.0,
+            'voltage': '115VAC',
+            'material': 'S',
         }
 
         config_service.start_configuration(
-            ls8000_family["id"], ls8000_family["name"], base_product_info
+            ls8000_family['id'], ls8000_family['name'], base_product_info
         )
 
         # Test different materials
-        test_materials = ["S", "H", "C", "CPVC", "A", "HC"]
+        test_materials = ['S', 'H', 'C', 'CPVC', 'A', 'HC']
 
         for material in test_materials:
-            logger.info(f"\n--- Testing material: {material} ---")
+            logger.info(f'\n--- Testing material: {material} ---')
 
             # Set material
-            config_service.select_option("Material", material)
+            config_service.select_option('Material', material)
 
             # Get current price
             current_price = config_service.current_config.final_price
-            logger.info(f"Price with {material}: ${current_price}")
+            logger.info(f'Price with {material}: ${current_price}')
 
             # If it's an exotic metal, test override
-            if material in ["A", "HC", "HB", "TT"]:
-                logger.info("Testing exotic metal override...")
-                config_service.select_option("Exotic Metal Override", 150.0)
+            if material in ['A', 'HC', 'HB', 'TT']:
+                logger.info('Testing exotic metal override...')
+                config_service.select_option('Exotic Metal Override', 150.0)
                 override_price = config_service.current_config.final_price
-                logger.info(f"Price with {material} + $150 override: ${override_price}")
+                logger.info(f'Price with {material} + $150 override: ${override_price}')
 
                 # Clear override
-                config_service.select_option("Exotic Metal Override", 0)
+                config_service.select_option('Exotic Metal Override', 0)
 
     except Exception as e:
-        logger.error(f"Error testing material pricing: {e}", exc_info=True)
+        logger.error(f'Error testing material pricing: {e}', exc_info=True)
     finally:
         db.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_material_pricing()
