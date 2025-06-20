@@ -7,7 +7,7 @@ It stores which exotic metals are available for each product family, along with 
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 
-from core.database import Base
+from ..database import Base
 
 
 class ExoticMetalOption(Base):
@@ -26,11 +26,11 @@ class ExoticMetalOption(Base):
         >>> print(emo)
     """
 
-    __tablename__ = "exotic_metal_options"
+    __tablename__ = 'exotic_metal_options'
 
     id = Column(Integer, primary_key=True)
     product_family_id = Column(
-        Integer, ForeignKey("product_families.id"), nullable=False
+        Integer, ForeignKey('product_families.id'), nullable=False
     )
     metal_type = Column(String, nullable=False)  # Type of exotic metal
     price = Column(Float, default=0.0)  # Additional cost for this metal

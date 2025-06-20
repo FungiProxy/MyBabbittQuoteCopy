@@ -1,0 +1,12 @@
+id,code,name,description,base_length,length_adder_per_inch,length_adder_per_foot,has_nonstandard_length_surcharge,nonstandard_length_surcharge,base_price_adder
+1,S,316 Stainless Steel,Standard 316SS probe,10.0,0.0,45.0,0,0.0,0.0
+2,H,Halar Coated,Halar coated probe,10.0,0.0,110.0,1,300.0,0.0
+3,TS,Teflon Sleeve,Teflon sleeve probe,10.0,0.0,110.0,0,0.0,0.0
+4,U,UHMWPE Blind End,UHMWPE blind end probe,4.0,40.0,0.0,0,0.0,0.0
+5,T,Teflon Blind End,Teflon blind end probe,4.0,50.0,0.0,0,0.0,0.0
+6,C,Cable,Cable probe,12.0,0.0,45.0,0,0.0,0.0
+7,CPVC,CPVC Blind End,CPVC blind end probe,4.0,50.0,0.0,0,0.0,0.0
+8,A,Alloy 20,Exotic metal,10.0,0.0,0.0,0,0.0,0.0
+9,HB,Hastelloy-B,Exotic metal,10.0,0.0,0.0,0,0.0,0.0
+10,HC,Hastelloy-C-276,Exotic metal,10.0,0.0,0.0,0,0.0,0.0
+11,TT,Titanium,Exotic metal,10.0,0.0,0.0,0,0.0,0.0

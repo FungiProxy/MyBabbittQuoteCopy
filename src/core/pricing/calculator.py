@@ -32,13 +32,7 @@ class PriceCalculator:
         return context.price
 
 
-def calculate_product_price(
-    db: Session,
-    product_id: int,
-    length: Optional[float] = None,
-    material_override: Optional[str] = None,
-    specs: Optional[Dict[str, Any]] = None,
-) -> float:
+def calculate_product_price(context: PricingContext) -> float:
     """
     Calculate the total price for a product using a strategy-based calculator.
 
@@ -46,11 +40,7 @@ def calculate_product_price(
     by applying a series of pricing strategies in a specific order.
 
     Args:
-        db: SQLAlchemy database session
-        product_id: Unique identifier of the product
-        length: Length in inches (if applicable)
-        material_override: Material code to override the product's default material
-        specs: Dictionary containing product specifications including connection options
+        context: The pricing context containing all necessary information.
 
     Returns:
         float: Calculated total price.
@@ -58,15 +48,6 @@ def calculate_product_price(
     Raises:
         ValueError: If the product, material, or options are invalid or unavailable.
     """
-    # Create the context for this pricing calculation
-    context = PricingContext(
-        db=db,
-        product_id=product_id,
-        length_in=length,
-        material_override_code=material_override,
-        specs=specs or {},
-    )
-
     # Define the sequence of pricing strategies
     # The order is critical for correct calculation
     pricing_strategies = [
@@ -105,11 +86,11 @@ def calculate_option_price(
     Returns:
         float: Calculated option price
     """
-    if option_price_type == "fixed":
+    if option_price_type == 'fixed':
         return option_price
-    elif option_price_type == "per_inch" and length is not None:
+    elif option_price_type == 'per_inch' and length is not None:
         return option_price * length
-    elif option_price_type == "per_foot" and length is not None:
+    elif option_price_type == 'per_foot' and length is not None:
         # Convert inches to feet
         return option_price * (length / 12)
     else:

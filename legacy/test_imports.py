@@ -6,14 +6,14 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "module_name",
+    'module_name',
     [
-        "os",
-        "sys",
-        "traceback",
-        "PySide6.QtWidgets",
-        "PySide6.QtCore",
-        "PySide6.QtGui",
+        'os',
+        'sys',
+        'traceback',
+        'PySide6.QtWidgets',
+        'PySide6.QtCore',
+        'PySide6.QtGui',
     ],
 )
 def test_base_imports(module_name):
@@ -22,13 +22,13 @@ def test_base_imports(module_name):
 
 
 @pytest.mark.parametrize(
-    "module_name",
+    'module_name',
     [
-        "src.ui",
-        "src.ui.main_window",
-        "src.ui.product_tab",
-        "src.ui.specifications_tab",
-        "src.ui.quote_tab",
+        'src.ui',
+        'src.ui.main_window',
+        'src.ui.product_tab',
+        'src.ui.specifications_tab',
+        'src.ui.quote_tab',
     ],
 )
 def test_application_imports(module_name):

@@ -5,6 +5,6 @@ To get the base price for T, take S base price and add 60 dollars.
 Length adder for all U is 40 dollars an inch.
 Length adder for all T is 50 dollars an inch.
 
-Pertaining to the H material $300 adder for non-standard length, the standard lengths are 6, 8, 10, 12, 16, 24, 36, 48, 60, 72 
+Pertaining to the H material $300 adder for non-standard length, the standard lengths are 6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96 
 
 We no longer offer Ultrasonic or Radar

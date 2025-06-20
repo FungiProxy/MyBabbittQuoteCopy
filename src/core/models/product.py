@@ -14,11 +14,9 @@ The Product model supports:
 - Categorization and searching
 """
 
-from sqlalchemy import Column, Float, Integer, String, Text, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Float, Integer, String, Text
 
 from ..database import Base
-from .product_variant import ProductVariant
 
 
 class Product(Base):
@@ -61,7 +59,7 @@ class Product(Base):
         ... )
     """
 
-    __tablename__ = "products"
+    __tablename__ = 'products'
 
     id = Column(Integer, primary_key=True, index=True)
     model_number = Column(

@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from src.core.models import Material, Product
+from src.core.models import Material, BaseModel
 
 
 @dataclass
@@ -15,7 +15,7 @@ class PricingContext:
     specs: Optional[Dict[str, Any]] = field(default_factory=dict)
 
     # These fields will be populated by strategies
-    product: Optional[Product] = None
+    product: Optional[BaseModel] = None
     material: Optional[Material] = None
     effective_length_in: Optional[float] = None
 
@@ -25,10 +25,10 @@ class PricingContext:
     def __post_init__(self):
         # Initial lookup for product
         self.product = (
-            self.db.query(Product).filter(Product.id == self.product_id).first()
+            self.db.query(BaseModel).filter(BaseModel.id == self.product_id).first()
         )
         if not self.product:
-            raise ValueError(f"Product with ID {self.product_id} not found")
+            raise ValueError(f'Product with ID {self.product_id} not found')
 
         # Determine effective length
         self.effective_length_in = (
@@ -45,4 +45,4 @@ class PricingContext:
             self.db.query(Material).filter(Material.code == material_code).first()
         )
         if not self.material:
-            raise ValueError(f"Material {material_code} not found")
+            raise ValueError(f'Material {material_code} not found')

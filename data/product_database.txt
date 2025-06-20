@@ -14,7 +14,7 @@ Base Models:
   * Longer 316SS Probes: add $45/foot
 - LS 2000-115VAC-H-10": $535.00
   * Longer Halar Coated Probes: add $110/foot
-  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+  * $300 adder for non-standard lengths (Standard lengths: 6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96)
 - LS2000-115VAC-U-4": $445.00
   * Longer Blind-end probes: add $40/inch
 - LS2000-115VAC-T-4": $485.00
@@ -58,7 +58,7 @@ Base Models:
   * Longer 316SS Probes: add $45/foot
 - LS 2100-24VDC-H-10": $570.00
   * Longer Halar Coated Probes: add $110/foot
-  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+  * $300 adder for non-standard lengths (Standard lengths: 6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96)
 - LS 2100-24VDC-U-4": $480.00 (Base S price + $20)
   * Longer Blind-end probes: add $40/inch
 - LS 2100-24VDC-T-4": $520.00 (Base S price + $60)
@@ -97,7 +97,7 @@ Base Models:
   * Longer 316 SS Probes: add $45/foot
 - LS6000-115VAC-H-10": $660.00
   * Longer Halar Coated Probes: add $110/foot
-  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+  * $300 adder for non-standard lengths (Standard lengths: 6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96)
 - LS 6000-115VAC-U-4": $570.00 (Base S price + $20)
   * Longer Blind-end probes: add $40/inch
 - LS 6000-115VAC-T-4": $610.00 (Base S price + $60)
@@ -149,7 +149,7 @@ Base Models:
   * Longer 316 SS Probes: add $45/foot
 - LS 7000-115VAC-H-10": $790.00
   * Longer Halar Coated Probes: add $110/foot
-  * $300 adder for non-standard lengths (Standard lengths: 6, 8, 10, 12, 16, 24, 36, 48, 60, 72)
+  * $300 adder for non-standard lengths (Standard lengths: 6, 10, 12, 18, 24, 36, 48, 60, 72, 84, 96)
 - LS 7000-115VAC-U-4": $700.00 (Base S price + $20)
   * Longer Blind-end probes: add $40/inch
 - LS 7000-115VAC-T-4": $740.00 (Base S price + $60)

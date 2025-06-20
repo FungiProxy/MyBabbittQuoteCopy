@@ -7,7 +7,7 @@ from src.core.services.product_service import ProductService
 from src.core.services.quote_service import QuoteService
 from src.core.services.spare_part_service import SparePartService
 
-__all__ = ["CustomerService", "ProductService", "QuoteService", "SparePartService"]
+__all__ = ['CustomerService', 'ProductService', 'QuoteService', 'SparePartService']
 
 """
 Services package initialization.

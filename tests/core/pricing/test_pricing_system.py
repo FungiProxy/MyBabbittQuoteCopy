@@ -10,31 +10,31 @@ This module tests all aspects of the pricing system including:
 - Edge cases and special product types
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 from src.core.models import (
-    Product,
-    Material,
     ConnectionOption,
+    Material,
     MaterialAvailability,
+    Product,
     StandardLength,
 )
 from src.core.pricing import (
-    calculate_product_price,
-    calculate_option_price,
     PricingContext,
-)
-from src.core.pricing.strategies import (
-    BasePriceStrategy,
-    MaterialPremiumStrategy,
-    ExtraLengthStrategy,
-    NonStandardLengthSurchargeStrategy,
-    ConnectionOptionStrategy,
-    MaterialAvailabilityStrategy,
+    calculate_product_price,
 )
 from src.core.pricing.calculator import PriceCalculator
+from src.core.pricing.strategies import (
+    BasePriceStrategy,
+    ConnectionOptionStrategy,
+    ExtraLengthStrategy,
+    MaterialAvailabilityStrategy,
+    MaterialPremiumStrategy,
+    NonStandardLengthSurchargeStrategy,
+)
 
 
 # Test fixtures
@@ -49,11 +49,11 @@ def base_product():
     """Create a base product for testing."""
     return Product(
         id=1,
-        model_number="LS2000-120-S",
+        model_number='LS2000-120-S',
         base_price=500.0,
         base_length=10.0,
-        material="S",
-        voltage="120V",
+        material='S',
+        voltage='120V',
     )
 
 
@@ -61,8 +61,8 @@ def base_product():
 def base_material():
     """Create a base material for testing."""
     return Material(
-        code="S",
-        name="Stainless Steel",
+        code='S',
+        name='Stainless Steel',
         has_nonstandard_length_surcharge=True,
         nonstandard_length_surcharge=50.0,
     )
@@ -75,7 +75,7 @@ def test_base_price_strategy_standard_material(mock_db, base_product, base_mater
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="S",
+        material_override_code='S',
     )
     context.product = base_product
     context.material = base_material
@@ -92,19 +92,19 @@ def test_base_price_strategy_exotic_material(mock_db, base_product, base_materia
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="U",
+        material_override_code='U',
     )
     context.product = base_product
-    context.material = Material(code="U", name="UHMWPE")
+    context.material = Material(code='U', name='UHMWPE')
 
     # Mock the S material product query
     s_product = Product(
         id=2,
-        model_number="LS2000-120-S",
+        model_number='LS2000-120-S',
         base_price=500.0,
         base_length=10.0,
-        material="S",
-        voltage="120V",
+        material='S',
+        voltage='120V',
     )
     mock_db.query().filter().first.return_value = s_product
 
@@ -121,10 +121,10 @@ def test_material_premium_strategy_uhmwpe(mock_db, base_product):
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="U",
+        material_override_code='U',
     )
     context.product = base_product
-    context.material = Material(code="U", name="UHMWPE")
+    context.material = Material(code='U', name='UHMWPE')
     context.price = 500.0  # Base price
 
     strategy = MaterialPremiumStrategy()
@@ -139,10 +139,10 @@ def test_material_premium_strategy_teflon(mock_db, base_product):
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="T",
+        material_override_code='T',
     )
     context.product = base_product
-    context.material = Material(code="T", name="Teflon")
+    context.material = Material(code='T', name='Teflon')
     context.price = 500.0  # Base price
 
     strategy = MaterialPremiumStrategy()
@@ -158,7 +158,7 @@ def test_extra_length_strategy_ls2000_standard(mock_db, base_product, base_mater
         db=mock_db,
         product_id=1,
         length_in=24.0,  # 24 inches
-        material_override_code="S",
+        material_override_code='S',
     )
     context.product = base_product
     context.material = base_material
@@ -179,10 +179,10 @@ def test_extra_length_strategy_ls2000_exotic(mock_db, base_product):
         db=mock_db,
         product_id=1,
         length_in=24.0,  # 24 inches
-        material_override_code="U",
+        material_override_code='U',
     )
     context.product = base_product
-    context.material = Material(code="U", name="UHMWPE")
+    context.material = Material(code='U', name='UHMWPE')
     context.price = 500.0  # Base price
 
     strategy = ExtraLengthStrategy()
@@ -195,41 +195,75 @@ def test_extra_length_strategy_ls2000_exotic(mock_db, base_product):
 
 
 # Non-Standard Length Surcharge Tests
-def test_nonstandard_length_surcharge_ls2000(mock_db, base_product, base_material):
-    """Test non-standard length surcharge for LS2000."""
+def test_nonstandard_length_surcharge_halar(mock_db, base_product):
+    """Test non-standard length surcharge for Halar material."""
     context = PricingContext(
         db=mock_db,
         product_id=1,
-        length_in=15.0,  # Non-standard length
-        material_override_code="S",
+        length_in=15.0,  # Non-standard length for Halar
+        material_override_code='H',
     )
     context.product = base_product
-    context.material = base_material
+    context.material = Material(code='H', name='Halar')
     context.price = 500.0  # Base price
-
-    # Mock standard length query to return None (non-standard length)
-    mock_db.query().filter().first.return_value = None
 
     strategy = NonStandardLengthSurchargeStrategy()
     price = strategy.calculate(context)
 
-    assert price == 550.0  # Base price + $50 surcharge
+    assert price == 800.0  # Base price + $300 surcharge for non-standard Halar length
 
 
-def test_nonstandard_length_surcharge_halar_limit(mock_db, base_product):
-    """Test Halar length limit enforcement."""
+def test_nonstandard_length_surcharge_halar_standard_length(mock_db, base_product):
+    """Test that standard Halar lengths don't get surcharge."""
     context = PricingContext(
         db=mock_db,
         product_id=1,
-        length_in=84.0,  # Over 72" limit
-        material_override_code="H",
+        length_in=24.0,  # Standard length for Halar
+        material_override_code='H',
     )
     context.product = base_product
-    context.material = Material(code="H", name="Halar")
+    context.material = Material(code='H', name='Halar')
+    context.price = 500.0  # Base price
+
+    strategy = NonStandardLengthSurchargeStrategy()
+    price = strategy.calculate(context)
+
+    assert price == 500.0  # Base price only, no surcharge for standard length
+
+
+def test_nonstandard_length_surcharge_other_materials(mock_db, base_product):
+    """Test that other materials don't get non-standard length surcharge."""
+    context = PricingContext(
+        db=mock_db,
+        product_id=1,
+        length_in=15.0,  # Non-standard length
+        material_override_code='S',
+    )
+    context.product = base_product
+    context.material = Material(code='S', name='Stainless Steel')
+    context.price = 500.0  # Base price
+
+    strategy = NonStandardLengthSurchargeStrategy()
+    price = strategy.calculate(context)
+
+    assert price == 500.0  # Base price only, no surcharge for non-Halar materials
+
+
+def test_nonstandard_length_surcharge_halar_limit(mock_db, base_product):
+    """Test Halar length limit enforcement at 96 inches."""
+    context = PricingContext(
+        db=mock_db,
+        product_id=1,
+        length_in=97.0,  # Over the 96" limit
+        material_override_code='H',
+    )
+    context.effective_length_in = 97.0
+    context.product = base_product
+    context.material = Material(code='H', name='Halar')
 
     strategy = NonStandardLengthSurchargeStrategy()
 
-    with pytest.raises(ValueError, match="Halar coated probes cannot exceed 72 inches"):
+    with pytest.raises(ValueError, match='Halar coated probes cannot exceed 96 inches'):
         strategy.calculate(context)
 
 
@@ -240,11 +274,11 @@ def test_connection_option_strategy_flange(mock_db, base_product, base_material)
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="S",
+        material_override_code='S',
         specs={
-            "connection_type": "Flange",
-            "flange_rating": "150#",
-            "flange_size": '1"',
+            'connection_type': 'Flange',
+            'flange_rating': '150#',
+            'flange_size': '1"',
         },
     )
     context.product = base_product
@@ -253,8 +287,8 @@ def test_connection_option_strategy_flange(mock_db, base_product, base_material)
 
     # Mock connection option query
     connection_option = ConnectionOption(
-        type="Flange",
-        rating="150#",
+        type='Flange',
+        rating='150#',
         size='1"',
         price=100.0,
     )
@@ -275,10 +309,10 @@ def test_connection_option_strategy_triclamp(mock_db, base_product, base_materia
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="S",
+        material_override_code='S',
         specs={
-            "connection_type": "Tri-Clamp",
-            "triclamp_size": '1"',
+            'connection_type': 'Tri-Clamp',
+            'triclamp_size': '1"',
         },
     )
     context.product = base_product
@@ -287,7 +321,7 @@ def test_connection_option_strategy_triclamp(mock_db, base_product, base_materia
 
     # Mock connection option query
     connection_option = ConnectionOption(
-        type="Tri-Clamp",
+        type='Tri-Clamp',
         size='1"',
         price=75.0,
     )
@@ -309,14 +343,14 @@ def test_material_availability_strategy_available(mock_db, base_product):
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="H",
+        material_override_code='H',
     )
     context.product = base_product
 
     # Mock material availability query
     availability = MaterialAvailability(
-        material_code="H",
-        product_type="LS2000",
+        material_code='H',
+        product_type='LS2000',
         is_available=True,
     )
     mock_db.query().filter().first.return_value = availability
@@ -333,7 +367,7 @@ def test_material_availability_strategy_unavailable(mock_db, base_product):
         db=mock_db,
         product_id=1,
         length_in=10.0,
-        material_override_code="H",
+        material_override_code='H',
     )
     context.product = base_product
 
@@ -343,7 +377,7 @@ def test_material_availability_strategy_unavailable(mock_db, base_product):
     strategy = MaterialAvailabilityStrategy()
 
     with pytest.raises(
-        ValueError, match="Material H is not available for product type LS2000"
+        ValueError, match='Material H is not available for product type LS2000'
     ):
         strategy.calculate(context)
 
@@ -363,17 +397,17 @@ def test_complete_pricing_calculation(mock_db, base_product, base_material):
     availability_query = MagicMock()
     availability_query.filter_by.return_value = availability_query
     availability_query.first.return_value = MaterialAvailability(
-        material_code="S", product_type="LS2000", is_available=True
+        material_code='S', product_type='LS2000', is_available=True
     )
 
     length_query = MagicMock()
     length_query.filter_by.return_value = length_query
-    length_query.first.return_value = StandardLength(material_code="S", length=24.0)
+    length_query.first.return_value = StandardLength(material_code='S', length=24.0)
 
     connection_query = MagicMock()
     connection_query.filter_by.return_value = connection_query
     connection_query.first.return_value = ConnectionOption(
-        type="Flange", rating="150#", size='1"', price=100.0
+        type='Flange', rating='150#', size='1"', price=100.0
     )
 
     # Set up the mock_db to return different queries based on the model
@@ -392,16 +426,16 @@ def test_complete_pricing_calculation(mock_db, base_product, base_material):
 
     mock_db.query.side_effect = get_query
 
-    with patch("src.core.pricing.context.PricingContext.__post_init__", lambda x: None):
+    with patch('src.core.pricing.context.PricingContext.__post_init__', lambda x: None):
         context = PricingContext(
             db=mock_db,
             product_id=1,
             length_in=24.0,
-            material_override_code="S",
+            material_override_code='S',
             specs={
-                "connection_type": "Flange",
-                "flange_rating": "150#",
-                "flange_size": '1"',
+                'connection_type': 'Flange',
+                'flange_rating': '150#',
+                'flange_size': '1"',
             },
         )
         context.product = base_product
@@ -429,20 +463,20 @@ def test_special_product_pricing_ls7000_dual(mock_db):
     """Test pricing for LS7000/2 dual point switch."""
     product = Product(
         id=2,
-        model_number="LS7000/2-120-S",
+        model_number='LS7000/2-120-S',
         base_price=800.0,
         base_length=10.0,
-        material="S",
-        voltage="120V",
+        material='S',
+        voltage='120V',
     )
-    material = Material(code="S", name="Stainless Steel")
+    material = Material(code='S', name='Stainless Steel')
 
     # Mock database queries
     mock_db.query().filter().first.side_effect = [
         product,
         material,
         MaterialAvailability(
-            material_code="S", product_type="LS7000/2", is_available=True
+            material_code='S', product_type='LS7000/2', is_available=True
         ),
     ]
 
@@ -450,7 +484,7 @@ def test_special_product_pricing_ls7000_dual(mock_db):
         db=mock_db,
         product_id=2,
         length=24.0,
-        material_override="S",
+        material_override='S',
     )
 
     # Expected price calculation:

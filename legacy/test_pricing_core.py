@@ -10,30 +10,30 @@ from src.core.pricing import (
 
 
 def test_calculate_option_price_fixed():
-    assert calculate_option_price(100.0, "fixed") == 100.0
+    assert calculate_option_price(100.0, 'fixed') == 100.0
 
 
 def test_calculate_option_price_per_inch():
-    assert calculate_option_price(10.0, "per_inch", length=24) == 240.0
+    assert calculate_option_price(10.0, 'per_inch', length=24) == 240.0
 
 
 def test_calculate_option_price_per_foot():
-    assert calculate_option_price(120.0, "per_foot", length=24) == 240.0
+    assert calculate_option_price(120.0, 'per_foot', length=24) == 240.0
 
 
 def test_calculate_option_price_per_inch_missing_length():
     # Should default to fixed price if length is None
-    assert calculate_option_price(10.0, "per_inch") == 10.0
+    assert calculate_option_price(10.0, 'per_inch') == 10.0
 
 
 def test_calculate_option_price_per_foot_missing_length():
     # Should default to fixed price if length is None
-    assert calculate_option_price(120.0, "per_foot") == 120.0
+    assert calculate_option_price(120.0, 'per_foot') == 120.0
 
 
 def test_calculate_option_price_invalid_type():
     # Should default to fixed price for unknown type
-    assert calculate_option_price(50.0, "unknown") == 50.0
+    assert calculate_option_price(50.0, 'unknown') == 50.0
 
 
 def test_get_connection_option_price_flange_found():
@@ -41,14 +41,14 @@ def test_get_connection_option_price_flange_found():
     option = MagicMock()
     option.price = 42.0
     db.query().filter_by().first.return_value = option
-    specs = {"connection_type": "Flange", "flange_rating": "150#", "flange_size": "2"}
+    specs = {'connection_type': 'Flange', 'flange_rating': '150#', 'flange_size': '2'}
     assert get_connection_option_price(db, specs) == 42.0
 
 
 def test_get_connection_option_price_flange_not_found():
     db = MagicMock()
     db.query().filter_by().first.return_value = None
-    specs = {"connection_type": "Flange", "flange_rating": "150#", "flange_size": "2"}
+    specs = {'connection_type': 'Flange', 'flange_rating': '150#', 'flange_size': '2'}
     assert get_connection_option_price(db, specs) == 0.0
 
 
@@ -57,29 +57,29 @@ def test_get_connection_option_price_triclamp_found():
     option = MagicMock()
     option.price = 55.0
     db.query().filter_by().first.return_value = option
-    specs = {"connection_type": "Tri-Clamp", "triclamp_size": "1.5"}
+    specs = {'connection_type': 'Tri-Clamp', 'triclamp_size': '1.5'}
     assert get_connection_option_price(db, specs) == 55.0
 
 
 def test_get_connection_option_price_triclamp_not_found():
     db = MagicMock()
     db.query().filter_by().first.return_value = None
-    specs = {"connection_type": "Tri-Clamp", "triclamp_size": "1.5"}
+    specs = {'connection_type': 'Tri-Clamp', 'triclamp_size': '1.5'}
     assert get_connection_option_price(db, specs) == 0.0
 
 
 def test_get_connection_option_price_unknown_type():
     db = MagicMock()
-    specs = {"connection_type": "Unknown"}
+    specs = {'connection_type': 'Unknown'}
     assert get_connection_option_price(db, specs) == 0.0
 
 
 def make_product(
     base_price=100.0,
     base_length=24,
-    material="S",
-    model_number="LS2000",
-    voltage="115VAC",
+    material='S',
+    model_number='LS2000',
+    voltage='115VAC',
 ):
     product = MagicMock()
     product.base_price = base_price
@@ -91,7 +91,7 @@ def make_product(
 
 
 def make_material(
-    code="S", has_nonstandard_length_surcharge=False, nonstandard_length_surcharge=0.0
+    code='S', has_nonstandard_length_surcharge=False, nonstandard_length_surcharge=0.0
 ):
     material = MagicMock()
     material.code = code
@@ -112,7 +112,7 @@ def test_calculate_product_price_basic():
 def test_calculate_product_price_product_not_found():
     db = MagicMock()
     db.query().filter().first.return_value = None
-    with pytest.raises(ValueError, match="Product with ID 1 not found"):
+    with pytest.raises(ValueError, match='Product with ID 1 not found'):
         calculate_product_price(db, 1)
 
 
@@ -120,24 +120,24 @@ def test_calculate_product_price_material_not_found():
     db = MagicMock()
     product = make_product()
     db.query().filter().first.side_effect = [product, None]
-    with pytest.raises(ValueError, match="Material S not found"):
+    with pytest.raises(ValueError, match='Material S not found'):
         calculate_product_price(db, 1)
 
 
 def test_calculate_product_price_material_unavailable():
     db = MagicMock()
     product = make_product()
-    material = make_material(code="H")
+    material = make_material(code='H')
     # Product, material, then None for MaterialAvailability
     db.query().filter().first.side_effect = [product, material, None]
-    with pytest.raises(ValueError, match="Material H is not available"):
-        calculate_product_price(db, 1, material_override="H")
+    with pytest.raises(ValueError, match='Material H is not available'):
+        calculate_product_price(db, 1, material_override='H')
 
 
 def test_calculate_product_price_length_adjustment():
     db = MagicMock()
-    product = make_product(base_length=24, material="S")
-    material = make_material(code="S")
+    product = make_product(base_length=24, material='S')
+    material = make_material(code='S')
     db.query().filter().first.side_effect = [product, material]
     # Length > base_length, S material: $3.75/inch
     result = calculate_product_price(db, 1, length=36)
@@ -146,9 +146,9 @@ def test_calculate_product_price_length_adjustment():
 
 def test_calculate_product_price_nonstandard_length_surcharge():
     db = MagicMock()
-    product = make_product(base_length=24, material="S")
+    product = make_product(base_length=24, material='S')
     material = make_material(
-        code="S",
+        code='S',
         has_nonstandard_length_surcharge=True,
         nonstandard_length_surcharge=50.0,
     )
@@ -165,6 +165,6 @@ def test_calculate_product_price_with_specs_adds_connection_price():
     product = make_product()
     material = make_material()
     db.query().filter().first.side_effect = [product, material]
-    with patch("src.core.pricing.get_connection_option_price", return_value=25.0):
-        result = calculate_product_price(db, 1, specs={"connection_type": "Flange"})
+    with patch('src.core.pricing.get_connection_option_price', return_value=25.0):
+        result = calculate_product_price(db, 1, specs={'connection_type': 'Flange'})
         assert result == product.base_price + 25.0
