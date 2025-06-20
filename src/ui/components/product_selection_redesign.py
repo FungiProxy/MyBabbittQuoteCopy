@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QComboBox,
+    QMessageBox,
 )
 
 from src.core.config.base_models import BASE_MODELS
@@ -189,37 +190,13 @@ class ProductSelectionDialog(QDialog):
         return panel
 
     def _get_product_families(self) -> List[Dict]:
-        """Get product families organized by category."""
-        families = []
-
-        # Group families by category
-        categories = {
-            'Level Switches': ['LS2000', 'LS2100', 'LS6000', 'LS7000', 'LS7000/2', 'LS8000', 'LS8000/2'],
-            'Level Transmitters': ['LT9000'],
-            'Flow Switches': ['FS10000'],
-            'Presence/Absence': ['LS7500', 'LS8500']
-        }
-
-        for category, family_names in categories.items():
-            category_data = {
-                'name': category,
-                'families': []
-            }
-
-            for family_name in family_names:
-                if family_name in BASE_MODELS:
-                    base_model = BASE_MODELS[family_name]
-                    family_data = {
-                        'name': family_name,
-                        'description': base_model['description'],
-                        'category': category
-                    }
-                    category_data['families'].append(family_data)
-
-            if category_data['families']:
-                families.append(category_data)
-
-        return families
+        """Get product families from the service."""
+        try:
+            return self.product_service.get_product_families_by_category(self.db)
+        except Exception as e:
+            logger.error(f"Error fetching product families: {e}")
+            QMessageBox.critical(self, "Database Error", "Could not load product families.")
+            return []
 
     def _populate_families(self):
         """Populate the families panel with family cards."""
@@ -257,7 +234,7 @@ class ProductSelectionDialog(QDialog):
         desc_label.setWordWrap(True)
         layout.addWidget(desc_label)
 
-        card.mousePressEvent = lambda event, f=family: self._select_family(f)
+        card.mousePressEvent = lambda event: self._select_family(family)
 
         return card
 
@@ -265,7 +242,7 @@ class ProductSelectionDialog(QDialog):
         """Handle family selection."""
         self.selected_family = family
         self._update_family_selection()
-        self._load_products_for_family(family['name'])
+        self._load_products_for_family(family)
 
     def _update_family_selection(self):
         """Update visual selection state of family cards."""
@@ -276,31 +253,34 @@ class ProductSelectionDialog(QDialog):
                 if hasattr(widget, 'property') and widget.property('family_name'):
                     is_selected = widget.property('family_name') == self.selected_family['name']
                     widget.setProperty('selected', is_selected)
-                    # Force a style re-polish to apply the [selected="true"] selector
-                    widget.style().unpolish(widget)
                     widget.style().polish(widget)
 
-    def _load_products_for_family(self, family_name: str):
+    def _load_products_for_family(self, family: Dict):
         """Load products for the selected family."""
         # Clear existing products
-        for i in reversed(range(self.products_layout.count())):
-            item = self.products_layout.itemAt(i)
-            if item and item.widget():
-                item.widget().setParent(None)
+        for i in reversed(range(self.products_layout.count())): 
+            self.products_layout.itemAt(i).widget().setParent(None)
 
-        # For now, create a single product card per family based on BASE_MODELS
-        if family_name in BASE_MODELS:
-            base_model = BASE_MODELS[family_name]
-            product_data = {
-                'family_name': family_name,
-                'name': family_name,
-                'description': base_model['description'].replace(' - Base Configuration', ''),
-                'base_price': base_model['base_price'],
-                'model_number': base_model['model_number']
-            }
+        try:
+            family_name = family['name']
+            products = self.product_service.get_products_by_family(self.db, family_name)
+            
+            if not products:
+                # Show placeholder
+                placeholder = QLabel(f"No products found for {family_name}")
+                placeholder.setAlignment(Qt.AlignCenter)
+                self.products_layout.addWidget(placeholder, 0, 0, 1, 3)
+                return
 
-            product_card = self._create_product_card(product_data)
-            self.products_layout.addWidget(product_card, 0, 0)
+            # Add product cards
+            for i, product in enumerate(products):
+                card = self._create_product_card(product)
+                row, col = divmod(i, 3)
+                self.products_layout.addWidget(card, row, col)
+                
+        except Exception as e:
+            logger.error(f"Error loading products for {family.get('name')}: {e}")
+            QMessageBox.critical(self, "Database Error", f"Could not load products for {family.get('name')}.")
 
     def _create_product_card(self, product: Dict) -> QFrame:
         """Create a product card."""
@@ -331,17 +311,15 @@ class ProductSelectionDialog(QDialog):
         return card
 
     def _configure_product(self, product: Dict):
-        """Handle product configuration selection."""
+        """Emit signal to configure the selected product."""
         self.product_selected.emit(product)
         self.accept()
 
     def _load_default_family(self):
-        """Load the first family by default."""
-        if self.product_families:
-            first_category = self.product_families[0]
-            if first_category['families']:
-                first_family = first_category['families'][0]
-                self._select_family(first_family)
+        """Load the first available product family by default."""
+        if self.product_families and self.product_families[0]['families']:
+            default_family = self.product_families[0]['families'][0]
+            self._select_family(default_family)
 
 
 class ProductCard(QFrame):

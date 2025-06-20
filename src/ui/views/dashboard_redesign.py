@@ -8,7 +8,7 @@ analytics/reports complexity. Clean card-based layout with key statistics.
 import logging
 from typing import Dict, List
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QVBoxLayout,
     QWidget,
+    QPushButton,
+    QMessageBox,
 )
 
 from src.core.database import SessionLocal
@@ -35,6 +37,8 @@ class DashboardRedesign(QWidget):
     - Clean, professional layout
     - Auto-refresh capability
     """
+
+    quote_loaded = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -196,7 +200,8 @@ class DashboardRedesign(QWidget):
             # Convert to the format expected by the UI
             return [
                 {
-                    'id': quote.get('quote_number', 'N/A'),
+                    'db_id': quote.get('id'),
+                    'quote_number': quote.get('quote_number', 'N/A'),
                     'customer_name': quote.get('customer', 'Unknown'),
                     'created_date': quote.get('date', 'N/A'),
                     'total_value': quote.get('total', 0),
@@ -247,41 +252,81 @@ class DashboardRedesign(QWidget):
         item.setProperty("class", "quoteItemCard")
 
         layout = QHBoxLayout(item)
-        layout.setContentsMargins(0, 0, 0, 0)
         
-        # Quote info
-        info_layout = QVBoxLayout()
+        # Details
+        details_layout = QVBoxLayout()
+        quote_id_label = QLabel(f"Quote #{quote['quote_number']}")
+        quote_id_label.setProperty("class", "quoteItemTitle")
         
-        # Quote number and customer
-        title = QLabel(f"Quote #{quote.get('id', 'N/A')} - {quote.get('customer_name', 'Unknown Customer')}")
-        title.setProperty("class", "quoteItemTitle")
-        info_layout.addWidget(title)
+        customer_label = QLabel(quote['customer_name'])
+        customer_label.setProperty("class", "quoteItemDetails")
         
-        # Date and value
-        details = QLabel(f"Created: {quote.get('created_date', 'N/A')} | Value: ${quote.get('total_value', 0):,.2f}")
-        details.setProperty("class", "quoteItemDetails")
-        info_layout.addWidget(details)
+        details_layout.addWidget(quote_id_label)
+        details_layout.addWidget(customer_label)
+        layout.addLayout(details_layout)
         
-        layout.addLayout(info_layout)
         layout.addStretch()
         
-        # Status
-        status = quote.get('status', 'Draft')
-        status_label = QLabel(status)
+        # Actions
+        actions_layout = QHBoxLayout()
+        actions_layout.setSpacing(10)
         
-        if status == 'Sent':
-            status_label.setProperty("class", "status-sent")
-        elif status == 'Draft':
-            status_label.setProperty("class", "status-draft")
-        else:
-            status_label.setProperty("class", "status-default")
-            
-        layout.addWidget(status_label)
+        load_button = QPushButton("Load")
+        load_button.setProperty("class", "button-secondary")
+        load_button.clicked.connect(lambda: self._load_quote(quote['db_id']))
         
+        delete_button = QPushButton("Delete")
+        delete_button.setProperty("class", "button-danger")
+        delete_button.clicked.connect(lambda: self._delete_quote(quote['db_id']))
+        
+        actions_layout.addWidget(load_button)
+        actions_layout.addWidget(delete_button)
+        
+        layout.addLayout(actions_layout)
+
         return item
 
+    def _load_quote(self, quote_id: int):
+        """Load a quote and emit a signal."""
+        logger.info(f"Loading quote {quote_id}")
+        try:
+            with SessionLocal() as db:
+                quote_details = self.quote_service.get_full_quote_details(db, quote_id)
+                if quote_details:
+                    self.quote_loaded.emit(quote_details)
+                else:
+                    QMessageBox.warning(self, "Not Found", f"Quote with ID {quote_id} not found.")
+        except Exception as e:
+            logger.error(f"Error loading quote {quote_id}: {e}")
+            QMessageBox.critical(self, "Error", "Could not load quote.")
+
+    def _delete_quote(self, quote_id: int):
+        """Delete a quote."""
+        reply = QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Are you sure you want to delete quote {quote_id}?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+
+        if reply == QMessageBox.Yes:
+            logger.info(f"Deleting quote {quote_id}")
+            try:
+                with SessionLocal() as db:
+                    success = self.quote_service.delete_quote(db, quote_id)
+                    if success:
+                        QMessageBox.information(self, "Success", f"Quote {quote_id} deleted.")
+                        self.refresh_data()
+                    else:
+                        QMessageBox.warning(self, "Not Found", f"Quote with ID {quote_id} not found.")
+            except Exception as e:
+                logger.error(f"Error deleting quote {quote_id}: {e}")
+                QMessageBox.critical(self, "Error", "Could not delete quote.")
+
     def refresh_data(self):
-        """Refresh all dashboard data."""
+        """Refresh dashboard data."""
+        logger.info("Refreshing dashboard data...")
         self._load_data()
         logger.info("Dashboard data refreshed")
 

@@ -244,7 +244,7 @@ class QuoteCreationPageRedesign(QWidget):
         self.generate_pdf_btn.setProperty("class", "primary")
         self.generate_pdf_btn.clicked.connect(self._generate_pdf)
         
-        self.send_quote_btn = QPushButton("Send Quote")
+        self.send_quote_btn = QPushButton("Finalize and Send")
         self.send_quote_btn.setProperty("class", "success")
         self.send_quote_btn.clicked.connect(self._send_quote)
         
@@ -274,10 +274,11 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _on_product_configured(self, config_data: Dict):
         """Handle completed product configuration."""
+        logger.debug(f"Received configuration data: {config_data}")
         try:
             # Add to quote items
             quote_item = {
-                "product_family": config_data["product_family"],
+                "product_family": config_data.get("product_family") or config_data.get("product_data", {}).get("family_name"),
                 "model_number": config_data["model_number"],
                 "configuration": self._format_configuration(config_data["selected_options"]),
                 "quantity": 1,
@@ -292,6 +293,9 @@ class QuoteCreationPageRedesign(QWidget):
             
             logger.info(f"Added product to quote: {quote_item['model_number']}")
             
+        except KeyError as e:
+            logger.error(f"Missing key in configuration data: {e}", exc_info=True)
+            QMessageBox.critical(self, "Configuration Error", f"Failed to add product due to missing data: {e}")
         except Exception as e:
             logger.error(f"Error adding configured product: {e}")
             QMessageBox.critical(self, "Error", f"Failed to add product to quote: {str(e)}")
@@ -482,8 +486,8 @@ class QuoteCreationPageRedesign(QWidget):
     def _on_customer_info_changed(self):
         """Handle customer information changes."""
         self.current_quote["customer_info"] = {
-            "company_name": self.company_name_edit.text().strip(),
-            "contact_name": self.contact_name_edit.text().strip(),
+            "company": self.company_name_edit.text().strip(),
+            "name": self.contact_name_edit.text().strip(),
             "email": self.email_edit.text().strip(),
             "phone": self.phone_edit.text().strip(),
             "notes": self.notes_edit.toPlainText().strip()
@@ -582,19 +586,51 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _save_quote_to_database(self, quote_data: Dict) -> Optional[str]:
         """Save quote to database and return quote ID."""
+        logger.debug(f"Attempting to save quote data: {quote_data}")
         try:
-            # Simplified save operation
-            # In real implementation, this would use QuoteService
-            
-            # Generate a temporary quote ID
-            import time
-            quote_id = f"Q{int(time.time())}"
-            
-            logger.info(f"Quote saved with ID: {quote_id}")
-            return quote_id
-            
+            with SessionLocal() as db:
+                # Prepare data for the service
+                customer_data = quote_data["customer_info"]
+                products_data = []
+                for item in quote_data["items"]:
+                    product_info = {
+                        "product_id": item["config_data"]["product_data"]["id"],
+                        "part_number": item["model_number"],
+                        "quantity": item["quantity"],
+                        "base_price": item["unit_price"],
+                        "options": []
+                    }
+                    
+                    # Correctly extract options from the flat dictionary
+                    options = item["config_data"]["selected_options"]
+                    logger.debug(f"Processing options for item {item['model_number']}: {options}")
+                    for option_value in options.values():
+                        # The value can be a dict (e.g., from a combobox) or a primitive
+                        if isinstance(option_value, dict) and "id" in option_value:
+                            product_info["options"].append({
+                                "id": option_value["id"],
+                                "price": option_value.get("price", 0)
+                            })
+
+                    products_data.append(product_info)
+                
+                logger.debug(f"Prepared products data for service: {products_data}")
+                quote_details = {"notes": customer_data.get("notes")}
+
+                # Use the quote service
+                quote = self.quote_service.create_quote_with_items(
+                    db,
+                    customer_data=customer_data,
+                    products_data=products_data,
+                    quote_details=quote_details,
+                )
+
+                logger.info(f"Quote saved with ID: {quote.quote_number}")
+                return quote.quote_number
+
         except Exception as e:
-            logger.error(f"Error saving to database: {e}")
+            logger.error(f"Error saving to database: {e}", exc_info=True)
+            QMessageBox.critical(self, "Database Error", f"An unexpected error occurred while saving the quote: {e}")
             return None
 
     def new_quote(self):
@@ -611,7 +647,7 @@ class QuoteCreationPageRedesign(QWidget):
             self._reset_quote()
 
     def _reset_quote(self):
-        """Reset the quote to initial state."""
+        """Reset the quote state to default for a new quote."""
         self.current_quote = {
             "items": [],
             "customer_info": {},
@@ -620,51 +656,103 @@ class QuoteCreationPageRedesign(QWidget):
             "status": "Draft"
         }
         
-        # Clear UI
-        self.items_table.setRowCount(0)
+        # Clear UI fields
+        self.quote_number_label.setText("Quote #: (Will be assigned on save)")
+        self.status_label.setText("Status: Draft")
+        self.status_label.setProperty("class", "status-draft")
+        
         self.company_name_edit.clear()
         self.contact_name_edit.clear()
         self.email_edit.clear()
         self.phone_edit.clear()
         self.notes_edit.clear()
         
-        # Reset labels
-        self.quote_number_label.setText("Quote #: (Will be assigned on save)")
-        self.status_label.setText("Status: Draft")
-        self.status_label.setProperty("class", "status-draft")
-        self.total_label.setText("Total: $0.00")
-        
-        self._update_items_visibility()
-
-    def load_quote(self, quote_data: Dict):
-        """Load an existing quote for editing."""
-        self.current_quote = quote_data.copy()
-        
-        # Populate customer info
-        customer_info = quote_data.get("customer_info", {})
-        self.company_name_edit.setText(customer_info.get("company_name", ""))
-        self.contact_name_edit.setText(customer_info.get("contact_name", ""))
-        self.email_edit.setText(customer_info.get("email", ""))
-        self.phone_edit.setText(customer_info.get("phone", ""))
-        self.notes_edit.setPlainText(customer_info.get("notes", ""))
-        
-        # Update labels
-        quote_number = quote_data.get("quote_number")
-        if quote_number:
-            self.quote_number_label.setText(f"Quote #: {quote_number}")
-        
-        status = quote_data.get("status", "Draft")
-        if status == 'Sent':
-            self.status_label.setProperty("class", "status-sent")
-        else: # Draft or other
-            self.status_label.setProperty("class", "status-draft")
-        
-        # Populate items table
         self._update_items_table()
         self._update_quote_totals()
+        logger.info("Quote state has been reset.")
+
+    def load_quote_data(self, quote_data: Dict):
+        """Loads data from an existing quote into the editor."""
+        self._reset_quote()  # Start with a clean slate
+        
+        # Basic quote info
+        self.current_quote["quote_number"] = quote_data.get("quote_number")
+        self.current_quote["status"] = quote_data.get("status", "Draft")
+        
+        # Customer info
+        customer = quote_data.get("customer", {})
+        self.company_name_edit.setText(customer.get("company", ""))
+        self.contact_name_edit.setText(customer.get("name", ""))
+        self.email_edit.setText(customer.get("email", ""))
+        self.phone_edit.setText(customer.get("phone", ""))
+        
+        # Notes
+        self.notes_edit.setText(quote_data.get("notes", ""))
+        
+        # Transform quote items from database format to UI format
+        products = quote_data.get("products", [])
+        transformed_items = []
+        
+        for product in products:
+            # Transform database product format to UI format
+            item = {
+                "product_family": product.get("product_family", product.get("name", "Unknown")),
+                "model_number": product.get("part_number", "Unknown"),
+                "quantity": product.get("quantity", 1),
+                "unit_price": product.get("base_price", 0.0),
+                "total_price": product.get("base_price", 0.0) * product.get("quantity", 1),
+                "configuration": self._format_loaded_configuration(product.get("options", [])),
+                "config_data": {
+                    "product_data": {
+                        "id": product.get("product_id"),
+                        "family_name": product.get("product_family", product.get("name", "Unknown")),
+                        "description": product.get("description", "")
+                    },
+                    "selected_options": self._transform_options_to_ui_format(product.get("options", []))
+                }
+            }
+            transformed_items.append(item)
+        
+        self.current_quote["items"] = transformed_items
+        
+        # Update UI
+        self.quote_number_label.setText(f"Quote #: {self.current_quote['quote_number']}")
+        self.status_label.setText(f"Status: {self.current_quote['status']}")
+        
+        self._update_items_table()
+        self._update_quote_totals()
+        
+        logger.info(f"Successfully loaded quote {self.current_quote['quote_number']} with {len(transformed_items)} items.")
+
+    def _format_loaded_configuration(self, options: List[Dict]) -> str:
+        """Format loaded options into a configuration string."""
+        if not options:
+            return "Standard Configuration"
+        
+        config_parts = []
+        for option in options:
+            option_name = option.get("name", "Unknown")
+            selected_value = option.get("selected", "Unknown")
+            config_parts.append(f"{option_name}: {selected_value}")
+        
+        return " | ".join(config_parts)
+
+    def _transform_options_to_ui_format(self, options: List[Dict]) -> Dict:
+        """Transform database options format to UI format."""
+        ui_options = {}
+        for option in options:
+            option_name = option.get("name", "Unknown")
+            ui_options[option_name] = {
+                "id": option.get("id"),
+                "name": option.get("selected", "Unknown"),
+                "price": option.get("price", 0.0),
+                "code": option.get("code", "")
+            }
+        return ui_options
 
     def closeEvent(self, event):
-        """Handle widget close event."""
-        if hasattr(self, 'db') and self.db:
+        """Handle the window close event."""
+        if self.db:
             self.db.close()
+            logger.info("Database connection closed on exit.")
         event.accept()

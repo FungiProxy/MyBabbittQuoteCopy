@@ -11,7 +11,10 @@ import traceback
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 # Set global logging level to INFO
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Print debug information
 print('Starting Babbitt Quote Generator...')

@@ -193,6 +193,8 @@ class MainWindowRedesign(QMainWindow):
         # Page-specific signals
         if hasattr(self.settings_page, 'theme_changed'):
             self.settings_page.theme_changed.connect(self._apply_theme)
+        
+        self.dashboard_page.quote_loaded.connect(self._load_quote_into_editor)
 
     @Slot(int)
     def _on_nav_changed(self, index):
@@ -223,6 +225,19 @@ class MainWindowRedesign(QMainWindow):
     def _show_dashboard(self):
         """Show dashboard page."""
         self.nav_list.setCurrentRow(0)
+
+    @Slot(dict)
+    def _load_quote_into_editor(self, quote_data: dict):
+        """Loads a quote into the quote creation page."""
+        logger.info(f"Loading quote {quote_data.get('quote_number')} into editor.")
+        self._show_quote_creation()
+        
+        # Pass data to the quote page
+        if hasattr(self.quote_page, 'load_quote_data'):
+            self.quote_page.load_quote_data(quote_data)
+        else:
+            logger.warning("Quote page does not have 'load_quote_data' method.")
+            QMessageBox.warning(self, "Load Error", "Could not load quote data into the editor.")
 
     @Slot(str)
     def _apply_theme(self, theme_name):

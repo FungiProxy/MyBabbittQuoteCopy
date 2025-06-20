@@ -60,6 +60,8 @@ class ConfigurationWizard(QDialog):
         self.setModal(True)
         self.resize(1200, 800)
 
+        logger.debug(f"ConfigurationWizard received product_data: {product_data}")
+
         # Services
         self.db = SessionLocal()
         self.product_service = ProductService()
@@ -73,6 +75,8 @@ class ConfigurationWizard(QDialog):
             'calculated_price': product_data.get('base_price', 0),
             'validation_errors': []
         }
+
+        logger.debug(f"ConfigurationWizard set product_family to: {self.current_config['product_family']}")
 
         # Available options (loaded from database)
         self.available_options = {}
@@ -858,6 +862,8 @@ class ConfigurationWizard(QDialog):
                 'base_price': self.current_config['base_price'],
                 'product_data': self.product_data.copy()
             }
+
+            logger.debug(f"Emitting configuration_completed with data: {configuration_data}")
 
             # Emit completion signal
             self.configuration_completed.emit(configuration_data)

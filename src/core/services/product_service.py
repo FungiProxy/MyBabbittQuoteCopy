@@ -199,6 +199,47 @@ class ProductService:
         # Example: apply length-based adder if needed (not implemented here)
         return product, price
 
+    def get_product_families_by_category(self, db: Session) -> List[Dict]:
+        """
+        Retrieves all product families, organized by category.
+        """
+        families = db.query(ProductFamily).order_by(ProductFamily.category, ProductFamily.name).all()
+        
+        categories = {}
+        for family in families:
+            if family.category not in categories:
+                categories[family.category] = {'name': family.category, 'families': []}
+            
+            categories[family.category]['families'].append({
+                'id': family.id,
+                'name': family.name,
+                'description': family.description,
+                'category': family.category
+            })
+            
+        return list(categories.values())
+
+    def get_products_by_family(self, db: Session, family_name: str) -> List[Dict]:
+        """
+        Retrieves all base models for a given product family.
+        """
+        family = db.query(ProductFamily).filter_by(name=family_name).first()
+        if not family:
+            return []
+
+        products = db.query(BaseModel).filter_by(product_family_id=family.id).all()
+        
+        return [
+            {
+                "id": p.id,
+                "name": p.model_number,
+                "description": p.description,
+                "base_price": p.base_price,
+                "family_name": family.name
+            }
+            for p in products
+        ]
+
     def get_additional_options(self, db, family_name: str) -> list:
         """
         Fetch additional configurable options (add-ons) for a product family by name.

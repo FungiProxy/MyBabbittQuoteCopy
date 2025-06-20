@@ -187,6 +187,7 @@ class QuoteService:
                 "part_number": item.description,
                 "product_id": item.product.id,
                 "name": item.product.product_family.name,
+                "product_family": item.product.product_family.name,
                 "quantity": item.quantity,
                 "base_price": item.unit_price,
                 "options": [
@@ -315,6 +316,7 @@ class QuoteService:
 
         recent_quotes_data = [
             {
+                "id": quote.id,
                 "quote_number": quote.quote_number,
                 "customer": quote.customer.name,
                 "total": quote.total,

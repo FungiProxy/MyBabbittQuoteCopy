@@ -1,8 +1,12 @@
 [MASTER]
-ignore=venv
+ignore=venv,myenv
 
 [MESSAGES CONTROL]
-disable=C0114,C0115,C0116
+disable=C0114,C0115,C0116,E1101
+# E1101: Instance of 'Foo' has no 'bar' member (but some types could not be inferred)
+
+[TYPECHECK]
+generated-members=PySide6.QtCore.Qt,PySide6.QtWidgets.QMessageBox,PySide6.QtWidgets.QHeaderView,PySide6.QtWidgets.QTableWidget
 
 [FORMAT]
 max-line-length=88
