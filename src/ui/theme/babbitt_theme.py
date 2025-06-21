@@ -5,12 +5,11 @@ Provides the industrial theme for MyBabbittQuote application with professional
 blue color scheme and consistent styling across all components.
 """
 
-from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication
-from .dashboard_styles import get_dashboard_stylesheet
+from PySide6.QtWidgets import QWidget
+from src.ui.theme.dashboard_styles import get_dashboard_stylesheet
 
 
-class BabbittTheme(QObject):
+class BabbittTheme(QWidget):
     """
     Theme system for Babbitt International MyBabbittQuote application.
     
@@ -18,7 +17,35 @@ class BabbittTheme(QObject):
     gold accents, and clean styling appropriate for business use.
     """
     
-    # Primary Colors - Industrial Blue Scheme
+    # ============================================================================
+    # STANDARD SIZING CONSTANTS
+    # ============================================================================
+    FONT_SIZE_XS = "11px"
+    FONT_SIZE_SM = "12px"
+    FONT_SIZE_BASE = "14px"
+    FONT_SIZE_LG = "16px"
+    FONT_SIZE_XL = "18px"
+    FONT_SIZE_2XL = "24px"
+    FONT_SIZE_3XL = "28px"
+    
+    FONT_WEIGHT_NORMAL = "400"
+    FONT_WEIGHT_MEDIUM = "500"
+    FONT_WEIGHT_SEMIBOLD = "600"
+    
+    SPACING_SM = "8px"
+    SPACING_MD = "12px"
+    SPACING_LG = "16px"
+    SPACING_XL = "20px"
+    
+    BORDER_RADIUS_MD = "6px"
+    BORDER_RADIUS_LG = "8px"
+    
+    BUTTON_HEIGHT = "40px"
+    INPUT_HEIGHT = "44px"
+    
+    # ============================================================================
+    # COLOR DEFINITIONS
+    # ============================================================================
     PRIMARY_BLUE = "#2C3E50"      # Deep professional blue
     SECONDARY_BLUE = "#34495E"    # Lighter blue for hover states
     ACCENT_GOLD = "#F39C12"       # Gold accent for highlights
@@ -45,7 +72,7 @@ class BabbittTheme(QObject):
             background-color: {BabbittTheme.LIGHT_GRAY};
             color: {BabbittTheme.DARK_GRAY};
             font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 14px;
+            font-size: {BabbittTheme.FONT_SIZE_BASE};
         }}
         
         /* Sidebar Styling */
@@ -58,9 +85,9 @@ class BabbittTheme(QObject):
         
         QLabel#logoLabel {{
             color: {BabbittTheme.ACCENT_GOLD};
-            font-size: 24px;
-            font-weight: 600;
-            padding: 20px 10px;
+            font-size: {BabbittTheme.FONT_SIZE_2XL};
+            font-weight: {BabbittTheme.FONT_WEIGHT_SEMIBOLD};
+            padding: {BabbittTheme.SPACING_XL} {BabbittTheme.SPACING_MD};
             background-color: transparent;
         }}
         
@@ -73,7 +100,7 @@ class BabbittTheme(QObject):
         }}
         
         QListWidget#navList::item {{
-            padding: 12px 20px;
+            padding: {BabbittTheme.SPACING_MD} {BabbittTheme.SPACING_XL};
             border-left: 3px solid transparent;
             margin: 2px 0;
         }}
@@ -123,12 +150,11 @@ class BabbittTheme(QObject):
         
         /* Button Styles */
         QPushButton {{
-            border: none;
-            border-radius: 4px;
-            padding: 8px 16px;
-            font-weight: 500;
-            font-size: 14px;
-            min-height: 20px;
+            border-radius: {BabbittTheme.BORDER_RADIUS_MD};
+            padding: {BabbittTheme.SPACING_SM} {BabbittTheme.SPACING_LG};
+            font-weight: {BabbittTheme.FONT_WEIGHT_MEDIUM};
+            font-size: {BabbittTheme.FONT_SIZE_BASE};
+            min-height: {BabbittTheme.BUTTON_HEIGHT};
         }}
         
         QPushButton.primary {{
@@ -438,11 +464,11 @@ class BabbittTheme(QObject):
         
         /* Form Controls */
         QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {{
-            padding: 8px 12px;
+            padding: {BabbittTheme.SPACING_SM} {BabbittTheme.SPACING_MD};
             border: 1px solid {BabbittTheme.CARD_BORDER};
-            border-radius: 4px;
-            font-size: 14px;
-            background-color: {BabbittTheme.WHITE};
+            border-radius: {BabbittTheme.BORDER_RADIUS_MD};
+            font-size: {BabbittTheme.FONT_SIZE_BASE};
+            min-height: {BabbittTheme.INPUT_HEIGHT};
         }}
         
         QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {{
@@ -457,8 +483,8 @@ class BabbittTheme(QObject):
         }}
         
         QLabel.sectionTitle {{
-            font-size: 16px;
-            font-weight: 600;
+            font-size: {BabbittTheme.FONT_SIZE_LG};
+            font-weight: {BabbittTheme.FONT_WEIGHT_SEMIBOLD};
             color: {BabbittTheme.PRIMARY_BLUE};
             margin-bottom: 15px;
             padding-bottom: 8px;
@@ -634,16 +660,22 @@ class BabbittTheme(QObject):
     STYLES = {}
 
     @staticmethod
+    def get_button_style(style_name: str) -> str:
+        """Get the stylesheet for a specific button style."""
+        return BabbittTheme.STYLES.get(style_name, "")
+
+    @staticmethod
     def apply_stylesheet(widget, css_class):
-        pass
+        """Apply a CSS class to a widget."""
+        current_class = widget.property("class") or ""
+        widget.setProperty("class", f"{current_class} {css_class}".strip())
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
 
     @staticmethod
     def apply_property_styles(widget, properties):
-        """Apply style properties to a widget."""
-        style_parts = []
-        for prop, value in properties.items():
-            style_parts.append(f"{prop}: {value};")
-        
-        current_style = widget.styleSheet()
-        new_style = " ".join(style_parts)
-        widget.setStyleSheet(f"{current_style} {new_style}")
+        """Apply property-based styles to a widget."""
+        for name, value in properties.items():
+            widget.setProperty(name, value)
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
