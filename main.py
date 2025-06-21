@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 # Set global logging level to INFO
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
@@ -22,42 +22,43 @@ print(f'Current directory: {os.getcwd()}')
 print(f'Python version: {sys.version}')
 
 try:
-    # Import main window and theme
-    print('Importing MainWindowRedesign...')
+    # Import main window and themes
+    print('Importing MainWindowRedesign and themes...')
     from src.ui.main_window_redesign import MainWindowRedesign
     from src.ui.theme.modern_professional_theme import apply_theme_to_application
-    from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
-
-    print('MainWindowRedesign imported successfully')
+    from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+    print('MainWindowRedesign and themes imported successfully')
 except Exception as e:
     print(f'Error during initialization: {e}')
     traceback.print_exc()
     input('Press Enter to exit...')
     sys.exit(1)
 
-
 def main():
     """Main application entry point."""
     try:
         print('Creating QApplication...')
-
-        # Create application
         app = QApplication(sys.argv)
-        
+
         # === THEME SELECTION ===
-        THEME_NAME = 'modern_professional'  # Change to 'dark_professional' or 'corporate' as desired
+        # Option 1: Use string-based theme selection (flexible)
+        THEME_NAME = 'modern_professional'  # Options: 'modern_professional', 'dark_professional', 'corporate'
         print(f'Applying theme: {THEME_NAME}...')
         apply_theme_to_application(THEME_NAME)
-        
+
+        # Option 2: Use class-based theme (uncomment to use ModernBabbittTheme)
+        # print('Applying ModernBabbittTheme...')
+        # stylesheet = ModernBabbittTheme.get_main_stylesheet()
+        # app.setStyleSheet(stylesheet)
+        # print('ModernBabbittTheme applied successfully')
+
         print('Creating MainWindowRedesign...')
-        # Create and show main window
         window = MainWindowRedesign()
 
         print('Showing window...')
         window.show()
 
         print('Entering event loop...')
-        # Run application
         sys.exit(app.exec())
     except Exception as e:
         print(f'Error in main: {e}')
@@ -65,7 +66,7 @@ def main():
 
         if QApplication.instance():
             error_box = QMessageBox()
-            error_box.setIcon(QMessageBox.Critical)
+            error_box.setIcon(QMessageBox.Icon.Critical)
             error_box.setWindowTitle('Application Error')
             error_box.setText(f'An error occurred: {e!s}')
             error_box.setDetailedText(traceback.format_exc())
@@ -73,7 +74,6 @@ def main():
 
         input('Press Enter to exit...')
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
