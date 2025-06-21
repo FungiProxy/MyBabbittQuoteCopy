@@ -16,12 +16,12 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QMessageBox, QProgressBar,
     QButtonGroup, QRadioButton
 )
-from PySide6.QtGui import QFont, QPixmap, QPalette
-from PySide6.QtCore import QIntValidator
+from PySide6.QtGui import QFont, QPixmap, QPalette, QIntValidator
 
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
+from src.ui.theme.babbitt_theme import BabbittTheme
 
 logger = logging.getLogger(__name__)
 
@@ -220,6 +220,7 @@ class ImprovedProductSelectionDialog(QDialog):
     
     def __init__(self, product_service: ProductService, product_to_edit=None, parent=None):
         super().__init__(parent)
+        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
         self.product_service = product_service
         self.config_service = ConfigurationService()
         self.db = SessionLocal()
@@ -263,6 +264,11 @@ class ImprovedProductSelectionDialog(QDialog):
             self._load_product_for_editing()
         else:
             self._load_product_list()
+        
+        # Apply modern UI integration enhancements
+        from src.ui.utils.ui_integration import QuickMigrationHelper
+        QuickMigrationHelper.fix_oversized_dropdowns(self)
+        QuickMigrationHelper.modernize_existing_dialog(self)
     
     def _setup_ui(self):
         """Setup the improved UI layout."""
@@ -817,7 +823,7 @@ class ImprovedProductSelectionDialog(QDialog):
         """Set default values for the product family."""
         default_configs = {
             "LS2000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
-            "LS2100": {"Voltage": "24VDC", "Material": "S", "Probe Length": 10},
+            "LS1000": {"Voltage": "24VDC", "Material": "S", "Probe Length": 10},
             "LS6000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
             "LS7000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
             "LS7000/2": {"Voltage": "115VAC", "Material": "H", "Probe Length": 10},

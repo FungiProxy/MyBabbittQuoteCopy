@@ -30,7 +30,8 @@ from PySide6.QtWidgets import (
 
 from src.core.database import SessionLocal
 from src.core.services.quote_service import QuoteService
-from src.ui.components.product_selection_redesign import ProductSelectionDialog
+from src.core.services.product_service import ProductService
+from src.ui.product_selection_dialog_improved import ImprovedProductSelectionDialog
 from src.ui.components.configuration_wizard import ConfigurationWizard
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ class QuoteCreationPageRedesign(QWidget):
         # Services
         self.db = SessionLocal()
         self.quote_service = QuoteService()
+        self.product_service = ProductService()
         
         # Current quote state
         self.current_quote = {
@@ -279,24 +281,15 @@ class QuoteCreationPageRedesign(QWidget):
         return panel
 
     def _add_product(self):
-        """Open product selection dialog."""
-        # Get current theme from parent window if available
-        theme_name = None
-        if self.parent():
-            try:
-                # Try to get theme from main window
-                main_window = self.parent()
-                while main_window and not hasattr(main_window, 'settings_service'):
-                    main_window = main_window.parent()
-                
-                if main_window and hasattr(main_window, 'settings_service'):
-                    theme_name = main_window.settings_service.get_theme('Modern Babbitt')
-            except:
-                theme_name = 'Modern Babbitt'
-        
-        dialog = ProductSelectionDialog(self, theme_name=theme_name)
-        dialog.product_selected.connect(self._on_product_configured)
-        dialog.exec()
+        """Open the product selection dialog to add a new item."""
+        try:
+            # Use the improved dialog
+            dialog = ImprovedProductSelectionDialog(product_service=self.product_service, parent=self)
+            dialog.product_added.connect(self._on_product_configured)
+            dialog.exec()
+        except Exception as e:
+            logger.error(f"Error opening product selection dialog: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Could not open product selection dialog: {e}")
 
     def _on_product_configured(self, config_data: Dict):
         """Handle completed product configuration from the new widget."""
@@ -463,40 +456,55 @@ class QuoteCreationPageRedesign(QWidget):
                 QMessageBox.warning(self, "Invalid Quantity", "Please enter a valid positive number.")
 
     def _edit_item(self, row: int):
-        """Edit a quote item."""
-        if 0 <= row < len(self.current_quote["items"]):
-            quote_item = self.current_quote["items"][row]
-            
-            # Open configuration wizard with existing data
-            config_wizard = ConfigurationWizard(quote_item["config_data"]["product_data"], self)
-            
-            # Pre-populate with existing configuration
-            # This would require additional methods in ConfigurationWizard
-            # For now, just show a message
-            QMessageBox.information(
-                self, 
-                "Edit Item", 
-                f"Edit functionality for {quote_item['model_number']} will open the configuration wizard.\n\n"
-                "This feature is planned for the next iteration."
+        """Edit an existing quote item."""
+        product_to_edit = self.current_quote["items"][row]
+        
+        try:
+            # Use the improved dialog for editing
+            dialog = ImprovedProductSelectionDialog(
+                product_service=self.product_service,
+                product_to_edit=product_to_edit,
+                parent=self
             )
+            
+            # Reconnect the signal to a handler that updates the item
+            dialog.product_added.connect(lambda new_config: self._on_product_updated(row, new_config))
+            
+            dialog.exec()
+        except Exception as e:
+            logger.error(f"Error opening product configuration dialog for editing: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Could not open product configuration: {e}")
+
+    def _on_product_updated(self, row: int, new_config: Dict):
+        """
+        Handle the updated configuration for an existing item.
+        This replaces the old item at the given row with the new one.
+        """
+        # Replace the item in the quote data
+        self.current_quote["items"][row] = new_config
+        
+        # Refresh the table to show updated item
+        self._update_items_table()
 
     def _remove_item(self, row: int):
-        """Remove a quote item."""
-        if 0 <= row < len(self.current_quote["items"]):
-            quote_item = self.current_quote["items"][row]
-            
-            reply = QMessageBox.question(
-                self,
-                "Remove Item",
-                f"Are you sure you want to remove {quote_item['model_number']} from the quote?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
-            )
-            
-            if reply == QMessageBox.StandardButton.Yes:
-                self.current_quote["items"].pop(row)
-                self._update_items_table()
-                self._update_quote_totals()
+        """Remove an item from the quote."""
+        if not (0 <= row < len(self.current_quote["items"])):
+            return
+        
+        quote_item = self.current_quote["items"][row]
+        
+        reply = QMessageBox.question(
+            self,
+            "Remove Item",
+            f"Are you sure you want to remove {quote_item['model_number']} from the quote?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.current_quote["items"].pop(row)
+            self._update_items_table()
+            self._update_quote_totals()
 
     def _update_quote_totals(self):
         """Update quote total calculations."""

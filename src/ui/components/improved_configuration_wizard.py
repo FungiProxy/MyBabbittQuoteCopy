@@ -21,7 +21,7 @@ from PySide6.QtGui import QFont, QPixmap, QPalette, QIntValidator
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
-from src.ui.theme.theme_manager import ThemeManager
+from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
 
 logger = logging.getLogger(__name__)
@@ -226,6 +226,7 @@ class ImprovedConfigurationWizard(QDialog):
     
     def __init__(self, product_data: Dict, parent=None):
         super().__init__(parent)
+        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
         self.product_data = product_data
         self.db = SessionLocal()
         self.product_service = ProductService()
@@ -234,13 +235,14 @@ class ImprovedConfigurationWizard(QDialog):
         self.option_widgets = {}
         
         self.setWindowTitle(f"Configure {product_data.get('name', 'Product')}")
-        self.setModal(True)
+        self.setModal(True)         
         self.resize(1200, 800)
         
         self._setup_ui()
         self._load_product_config()
+        self._set_default_values()
         
-        # Apply modern styling fixes
+        # Apply modern UI integration enhancements
         QuickMigrationHelper.fix_oversized_dropdowns(self)
         QuickMigrationHelper.modernize_existing_dialog(self)
     

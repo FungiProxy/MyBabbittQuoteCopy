@@ -22,6 +22,7 @@ try:
     # Import main window
     print('Importing MainWindowRedesign...')
     from src.ui.main_window_redesign import MainWindowRedesign
+    from src.ui.theme.babbitt_theme import BabbittTheme
 
     print('MainWindowRedesign imported successfully')
 except Exception as e:
@@ -38,6 +39,7 @@ def main():
 
         # Create application
         app = QApplication(sys.argv)
+        app.setStyleSheet(BabbittTheme.get_main_stylesheet())
         
         print('Creating MainWindowRedesign...')
         # Create and show main window (theme is applied within MainWindowRedesign)

@@ -36,7 +36,6 @@ from src.core.services.product_service import ProductService
 from src.core.services.configuration_service import ConfigurationService
 from src.core.pricing import PricingContext
 from src.ui.theme.babbitt_theme import BabbittTheme
-from src.ui.theme.theme_manager import ThemeManager
 from src.ui.product_configuration import ProductConfigurationWidget
 
 logger = logging.getLogger(__name__)
@@ -58,26 +57,10 @@ class ProductSelectionDialog(QDialog):
 
     def __init__(self, parent=None, theme_name=None):
         super().__init__(parent)
+        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
         self.setWindowTitle('Select Product')
         self.setModal(True)
         self.resize(1000, 800)
-
-        # Apply theme if provided or get from parent
-        if theme_name:
-            self.current_theme = theme_name
-        elif parent:
-            # Try to get theme from parent window
-            try:
-                if hasattr(parent, 'settings_service'):
-                    self.current_theme = parent.settings_service.get_theme('Light')
-                else:
-                    self.current_theme = 'Light'
-            except:
-                self.current_theme = 'Light'
-        else:
-            self.current_theme = 'Light'
-        
-        # The theme is now applied globally, so we don't need to apply it to individual widgets
 
         # Services
         self.db = SessionLocal()
@@ -98,7 +81,10 @@ class ProductSelectionDialog(QDialog):
         self._setup_ui()
         self._load_default_family()
         
-        # Apply modern styling fixes - removed since ui_integration is not available
+        # Apply modern UI integration enhancements
+        from src.ui.utils.ui_integration import QuickMigrationHelper
+        QuickMigrationHelper.fix_oversized_dropdowns(self)
+        QuickMigrationHelper.modernize_existing_dialog(self)
 
     def __del__(self):
         """Clean up database connection."""
