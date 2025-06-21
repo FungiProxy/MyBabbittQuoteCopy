@@ -22,9 +22,11 @@ print(f'Current directory: {os.getcwd()}')
 print(f'Python version: {sys.version}')
 
 try:
-    # Import main window
+    # Import main window and theme
     print('Importing MainWindowRedesign...')
     from src.ui.main_window_redesign import MainWindowRedesign
+    from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+    from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
 
     print('MainWindowRedesign imported successfully')
 except Exception as e:
@@ -42,8 +44,12 @@ def main():
         # Create application
         app = QApplication(sys.argv)
         
+        # Apply Modern Babbitt theme to entire application
+        print('Applying Modern Babbitt theme...')
+        ModernBabbittTheme.apply_to_application(app)
+        
         print('Creating MainWindowRedesign...')
-        # Create and show main window (theme is applied within MainWindowRedesign)
+        # Create and show main window
         window = MainWindowRedesign()
 
         print('Showing window...')

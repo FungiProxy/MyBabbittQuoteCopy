@@ -648,4 +648,22 @@ class BabbittProfessionalTheme(QObject):
             new_styles.append(f"{css_property}: {value};")
 
         # Combine new styles with existing ones
-        widget.setStyleSheet(current_style + " " + " ".join(new_styles)) 
+        widget.setStyleSheet(current_style + " " + " ".join(new_styles))
+
+    @classmethod
+    def get_theme_info(cls):
+        """Get theme information for the settings page."""
+        return {
+            'name': 'Babbitt Professional',
+            'description': 'Professional Babbitt theme with corporate styling',
+            'author': 'Babbitt Quote Generator',
+            'primary_color': '#1B4F72',
+            'secondary_color': '#2874A6',
+            'accent_color': '#F39C12',
+            'background_color': '#F8F9FA',
+            'text_color': '#2C3E50',
+            'success_color': '#27AE60',
+            'warning_color': '#F39C12',
+            'error_color': '#E74C3C',
+            'info_color': '#3498DB',
+        } 

@@ -7,6 +7,8 @@ and clean industrial design. Integrates with existing product service and databa
 
 import logging
 from typing import Dict, List
+from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
+
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -48,6 +50,7 @@ class ProductSelectionDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        
         self.setWindowTitle('Select Product')
         self.setModal(True)
         self.resize(1000, 700)
@@ -66,6 +69,9 @@ class ProductSelectionDialog(QDialog):
         # Apply modern styling fixes
         QuickMigrationHelper.fix_oversized_dropdowns(self)
         QuickMigrationHelper.modernize_existing_dialog(self)
+        
+        # Apply configuration dialog fixes
+        ConfigurationDialogHelper.apply_dialog_fixes(self)
 
     def __del__(self):
         """Clean up database connection."""
@@ -331,6 +337,7 @@ class ProductCard(QFrame):
 
     def __init__(self, product_data: Dict, parent=None):
         super().__init__(parent)
+        
         self.product_data = product_data
         self._setup_ui()
 

@@ -48,10 +48,8 @@ class MainWindowRedesign(QMainWindow):
         self.setWindowTitle("MyBabbittQuote - Babbitt International")
         self.resize(1400, 800)
         
-        # Get settings and apply theme
+        # Initialize settings service (theme is now applied in main.py)
         self.settings_service = SettingsService()
-        theme_name = self.settings_service.get_theme('Modern Babbitt')  # Default to Modern Babbitt
-        ThemeManager.apply_theme(theme_name, QApplication.instance())
         
         # Initialize UI
         self._setup_ui()

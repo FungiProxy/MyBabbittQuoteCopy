@@ -6,6 +6,8 @@ File: src/ui/utils/ui_integration.py
 """
 
 from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QFrame
+from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
+
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, pyqtProperty
 from PySide6.QtGui import QColor
 
@@ -339,6 +341,9 @@ class SampleModernDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+                # Apply configuration dialog fixes
+                ConfigurationDialogHelper.apply_dialog_fixes(self)
+
         self.setWindowTitle("Modern Dialog Example")
         self.resize(600, 400)
         

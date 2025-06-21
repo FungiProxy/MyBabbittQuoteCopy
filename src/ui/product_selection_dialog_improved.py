@@ -22,6 +22,7 @@ from PySide6.QtCore import QIntValidator
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
+from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
 
 logger = logging.getLogger(__name__)
 
@@ -259,6 +260,9 @@ class ImprovedProductSelectionDialog(QDialog):
         """)
         
         self._setup_ui()
+        
+        # Apply configuration dialog fixes
+        ConfigurationDialogHelper.apply_dialog_fixes(self)
         
         if product_to_edit:
             self._load_product_for_editing()
@@ -818,7 +822,7 @@ class ImprovedProductSelectionDialog(QDialog):
         """Set default values for the product family."""
         default_configs = {
             "LS2000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
-            "LS2100": {"Voltage": "24VDC", "Material": "S", "Probe Length": 10},
+            "LS1000": {"Voltage": "24VDC", "Material": "S", "Probe Length": 10},
             "LS6000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
             "LS7000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
             "LS7000/2": {"Voltage": "115VAC", "Material": "H", "Probe Length": 10},

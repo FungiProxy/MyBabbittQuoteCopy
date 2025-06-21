@@ -679,3 +679,21 @@ class BabbittTheme(QWidget):
             widget.setProperty(name, value)
         widget.style().unpolish(widget)
         widget.style().polish(widget)
+
+    @classmethod
+    def get_theme_info(cls):
+        """Get theme information for the settings page."""
+        return {
+            'name': 'Babbitt Theme',
+            'description': 'Classic Babbitt theme with traditional styling',
+            'author': 'Babbitt Quote Generator',
+            'primary_color': '#2C3E50',
+            'secondary_color': '#34495E',
+            'accent_color': '#E74C3C',
+            'background_color': '#ECF0F1',
+            'text_color': '#2C3E50',
+            'success_color': '#27AE60',
+            'warning_color': '#F39C12',
+            'error_color': '#E74C3C',
+            'info_color': '#3498DB',
+        }

@@ -6,25 +6,25 @@ Manages multiple themes and provides a unified interface for theme switching.
 
 from PySide6.QtWidgets import QApplication
 
-# Correctly import all standardized theme classes
-from src.ui.theme.babbitt_theme_standardized import BabbittThemeStandardized
-from src.ui.theme.babbitt_professional_theme_standardized import BabbittProfessionalThemeStandardized
-from src.ui.theme.modern_babbitt_theme_standardized import ModernBabbittThemeStandardized
-from src.ui.theme.modern_light_theme_standardized import ModernLightThemeStandardized
-from src.ui.theme.corporate_theme_standardized import CorporateThemeStandardized
+# Import the existing theme classes
+from src.ui.theme.babbitt_theme import BabbittTheme
+from src.ui.theme.babbitt_professional_theme import BabbittProfessionalTheme
+from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.theme.modern_light_theme import ModernLightTheme
+from src.ui.theme.corporate_theme import CorporateTheme
 
 class ThemeManager:
     """
     Manages application themes and provides theme switching functionality.
     """
 
-    # Available themes mapping using the new standardized theme classes
+    # Available themes mapping using the existing theme classes
     THEMES = {
-        'Babbitt Theme': BabbittThemeStandardized,
-        'Babbitt Professional': BabbittProfessionalThemeStandardized,
-        'Modern Babbitt': ModernBabbittThemeStandardized,
-        'Modern Light': ModernLightThemeStandardized,
-        'Corporate': CorporateThemeStandardized,
+        'Babbitt Theme': BabbittTheme,
+        'Babbitt Professional': BabbittProfessionalTheme,
+        'Modern Babbitt': ModernBabbittTheme,
+        'Modern Light': ModernLightTheme,
+        'Corporate': CorporateTheme,
     }
 
     @classmethod
@@ -56,8 +56,15 @@ class ThemeManager:
         if theme_class is None:
             raise ValueError(f"Unknown theme: {theme_name}")
         
-        # Apply the theme using the standardized method from the base class
-        theme_class.apply_to_application(app)
+        # Apply the theme using the theme's apply method
+        if hasattr(theme_class, 'apply_to_application'):
+            theme_class.apply_to_application(app)
+        elif hasattr(theme_class, 'apply'):
+            theme_class.apply(app)
+        else:
+            # Fallback: apply stylesheet directly if it's a QApplication
+            if hasattr(app, 'setStyleSheet'):
+                app.setStyleSheet(theme_class.get_stylesheet())
         
         return theme_class
 
@@ -74,8 +81,14 @@ class ThemeManager:
         if theme_class is None:
             raise ValueError(f"Unknown theme: {theme_name}")
         
-        # Apply the theme using the standardized method from the base class
-        theme_class.apply_to_widget(widget)
+        # Apply the theme using the theme's apply method
+        if hasattr(theme_class, 'apply_to_widget'):
+            theme_class.apply_to_widget(widget)
+        elif hasattr(theme_class, 'apply'):
+            theme_class.apply(widget)
+        else:
+            # Fallback: apply stylesheet directly
+            widget.setStyleSheet(theme_class.get_stylesheet())
         
         return theme_class
 
@@ -94,5 +107,15 @@ class ThemeManager:
         if theme_class is None:
             return None
         
-        # Use the standardized theme info method from the base class
-        return theme_class.get_theme_info() 
+        # Use the theme's info method if available
+        if hasattr(theme_class, 'get_theme_info'):
+            return theme_class.get_theme_info()
+        elif hasattr(theme_class, 'get_info'):
+            return theme_class.get_info()
+        else:
+            # Fallback: return basic info
+            return {
+                'name': theme_name,
+                'description': f'{theme_name} theme',
+                'author': 'Babbitt Quote Generator'
+            } 

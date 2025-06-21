@@ -6,7 +6,7 @@ File: src/ui/components/improved_configuration_wizard.py
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve
 from PySide6.QtWidgets import (
@@ -24,6 +24,7 @@ from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
 from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
 from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
+from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
 
 logger = logging.getLogger(__name__)
 
@@ -259,6 +260,9 @@ class ImprovedConfigurationWizard(QDialog):
         # Apply modern styling fixes
         QuickMigrationHelper.fix_oversized_dropdowns(self)
         QuickMigrationHelper.modernize_existing_dialog(self)
+        
+        # Apply configuration dialog fixes
+        ConfigurationDialogHelper.apply_dialog_fixes(self)
     
     def _setup_ui(self):
         """Setup the improved UI layout."""

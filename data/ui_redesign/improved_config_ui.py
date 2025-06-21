@@ -7,6 +7,8 @@ File: src/ui/product_selection_dialog_improved.py
 
 import logging
 from typing import Dict, List, Optional
+from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
+
 
 from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve
 from PySide6.QtWidgets import (
@@ -33,6 +35,9 @@ class ModernOptionWidget(QFrame):
     
     def __init__(self, option_name: str, choices: list, adders: dict, parent=None):
         super().__init__(parent)
+                # Apply configuration dialog fixes
+                ConfigurationDialogHelper.apply_dialog_fixes(self)
+
         self.option_name = option_name
         self.choices = choices
         self.adders = adders
@@ -221,6 +226,9 @@ class ImprovedProductSelectionDialog(QDialog):
     
     def __init__(self, product_service: ProductService, product_to_edit=None, parent=None):
         super().__init__(parent)
+                # Apply configuration dialog fixes
+                ConfigurationDialogHelper.apply_dialog_fixes(self)
+
         self.product_service = product_service
         self.config_service = ConfigurationService()
         self.db = SessionLocal()
