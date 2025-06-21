@@ -32,6 +32,7 @@ from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
 from src.ui.views.settings_page import SettingsPage
 from src.ui.views.dashboard_redesign import DashboardRedesign
 from src.ui.helpers.window_layout_helper import fix_main_window_layout
+from src.ui.helpers.theme_helper import PerfectThemeHelper
 
 logger = logging.getLogger(__name__)
 
@@ -46,15 +47,11 @@ class MainWindowRedesign(QMainWindow):
     def __init__(self):
         """Initialize the redesigned main window."""
         super().__init__()
-        self.setWindowTitle("MyBabbittQuote - Babbitt International")
-        self.setMinimumSize(1000, 600)
-
-        # CRITICAL: Apply layout and theme fixes
-        from src.ui.theme.modern_professional_theme import ModernProfessionalTheme
         
-        fix_main_window_layout(self)
-        ModernProfessionalTheme.apply_to_widget(self)
-
+        # 🔴 CRITICAL - Add these 3 lines for perfect UI
+        from src.ui.helpers.theme_helper import PerfectThemeHelper
+        PerfectThemeHelper.setup_main_window(self)
+        
         # Initialize settings service (theme is now applied in main.py)
         self.settings_service = SettingsService()
         

@@ -1,95 +1,92 @@
 """
-Fixed Layout & Standardized Theme Base - Professional UI
+Complete UI Fix - Professional Component Styling
 File: src/ui/theme/standardized_theme_base.py
 
-🔴 Critical - Fixes window sizing, layout proportions, and styling issues
+🔴 Critical - Replaces your theme base with working component styling
 """
 
 from abc import ABC
-from PySide6.QtCore import QCoreApplication
 
 
 class StandardizedThemeBase(ABC):
     """
-    Complete standardized theme with proper layout proportions and professional styling.
-    Fixes window sizing, sidebar proportions, and overall UI/UX issues.
+    Complete theme base with working component styling for your application.
+    Fixes all the flat, unstyled components visible in your screenshots.
     """
     
     # ============================================================================
-    # FIXED LAYOUT CONSTANTS - PROPER PROPORTIONS
+    # LAYOUT CONSTANTS - OPTIMAL SIZING
     # ============================================================================
     
-    # Window Sizing - Reasonable defaults
-    DEFAULT_WINDOW_WIDTH = "1200px"
-    DEFAULT_WINDOW_HEIGHT = "700px"
-    MINIMUM_WINDOW_WIDTH = "1000px"
-    MINIMUM_WINDOW_HEIGHT = "600px"
+    # Window Sizing
+    DEFAULT_WINDOW_WIDTH = "1300px"
+    DEFAULT_WINDOW_HEIGHT = "750px"
+    MINIMUM_WINDOW_WIDTH = "1100px"
+    MINIMUM_WINDOW_HEIGHT = "650px"
     
-    # Layout Proportions - Much better balance
-    SIDEBAR_WIDTH = "180px"        # Narrower sidebar
-    CONTENT_HEADER_HEIGHT = "60px" # Reasonable header height
+    # Layout Proportions
+    SIDEBAR_WIDTH = "180px"
+    CONTENT_HEADER_HEIGHT = "70px"
     
-    # Font Sizes - Professional scale
+    # Typography
     FONT_SIZE_XS = "11px"
-    FONT_SIZE_SM = "12px" 
-    FONT_SIZE_BASE = "13px"        # Slightly smaller base
-    FONT_SIZE_LG = "15px"
-    FONT_SIZE_XL = "17px"
-    FONT_SIZE_2XL = "20px"
-    FONT_SIZE_3XL = "24px"
+    FONT_SIZE_SM = "12px"
+    FONT_SIZE_BASE = "14px"
+    FONT_SIZE_LG = "16px"
+    FONT_SIZE_XL = "18px"
+    FONT_SIZE_2XL = "22px"
+    FONT_SIZE_3XL = "26px"
     
-    # Font Weights
     FONT_WEIGHT_NORMAL = "400"
     FONT_WEIGHT_MEDIUM = "500"
     FONT_WEIGHT_SEMIBOLD = "600"
     FONT_WEIGHT_BOLD = "700"
     
-    # Spacing - Tighter, more professional
+    # Spacing
     SPACING_XS = "4px"
-    SPACING_SM = "6px"
-    SPACING_MD = "10px"
-    SPACING_LG = "14px"
-    SPACING_XL = "18px"
-    SPACING_2XL = "22px"
-    SPACING_3XL = "28px"
+    SPACING_SM = "8px"
+    SPACING_MD = "12px"
+    SPACING_LG = "16px"
+    SPACING_XL = "20px"
+    SPACING_2XL = "24px"
+    SPACING_3XL = "32px"
     
     # Border Radius
-    BORDER_RADIUS_SM = "3px"
-    BORDER_RADIUS_MD = "5px"
-    BORDER_RADIUS_LG = "7px"
-    BORDER_RADIUS_XL = "10px"
+    BORDER_RADIUS_SM = "4px"
+    BORDER_RADIUS_MD = "6px"
+    BORDER_RADIUS_LG = "8px"
+    BORDER_RADIUS_XL = "12px"
     
-    # Component Sizes - Compact and professional
-    BUTTON_HEIGHT = "32px"
-    INPUT_HEIGHT = "32px"
-    LARGE_BUTTON_HEIGHT = "38px"
-    CARD_PADDING = "16px"
+    # Component Sizes
+    BUTTON_HEIGHT = "36px"
+    INPUT_HEIGHT = "38px"
+    LARGE_BUTTON_HEIGHT = "44px"
     
     # ============================================================================
-    # MODERN COLOR SCHEME - OVERRIDE IN THEMES
+    # PROFESSIONAL COLOR SCHEME
     # ============================================================================
     
     # Primary Colors
-    PRIMARY_COLOR = "#2563eb"      # Modern blue
-    SECONDARY_COLOR = "#1d4ed8"    # Darker blue
-    ACCENT_COLOR = "#f59e0b"       # Professional amber
+    PRIMARY_COLOR = "#1e40af"
+    SECONDARY_COLOR = "#1d4ed8"
+    ACCENT_COLOR = "#f59e0b"
     
     # Status Colors
-    SUCCESS_COLOR = "#059669"      # Professional green
-    WARNING_COLOR = "#d97706"      # Professional orange
-    ERROR_COLOR = "#dc2626"        # Professional red
-    INFO_COLOR = "#0891b2"         # Professional cyan
+    SUCCESS_COLOR = "#059669"
+    WARNING_COLOR = "#d97706"
+    ERROR_COLOR = "#dc2626"
+    INFO_COLOR = "#0891b2"
     
-    # Background Colors - Clean and modern
-    BACKGROUND_PRIMARY = "#ffffff"
-    BACKGROUND_SECONDARY = "#f8fafc"
+    # Background Colors
+    BACKGROUND_PRIMARY = "#f8fafc"
+    BACKGROUND_SECONDARY = "#ffffff"
     BACKGROUND_CARD = "#ffffff"
     BACKGROUND_SURFACE = "#f1f5f9"
     
     # Text Colors
-    TEXT_PRIMARY = "#1e293b"
-    TEXT_SECONDARY = "#64748b"
-    TEXT_MUTED = "#94a3b8"
+    TEXT_PRIMARY = "#0f172a"
+    TEXT_SECONDARY = "#475569"
+    TEXT_MUTED = "#64748b"
     
     # Border Colors
     BORDER_COLOR = "#e2e8f0"
@@ -97,15 +94,15 @@ class StandardizedThemeBase(ABC):
     
     # Interactive States
     HOVER_BACKGROUND = "#f1f5f9"
-    ACTIVE_BACKGROUND = "#2563eb"
-    FOCUS_BORDER = "#2563eb"
+    ACTIVE_BACKGROUND = "#1e40af"
+    FOCUS_BORDER = "#1e40af"
     
     @classmethod
     def get_complete_stylesheet(cls):
-        """Get the complete stylesheet with proper layout and modern styling."""
+        """Get the complete working stylesheet."""
         return f"""
         /* =====================================================================
-           MAIN WINDOW - FIXED SIZING AND LAYOUT
+           GLOBAL STYLES
            ===================================================================== */
         
         QMainWindow {{
@@ -113,21 +110,15 @@ class StandardizedThemeBase(ABC):
             color: {cls.TEXT_PRIMARY};
             font-family: 'Segoe UI', 'Inter', 'Arial', sans-serif;
             font-size: {cls.FONT_SIZE_BASE};
-            min-width: {cls.MINIMUM_WINDOW_WIDTH};
-            min-height: {cls.MINIMUM_WINDOW_HEIGHT};
         }}
         
-        QDialog {{
-            background-color: {cls.BACKGROUND_PRIMARY};
+        QWidget {{
+            background-color: transparent;
             color: {cls.TEXT_PRIMARY};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_LG};
-            min-width: 600px;
-            min-height: 400px;
         }}
         
         /* =====================================================================
-           SIDEBAR - MODERN PROFESSIONAL DESIGN
+           SIDEBAR - PROFESSIONAL GRADIENT
            ===================================================================== */
         
         QFrame#sidebarFrame {{
@@ -143,10 +134,8 @@ class StandardizedThemeBase(ABC):
             color: white;
             font-size: {cls.FONT_SIZE_2XL};
             font-weight: {cls.FONT_WEIGHT_BOLD};
-            padding: {cls.SPACING_XL} {cls.SPACING_LG};
-            margin-bottom: {cls.SPACING_LG};
+            padding: {cls.SPACING_2XL} {cls.SPACING_LG};
             background-color: transparent;
-            qproperty-alignment: AlignCenter;
         }}
         
         QListWidget#navList {{
@@ -155,7 +144,6 @@ class StandardizedThemeBase(ABC):
             color: white;
             font-size: {cls.FONT_SIZE_BASE};
             outline: none;
-            padding: 0;
         }}
         
         QListWidget#navList::item {{
@@ -184,28 +172,26 @@ class StandardizedThemeBase(ABC):
             margin: {cls.SPACING_LG} {cls.SPACING_MD};
             border-radius: {cls.BORDER_RADIUS_MD};
             font-size: {cls.FONT_SIZE_SM};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
         }}
         
         QPushButton#settingsButton:hover {{
             background-color: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
         }}
         
         /* =====================================================================
-           CONTENT AREA - MODERN LAYOUT
+           CONTENT AREA
            ===================================================================== */
         
         QFrame#contentAreaFrame {{
-            background-color: {cls.BACKGROUND_SECONDARY};
+            background-color: {cls.BACKGROUND_PRIMARY};
             border: none;
         }}
         
         QFrame#contentHeader {{
-            background-color: {cls.BACKGROUND_CARD};
+            background-color: {cls.BACKGROUND_SECONDARY};
             border: none;
-            border-bottom: 1px solid {cls.BORDER_COLOR};
-            padding: {cls.SPACING_LG} {cls.SPACING_2XL};
+            border-bottom: 2px solid {cls.BORDER_COLOR};
+            padding: {cls.SPACING_XL} {cls.SPACING_3XL};
             min-height: {cls.CONTENT_HEADER_HEIGHT};
             max-height: {cls.CONTENT_HEADER_HEIGHT};
         }}
@@ -214,12 +200,55 @@ class StandardizedThemeBase(ABC):
             font-size: {cls.FONT_SIZE_3XL};
             font-weight: {cls.FONT_WEIGHT_BOLD};
             color: {cls.PRIMARY_COLOR};
-            margin: 0;
-            padding: 0;
         }}
         
         /* =====================================================================
-           BUTTONS - MODERN PROFESSIONAL STYLING
+           DASHBOARD STAT CARDS - FIXED
+           ===================================================================== */
+        
+        QFrame[objectName*="statCard"], QFrame[objectName*="StatCard"], 
+        QFrame[objectName*="card"], QFrame[objectName*="Card"] {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.BACKGROUND_CARD}, 
+                stop:1 {cls.BACKGROUND_SURFACE});
+            border: 1px solid {cls.BORDER_COLOR};
+            border-radius: {cls.BORDER_RADIUS_LG};
+            padding: {cls.SPACING_2XL};
+            margin: {cls.SPACING_MD};
+            min-height: 120px;
+        }}
+        
+        /* Dashboard specific styling for any QFrame that contains stats */
+        QFrame:has(QLabel[text*="Total"]), QFrame:has(QLabel[text*="Quote"]), 
+        QFrame:has(QLabel[text*="Active"]), QFrame:has(QLabel[text*="Customer"]) {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.BACKGROUND_CARD}, 
+                stop:1 {cls.BACKGROUND_SURFACE});
+            border: 1px solid {cls.BORDER_COLOR};
+            border-radius: {cls.BORDER_RADIUS_LG};
+            padding: {cls.SPACING_2XL};
+            margin: {cls.SPACING_MD};
+        }}
+        
+        /* Stat card labels styling */
+        QLabel[text*="Total Quotes"], QLabel[text*="Quote Value"], 
+        QLabel[text*="Active Customers"], QLabel[text*="This month"],
+        QLabel[text*="Total pending"], QLabel[text*="This quarter"] {{
+            font-size: {cls.FONT_SIZE_LG};
+            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
+            color: {cls.PRIMARY_COLOR};
+            margin-bottom: {cls.SPACING_SM};
+        }}
+        
+        /* Stat values (numbers) */
+        QLabel[text="0"], QLabel[text="$0.00"] {{
+            font-size: {cls.FONT_SIZE_3XL};
+            font-weight: {cls.FONT_WEIGHT_BOLD};
+            color: {cls.PRIMARY_COLOR};
+        }}
+        
+        /* =====================================================================
+           BUTTONS - COMPREHENSIVE STYLING
            ===================================================================== */
         
         QPushButton {{
@@ -235,39 +264,33 @@ class StandardizedThemeBase(ABC):
         
         QPushButton:hover {{
             background-color: {cls.HOVER_BACKGROUND};
-            transform: translateY(-1px);
         }}
         
         QPushButton:pressed {{
             background-color: {cls.BORDER_COLOR};
-            transform: translateY(0px);
         }}
         
-        QPushButton:disabled {{
-            background-color: {cls.BORDER_COLOR_LIGHT};
-            color: {cls.TEXT_MUTED};
-        }}
-        
-        /* Primary Button */
-        QPushButton.primary, QPushButton#newQuoteButton, QPushButton[buttonStyle="primary"] {{
+        /* Primary Buttons */
+        QPushButton#newQuoteButton, QPushButton[text*="New Quote"],
+        QPushButton[text*="Add Product"], QPushButton[text*="Generate PDF"] {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                 stop:0 {cls.PRIMARY_COLOR}, 
                 stop:1 {cls.SECONDARY_COLOR});
             color: white;
             font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
             min-height: {cls.LARGE_BUTTON_HEIGHT};
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }}
         
-        QPushButton.primary:hover, QPushButton#newQuoteButton:hover {{
+        QPushButton#newQuoteButton:hover, QPushButton[text*="New Quote"]:hover,
+        QPushButton[text*="Add Product"]:hover, QPushButton[text*="Generate PDF"]:hover {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                 stop:0 {cls.SECONDARY_COLOR}, 
                 stop:1 {cls.PRIMARY_COLOR});
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }}
         
-        /* Success Button */
-        QPushButton.success, QPushButton#addToQuoteButton, QPushButton#configureButton {{
+        /* Success Buttons */
+        QPushButton[text*="Finalize"], QPushButton[text*="Send"],
+        QPushButton[text*="Save"], QPushButton[text*="Confirm"] {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                 stop:0 {cls.SUCCESS_COLOR}, 
                 stop:1 #047857);
@@ -275,26 +298,29 @@ class StandardizedThemeBase(ABC):
             font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
         }}
         
-        QPushButton.success:hover {{
+        QPushButton[text*="Finalize"]:hover, QPushButton[text*="Send"]:hover,
+        QPushButton[text*="Save"]:hover, QPushButton[text*="Confirm"]:hover {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                 stop:0 #047857, 
                 stop:1 {cls.SUCCESS_COLOR});
         }}
         
-        /* Secondary Button */
-        QPushButton.secondary, QPushButton#saveDraftButton {{
+        /* Secondary Buttons */
+        QPushButton[text*="Save Draft"], QPushButton[text*="Cancel"],
+        QPushButton[text*="Browse"], QPushButton[text*="Reset"] {{
             background-color: transparent;
             color: {cls.PRIMARY_COLOR};
             border: 2px solid {cls.PRIMARY_COLOR};
         }}
         
-        QPushButton.secondary:hover {{
+        QPushButton[text*="Save Draft"]:hover, QPushButton[text*="Cancel"]:hover,
+        QPushButton[text*="Browse"]:hover, QPushButton[text*="Reset"]:hover {{
             background-color: {cls.PRIMARY_COLOR};
             color: white;
         }}
         
         /* =====================================================================
-           FORM CONTROLS - COMPACT AND MODERN
+           FORM CONTROLS - MODERN STYLING
            ===================================================================== */
         
         QLineEdit, QTextEdit, QPlainTextEdit {{
@@ -304,7 +330,6 @@ class StandardizedThemeBase(ABC):
             font-size: {cls.FONT_SIZE_BASE};
             background-color: {cls.BACKGROUND_CARD};
             min-height: {cls.INPUT_HEIGHT};
-            max-height: {cls.INPUT_HEIGHT};
         }}
         
         QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {{
@@ -312,12 +337,12 @@ class StandardizedThemeBase(ABC):
             outline: none;
         }}
         
-        QTextEdit, QPlainTextEdit {{
-            min-height: 80px;
-            max-height: none;
+        QLineEdit[placeholderText*="Enter"], QLineEdit[placeholderText*="Additional"] {{
+            font-style: italic;
+            color: {cls.TEXT_MUTED};
         }}
         
-        /* ComboBox - FIXED SIZING ISSUES */
+        /* ComboBox - Fixed sizing */
         QComboBox {{
             border: 2px solid {cls.BORDER_COLOR};
             border-radius: {cls.BORDER_RADIUS_MD};
@@ -326,7 +351,6 @@ class StandardizedThemeBase(ABC):
             font-size: {cls.FONT_SIZE_BASE};
             min-height: {cls.INPUT_HEIGHT};
             max-height: {cls.INPUT_HEIGHT};
-            max-width: 250px;
         }}
         
         QComboBox:focus {{
@@ -336,7 +360,6 @@ class StandardizedThemeBase(ABC):
         QComboBox::drop-down {{
             border: none;
             width: 20px;
-            padding-right: {cls.SPACING_SM};
         }}
         
         QComboBox::down-arrow {{
@@ -344,7 +367,6 @@ class StandardizedThemeBase(ABC):
             border-left: 4px solid transparent;
             border-right: 4px solid transparent;
             border-top: 5px solid {cls.TEXT_SECONDARY};
-            margin-top: 2px;
         }}
         
         QComboBox QAbstractItemView {{
@@ -359,12 +381,26 @@ class StandardizedThemeBase(ABC):
         QComboBox QAbstractItemView::item {{
             padding: {cls.SPACING_SM} {cls.SPACING_MD};
             min-height: 28px;
-            border-bottom: 1px solid {cls.BORDER_COLOR_LIGHT};
         }}
         
-        QComboBox QAbstractItemView::item:selected {{
+        /* CheckBox */
+        QCheckBox {{
+            font-size: {cls.FONT_SIZE_BASE};
+            color: {cls.TEXT_PRIMARY};
+            spacing: {cls.SPACING_SM};
+        }}
+        
+        QCheckBox::indicator {{
+            width: 18px;
+            height: 18px;
+            border: 2px solid {cls.BORDER_COLOR};
+            border-radius: 3px;
+            background-color: {cls.BACKGROUND_CARD};
+        }}
+        
+        QCheckBox::indicator:checked {{
             background-color: {cls.PRIMARY_COLOR};
-            color: white;
+            border-color: {cls.PRIMARY_COLOR};
         }}
         
         /* =====================================================================
@@ -376,53 +412,66 @@ class StandardizedThemeBase(ABC):
             font-size: {cls.FONT_SIZE_BASE};
         }}
         
-        QLabel.title, QLabel#pageTitle {{
-            font-size: {cls.FONT_SIZE_3XL};
+        /* Section headers */
+        QLabel[text*="General"], QLabel[text*="Theme Preview"],
+        QLabel[text*="Export Settings"], QLabel[text*="Database"],
+        QLabel[text*="Quote Items"], QLabel[text*="Customer Information"] {{
+            font-size: {cls.FONT_SIZE_XL};
             font-weight: {cls.FONT_WEIGHT_BOLD};
             color: {cls.PRIMARY_COLOR};
-            margin-bottom: {cls.SPACING_LG};
-        }}
-        
-        QLabel.section-header {{
-            font-size: {cls.FONT_SIZE_LG};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
-            color: {cls.PRIMARY_COLOR};
-            margin: {cls.SPACING_LG} 0 {cls.SPACING_SM} 0;
-            padding-bottom: {cls.SPACING_XS};
+            margin: {cls.SPACING_XL} 0 {cls.SPACING_LG} 0;
+            padding-bottom: {cls.SPACING_SM};
             border-bottom: 2px solid {cls.BORDER_COLOR_LIGHT};
         }}
         
-        QLabel.field-label {{
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
+        /* Form field labels */
+        QLabel[text*="Application Theme"], QLabel[text*="Startup Page"],
+        QLabel[text*="Default Export Path"], QLabel[text*="Database Path"],
+        QLabel[text*="Company Name"], QLabel[text*="Contact Person"],
+        QLabel[text*="Email"], QLabel[text*="Phone"], QLabel[text*="Notes"] {{
+            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
             color: {cls.TEXT_PRIMARY};
+            font-size: {cls.FONT_SIZE_BASE};
             margin-bottom: {cls.SPACING_XS};
-            font-size: {cls.FONT_SIZE_SM};
         }}
         
-        QLabel.secondary-text {{
+        /* Status labels */
+        QLabel[text*="Status"], QLabel[text*="Total"] {{
+            font-size: {cls.FONT_SIZE_SM};
             color: {cls.TEXT_SECONDARY};
-            font-size: {cls.FONT_SIZE_SM};
+            font-weight: {cls.FONT_WEIGHT_MEDIUM};
         }}
         
-        QLabel.price {{
-            font-size: {cls.FONT_SIZE_XL};
-            font-weight: {cls.FONT_WEIGHT_BOLD};
-            color: {cls.SUCCESS_COLOR};
+        QLabel[text*="Draft"] {{
+            background-color: {cls.TEXT_MUTED};
+            color: white;
+            padding: {cls.SPACING_XS} {cls.SPACING_SM};
+            border-radius: {cls.BORDER_RADIUS_SM};
+            font-size: {cls.FONT_SIZE_XS};
+            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
         }}
         
         /* =====================================================================
-           CARDS AND CONTAINERS
+           CONTAINERS AND SECTIONS
            ===================================================================== */
         
-        QFrame.card, QGroupBox {{
+        /* Main content sections */
+        QFrame[objectName*="section"], QFrame[objectName*="Section"],
+        QFrame[objectName*="panel"], QFrame[objectName*="Panel"] {{
             background-color: {cls.BACKGROUND_CARD};
             border: 1px solid {cls.BORDER_COLOR};
             border-radius: {cls.BORDER_RADIUS_LG};
-            padding: {cls.CARD_PADDING};
-            margin: {cls.SPACING_SM};
+            padding: {cls.SPACING_2XL};
+            margin: {cls.SPACING_MD};
         }}
         
+        /* Group boxes */
         QGroupBox {{
+            background-color: {cls.BACKGROUND_CARD};
+            border: 2px solid {cls.BORDER_COLOR};
+            border-radius: {cls.BORDER_RADIUS_LG};
+            padding-top: {cls.SPACING_LG};
+            margin-top: {cls.SPACING_MD};
             font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
             font-size: {cls.FONT_SIZE_LG};
             color: {cls.PRIMARY_COLOR};
@@ -432,68 +481,49 @@ class StandardizedThemeBase(ABC):
             subcontrol-origin: margin;
             subcontrol-position: top left;
             padding: 0 {cls.SPACING_SM};
-            margin-top: -{cls.SPACING_SM};
             background-color: {cls.BACKGROUND_CARD};
         }}
         
         /* =====================================================================
-           DASHBOARD SPECIFIC STYLES
+           SPECIFIC UI FIXES
            ===================================================================== */
         
-        QFrame.stat-card {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {cls.BACKGROUND_CARD}, 
-                stop:1 {cls.BACKGROUND_SURFACE});
-            border: 1px solid {cls.BORDER_COLOR};
+        /* Quote Items area */
+        QFrame:has(QLabel[text*="No items added"]) {{
+            background-color: {cls.BACKGROUND_SURFACE};
+            border: 2px dashed {cls.BORDER_COLOR};
             border-radius: {cls.BORDER_RADIUS_LG};
-            padding: {cls.SPACING_2XL};
-            min-height: 100px;
-            margin: {cls.SPACING_SM};
+            padding: {cls.SPACING_3XL};
+            text-align: center;
         }}
         
-        QLabel.stat-value {{
-            font-size: {cls.FONT_SIZE_3XL};
-            font-weight: {cls.FONT_WEIGHT_BOLD};
-            color: {cls.PRIMARY_COLOR};
-            margin-bottom: {cls.SPACING_SM};
+        QLabel[text*="No items added"] {{
+            color: {cls.TEXT_MUTED};
+            font-style: italic;
+            text-align: center;
         }}
         
-        QLabel.stat-label {{
-            font-size: {cls.FONT_SIZE_BASE};
-            color: {cls.TEXT_SECONDARY};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
-        }}
-        
-        /* =====================================================================
-           FORM LAYOUT IMPROVEMENTS
-           ===================================================================== */
-        
-        QFormLayout {{
-            spacing: {cls.SPACING_MD};
-        }}
-        
-        QVBoxLayout {{
-            spacing: {cls.SPACING_MD};
-        }}
-        
-        QHBoxLayout {{
-            spacing: {cls.SPACING_MD};
+        /* Recent Quotes section */
+        QLabel[text*="No recent quotes found"] {{
+            color: {cls.TEXT_MUTED};
+            font-style: italic;
+            text-align: center;
+            padding: {cls.SPACING_3XL};
         }}
         
         /* =====================================================================
-           SCROLLBARS - MODERN THIN STYLE
+           SCROLLBARS
            ===================================================================== */
         
         QScrollBar:vertical {{
             background-color: {cls.BACKGROUND_SURFACE};
-            width: 8px;
-            border-radius: 4px;
-            border: none;
+            width: 10px;
+            border-radius: 5px;
         }}
         
         QScrollBar::handle:vertical {{
             background-color: {cls.BORDER_COLOR};
-            border-radius: 4px;
+            border-radius: 5px;
             min-height: 20px;
         }}
         
@@ -505,111 +535,43 @@ class StandardizedThemeBase(ABC):
             height: 0px;
         }}
         
-        QScrollBar:horizontal {{
-            background-color: {cls.BACKGROUND_SURFACE};
-            height: 8px;
-            border-radius: 4px;
-            border: none;
-        }}
-        
-        QScrollBar::handle:horizontal {{
-            background-color: {cls.BORDER_COLOR};
-            border-radius: 4px;
-            min-width: 20px;
-        }}
-        
-        QScrollBar::handle:horizontal:hover {{
-            background-color: {cls.TEXT_MUTED};
-        }}
-        
-        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-            width: 0px;
-        }}
-        
         /* =====================================================================
-           TABLES AND LISTS
+           FORM LAYOUT IMPROVEMENTS
            ===================================================================== */
         
-        QTableWidget, QListWidget {{
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-            background-color: {cls.BACKGROUND_CARD};
-            alternate-background-color: {cls.BACKGROUND_SURFACE};
-            gridline-color: {cls.BORDER_COLOR_LIGHT};
+        QFormLayout {{
+            spacing: {cls.SPACING_LG};
         }}
         
-        QTableWidget::item, QListWidget::item {{
-            padding: {cls.SPACING_SM} {cls.SPACING_MD};
-            border-bottom: 1px solid {cls.BORDER_COLOR_LIGHT};
+        QVBoxLayout {{
+            spacing: {cls.SPACING_MD};
         }}
         
-        QTableWidget::item:selected, QListWidget::item:selected {{
-            background-color: {cls.PRIMARY_COLOR};
-            color: white;
-        }}
-        
-        QHeaderView::section {{
-            background-color: {cls.BACKGROUND_SURFACE};
-            padding: {cls.SPACING_MD} {cls.SPACING_LG};
-            border: none;
-            border-bottom: 2px solid {cls.BORDER_COLOR};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
-            color: {cls.TEXT_PRIMARY};
-        }}
-        
-        /* =====================================================================
-           STATUS INDICATORS
-           ===================================================================== */
-        
-        QLabel.status-badge {{
-            border-radius: {cls.BORDER_RADIUS_SM};
-            padding: {cls.SPACING_XS} {cls.SPACING_SM};
-            font-size: {cls.FONT_SIZE_XS};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
-            color: white;
-        }}
-        
-        QLabel.status-badge[status="success"] {{
-            background-color: {cls.SUCCESS_COLOR};
-        }}
-        
-        QLabel.status-badge[status="warning"] {{
-            background-color: {cls.WARNING_COLOR};
-        }}
-        
-        QLabel.status-badge[status="error"] {{
-            background-color: {cls.ERROR_COLOR};
-        }}
-        
-        QLabel.status-badge[status="info"] {{
-            background-color: {cls.INFO_COLOR};
-        }}
-        
-        QLabel.status-badge[status="draft"] {{
-            background-color: {cls.TEXT_MUTED};
+        QHBoxLayout {{
+            spacing: {cls.SPACING_MD};
         }}
         """
     
     @classmethod
     def get_main_stylesheet(cls):
-        """Get the complete stylesheet for this theme."""
+        """Get the complete stylesheet."""
         return cls.get_complete_stylesheet()
     
     @classmethod
     def apply_to_widget(cls, widget):
-        """Apply this theme to a specific widget."""
+        """Apply theme to widget with proper sizing."""
         stylesheet = cls.get_main_stylesheet()
         widget.setStyleSheet(stylesheet)
         
-        # Set reasonable window size if it's a main window
+        # Set reasonable window size
         if hasattr(widget, 'resize'):
-            widget.resize(1200, 700)
+            widget.resize(1300, 750)
         if hasattr(widget, 'setMinimumSize'):
-            widget.setMinimumSize(1000, 600)
+            widget.setMinimumSize(1100, 650)
     
     @classmethod
     def apply_to_application(cls, app=None):
-        """Apply this theme to the entire application."""
+        """Apply theme to entire application."""
         if app is None:
             from PySide6.QtWidgets import QApplication
             app = QApplication.instance()
