@@ -18,10 +18,10 @@ class PricingStrategy(ABC):
 
 class MaterialAvailabilityStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        if not context.material_override_code:
-            return context.price
-
         # Get product type from model number
+        if not context.product or not context.product.model_number:
+            return context.price
+            
         product_type = context.product.model_number.split("-")[0]
 
         # Handle special cases for dual point switches
@@ -39,10 +39,29 @@ class MaterialAvailabilityStrategy(PricingStrategy):
             .first()
         )
 
-        if (
-            not material_option
-            or context.material_override_code not in material_option.choices
-        ):
+        if not material_option:
+            raise ValueError(
+                f"No material options found for product type {product_type}"
+            )
+
+        # Check if material code is available in choices
+        # Handle both simple string choices and complex dict choices
+        material_available = False
+        choices = material_option.choices
+        if choices and isinstance(choices, list):
+            for choice in choices:
+                if isinstance(choice, dict):
+                    # Complex choice structure: {'code': 'S', 'display_name': 'S - 316 Stainless Steel'}
+                    if choice.get('code') == context.material_override_code:
+                        material_available = True
+                        break
+                else:
+                    # Simple choice structure: 'S'
+                    if choice == context.material_override_code:
+                        material_available = True
+                        break
+
+        if not material_available:
             raise ValueError(
                 f"Material {context.material_override_code} is not available for product type {product_type}"
             )

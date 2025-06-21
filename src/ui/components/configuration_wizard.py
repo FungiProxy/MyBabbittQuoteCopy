@@ -301,30 +301,123 @@ class ConfigurationWizard(QDialog):
         family_name = self.current_config['product_family']
 
         try:
-            # Get materials using ProductService
-            materials = self.product_service.get_available_materials_for_product(self.db, family_name)
-            if materials:
-                self._create_material_section(materials)
-
-            # Get voltages using ProductService
-            voltages = self.product_service.get_available_voltages(self.db, family_name)
-            if voltages:
-                self._create_voltage_section(voltages)
-
-            # Get probe length options (can be hardcoded or moved to a config file)
-            self._create_probe_section()
-
-            # Get additional options by category
-            additional_options = self.product_service.get_additional_options(self.db, family_name)
-            self._create_additional_options_sections(additional_options)
+            # 1. CORE CONFIGURATION (Voltage, Material, Length)
+            self._create_core_configuration_section(family_name)
+            
+            # 2. CONNECTION OPTIONS
+            self._create_connection_options_section(family_name)
+            
+            # 3. ACCESSORIES
+            self._create_accessories_section(family_name)
+            
+            # 4. SPECIAL FEATURES
+            self._create_special_features_section(family_name)
 
         except Exception as e:
             logger.error(f'Error loading configuration options: {e}')
 
-    def _create_material_section(self, materials_config: List[Dict]):
-        """Create material selection section from service data."""
-        section = self._create_config_section('1. Material Selection')
+    def _create_core_configuration_section(self, family_name: str):
+        """Create core configuration section: Voltage, Material, Length."""
+        section = self._create_config_section('1. Core Configuration')
+        
+        # Get all additional options first
+        additional_options = self.product_service.get_additional_options(self.db, family_name)
+        
+        # Voltage (first) - get from additional_options
+        voltage_options = [opt for opt in additional_options if opt.get('name') == 'Voltage']
+        if voltage_options:
+            voltage_opt = voltage_options[0]
+            choices = voltage_opt.get('choices', [])
+            if choices:
+                self._create_voltage_widget(section, choices)
+        
+        # Material (second)
+        materials = self.product_service.get_available_materials_for_product(self.db, family_name)
+        if materials:
+            self._create_material_widget(section, materials)
+        
+        # Length (third)
+        self._create_length_widget(section)
+        
+        self.config_layout.addWidget(section)
 
+    def _create_connection_options_section(self, family_name: str):
+        """Create connection options section."""
+        additional_options = self.product_service.get_additional_options(self.db, family_name)
+        
+        # Filter for connection-related options
+        connection_options = [
+            opt for opt in additional_options 
+            if opt.get('category') in ['Connections', 'Connection Type', 'NPT Size', 'Flange Type', 'Flange Size', 'Tri-clamp', 'Insulator Material', 'Insulator Length']
+            and opt.get('name') not in ['Voltage', 'Material']  # Exclude core options
+        ]
+        
+        if connection_options:
+            section = self._create_config_section('2. Connection Options')
+            for option in connection_options:
+                self._create_option_widget(section, option)
+            self.config_layout.addWidget(section)
+
+    def _create_accessories_section(self, family_name: str):
+        """Create accessories section."""
+        additional_options = self.product_service.get_additional_options(self.db, family_name)
+        
+        # Filter for accessory options
+        accessory_options = [
+            opt for opt in additional_options 
+            if opt.get('category') in ['O-ring Material', 'Accessories']
+            and opt.get('name') not in ['Voltage', 'Material']  # Exclude core options
+        ]
+        
+        if accessory_options:
+            section = self._create_config_section('3. Accessories')
+            for option in accessory_options:
+                self._create_option_widget(section, option)
+            self.config_layout.addWidget(section)
+
+    def _create_special_features_section(self, family_name: str):
+        """Create special features section."""
+        additional_options = self.product_service.get_additional_options(self.db, family_name)
+        
+        # Filter for special features (anything not in other categories)
+        special_options = [
+            opt for opt in additional_options 
+            if opt.get('category') not in ['Material', 'Voltage', 'Voltages', 'Connections', 'Connection Type', 'NPT Size', 'Flange Type', 'Flange Size', 'Tri-clamp', 'Insulator Material', 'Insulator Length', 'O-ring Material', 'Accessories']
+            and opt.get('name') not in ['Voltage', 'Material']  # Exclude core options
+        ]
+        
+        if special_options:
+            section = self._create_config_section('4. Special Features')
+            for option in special_options:
+                self._create_option_widget(section, option)
+            self.config_layout.addWidget(section)
+
+    def _create_voltage_widget(self, section: QGroupBox, voltages: List[str]):
+        """Create voltage selection widget within a section."""
+        label = QLabel('Supply Voltage *')
+        label.setProperty('class', 'formLabel')
+        section.layout().addWidget(label)
+
+        voltage_layout = QHBoxLayout()
+        self.voltage_group = QButtonGroup()
+
+        for i, voltage in enumerate(voltages):
+            radio = QRadioButton(voltage)
+            radio.setProperty('voltage', voltage)
+            radio.setProperty('adder', 0)  # Assuming no adder for voltage for now
+
+            if i == 0:  # Select first option by default
+                radio.setChecked(True)
+                self.current_config['selected_options']['Voltage'] = voltage
+
+            radio.toggled.connect(self._on_voltage_changed)
+            self.voltage_group.addButton(radio)
+            voltage_layout.addWidget(radio)
+
+        section.layout().addLayout(voltage_layout)
+
+    def _create_material_widget(self, section: QGroupBox, materials_config: List[Dict]):
+        """Create material selection widget within a section."""
         label = QLabel('Housing Material *')
         label.setProperty('class', 'formLabel')
         section.layout().addWidget(label)
@@ -373,39 +466,9 @@ class ConfigurationWizard(QDialog):
             material_layout.addWidget(radio)
 
         section.layout().addLayout(material_layout)
-        self.config_layout.addWidget(section)
 
-    def _create_voltage_section(self, voltages: List[str]):
-        """Create voltage selection section from service data."""
-        section = self._create_config_section('2. Electrical Configuration')
-
-        label = QLabel('Supply Voltage *')
-        label.setProperty('class', 'formLabel')
-        section.layout().addWidget(label)
-
-        voltage_layout = QHBoxLayout()
-        self.voltage_group = QButtonGroup()
-
-        for i, voltage in enumerate(voltages):
-            radio = QRadioButton(voltage)
-            radio.setProperty('voltage', voltage)
-            radio.setProperty('adder', 0) # Assuming no adder for voltage for now
-
-            if i == 0:  # Select first option by default
-                radio.setChecked(True)
-                self.current_config['selected_options']['Voltage'] = voltage
-
-            radio.toggled.connect(self._on_voltage_changed)
-            self.voltage_group.addButton(radio)
-            voltage_layout.addWidget(radio)
-
-        section.layout().addLayout(voltage_layout)
-        self.config_layout.addWidget(section)
-
-    def _create_probe_section(self):
-        """Create probe configuration section."""
-        section = self._create_config_section('3. Probe Configuration')
-
+    def _create_length_widget(self, section: QGroupBox):
+        """Create length selection widget within a section."""
         length_layout = QHBoxLayout()
 
         length_label = QLabel('Probe Length (inches) *')
@@ -424,30 +487,6 @@ class ConfigurationWizard(QDialog):
         length_layout.addWidget(self.length_spinbox)
 
         section.layout().addLayout(length_layout)
-
-        # The extended probe option can be one of the additional options now
-        self.config_layout.addWidget(section)
-
-    def _create_additional_options_sections(self, options: List[Dict]):
-        """Create sections for all additional options returned by the service."""
-        # Group options by category
-        options_by_category = {}
-        for option in options:
-            category = option.get('category', 'Other Options')
-            if category not in options_by_category:
-                options_by_category[category] = []
-            options_by_category[category].append(option)
-
-        # Create a section for each category
-        for category_name, category_options in options_by_category.items():
-            # Skip core options handled elsewhere
-            if category_name in ['Material', 'Voltage']:
-                continue
-
-            section = self._create_config_section(category_name)
-            for option in category_options:
-                self._create_option_widget(section, option)
-            self.config_layout.addWidget(section)
 
     def _create_option_widget(self, section: QGroupBox, option_data: Dict):
         """Create a widget for a single dynamic option."""
