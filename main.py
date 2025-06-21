@@ -1,69 +1,78 @@
 #!/usr/bin/env python3
 """
-Babbitt Quote Generator - Main Application Entry Point
+MyBabbittQuote Application Entry Point
+
+Launch the beautiful, simplified quote generator with Babbitt International styling.
+
+File: main.py (REPLACE EXISTING)
 """
 
-import logging
 import os
 import sys
 import traceback
 
 from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtCore import Qt
 
-# Set global logging level to INFO
-logging.basicConfig(level=logging.INFO)
-
-# Print debug information
-print('Starting Babbitt Quote Generator...')
-print(f'Current directory: {os.getcwd()}')
-print(f'Python version: {sys.version}')
+# Print startup info
+print("🚀 Starting MyBabbittQuote...")
+print(f"📁 Working directory: {os.getcwd()}")
+print(f"🐍 Python version: {sys.version}")
 
 try:
-    # Import main window
-    print('Importing MainWindowRedesign...')
-    from src.ui.main_window_redesign import MainWindowRedesign
+    # Import the updated main window
+    from src.ui.views.main_window import MainWindow
     from src.ui.theme.babbitt_theme import BabbittTheme
-
-    print('MainWindowRedesign imported successfully')
+    print("✅ Imports successful")
 except Exception as e:
-    print(f'Error during initialization: {e}')
+    print(f"❌ Import error: {e}")
     traceback.print_exc()
-    input('Press Enter to exit...')
+    input("Press Enter to exit...")
     sys.exit(1)
 
 
 def main():
-    """Main application entry point."""
+    """Launch the MyBabbittQuote application with beautiful styling."""
     try:
-        print('Creating QApplication...')
-
+        print("🎨 Creating application...")
+        
         # Create application
         app = QApplication(sys.argv)
+        app.setApplicationName("MyBabbittQuote")
+        app.setApplicationVersion("1.0")
+        app.setOrganizationName("Babbitt International")
+        
+        # Set application-wide style
         app.setStyleSheet(BabbittTheme.get_main_stylesheet())
         
-        print('Creating MainWindowRedesign...')
-        # Create and show main window (theme is applied within MainWindowRedesign)
-        window = MainWindowRedesign()
-
-        print('Showing window...')
+        print("🏠 Creating main window...")
+        
+        # Create and show main window
+        window = MainWindow()
         window.show()
-
-        print('Entering event loop...')
-        # Run application
+        
+        print("✨ Application ready! Launching...")
+        
+        # Run the application
         sys.exit(app.exec())
+        
     except Exception as e:
-        print(f'Error in main: {e}')
+        print(f"❌ Application error: {e}")
         traceback.print_exc()
-
-        if QApplication.instance():
-            error_box = QMessageBox()
-            error_box.setIcon(QMessageBox.Critical) # type: ignore
-            error_box.setWindowTitle('Application Error')
-            error_box.setText(f'An error occurred: {e!s}')
-            error_box.setDetailedText(traceback.format_exc())
-            error_box.exec()
-
-        input('Press Enter to exit...')
+        
+        # Show error dialog if possible
+        try:
+            if QApplication.instance():
+                error_box = QMessageBox()
+                error_box.setIcon(QMessageBox.Critical)
+                error_box.setWindowTitle("MyBabbittQuote - Error")
+                error_box.setText(f"Application failed to start: {str(e)}")
+                error_box.setDetailedText(traceback.format_exc())
+                error_box.exec()
+        except:
+            pass
+        
+        input("Press Enter to exit...")
         sys.exit(1)
 
 

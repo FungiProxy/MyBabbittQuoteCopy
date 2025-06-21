@@ -57,10 +57,10 @@ class ProductSelectionDialog(QDialog):
 
     def __init__(self, parent=None, theme_name=None):
         super().__init__(parent)
-        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
-        self.setWindowTitle('Select Product')
+        self.setStyleSheet(BabbittTheme.get_dialog_stylesheet())
+        self.setWindowTitle("Configure Product - Babbitt International")
         self.setModal(True)
-        self.resize(1000, 800)
+        self.resize(1000, 700)  # Slightly larger for better usability
 
         # Services
         self.db = SessionLocal()

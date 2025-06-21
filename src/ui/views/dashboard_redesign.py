@@ -99,6 +99,24 @@ class DashboardRedesign(QWidget):
         # Recent activity
         self._create_recent_section()
         main_layout.addWidget(self.recent_frame)
+        
+    def _create_metric_card(self, title, value, icon):
+        card = QFrame()
+        card.setStyleSheet("""
+            QFrame {
+                background: white;
+                border: 1px solid #E9ECEF;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 8px;
+            }
+            QFrame:hover {
+                border-color: #2C3E50;
+                box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
+                transform: translateY(-2px);
+            }
+        """)
+        return card    
 
     def _create_stats_section(self):
         """Create the statistics cards section."""

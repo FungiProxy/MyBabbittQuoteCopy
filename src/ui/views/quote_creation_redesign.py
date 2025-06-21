@@ -33,6 +33,7 @@ from src.core.services.quote_service import QuoteService
 from src.core.services.product_service import ProductService
 from src.ui.product_selection_dialog_improved import ImprovedProductSelectionDialog
 from src.ui.components.configuration_wizard import ConfigurationWizard
+from src.ui.theme.babbitt_theme import BabbittTheme
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +77,28 @@ class QuoteCreationPageRedesign(QWidget):
         if hasattr(self, 'db') and self.db:
             self.db.close()
 
+    def _style_input_field(self, field):
+        field.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #E9ECEF;
+                border-radius: 6px;
+                padding: 12px 16px;
+                font-size: 14px;
+                background: white;
+            }
+            QLineEdit:focus {
+                border-color: #2C3E50;
+                outline: none;
+            }
+            QLineEdit:hover {
+                border-color: #34495E;
+            }
+        """)
+    
     def _setup_ui(self):
-        """Set up the quote creation UI."""
+        """Set up the quote creation UI to match the desired modern look."""
+        self.setStyleSheet(f"background-color: {BabbittTheme.LIGHT_GRAY};")
+        
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
@@ -86,85 +107,80 @@ class QuoteCreationPageRedesign(QWidget):
         header_widget = self._create_quote_header()
         main_layout.addWidget(header_widget)
         
-        # Main content grid
-        content_widget = QWidget()
-        content_layout = QGridLayout(content_widget)
+        # Main content area using a horizontal layout for two columns
+        content_layout = QHBoxLayout()
         content_layout.setSpacing(20)
         
         # Left column - Quote items
         items_panel = self._create_items_panel()
-        content_layout.addWidget(items_panel, 0, 0, 2, 1)
+        content_layout.addWidget(items_panel, 2) # 2/3 of the space
         
         # Right column - Customer info and actions
+        right_column_layout = QVBoxLayout()
+        right_column_layout.setSpacing(20)
+        
         customer_panel = self._create_customer_panel()
-        content_layout.addWidget(customer_panel, 0, 1)
+        right_column_layout.addWidget(customer_panel)
         
         actions_panel = self._create_actions_panel()
-        content_layout.addWidget(actions_panel, 1, 1)
+        right_column_layout.addWidget(actions_panel)
         
-        # Set column proportions (2:1 ratio)
-        content_layout.setColumnStretch(0, 2)
-        content_layout.setColumnStretch(1, 1)
+        right_column_layout.addStretch() # Pushes panels up
         
-        main_layout.addWidget(content_widget)
+        content_layout.addLayout(right_column_layout, 1) # 1/3 of the space
         
-        # Now that all components are created, update visibility
+        main_layout.addLayout(content_layout)
+        
         self._update_items_visibility()
 
     def _create_quote_header(self) -> QWidget:
         """Create the quote header with title and basic info."""
-        header = QFrame()
-        header.setProperty("class", "card")
+        header = QWidget() # Use a simple QWidget, no frame needed
         
         layout = QHBoxLayout(header)
+        layout.setContentsMargins(0,0,0,0)
         
-        # Title and quote number
         title_layout = QVBoxLayout()
-        
         title = QLabel("New Quote")
-        title.setObjectName("pageTitle")
+        title.setProperty("labelType", "title") # Use modern theme property
         title_layout.addWidget(title)
         
         self.quote_number_label = QLabel("Quote #: (Will be assigned on save)")
-        self.quote_number_label.setProperty("class", "quoteSubtitle")
+        self.quote_number_label.setProperty("labelType", "caption") # Use modern theme property
         title_layout.addWidget(self.quote_number_label)
         
         layout.addLayout(title_layout)
         layout.addStretch()
         
-        # Quote status and total
         status_layout = QVBoxLayout()
-        status_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        status_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         
-        self.status_label = QLabel("Status: Draft")
-        self.status_label.setProperty("class", "status-draft")
+        self.status_label = QLabel(self.current_quote['status'])
+        self.status_label.setProperty("status", "Draft") # Use theme property for styling
         status_layout.addWidget(self.status_label)
         
-        self.total_label = QLabel("Total: $0.00")
-        self.total_label.setObjectName("quoteTotalLabel")
+        self.total_label = QLabel(f"Total: ${self.current_quote['total_value']:.2f}")
+        self.total_label.setProperty("priceType", "total") # Use modern theme property
         status_layout.addWidget(self.total_label)
         
         layout.addLayout(status_layout)
-        
         return header
 
     def _create_items_panel(self) -> QWidget:
-        """Create the quote items panel."""
-        panel = QFrame()
-        panel.setProperty("card", True)
-        
+        """Create the quote items panel as a styled card."""
+        panel = QGroupBox("Quote Items")
         layout = QVBoxLayout(panel)
         layout.setSpacing(15)
 
-        title_label = QLabel("Quote Items")
-        title_label.setObjectName("sectionTitle")
-        layout.addWidget(title_label)
-        
-        # Add product button
+        # Container for the centered button
+        button_container = QWidget()
+        button_layout = QHBoxLayout(button_container)
+        button_layout.addStretch()
         add_product_btn = QPushButton("+ Add Product")
-        add_product_btn.setProperty("class", "primary")
         add_product_btn.clicked.connect(self._add_product)
-        layout.addWidget(add_product_btn)
+        button_layout.addWidget(add_product_btn)
+        button_layout.addStretch()
+        layout.addWidget(button_container)
         
         # Items table
         self.items_table = QTableWidget()
@@ -173,19 +189,17 @@ class QuoteCreationPageRedesign(QWidget):
             "Product", "Configuration", "Quantity", "Unit Price", "Total", "Actions"
         ])
         
-        # Configure table
         header = self.items_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # Product
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)          # Configuration
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Quantity
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Unit Price
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Total
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Actions
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
         
         self.items_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.items_table.setAlternatingRowColors(True)
         
-        # 🔴 Critical: Allow the table to shrink and expand vertically
         size_policy = self.items_table.sizePolicy()
         size_policy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
         self.items_table.setSizePolicy(size_policy)
@@ -201,82 +215,57 @@ class QuoteCreationPageRedesign(QWidget):
         return panel
 
     def _create_customer_panel(self) -> QWidget:
-        """Create the customer information panel."""
-        panel = QFrame()
-        panel.setProperty("card", True)
-        
-        layout = QVBoxLayout(panel)
-        form_layout = QFormLayout()
+        """Create the customer information panel as a styled card."""
+        panel = QGroupBox("Customer Information")
+        form_layout = QFormLayout(panel)
         form_layout.setSpacing(10)
-
-        title_label = QLabel("Customer Information")
-        title_label.setObjectName("sectionTitle")
-        layout.addWidget(title_label)
         
         # Customer form fields
         self.company_name_edit = QLineEdit()
-        self.company_name_edit.setPlaceholderText("Enter company name")
-        self.company_name_edit.textChanged.connect(self._on_customer_info_changed)
-        
         self.contact_name_edit = QLineEdit()
-        self.contact_name_edit.setPlaceholderText("Enter contact person")
-        self.contact_name_edit.textChanged.connect(self._on_customer_info_changed)
-        
         self.email_edit = QLineEdit()
-        self.email_edit.setPlaceholderText("Enter email address")
-        self.email_edit.textChanged.connect(self._on_customer_info_changed)
-        
         self.phone_edit = QLineEdit()
-        self.phone_edit.setPlaceholderText("Enter phone number")
-        self.phone_edit.textChanged.connect(self._on_customer_info_changed)
+        self.notes_edit = QTextEdit()
+        self.notes_edit.setAcceptRichText(False)
+        self.notes_edit.setPlaceholderText("Additional notes or requirements...")
         
-        # Add to form
+        # Add rows to form
         form_layout.addRow("Company Name:", self.company_name_edit)
         form_layout.addRow("Contact Person:", self.contact_name_edit)
         form_layout.addRow("Email:", self.email_edit)
         form_layout.addRow("Phone:", self.phone_edit)
-        
-        # Notes field
-        self.notes_edit = QTextEdit()
-        self.notes_edit.setPlaceholderText("Additional notes or requirements...")
-        self.notes_edit.setMaximumHeight(80)
-        self.notes_edit.textChanged.connect(self._on_customer_info_changed)
-        
         form_layout.addRow("Notes:", self.notes_edit)
 
-        layout.addLayout(form_layout)
+        # Connect signals
+        self.company_name_edit.textChanged.connect(self._on_customer_info_changed)
+        self.contact_name_edit.textChanged.connect(self._on_customer_info_changed)
+        self.email_edit.textChanged.connect(self._on_customer_info_changed)
+        self.phone_edit.textChanged.connect(self._on_customer_info_changed)
         
         return panel
 
     def _create_actions_panel(self) -> QWidget:
-        """Create the actions panel with save/send buttons."""
-        panel = QFrame()
-        panel.setProperty("class", "card")
-        
+        """Create the actions panel as a styled card."""
+        panel = QGroupBox("Actions")
         layout = QVBoxLayout(panel)
         layout.setSpacing(10)
         
         # Action buttons
         self.save_draft_btn = QPushButton("Save Draft")
-        self.save_draft_btn.setProperty("class", "secondary")
+        self.save_draft_btn.setProperty("buttonStyle", "secondary")
         self.save_draft_btn.clicked.connect(self._save_draft)
         
         self.generate_pdf_btn = QPushButton("Generate PDF")
-        self.generate_pdf_btn.setProperty("class", "primary")
+        self.generate_pdf_btn.setProperty("buttonStyle", "secondary")
         self.generate_pdf_btn.clicked.connect(self._generate_pdf)
         
         self.send_quote_btn = QPushButton("Send Quote")
-        self.send_quote_btn.setProperty("class", "success")
+        self.send_quote_btn.setProperty("buttonStyle", "secondary")
         self.send_quote_btn.clicked.connect(self._send_quote)
         
-        # Add buttons to layout
         layout.addWidget(self.save_draft_btn)
         layout.addWidget(self.generate_pdf_btn)
         layout.addWidget(self.send_quote_btn)
-        
-        # Initially disable some buttons
-        self.generate_pdf_btn.setEnabled(False)
-        self.send_quote_btn.setEnabled(False)
         
         return panel
 

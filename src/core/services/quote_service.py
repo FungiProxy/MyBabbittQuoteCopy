@@ -287,7 +287,7 @@ class QuoteService:
             - sales_by_category: Sales breakdown by product category
         """
         # Get total quotes
-        total_quotes = db.query(func.count(Quote.id)).scalar()
+        total_quotes = db.query(Quote).count()
 
         # Get total quote value
         total_quote_value = (
@@ -297,7 +297,7 @@ class QuoteService:
         # Get total unique customers
         total_customers = db.query(
             func.count(func.distinct(Quote.customer_id))
-        ).scalar()
+        ).scalar() or 0
 
         # Get total unique products quoted
         total_products = db.query(
@@ -409,3 +409,50 @@ class QuoteService:
             "quote_change": round(quote_change, 1),
             "value_change": round(value_change, 1),
         }
+
+    @staticmethod
+    def get_total_quotes_count(db) -> int:
+        """Get total number of quotes."""
+        try:
+            from src.core.models.quote import Quote
+            return db.query(Quote).count()
+        except Exception:
+            return 0
+
+    @staticmethod
+    def get_total_quotes_value(db) -> float:
+        """Get total value of all quotes."""
+        try:
+            from src.core.models.quote import Quote
+            from sqlalchemy import func
+            result = db.query(func.sum(Quote.total_price)).scalar()
+            return result or 0.0
+        except Exception:
+            return 0.0
+
+    @staticmethod
+    def get_customer_count(db) -> int:
+        """Get total number of customers."""
+        try:
+            from src.core.models.customer import Customer
+            return db.query(Customer).count()
+        except Exception:
+            return 0
+
+    @staticmethod
+    def get_recent_quotes(db, limit: int = 5) -> List[Dict]:
+        """Get recent quotes for dashboard display."""
+        try:
+            from src.core.models.quote import Quote
+            quotes = db.query(Quote).order_by(Quote.date_created.desc()).limit(limit).all()
+            return [
+                {
+                    'quote_number': quote.quote_number,
+                    'customer_name': quote.customer_name,
+                    'total_value': quote.total_price,
+                    'date_created': quote.date_created
+                }
+                for quote in quotes
+            ]
+        except Exception:
+            return []

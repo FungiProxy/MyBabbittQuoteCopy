@@ -32,6 +32,7 @@ class SettingsService:
         return {
             "window_size": [1400, 800],
             "window_position": None,
+            "theme": "Corporate",
             "recent_files": [],
             "auto_save": True,
             "auto_save_interval": 300,  # 5 minutes
@@ -143,4 +144,13 @@ class SettingsService:
     def reset_to_defaults(self):
         """Reset all settings to defaults."""
         self.settings = self._get_default_settings()
+        self._save_settings()
+    
+    def get_theme(self, default: str = "Corporate") -> str:
+        """Get the saved application theme."""
+        return self.settings.get("theme", default)
+
+    def set_theme(self, theme_name: str):
+        """Set the application theme."""
+        self.settings["theme"] = theme_name
         self._save_settings()

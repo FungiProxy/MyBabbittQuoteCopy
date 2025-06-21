@@ -11,77 +11,41 @@ from src.ui.theme.babbitt_theme import BabbittTheme
 
 class ThemeManager:
     """
-    Manages the application's light and dark themes.
+    Manages the application's visual themes.
     """
 
     @staticmethod
-    def apply_theme(mode: str):
-        """
-        Apply a theme mode to the entire application.
+    def get_available_themes() -> list[str]:
+        """Returns a list of available theme names."""
+        return [BabbittTheme.CORPORATE_THEME, BabbittTheme.DARK_THEME]
 
-        Args:
-            mode (str): The mode to apply, either 'Light' or 'Dark'.
+    @staticmethod
+    def apply_theme(theme_name: str):
+        """
+        Applies a theme to the entire application.
         """
         app = QApplication.instance()
-        if app is None:
-            # This case should ideally not happen in a running application
+        if not app:
             return
 
-        # Ensure we have a QApplication instance
-        if not hasattr(app, 'setStyleSheet'):
-            return
-
-        stylesheet = ""
-        if mode == 'Light':
-            stylesheet = BabbittTheme.get_light_stylesheet()
-        elif mode == 'Dark':
-            stylesheet = BabbittTheme.get_dark_stylesheet()
-        else:
-            # Default to light mode if an invalid mode is provided
-            stylesheet = BabbittTheme.get_light_stylesheet()
-
-        app.setStyleSheet(stylesheet)  # type: ignore
-
-    @classmethod
-    def get_theme_preview_info(cls, theme_name):
-        """
-        Get preview information for a theme.
+        stylesheet = BabbittTheme.get_stylesheet(theme_name)
+        app.setStyleSheet(stylesheet)
         
-        Args:
-            theme_name: Name of the theme
-            
-        Returns:
-            dict: Theme preview information
+    @staticmethod
+    def get_theme_preview_info(theme_name: str) -> dict:
         """
-        theme_class = BabbittTheme
-        if theme_class is None:
-            return None
-        
-        # Extract color information for preview
-        preview_info = {
-            'name': theme_name,
-            'description': theme_class.__doc__ or f'{theme_name} theme',
-            'primary_color': getattr(theme_class, 'PRIMARY_BLUE', 
-                                   getattr(theme_class, 'PRIMARY_PURPLE',
-                                   getattr(theme_class, 'PRIMARY_EMERALD',
-                                   getattr(theme_class, 'PRIMARY_NAVY', '#000000')))),
-            'accent_color': getattr(theme_class, 'ACCENT_GOLD',
-                                  getattr(theme_class, 'ACCENT_TEAL',
-                                  getattr(theme_class, 'ACCENT_MINT',
-                                  getattr(theme_class, 'ACCENT_RED', '#000000')))),
-            'background_color': getattr(theme_class, 'LIGHT_GRAY',
-                                      getattr(theme_class, 'DARK_BG',
-                                      getattr(theme_class, 'LIGHT_BG', '#FFFFFF'))),
-        }
-        
-        return preview_info 
-
-    @classmethod
-    def get_available_themes(cls):
+        Gets basic color information for a theme preview.
         """
-        Get list of available theme names.
+        if theme_name == BabbittTheme.DARK_THEME:
+            return {
+                'primary_color': BabbittTheme.PRIMARY_BLUE,
+                'accent_color': BabbittTheme.ACCENT_ORANGE,
+                'background_color': BabbittTheme.DARK_BG,
+            }
         
-        Returns:
-            list: List of available theme names
-        """
-        return ['Light', 'Dark'] 
+        # Default to Corporate theme preview
+        return {
+            'primary_color': BabbittTheme.PRIMARY_BLUE,
+            'accent_color': BabbittTheme.ACCENT_ORANGE,
+            'background_color': BabbittTheme.LIGHT_GRAY,
+        } 

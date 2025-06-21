@@ -287,6 +287,9 @@ class ImprovedConfigurationWizard(QDialog):
         
         # Bottom action area
         self._create_bottom_actions(main_layout)
+        
+        # Apply enhanced form styling
+        self._enhance_form_styling()
     
     def _create_bottom_actions(self, parent_layout):
         """Create bottom action buttons with pricing."""
@@ -612,4 +615,34 @@ class ImprovedConfigurationWizard(QDialog):
         """Clean up resources on close."""
         if hasattr(self, 'db') and self.db:
             self.db.close()
-        super().closeEvent(event) 
+        super().closeEvent(event)
+    
+    def _enhance_form_styling(self):
+        """Apply enhanced styling to form elements for better usability."""
+        # This method makes the interface more user-friendly
+        
+        # Make buttons more prominent
+        if hasattr(self, 'add_button'):
+            self.add_button.setProperty("class", "primary")
+            self.add_button.setText("Add to Quote")
+            self.add_button.setMinimumHeight(40)
+        
+        # Enhance quantity controls
+        if hasattr(self, 'quantity_spinner'):
+            self.quantity_spinner.setMinimumHeight(36)
+            self.quantity_spinner.setMinimum(1)
+            self.quantity_spinner.setMaximum(999)
+        
+        # Make total price more prominent
+        if hasattr(self, 'total_price_label'):
+            self.total_price_label.setStyleSheet("""
+                QLabel {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #ea580c;
+                    padding: 8px 12px;
+                    background-color: #fff7ed;
+                    border: 1px solid #fed7aa;
+                    border-radius: 6px;
+                }
+            """) 

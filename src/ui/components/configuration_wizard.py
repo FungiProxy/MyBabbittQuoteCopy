@@ -53,6 +53,7 @@ class ConfigurationWizard(QDialog):
 
     def __init__(self, product_data: Dict, parent=None):
         super().__init__(parent)
+        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
         self.product_data = product_data
         self.setWindowTitle(f"Configure {product_data.get('name', 'Product')}")
         self.setModal(True)

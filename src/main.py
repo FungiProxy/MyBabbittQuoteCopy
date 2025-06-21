@@ -39,10 +39,9 @@ def main():
 
         # Create application
         app = QApplication(sys.argv)
-        app.setStyleSheet(BabbittTheme.get_main_stylesheet())
+        # The MainWindowRedesign now handles loading and applying the theme
         
         print('Creating MainWindowRedesign...')
-        # Create and show main window (theme is applied within MainWindowRedesign)
         window = MainWindowRedesign()
 
         print('Showing window...')

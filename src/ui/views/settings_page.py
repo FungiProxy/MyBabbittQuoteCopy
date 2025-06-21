@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from src.core.services.settings_service import SettingsService
 from src.ui.theme.theme_manager import ThemeManager
+from src.ui.theme.babbitt_theme import BabbittTheme
 
 
 class ThemePreviewWidget(QFrame):
@@ -113,204 +114,56 @@ class SettingsPage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Settings")
         self.settings_service = SettingsService()
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(15)
+        main_layout.setContentsMargins(25, 25, 25, 25)
+        main_layout.setSpacing(20)
 
         # --- General Settings ---
         general_group = QGroupBox("General")
         general_layout = QFormLayout(general_group)
-        general_layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
-
-        # Theme selection with all available themes
+        
+        # Theme selection
         self.theme_combo = QComboBox()
-        available_themes = ThemeManager.get_available_themes()
-        self.theme_combo.addItems(available_themes)
+        self.theme_combo.addItems(ThemeManager.get_available_themes())
         general_layout.addRow("Application Theme:", self.theme_combo)
-
-        self.startup_page_combo = QComboBox()
-        self.startup_page_combo.addItems(["Dashboard", "Quote Creation", "Customers"])
-        general_layout.addRow("Startup Page:", self.startup_page_combo)
-
-        self.confirm_on_delete_check = QCheckBox("Confirm before deleting quotes")
-        general_layout.addRow(self.confirm_on_delete_check)
 
         main_layout.addWidget(general_group)
 
-        # --- Theme Preview ---
-        theme_preview_group = QGroupBox("Theme Preview")
-        theme_preview_layout = QVBoxLayout(theme_preview_group)
-        
-        # Theme preview grid
-        self.theme_preview_widget = QWidget()
-        self.theme_preview_layout = QGridLayout(self.theme_preview_widget)
-        self.theme_preview_layout.setSpacing(10)
-        
-        # Create preview widgets for each theme
-        self.preview_widgets = {}
-        available_themes = ThemeManager.get_available_themes()
-        cols = 3  # Number of columns in the grid
-        for i, theme_name in enumerate(available_themes):
-            row = i // cols
-            col = i % cols
-            preview_widget = ThemePreviewWidget(theme_name)
-            self.preview_widgets[theme_name] = preview_widget
-            self.theme_preview_layout.addWidget(preview_widget, row, col)
-        
-        theme_preview_layout.addWidget(self.theme_preview_widget)
-        main_layout.addWidget(theme_preview_group)
-
-        # --- Export Settings ---
-        export_group = QGroupBox("Export Settings")
-        export_layout = QFormLayout(export_group)
-
-        self.default_export_path_input = QLineEdit()
-        self.browse_export_path_btn = QPushButton("Browse...")
-        export_path_layout = QHBoxLayout()
-        export_path_layout.addWidget(self.default_export_path_input)
-        export_path_layout.addWidget(self.browse_export_path_btn)
-        export_layout.addRow("Default Export Path:", export_path_layout)
-
-        self.export_with_logo_check = QCheckBox("Include company logo in PDF exports")
-        export_layout.addRow(self.export_with_logo_check)
-
-        main_layout.addWidget(export_group)
-
-        # --- Database Settings ---
-        db_group = QGroupBox("Database")
-        db_layout = QFormLayout(db_group)
-
-        self.db_path_label = QLabel("data/babbitt.db")  # Placeholder
-        db_layout.addRow("Database Path:", self.db_path_label)
-
-        self.reseed_btn = QPushButton("Reseed Database")
-        db_layout.addWidget(self.reseed_btn)
-
-        main_layout.addWidget(db_group)
+        # --- Other settings groups would go here ---
 
         main_layout.addStretch()
 
-        # --- Save/Cancel Buttons ---
-        button_layout = QVBoxLayout()
+        # --- Save Button ---
         self.save_btn = QPushButton("Save Settings")
         self.save_btn.setObjectName("saveSettingsButton")
-        button_layout.addWidget(self.save_btn)
-
-        main_layout.addLayout(button_layout)
+        main_layout.addWidget(self.save_btn, 0, Qt.AlignmentFlag.AlignRight)
 
         self.load_settings()
         self._connect_signals()
 
     def _connect_signals(self):
         self.save_btn.clicked.connect(self.save_settings)
-        self.browse_export_path_btn.clicked.connect(self.browse_for_export_path)
-        self.reseed_btn.clicked.connect(self.reseed_database)
-        self.theme_combo.currentTextChanged.connect(self._on_theme_changed)
-
-    def _on_theme_changed(self, theme_name):
-        """Handle theme selection change and emit signal."""
-        self.theme_changed.emit(theme_name)
+        # When the theme combo changes, immediately emit the signal
+        self.theme_combo.currentTextChanged.connect(self.theme_changed.emit)
 
     def load_settings(self):
         """Load settings from storage and populate the UI fields."""
-        # Load current theme
-        current_theme = self.settings_service.get_theme('Modern Babbitt')  # Default to Modern Babbitt
-        if current_theme in ThemeManager.get_available_themes():
-            self.theme_combo.setCurrentText(current_theme)
-        else:
-            # If saved theme is not available, default to first available theme
-            available_themes = ThemeManager.get_available_themes()
-            if available_themes:
-                self.theme_combo.setCurrentText(available_themes[0])
-
-        startup_page = self.settings_service.get_startup_page()
-        self.startup_page_combo.setCurrentText(startup_page)
-
-        self.confirm_on_delete_check.setChecked(
-            self.settings_service.get_confirm_on_delete()
-        )
-
-        export_path = self.settings_service.get_default_export_path(
-            os.path.expanduser("~")
-        )
-        self.default_export_path_input.setText(export_path)
-
-        self.export_with_logo_check.setChecked(
-            self.settings_service.get_export_with_logo()
-        )
+        saved_theme = self.settings_service.get_theme(BabbittTheme.CORPORATE_THEME)
+        if saved_theme in ThemeManager.get_available_themes():
+            self.theme_combo.setCurrentText(saved_theme)
 
     def save_settings(self):
         """Save the current settings from the UI to storage."""
-        # Save selected theme
         selected_theme = self.theme_combo.currentText()
         self.settings_service.set_theme(selected_theme)
         
-        self.settings_service.set_startup_page(self.startup_page_combo.currentText())
-        self.settings_service.set_confirm_on_delete(
-            self.confirm_on_delete_check.isChecked()
-        )
+        # Also apply the theme immediately upon saving
+        self.theme_changed.emit(selected_theme)
 
-        self.settings_service.set_default_export_path(
-            self.default_export_path_input.text()
-        )
-        self.settings_service.set_export_with_logo(
-            self.export_with_logo_check.isChecked()
-        )
-
-        self.settings_service.sync()
-
-        QMessageBox.information(
-            self, "Settings Saved", "Your settings have been saved successfully."
-        )
-
-    def browse_for_export_path(self):
-        """Open a dialog to select a default export directory."""
-        current_path = self.default_export_path_input.text()
-        directory = QFileDialog.getExistingDirectory(
-            self, "Select Default Export Path", current_path
-        )
-        if directory:
-            self.default_export_path_input.setText(directory)
-
-    def reseed_database(self):
-        """Triggers the database seeding script."""
-        reply = QMessageBox.question(
-            self,
-            "Reseed Database",
-            "This will delete all existing data and re-seed the database with default values. Are you sure you want to continue?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
-        )
-
-        if reply == QMessageBox.Yes:
-            try:
-                # Assuming the script is in a 'scripts' folder at the project root
-                script_path = os.path.join(os.getcwd(), "scripts", "seed_database.py")
-                if not os.path.exists(script_path):
-                    QMessageBox.critical(
-                        self, "Error", f"Seeding script not found at {script_path}"
-                    )
-                    return
-
-                # Use the same python executable that is running the app
-                python_executable = sys.executable
-                subprocess.run(
-                    [python_executable, script_path],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-                QMessageBox.information(
-                    self, "Success", "Database has been re-seeded successfully."
-                )
-            except subprocess.CalledProcessError as e:
-                QMessageBox.critical(
-                    self, "Error", f"Failed to re-seed database:\n{e.stderr}"
-                )
-            except Exception as e:
-                QMessageBox.critical(
-                    self, "Error", f"An unexpected error occurred: {e}"
-                )
+        QMessageBox.information(self, "Settings Saved", "Your settings have been saved successfully.")
+        
+    def get_selected_theme(self) -> str:
+        """Returns the currently selected theme from the dropdown."""
+        return self.theme_combo.currentText()

@@ -277,6 +277,9 @@ class ImprovedProductSelectionDialog(QDialog):
         # Right panel - Configuration
         self.right_panel = self._create_right_panel()
         main_layout.addWidget(self.right_panel, 2)
+        
+        # Apply enhanced form styling
+        self._enhance_form_styling()
     
     def _create_left_panel(self) -> QWidget:
         """Create modern left panel for product selection."""
@@ -869,3 +872,33 @@ class ImprovedProductSelectionDialog(QDialog):
         if hasattr(self, 'db') and self.db:
             self.db.close()
         super().closeEvent(event)
+
+    def _enhance_form_styling(self):
+        """Apply enhanced styling to form elements for better usability."""
+        # This method makes the interface more user-friendly
+        
+        # Make buttons more prominent
+        if hasattr(self, 'add_button'):
+            self.add_button.setProperty("class", "primary")
+            self.add_button.setText("Add to Quote")
+            self.add_button.setMinimumHeight(40)
+        
+        # Enhance quantity controls
+        if hasattr(self, 'quantity_spinner'):
+            self.quantity_spinner.setMinimumHeight(36)
+            self.quantity_spinner.setMinimum(1)
+            self.quantity_spinner.setMaximum(999)
+        
+        # Make total price more prominent
+        if hasattr(self, 'total_price_label'):
+            self.total_price_label.setStyleSheet("""
+                QLabel {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #ea580c;
+                    padding: 8px 12px;
+                    background-color: #fff7ed;
+                    border: 1px solid #fed7aa;
+                    border-radius: 6px;
+                }
+            """)

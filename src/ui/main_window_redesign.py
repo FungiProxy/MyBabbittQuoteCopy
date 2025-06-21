@@ -24,41 +24,29 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.ui.theme.babbitt_theme import BabbittTheme
-from src.ui.views.customers_page import CustomersPage
-from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
-from src.ui.views.settings_page import SettingsPage
+from src.core.services.settings_service import SettingsService
 from src.ui.views.dashboard_redesign import DashboardRedesign
+from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
+from src.ui.views.customers_page import CustomersPage
+from src.ui.views.settings_page import SettingsPage
+from src.ui.theme.theme_manager import ThemeManager
+from src.ui.theme.babbitt_theme import BabbittTheme
 
 logger = logging.getLogger(__name__)
 
 
 class MainWindowRedesign(QMainWindow):
-    """
-    Main window with beautiful blue gradient sidebar and professional styling.
-    Matches the polished UI from your screenshots.
-    """
+    """Modern main window with a clear, professional design."""
 
     def __init__(self):
-        """Initialize the main window with complete styling."""
         super().__init__()
+        self.settings_service = SettingsService()
         self.setWindowTitle("MyBabbittQuote - Babbitt International")
-        
-        # Set proper window size to match your screenshots
-        self.resize(1400, 900)
-        self.setMinimumSize(1200, 800)
-        
-        # Apply the complete theme immediately
-        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
-        
-        # Initialize UI components
+        self.resize(1400, 800)
         self._setup_ui()
         self._connect_signals()
-        
-        # Show dashboard by default
-        self._show_dashboard()
-        
-        logger.info("MainWindowRedesign initialized with complete styling")
+        self._load_and_apply_theme()
+        self.nav_list.setCurrentRow(0) # Start on dashboard
 
     def _setup_ui(self):
         """Set up the main UI layout with proper proportions."""
@@ -141,24 +129,47 @@ class MainWindowRedesign(QMainWindow):
         self._create_pages()
 
     def _create_content_header(self):
-        """Create the content area header with orange accent button."""
         self.header_frame = QFrame()
         self.header_frame.setObjectName("contentHeader")
         
         header_layout = QHBoxLayout(self.header_frame)
-        header_layout.setContentsMargins(24, 20, 24, 20)
+        header_layout.setContentsMargins(32, 24, 32, 24)
         
         # Page title with proper styling
         self.page_title = QLabel("Dashboard")
         self.page_title.setObjectName("pageTitle")
+        self.page_title.setStyleSheet("""
+            font-size: 28px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin: 0;
+        """)
         header_layout.addWidget(self.page_title)
         
-        # Spacer
         header_layout.addStretch()
         
-        # Header actions - orange accent button
+        # Orange accent button (matches your screenshot)
         self.new_quote_button = QPushButton("New Quote")
-        self.new_quote_button.setProperty("class", "primary")
+        self.new_quote_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #F39C12, stop:1 #E67E22);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 12px 24px;
+                font-size: 14px;
+                font-weight: 600;
+                min-height: 20px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #E67E22, stop:1 #D35400);
+            }
+            QPushButton:pressed {
+                background: #D35400;
+            }
+        """)
         header_layout.addWidget(self.new_quote_button)
 
     def _create_pages(self):
@@ -201,11 +212,7 @@ class MainWindowRedesign(QMainWindow):
         self.new_quote_button.clicked.connect(self._show_quote_creation)
         
         # Page-specific signals
-        try:
-            if hasattr(self.settings_page, 'theme_changed'):
-                self.settings_page.theme_changed.connect(self._apply_theme)
-        except:
-            pass
+        self.settings_page.theme_changed.connect(self._apply_theme)
 
     @Slot(int)
     def _on_nav_changed(self, index):
@@ -238,10 +245,12 @@ class MainWindowRedesign(QMainWindow):
         self.nav_list.setCurrentRow(0)
 
     @Slot(str)
-    def _apply_theme(self, theme_name):
-        """Apply a theme to the application."""
-        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
-        logger.info(f"Applied theme: {theme_name}")
+    def _apply_theme(self, theme_name: str):
+        """Apply the selected theme and save the setting."""
+        ThemeManager.apply_theme(theme_name)
+        # The theme is now applied globally via the manager, no need to setStyleSheet here
+        self.settings_service.set_theme(theme_name)
+        logger.info(f"Theme changed to: {theme_name}")
 
     def show_notification(self, message, message_type="info"):
         """Show a notification message."""
@@ -279,6 +288,11 @@ class MainWindowRedesign(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def _load_and_apply_theme(self):
+        """Load the saved theme and apply it on startup."""
+        saved_theme = self.settings_service.get_theme(BabbittTheme.CORPORATE_THEME)
+        self._apply_theme(saved_theme)
 
 
 # Utility function for easy theme application

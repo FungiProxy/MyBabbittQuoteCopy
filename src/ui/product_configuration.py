@@ -183,10 +183,54 @@ class ProductConfigurationWidget(QWidget):
         self.price_widget = self.create_price_summary()
         layout.addWidget(self.price_widget)
         
+        # Add to Quote button
+        self.add_button = QPushButton("Add to Quote")
+        self.add_button.setStyleSheet(BabbittStyles.get_button_style())
+        self.add_button.clicked.connect(self._on_add_to_quote)
+        layout.addWidget(self.add_button)
+        
         layout.addStretch()
         
         # Add the scroll area to the main layout
         main_layout.addWidget(scroll_area)
+        
+        # Apply enhanced form styling
+        self._enhance_form_styling()
+        
+    def _enhance_form_styling(self):
+        """Apply enhanced styling to form elements for better usability."""
+        # This method makes the interface more user-friendly
+        
+        # Make buttons more prominent
+        if hasattr(self, 'add_button'):
+            self.add_button.setProperty("class", "primary")
+            self.add_button.setText("Add to Quote")
+            self.add_button.setMinimumHeight(40)
+        
+        # Enhance quantity controls
+        if hasattr(self, 'quantity'):
+            self.quantity.setMinimumHeight(36)
+            self.quantity.setMinimum(1)
+            self.quantity.setMaximum(999)
+        
+        # Make total price more prominent
+        if hasattr(self, 'total_label'):
+            self.total_label.setStyleSheet("""
+                QLabel {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #ea580c;
+                    padding: 8px 12px;
+                    background-color: #fff7ed;
+                    border: 1px solid #fed7aa;
+                    border-radius: 6px;
+                }
+            """)
+    
+    def _on_add_to_quote(self):
+        """Handle add to quote button click."""
+        config_summary = self.get_configuration_summary()
+        self.configuration_changed.emit(config_summary)
         
     def create_configuration_form(self):
         """Create the main configuration form"""
