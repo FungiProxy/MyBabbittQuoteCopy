@@ -25,6 +25,45 @@ from src.core.services.quote_service import QuoteService
 logger = logging.getLogger(__name__)
 
 
+class StatCard(QFrame):
+    """A custom widget for displaying a single statistic on the dashboard."""
+    def __init__(self, title: str, value: str, subtitle: str, icon: str, parent=None):
+        super().__init__(parent)
+        self.setProperty("card", True)
+        self.setProperty("elevated", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(10)
+
+        # Header with title and icon
+        header_layout = QHBoxLayout()
+        title_label = QLabel(title)
+        title_label.setProperty("class", "statTitle")
+        icon_label = QLabel(icon)
+        icon_label.setProperty("class", "statIcon")
+        header_layout.addWidget(title_label)
+        header_layout.addStretch()
+        header_layout.addWidget(icon_label)
+        layout.addLayout(header_layout)
+
+        # Value
+        self.value_label = QLabel(value)
+        self.value_label.setProperty("class", "statValue")
+        layout.addWidget(self.value_label)
+
+        # Subtitle
+        self.subtitle_label = QLabel(subtitle)
+        self.subtitle_label.setProperty("class", "statSubtitle")
+        layout.addWidget(self.subtitle_label)
+
+    def set_value(self, value: str):
+        self.value_label.setText(value)
+
+    def set_subtitle(self, subtitle: str):
+        self.subtitle_label.setText(subtitle)
+
+
 class DashboardRedesign(QWidget):
     """
     Simplified dashboard for MyBabbittQuote focusing on core business metrics.
@@ -68,15 +107,9 @@ class DashboardRedesign(QWidget):
         stats_layout.setSpacing(20)
         
         # Create stat cards
-        self.total_quotes_card = self._create_stat_card(
-            "Total Quotes", "0", "This month", "📋"
-        )
-        self.quote_value_card = self._create_stat_card(
-            "Quote Value", "$0", "Total pending", "💰"
-        )
-        self.active_customers_card = self._create_stat_card(
-            "Active Customers", "0", "This quarter", "👥"
-        )
+        self.total_quotes_card = StatCard("Total Quotes", "0", "This month", "📋")
+        self.quote_value_card = StatCard("Quote Value", "$0", "Total pending", "💰")
+        self.active_customers_card = StatCard("Active Customers", "0", "This quarter", "👥")
         
         # Add cards to grid (responsive layout)
         stats_layout.addWidget(self.total_quotes_card, 0, 0)
@@ -88,44 +121,9 @@ class DashboardRedesign(QWidget):
         stats_layout.setColumnStretch(1, 1)
         stats_layout.setColumnStretch(2, 1)
 
-    def _create_stat_card(self, title: str, value: str, subtitle: str, icon: str) -> QFrame:
+    def _create_stat_card(self, title: str, value: str, subtitle: str, icon: str) -> StatCard:
         """Create a statistics card widget."""
-        card = QFrame()
-        card.setProperty("class", "statCard")
-
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        # Header with title and icon
-        header_layout = QHBoxLayout()
-
-        title_label = QLabel(title)
-        title_label.setProperty("class", "statTitle")
-
-        icon_label = QLabel(icon)
-        icon_label.setProperty("class", "statIcon")
-
-        header_layout.addWidget(title_label)
-        header_layout.addStretch()
-        header_layout.addWidget(icon_label)
-
-        layout.addLayout(header_layout)
-
-        # Value
-        value_label = QLabel(value)
-        value_label.setProperty("class", "statValue")
-        layout.addWidget(value_label)
-
-        # Subtitle
-        subtitle_label = QLabel(subtitle)
-        subtitle_label.setProperty("class", "statSubtitle")
-        layout.addWidget(subtitle_label)
-
-        # Store references for updating
-        card.value_label = value_label
-        card.subtitle_label = subtitle_label
-
-        return card
+        return StatCard(title, value, subtitle, icon)
 
     def _create_recent_section(self):
         """Create the recent quotes section."""
@@ -139,9 +137,11 @@ class DashboardRedesign(QWidget):
         
         # Recent quotes container
         self.recent_quotes_container = QFrame()
-        self.recent_quotes_container.setProperty("class", "card")
+        self.recent_quotes_container.setProperty("card", True)
         
         self.recent_quotes_layout = QVBoxLayout(self.recent_quotes_container)
+        self.recent_quotes_layout.setContentsMargins(0, 0, 0, 0)
+        self.recent_quotes_layout.setSpacing(0)
         
         # Placeholder
         placeholder = QLabel("Your recent quotes will appear here")
@@ -212,14 +212,14 @@ class DashboardRedesign(QWidget):
     def _update_stat_cards(self, stats: Dict):
         """Update the statistics cards with new data."""
         # Update total quotes
-        self.total_quotes_card.value_label.setText(str(stats['total_quotes']))
+        self.total_quotes_card.set_value(str(stats['total_quotes']))
         
         # Update quote value
         value_formatted = f"${stats['total_value']:,.2f}"
-        self.quote_value_card.value_label.setText(value_formatted)
+        self.quote_value_card.set_value(value_formatted)
         
         # Update active customers
-        self.active_customers_card.value_label.setText(str(stats['active_customers']))
+        self.active_customers_card.set_value(str(stats['active_customers']))
 
     def _update_recent_quotes(self, quotes: List[Dict]):
         """Update the recent quotes section."""
@@ -247,7 +247,8 @@ class DashboardRedesign(QWidget):
         item.setProperty("class", "quoteItemCard")
 
         layout = QHBoxLayout(item)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(15, 10, 15, 10)
+        layout.setSpacing(15)
         
         # Quote info
         info_layout = QVBoxLayout()

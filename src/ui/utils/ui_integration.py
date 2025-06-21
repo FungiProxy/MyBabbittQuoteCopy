@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QFrame, QComboBox, Q
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QColor
 
-from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.theme.babbitt_theme import BabbittTheme
 
 
 class UIAnimations:
@@ -115,7 +115,7 @@ How to update your existing product_selection_dialog.py:
 1. Replace the imports at the top:
    
    from src.ui.product_selection_dialog_improved import ImprovedProductSelectionDialog
-   from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+   from src.ui.theme.babbitt_theme import BabbittTheme
    from src.ui.utils.ui_integration import ModernWidgetFactory, UIAnimations
 
 2. Replace your dialog initialization:
@@ -128,10 +128,10 @@ How to update your existing product_selection_dialog.py:
 
 3. Apply the theme in your main.py or main_window.py:
 
-   from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+   from src.ui.theme.babbitt_theme import BabbittTheme
    
    app = QApplication(sys.argv)
-   ModernBabbittTheme.apply_modern_theme(app)
+   BabbittTheme.apply_modern_theme(app)
    
    # Rest of your app initialization...
 
@@ -167,7 +167,7 @@ class QuickMigrationHelper:
         🟡 20 min implementation - Call this on your existing dialog after creation
         """
         # Apply modern theme
-        dialog_widget.setStyleSheet(ModernBabbittTheme.get_application_stylesheet())
+        dialog_widget.setStyleSheet(BabbittTheme.get_application_stylesheet())
         
         # Update all combo boxes to modern style
         for combo in dialog_widget.findChildren(QComboBox):
@@ -185,7 +185,7 @@ class QuickMigrationHelper:
         
         # Update all group boxes
         for group in dialog_widget.findChildren(QGroupBox):
-            group.setStyleSheet(ModernBabbittTheme.get_card_style(elevated=True))
+            group.setStyleSheet(BabbittTheme.get_card_style(elevated=True))
         
         # Force style refresh
         dialog_widget.style().unpolish(dialog_widget)
@@ -206,7 +206,7 @@ class QuickMigrationHelper:
             combo.setStyleSheet(f"""
                 QComboBox {{
                     padding: 6px 10px;
-                    border: 1px solid {ModernBabbittTheme.BORDER_GRAY};
+                    border: 1px solid {BabbittTheme.BORDER_GRAY};
                     border-radius: 4px;
                     background-color: white;
                     font-size: 13px;
@@ -214,17 +214,17 @@ class QuickMigrationHelper:
                     min-height: 28px;
                 }}
                 QComboBox:focus {{
-                    border-color: {ModernBabbittTheme.PRIMARY_BLUE};
+                    border-color: {BabbittTheme.PRIMARY_BLUE};
                 }}
                 QComboBox::drop-down {{
                     width: 20px;
                     border: none;
                 }}
                 QComboBox QAbstractItemView {{
-                    border: 1px solid {ModernBabbittTheme.BORDER_GRAY};
+                    border: 1px solid {BabbittTheme.BORDER_GRAY};
                     border-radius: 4px;
                     background-color: white;
-                    selection-background-color: {ModernBabbittTheme.LIGHT_BLUE};
+                    selection-background-color: {BabbittTheme.LIGHT_BLUE};
                     max-height: 200px;
                 }}
             """)
@@ -238,16 +238,16 @@ class QuickMigrationHelper:
 
 1. Copy the new files to your project:
    - src/ui/product_selection_dialog_improved.py
-   - src/ui/theme/modern_babbitt_theme.py 
+   - src/ui/theme/babbitt_theme.py 
    - src/ui/utils/ui_integration.py
 
 2. In your main application file, add the theme:
    
    # In main.py or wherever you create QApplication
-   from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+   from src.ui.theme.babbitt_theme import BabbittTheme
    
    app = QApplication(sys.argv)
-   ModernBabbittTheme.apply_modern_theme(app)  # Add this line
+   BabbittTheme.apply_modern_theme(app)  # Add this line
 
 3. Quick fix for existing dialogs - add this to any dialog's __init__:
    
@@ -343,7 +343,7 @@ class SampleModernDialog(QWidget):
         self.resize(600, 400)
         
         # Apply modern theme
-        self.setStyleSheet(ModernBabbittTheme.get_application_stylesheet())
+        self.setStyleSheet(BabbittTheme.get_application_stylesheet())
         
         self._setup_ui()
     
@@ -352,7 +352,7 @@ class SampleModernDialog(QWidget):
         from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QSpinBox, QLineEdit
         
         layout = QVBoxLayout(self)
-        layout.setSpacing(ModernBabbittTheme.get_modern_form_spacing()['section_spacing'])
+        layout.setSpacing(BabbittTheme.get_modern_form_spacing()['section_spacing'])
         
         # Modern title
         title = ModernWidgetFactory.create_title_label("Sample Configuration")
@@ -431,7 +431,7 @@ def test_modern_ui_improvements():
     import sys
     
     app = QApplication(sys.argv)
-    ModernBabbittTheme.apply_modern_theme(app)
+    BabbittTheme.apply_modern_theme(app)
     
     # Test sample dialog
     dialog = SampleModernDialog()

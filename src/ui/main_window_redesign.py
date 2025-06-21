@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QVBoxLayout,
     QWidget,
+    QSizePolicy,
+    QGridLayout,
 )
 
 from src.core.database import SessionLocal
@@ -46,12 +48,18 @@ class MainWindowRedesign(QMainWindow):
         """Initialize the redesigned main window."""
         super().__init__()
         self.setWindowTitle("MyBabbittQuote - Babbitt International")
-        self.resize(1400, 800)
         
-        # Get settings and apply theme
+        # Set initial size without aspect ratio constraint
+        self.resize(1600, 900)
+        
+        # Set minimum size - ensure it's enforced
+        self.setMinimumSize(1200, 750)
+        
+        # Initialize theme mode and apply default
+        self.current_theme = 'Light' # Default to light mode
         self.settings_service = SettingsService()
-        theme_name = self.settings_service.get_theme('Modern Babbitt')  # Default to Modern Babbitt
-        ThemeManager.apply_theme(theme_name, QApplication.instance())
+        # Note: We will load the saved theme mode later if needed
+        ThemeManager.apply_theme(self.current_theme)
         
         # Initialize UI
         self._setup_ui()
@@ -64,7 +72,7 @@ class MainWindowRedesign(QMainWindow):
 
     def _setup_ui(self):
         """Set up the main UI layout."""
-        # Central widget with horizontal layout
+        # Use our custom AspectRatioWidget as the central container
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         
@@ -84,6 +92,7 @@ class MainWindowRedesign(QMainWindow):
         """Create the sidebar navigation panel."""
         self.sidebar_frame = QFrame()
         self.sidebar_frame.setObjectName("sidebarFrame")
+        self.sidebar_frame.setMaximumWidth(260) # Constrain sidebar width
         
         sidebar_layout = QVBoxLayout(self.sidebar_frame)
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
@@ -117,6 +126,11 @@ class MainWindowRedesign(QMainWindow):
         # Spacer
         sidebar_layout.addStretch()
         
+        # Theme toggle button
+        self.theme_toggle_button = QPushButton("🌙 Dark Mode")
+        self.theme_toggle_button.setObjectName("settingsButton") # Reuse style
+        sidebar_layout.addWidget(self.theme_toggle_button)
+        
         # Settings button at bottom
         self.settings_button = QPushButton("⚙️ Settings")
         self.settings_button.setObjectName("settingsButton")
@@ -137,6 +151,7 @@ class MainWindowRedesign(QMainWindow):
         
         # Stacked widget for different pages
         self.stacked_widget = QStackedWidget()
+        self.stacked_widget.setMinimumSize(0, 0)
         content_layout.addWidget(self.stacked_widget)
         
         # Initialize pages
@@ -146,22 +161,27 @@ class MainWindowRedesign(QMainWindow):
         """Create the content area header."""
         self.header_frame = QFrame()
         self.header_frame.setObjectName("contentHeader")
+        self.header_frame.setFixedHeight(100)
         
-        header_layout = QHBoxLayout(self.header_frame)
-        header_layout.setContentsMargins(20, 20, 20, 20)
+        # Use QGridLayout for more robust alignment
+        header_layout = QGridLayout(self.header_frame)
+        header_layout.setContentsMargins(30, 0, 30, 0)
         
         # Page title
         self.page_title = QLabel("Dashboard")
         self.page_title.setObjectName("pageTitle")
-        header_layout.addWidget(self.page_title)
+        # Align title to the left and center vertically
+        header_layout.addWidget(self.page_title, 0, 0, Qt.AlignmentFlag.AlignVCenter)
         
-        # Spacer
-        header_layout.addStretch()
+        # Spacer column that expands
+        header_layout.setColumnStretch(1, 1)
         
         # Header actions
         self.new_quote_button = QPushButton("New Quote")
+        self.new_quote_button.setObjectName("new_quote_button")
         self.new_quote_button.setProperty("class", "primary")
-        header_layout.addWidget(self.new_quote_button)
+        # Align button to the right and center vertically
+        header_layout.addWidget(self.new_quote_button, 0, 2, Qt.AlignmentFlag.AlignVCenter)
 
     def _create_pages(self):
         """Create and add all pages to the stacked widget."""
@@ -186,13 +206,15 @@ class MainWindowRedesign(QMainWindow):
         # Navigation
         self.nav_list.currentRowChanged.connect(self._on_nav_changed)
         self.settings_button.clicked.connect(self._show_settings)
+        self.theme_toggle_button.clicked.connect(self._toggle_theme)
         
         # Header actions
         self.new_quote_button.clicked.connect(self._show_quote_creation)
         
         # Page-specific signals
-        if hasattr(self.settings_page, 'theme_changed'):
-            self.settings_page.theme_changed.connect(self._apply_theme)
+        # The old theme switching from settings page is removed
+        # if hasattr(self.settings_page, 'theme_changed'):
+        #     self.settings_page.theme_changed.connect(self._apply_theme)
 
     @Slot(int)
     def _on_nav_changed(self, index):
@@ -224,12 +246,25 @@ class MainWindowRedesign(QMainWindow):
         """Show dashboard page."""
         self.nav_list.setCurrentRow(0)
 
+    @Slot()
+    def _toggle_theme(self):
+        """Toggle between light and dark themes."""
+        if self.current_theme == 'Light':
+            self.current_theme = 'Dark'
+            self.theme_toggle_button.setText("☀️ Light Mode")
+        else:
+            self.current_theme = 'Light'
+            self.theme_toggle_button.setText("🌙 Dark Mode")
+            
+        ThemeManager.apply_theme(self.current_theme)
+        logger.info(f"Switched theme to {self.current_theme}")
+
     @Slot(str)
     def _apply_theme(self, theme_name):
         """Apply a theme to the application."""
         try:
-            # Apply theme to the entire application
-            ThemeManager.apply_theme(theme_name, QApplication.instance())
+            # This method is now simplified as theme is managed by the toggle
+            ThemeManager.apply_theme(theme_name)
             
             # Save the theme setting
             self.settings_service.set_theme(theme_name)
@@ -277,6 +312,8 @@ class MainWindowRedesign(QMainWindow):
         
         if reply == QMessageBox.Yes:
             logger.info("Application closing")
+            # Clean up services
+            self.settings_service.sync()
             event.accept()
         else:
             event.ignore()

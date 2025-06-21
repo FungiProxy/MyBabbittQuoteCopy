@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QFrame
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, pyqtProperty
 from PySide6.QtGui import QColor
 
-from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.theme.theme_manager import ThemeManager
 
 
 class UIAnimations:

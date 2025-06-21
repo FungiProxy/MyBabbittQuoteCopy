@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QGroupBox,
     QFormLayout,
+    QSizePolicy,
 )
 
 from src.core.database import SessionLocal
@@ -147,10 +148,15 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _create_items_panel(self) -> QWidget:
         """Create the quote items panel."""
-        panel = QGroupBox("Quote Items")
+        panel = QFrame()
+        panel.setProperty("card", True)
         
         layout = QVBoxLayout(panel)
         layout.setSpacing(15)
+
+        title_label = QLabel("Quote Items")
+        title_label.setObjectName("sectionTitle")
+        layout.addWidget(title_label)
         
         # Add product button
         add_product_btn = QPushButton("+ Add Product")
@@ -177,6 +183,11 @@ class QuoteCreationPageRedesign(QWidget):
         self.items_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.items_table.setAlternatingRowColors(True)
         
+        # 🔴 Critical: Allow the table to shrink and expand vertically
+        size_policy = self.items_table.sizePolicy()
+        size_policy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
+        self.items_table.setSizePolicy(size_policy)
+        
         layout.addWidget(self.items_table)
         
         # Empty state message
@@ -189,10 +200,16 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _create_customer_panel(self) -> QWidget:
         """Create the customer information panel."""
-        panel = QGroupBox("Customer Information")
+        panel = QFrame()
+        panel.setProperty("card", True)
         
-        layout = QFormLayout(panel)
-        layout.setSpacing(10)
+        layout = QVBoxLayout(panel)
+        form_layout = QFormLayout()
+        form_layout.setSpacing(10)
+
+        title_label = QLabel("Customer Information")
+        title_label.setObjectName("sectionTitle")
+        layout.addWidget(title_label)
         
         # Customer form fields
         self.company_name_edit = QLineEdit()
@@ -212,10 +229,10 @@ class QuoteCreationPageRedesign(QWidget):
         self.phone_edit.textChanged.connect(self._on_customer_info_changed)
         
         # Add to form
-        layout.addRow("Company Name:", self.company_name_edit)
-        layout.addRow("Contact Person:", self.contact_name_edit)
-        layout.addRow("Email:", self.email_edit)
-        layout.addRow("Phone:", self.phone_edit)
+        form_layout.addRow("Company Name:", self.company_name_edit)
+        form_layout.addRow("Contact Person:", self.contact_name_edit)
+        form_layout.addRow("Email:", self.email_edit)
+        form_layout.addRow("Phone:", self.phone_edit)
         
         # Notes field
         self.notes_edit = QTextEdit()
@@ -223,7 +240,9 @@ class QuoteCreationPageRedesign(QWidget):
         self.notes_edit.setMaximumHeight(80)
         self.notes_edit.textChanged.connect(self._on_customer_info_changed)
         
-        layout.addRow("Notes:", self.notes_edit)
+        form_layout.addRow("Notes:", self.notes_edit)
+
+        layout.addLayout(form_layout)
         
         return panel
 
@@ -280,18 +299,17 @@ class QuoteCreationPageRedesign(QWidget):
         dialog.exec()
 
     def _on_product_configured(self, config_data: Dict):
-        """Handle completed product configuration."""
+        """Handle completed product configuration from the new widget."""
         try:
-            # Add to quote items
-            # This part needs to be updated to handle the new unified data structure
+            # The new widget returns a summary with all the data we need.
             quote_item = {
-                "product_family": config_data.get("family_name", config_data.get("name")),
-                "model_number": config_data.get("name", "N/A"), # Placeholder
-                "configuration": "Details from new config flow", # Placeholder
-                "quantity": 1,
-                "unit_price": config_data.get("base_price", 0), # Placeholder
-                "total_price": config_data.get("base_price", 0), # Placeholder
-                "config_data": config_data
+                "product_family": config_data.get("product", "N/A"),
+                "model_number": config_data.get("product", "N/A"), # Use the base product name
+                "configuration": config_data.get("description", "Standard Configuration"),
+                "quantity": config_data.get("quantity", 1),
+                "unit_price": config_data.get("unit_price", 0),
+                "total_price": config_data.get("total_price", 0),
+                "config_data": config_data.get("configuration", {}) # Store the detailed config
             }
             
             self.current_quote["items"].append(quote_item)
@@ -301,7 +319,7 @@ class QuoteCreationPageRedesign(QWidget):
             logger.info(f"Added product to quote: {quote_item['model_number']}")
             
         except Exception as e:
-            logger.error(f"Error adding configured product: {e}")
+            logger.error(f"Error adding configured product: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Failed to add product to quote: {str(e)}")
 
     def _format_configuration(self, selected_options: Dict) -> str:

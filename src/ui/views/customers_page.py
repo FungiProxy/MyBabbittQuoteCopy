@@ -87,7 +87,6 @@ class CustomersPage(QWidget):
 
         # Customers list
         self.customers_list = QListWidget()
-        self.customers_list.setMinimumHeight(400)
         customers_layout.addWidget(self.customers_list)
 
         main_layout.addWidget(customers_card)

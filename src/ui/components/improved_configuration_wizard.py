@@ -16,13 +16,12 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QMessageBox, QProgressBar,
     QButtonGroup, QRadioButton
 )
-from PySide6.QtGui import QFont, QPixmap, QPalette
-from PySide6.QtCore import QIntValidator
+from PySide6.QtGui import QFont, QPixmap, QPalette, QIntValidator
 
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
-from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.theme.theme_manager import ThemeManager
 from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
 
 logger = logging.getLogger(__name__)
@@ -39,20 +38,8 @@ class ModernOptionWidget(QFrame):
         self.choices = choices
         self.adders = adders
         
-        self.setFrameStyle(QFrame.Box)
-        self.setStyleSheet("""
-            ModernOptionWidget {
-                background-color: #ffffff;
-                border: 1px solid #e0e4e7;
-                border-radius: 8px;
-                margin: 4px;
-                padding: 12px;
-            }
-            ModernOptionWidget:hover {
-                border-color: #2C3E50;
-                background-color: #f8f9fa;
-            }
-        """)
+        self.setProperty("card", True)
+        self.setProperty("interactive", True)
         
         self._setup_ui()
     
@@ -240,18 +227,15 @@ class ImprovedConfigurationWizard(QDialog):
     def __init__(self, product_data: Dict, parent=None):
         super().__init__(parent)
         self.product_data = product_data
-        self.product_service = ProductService()
-        self.config_service = ConfigurationService()
         self.db = SessionLocal()
+        self.product_service = ProductService()
+        self.config_service = ConfigurationService(self.db, self.product_service)
         self.quantity = 1
         self.option_widgets = {}
         
         self.setWindowTitle(f"Configure {product_data.get('name', 'Product')}")
         self.setModal(True)
         self.resize(1200, 800)
-        
-        # Apply modern styling
-        self.setStyleSheet(ModernBabbittTheme.get_application_stylesheet())
         
         self._setup_ui()
         self._load_product_config()
@@ -305,7 +289,8 @@ class ImprovedConfigurationWizard(QDialog):
     def _create_bottom_actions(self, parent_layout):
         """Create bottom action buttons with pricing."""
         actions_frame = QFrame()
-        actions_frame.setStyleSheet(ModernBabbittTheme.get_card_style(elevated=True))
+        actions_frame.setProperty("card", True)
+        actions_frame.setProperty("elevated", True)
         
         layout = QVBoxLayout(actions_frame)
         layout.setSpacing(12)
@@ -396,27 +381,30 @@ class ImprovedConfigurationWizard(QDialog):
         col = 0
         
         # Get core options (Voltage, Material)
-        core_options = ["Voltage", "Material"]
-        
-        for option_name in core_options:
-            try:
-                choices = self.product_service.get_option_choices(self.db, self.product_data["name"], option_name)
-                adders = self.product_service.get_option_adders(self.db, self.product_data["name"], option_name)
-                
-                if choices:
-                    option_widget = ModernOptionWidget(option_name, choices, adders)
-                    option_widget.option_changed.connect(self._on_option_changed)
-                    self.option_widgets[option_name] = option_widget
-                    
-                    grid_layout.addWidget(option_widget, row, col)
-                    
-                    col += 1
-                    if col >= 2:  # Max 2 columns
-                        col = 0
-                        row += 1
+        try:
+            # Materials
+            materials = self.product_service.get_available_materials_for_product(self.db, self.product_data["name"])
+            if materials:
+                # Assuming the first material option contains the choices
+                mat_option = materials[0]
+                option_widget = ModernOptionWidget("Material", mat_option['choices'], mat_option['adders'])
+                option_widget.option_changed.connect(self._on_option_changed)
+                self.option_widgets["Material"] = option_widget
+                grid_layout.addWidget(option_widget, row, col)
+                col += 1
+
+            # Voltages
+            voltages = self.product_service.get_available_voltages(self.db, self.product_data["name"])
+            if voltages:
+                # Voltage options don't typically have adders from this view
+                option_widget = ModernOptionWidget("Voltage", voltages, {})
+                option_widget.option_changed.connect(self._on_option_changed)
+                self.option_widgets["Voltage"] = option_widget
+                grid_layout.addWidget(option_widget, row, col)
+                col += 1
                         
-            except Exception as e:
-                logger.error(f"Error creating core option {option_name}: {e}")
+        except Exception as e:
+            logger.error(f"Error creating core option: {e}")
         
         group.setLayout(grid_layout)
         self.config_layout.addWidget(group)
@@ -481,7 +469,7 @@ class ImprovedConfigurationWizard(QDialog):
         
         # Spinner for common lengths
         spinner_container = QFrame()
-        spinner_container.setStyleSheet(ModernBabbittTheme.get_card_style())
+        spinner_container.setProperty("card", True)
         spinner_layout = QVBoxLayout(spinner_container)
         
         spinner_label = QLabel("Standard Length")
@@ -498,7 +486,7 @@ class ImprovedConfigurationWizard(QDialog):
         
         # Manual input for custom lengths
         manual_container = QFrame()
-        manual_container.setStyleSheet(ModernBabbittTheme.get_card_style())
+        manual_container.setProperty("card", True)
         manual_layout = QVBoxLayout(manual_container)
         
         manual_label = QLabel("Custom Length")
@@ -541,7 +529,7 @@ class ImprovedConfigurationWizard(QDialog):
     def _on_option_changed(self, option_name: str, value):
         """Handle option change."""
         try:
-            self.config_service.update_option(option_name, value)
+            self.config_service.set_option(option_name, value)
             self._update_total_price()
             self.progress_bar.setValue(min(100, self.progress_bar.value() + 5))
         except Exception as e:
@@ -555,10 +543,10 @@ class ImprovedConfigurationWizard(QDialog):
     def _update_total_price(self):
         """Update price display."""
         try:
-            config = self.config_service.get_current_configuration()
+            config = self.config_service.current_config
             if config:
-                base_price = config.get('base_price', 0)
-                total_price = config.get('final_price', 0)
+                base_price = config.base_product.get('base_price', 0.0)
+                total_price = config.final_price
                 
                 self.base_price_label.setText(f"Base Price: ${base_price:.2f}")
                 final_total = total_price * self.quantity
@@ -603,10 +591,16 @@ class ImprovedConfigurationWizard(QDialog):
     def _on_add_to_quote(self):
         """Handle add to quote action."""
         try:
-            config = self.config_service.get_current_configuration()
+            config = self.config_service.current_config
             if config:
-                config['quantity'] = self.quantity
-                self.product_added.emit(config)
+                config_dict = {
+                    "product_family_name": config.product_family_name,
+                    "model_number": config.model_number,
+                    "final_price": config.final_price,
+                    "quantity": self.quantity,
+                    "selected_options": config.selected_options,
+                }
+                self.product_added.emit(config_dict)
                 self.accept()
         except Exception as e:
             logger.error(f"Error adding to quote: {e}")

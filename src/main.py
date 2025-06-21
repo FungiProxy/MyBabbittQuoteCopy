@@ -10,7 +10,7 @@ import traceback
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from src.core.services.settings_service import SettingsService
-from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.theme.theme_manager import ThemeManager
 
 # Print debug information
 print("Starting Babbitt Quote Generator...")
@@ -37,10 +37,10 @@ def main():
         # Create application
         app = QApplication(sys.argv)
         
-        # Apply modern theme
-        print("Applying modern Babbitt theme...")
-        ModernBabbittTheme.apply_modern_theme(app)
-        print("Modern theme applied successfully")
+        # Apply Babbitt theme (light mode by default)
+        print("Applying Babbitt theme...")
+        ThemeManager.apply_theme('Light')
+        print("Babbitt theme applied successfully")
 
         print("Creating MainWindowRedesign...")
         # Create and show main window
