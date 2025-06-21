@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from src.core.services.settings_service import SettingsService
 from src.ui.theme.theme_manager import ThemeManager
+from src.ui.helpers.window_layout_helper import fix_configuration_dialog_layout
 
 
 class ThemePreviewWidget(QFrame):
@@ -37,40 +38,28 @@ class ThemePreviewWidget(QFrame):
     def __init__(self, theme_name, parent=None):
         super().__init__(parent)
         self.theme_name = theme_name
-        self.setObjectName("themePreview")
-        self.setFixedSize(200, 120)
-        self.setStyleSheet("""
-            QFrame#themePreview {
-                border: 2px solid #E0E0E0;
-                border-radius: 8px;
-                background-color: white;
-                padding: 8px;
-            }
-            QFrame#themePreview:hover {
-                border-color: #2196F3;
-                background-color: #F5F5F5;
-            }
-        """)
         self.setup_ui()
-        
+    
     def setup_ui(self):
-        """Set up the preview UI."""
+        """Setup the preview widget UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(5)
+        layout.setSpacing(8)
         
         # Theme name
         name_label = QLabel(self.theme_name)
         name_label.setAlignment(Qt.AlignCenter)
-        name_label.setStyleSheet("font-weight: bold; font-size: 12px; color: #333;")
+        name_label.setStyleSheet("font-weight: 600; font-size: 12px;")
         layout.addWidget(name_label)
         
-        # Color preview
+        # Color preview frame
         preview_frame = QFrame()
-        preview_frame.setObjectName("colorPreview")
+        preview_frame.setFixedHeight(40)
+        preview_frame.setStyleSheet("border: 1px solid #ccc; border-radius: 4px;")
+        
         preview_layout = QHBoxLayout(preview_frame)
-        preview_layout.setContentsMargins(5, 5, 5, 5)
-        preview_layout.setSpacing(3)
+        preview_layout.setContentsMargins(8, 8, 8, 8)
+        preview_layout.setSpacing(8)
         
         # Get theme info
         theme_info = ThemeManager.get_theme_preview_info(self.theme_name)
@@ -113,6 +102,9 @@ class SettingsPage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Fix configuration dialog layout
+        fix_configuration_dialog_layout(self)
+        
         self.setWindowTitle("Settings")
         self.settings_service = SettingsService()
 

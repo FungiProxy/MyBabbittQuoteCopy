@@ -31,6 +31,7 @@ from src.ui.views.customers_page import CustomersPage
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
 from src.ui.views.settings_page import SettingsPage
 from src.ui.views.dashboard_redesign import DashboardRedesign
+from src.ui.helpers.window_layout_helper import fix_main_window_layout
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +47,23 @@ class MainWindowRedesign(QMainWindow):
         """Initialize the redesigned main window."""
         super().__init__()
         self.setWindowTitle("MyBabbittQuote - Babbitt International")
-        self.resize(1400, 800)
+        self.setMinimumSize(1000, 600)
+
+        # CRITICAL: Apply layout and theme fixes
+        from src.ui.theme.modern_professional_theme import ModernProfessionalTheme
         
+        fix_main_window_layout(self)
+        ModernProfessionalTheme.apply_to_widget(self)
+
         # Initialize settings service (theme is now applied in main.py)
         self.settings_service = SettingsService()
         
         # Initialize UI
         self._setup_ui()
+        # Ensure sidebar has proper width
+        if hasattr(self, 'sidebar_frame'):
+            self.sidebar_frame.setMaximumWidth(180)
+            self.sidebar_frame.setMinimumWidth(180)
         self._connect_signals()
         
         # Show dashboard by default

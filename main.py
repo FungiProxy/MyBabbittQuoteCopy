@@ -25,7 +25,7 @@ try:
     # Import main window and theme
     print('Importing MainWindowRedesign...')
     from src.ui.main_window_redesign import MainWindowRedesign
-    from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+    from src.ui.theme.modern_professional_theme import apply_theme_to_application
     from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
 
     print('MainWindowRedesign imported successfully')
@@ -44,9 +44,10 @@ def main():
         # Create application
         app = QApplication(sys.argv)
         
-        # Apply Modern Babbitt theme to entire application
-        print('Applying Modern Babbitt theme...')
-        ModernBabbittTheme.apply_to_application(app)
+        # === THEME SELECTION ===
+        THEME_NAME = 'modern_professional'  # Change to 'dark_professional' or 'corporate' as desired
+        print(f'Applying theme: {THEME_NAME}...')
+        apply_theme_to_application(THEME_NAME)
         
         print('Creating MainWindowRedesign...')
         # Create and show main window
