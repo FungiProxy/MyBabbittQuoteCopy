@@ -18,9 +18,6 @@ class PricingStrategy(ABC):
 
 class MaterialAvailabilityStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        if not context.material_override_code:
-            return context.price
-
         # Get product type from model number
         product_type = context.product.model_number.split("-")[0]
 
@@ -39,12 +36,25 @@ class MaterialAvailabilityStrategy(PricingStrategy):
             .first()
         )
 
-        if (
-            not material_option
-            or context.material_override_code not in material_option.choices
-        ):
+        if not material_option:
             raise ValueError(
-                f"Material {context.material_override_code} is not available for product type {product_type}"
+                f"No material options found for product type {product_type}"
+            )
+
+        # Handle different choice formats
+        available_materials = []
+        if material_option.choices:
+            for choice in material_option.choices:
+                if isinstance(choice, dict):
+                    # New format: {'code': 'S', 'display_name': 'S - 316 Stainless Steel'}
+                    available_materials.append(choice.get('code', ''))
+                else:
+                    # Old format: simple string
+                    available_materials.append(str(choice))
+
+        if context.material_override_code not in available_materials:
+            raise ValueError(
+                f"Material {context.material_override_code} is not available for product type {product_type}. Available materials: {available_materials}"
             )
 
         return context.price
@@ -95,7 +105,7 @@ class MaterialPremiumStrategy(PricingStrategy):
             .first()
         )
 
-        if material_option and context.material.code in material_option.adders:
+        if material_option and material_option.adders and context.material.code in material_option.adders:
             context.price += material_option.adders[context.material.code]
 
         return context.price

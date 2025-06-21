@@ -5,8 +5,11 @@ File: src/ui/utils/ui_integration.py
 🟢 5 min implementation - Integration helper and usage examples
 """
 
+import logging
+from PySide6.QtWidgets import QComboBox, QLineEdit, QTextEdit, QSpinBox, QApplication
 from src.ui.theme.babbitt_theme import BabbittTheme
 
+logger = logging.getLogger(__name__)
 
 class QuickMigrationHelper:
     """Helper class to quickly migrate existing dialogs to modern styling."""
@@ -14,12 +17,17 @@ class QuickMigrationHelper:
     @staticmethod
     def modernize_existing_dialog(dialog_widget):
         """
-        Quick migration function to apply modern styling to existing dialogs.
-        
-        🟡 20 min implementation - Call this on your existing dialog after creation
+        Applies modern Babbitt styles to an existing dialog without a full rewrite.
         """
-        # Apply modern theme
-        dialog_widget.setStyleSheet(BabbittTheme.get_application_stylesheet())
+        if not QApplication.instance():
+            logger.warning("No QApplication instance found. Cannot apply styles.")
+            return
+
+        # Apply a consistent, modern stylesheet
+        dialog_widget.setStyleSheet(BabbittTheme.get_dialog_stylesheet())
+        
+        # Set background color for the main dialog
+        dialog_widget.setAutoFillBackground(True)
         
         # Update all combo boxes to modern style
         try:

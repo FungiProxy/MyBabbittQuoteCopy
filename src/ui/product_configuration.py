@@ -1,346 +1,140 @@
-# ui/product_configuration.py
-from PySide6.QtWidgets import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
+"""
+Product Configuration Widget
 
-class BabbittStyles:
-    """Centralized styling for quick, uniform appearance"""
-    
-    # Color scheme based on your current orange accent
-    COLORS = {
-        'primary_dark': '#2c3e50',      # Dark sidebar (similar to current)
-        'primary': '#34495e',           # Lighter dark
-        'accent': '#f39c12',            # Orange (keeping your current)
-        'accent_hover': '#e67e22',      # Darker orange for hover
-        'success': '#27ae60',           # Green for success
-        'background': '#ffffff',        # White background
-        'card_bg': '#f8f9fa',          # Light gray for cards
-        'border': '#dee2e6',           # Border color
-        'text_primary': '#2c3e50',     # Dark text
-        'text_secondary': '#6c757d'    # Gray text
-    }
-    
-    @staticmethod
-    def get_main_window_style():
-        """Main window styling"""
-        return """
-            QMainWindow {
-                background-color: #ffffff;
-            }
-        """
-    
-    @staticmethod
-    def get_sidebar_style():
-        """Sidebar navigation styling"""
-        return f"""
-            QWidget#sidebar {{
-                background-color: {BabbittStyles.COLORS['primary_dark']};
-                min-width: 220px;
-                max-width: 220px;
-            }}
-            QPushButton#sidebarButton {{
-                background-color: transparent;
-                color: white;
-                border: none;
-                padding: 12px 20px;
-                text-align: left;
-                font-size: 14px;
-                font-weight: 500;
-            }}
-            QPushButton#sidebarButton:hover {{
-                background-color: {BabbittStyles.COLORS['primary']};
-                border-left: 4px solid {BabbittStyles.COLORS['accent']};
-            }}
-            QPushButton#sidebarButton:checked {{
-                background-color: {BabbittStyles.COLORS['primary']};
-                border-left: 4px solid {BabbittStyles.COLORS['accent']};
-            }}
-        """
-    
-    @staticmethod
-    def get_card_style():
-        """Card container styling"""
-        return f"""
-            QFrame#card {{
-                background-color: {BabbittStyles.COLORS['card_bg']};
-                border: 1px solid {BabbittStyles.COLORS['border']};
-                border-radius: 8px;
-                padding: 16px;
-                margin: 8px;
-            }}
-        """
-    
-    @staticmethod
-    def get_button_style():
-        """Primary button styling"""
-        return f"""
-            QPushButton {{
-                background-color: {BabbittStyles.COLORS['accent']};
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 4px;
-                font-weight: 600;
-                font-size: 14px;
-            }}
-            QPushButton:hover {{
-                background-color: {BabbittStyles.COLORS['accent_hover']};
-            }}
-            QPushButton:pressed {{
-                background-color: #d68910;
-            }}
-            QPushButton:disabled {{
-                background-color: #cccccc;
-                color: #666666;
-            }}
-        """
-    
-    @staticmethod
-    def get_input_style():
-        """Input field styling"""
-        return f"""
-            QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {{
-                border: 1px solid {BabbittStyles.COLORS['border']};
-                border-radius: 4px;
-                padding: 8px 12px;
-                font-size: 14px;
-                background-color: white;
-            }}
-            QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
-                border: 2px solid {BabbittStyles.COLORS['accent']};
-                padding: 7px 11px;
-            }}
-            QTextEdit {{
-                border: 1px solid {BabbittStyles.COLORS['border']};
-                border-radius: 4px;
-                padding: 8px;
-                font-size: 14px;
-            }}
-        """
-    
-    @staticmethod
-    def get_table_style():
-        """Table widget styling"""
-        return f"""
-            QTableWidget {{
-                border: 1px solid {BabbittStyles.COLORS['border']};
-                gridline-color: {BabbittStyles.COLORS['border']};
-                background-color: white;
-            }}
-            QTableWidget::item {{
-                padding: 8px;
-            }}
-            QTableWidget::item:selected {{
-                background-color: {BabbittStyles.COLORS['accent']};
-                color: white;
-            }}
-            QHeaderView::section {{
-                background-color: {BabbittStyles.COLORS['card_bg']};
-                padding: 8px;
-                border: none;
-                font-weight: 600;
-            }}
-        """
+A comprehensive product configuration widget that integrates with the existing
+product service and configuration service to provide a working product configuration
+interface.
+"""
+
+import logging
+from typing import Dict, List, Optional
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QFormLayout,
+    QLabel,
+    QComboBox,
+    QSpinBox,
+    QPushButton,
+    QFrame,
+    QScrollArea,
+    QGroupBox,
+    QButtonGroup,
+    QRadioButton,
+    QCheckBox,
+    QLineEdit,
+    QMessageBox,
+)
+
+from src.core.database import SessionLocal
+from src.core.services.product_service import ProductService
+from src.core.services.configuration_service import ConfigurationService
+from src.ui.theme.babbitt_theme import BabbittTheme
+
+logger = logging.getLogger(__name__)
+
 
 class ProductConfigurationWidget(QWidget):
-    """Simplified product configuration for quick implementation"""
+    """
+    Product configuration widget that provides a working interface for
+    configuring Babbitt International products.
     
-    configuration_changed = Signal(dict)  # Emits when config changes
+    Features:
+    - Dynamic option loading from database
+    - Real-time pricing updates
+    - Material and voltage selection
+    - Additional options configuration
+    - Length-based pricing
+    - Professional styling
+    """
     
-    def __init__(self):
-        super().__init__()
+    configuration_changed = Signal(dict)  # Emitted when configuration changes
+    
+    def __init__(self, product_data: Optional[Dict] = None, parent=None):
+        super().__init__(parent)
+        self.product_data = product_data or {}
+        self.db = SessionLocal()
+        self.product_service = ProductService()
+        self.config_service = ConfigurationService(self.db, self.product_service)
+        
+        # Configuration state
         self.current_config = {}
-        self.base_price = 425.00  # LS2000 base price from screenshot
-        self.setup_ui()
+        self.available_options = {}
+        self.option_widgets = {}
         
-    def setup_ui(self):
-        # The main layout for this entire widget
+        # Base price from product data
+        self.base_price = self.product_data.get('base_price', 0.0)
+        
+        self._setup_ui()
+        self._load_product_configuration()
+        
+    def __del__(self):
+        """Clean up database connection."""
+        if hasattr(self, 'db') and self.db:
+            self.db.close()
+    
+    def _setup_ui(self):
+        """Set up the main UI layout."""
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-
-        # Scroll area to contain all the config options
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("QScrollArea { border: none; }") # Remove scroll area border
-
-        # A container widget for the scroll area's content
-        container_widget = QWidget()
-        scroll_area.setWidget(container_widget)
-        
-        layout = QVBoxLayout(container_widget) # Layout for the container
-        layout.setSpacing(16)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(20)
         
         # Title
         title = QLabel("Configure Product")
-        title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
-        layout.addWidget(title)
+        title.setStyleSheet("""
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #2c3e50;
+            margin-bottom: 10px;
+        """)
+        main_layout.addWidget(title)
         
-        # Configuration form
-        form_widget = self.create_configuration_form()
-        layout.addWidget(form_widget)
+        # Scrollable configuration area
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setStyleSheet("QScrollArea { border: none; }")
+        
+        self.config_container = QWidget()
+        self.config_layout = QVBoxLayout(self.config_container)
+        self.config_layout.setSpacing(16)
+        self.config_layout.setContentsMargins(0, 0, 0, 0)
+        
+        scroll_area.setWidget(self.config_container)
+        main_layout.addWidget(scroll_area)
         
         # Price summary
-        self.price_widget = self.create_price_summary()
-        layout.addWidget(self.price_widget)
+        self.price_widget = self._create_price_summary()
+        main_layout.addWidget(self.price_widget)
         
         # Add to Quote button
         self.add_button = QPushButton("Add to Quote")
-        self.add_button.setStyleSheet(BabbittStyles.get_button_style())
+        self.add_button.setStyleSheet(BabbittTheme.get_button_style())
         self.add_button.clicked.connect(self._on_add_to_quote)
-        layout.addWidget(self.add_button)
+        self.add_button.setMinimumHeight(45)
+        main_layout.addWidget(self.add_button)
         
-        layout.addStretch()
-        
-        # Add the scroll area to the main layout
-        main_layout.addWidget(scroll_area)
-        
-        # Apply enhanced form styling
-        self._enhance_form_styling()
-        
-    def _enhance_form_styling(self):
-        """Apply enhanced styling to form elements for better usability."""
-        # This method makes the interface more user-friendly
-        
-        # Make buttons more prominent
-        if hasattr(self, 'add_button'):
-            self.add_button.setProperty("class", "primary")
-            self.add_button.setText("Add to Quote")
-            self.add_button.setMinimumHeight(40)
-        
-        # Enhance quantity controls
-        if hasattr(self, 'quantity'):
-            self.quantity.setMinimumHeight(36)
-            self.quantity.setMinimum(1)
-            self.quantity.setMaximum(999)
-        
-        # Make total price more prominent
-        if hasattr(self, 'total_label'):
-            self.total_label.setStyleSheet("""
-                QLabel {
-                    font-size: 18px;
-                    font-weight: 700;
-                    color: #ea580c;
-                    padding: 8px 12px;
-                    background-color: #fff7ed;
-                    border: 1px solid #fed7aa;
-                    border-radius: 6px;
-                }
-            """)
+        # Apply theme styling
+        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
     
-    def _on_add_to_quote(self):
-        """Handle add to quote button click."""
-        config_summary = self.get_configuration_summary()
-        self.configuration_changed.emit(config_summary)
-        
-    def create_configuration_form(self):
-        """Create the main configuration form"""
-        form_card = QFrame()
-        form_card.setObjectName("card")
-        form_card.setStyleSheet(BabbittStyles.get_card_style())
-        
-        form_layout = QFormLayout()
-        form_layout.setSpacing(12)
-        
-        # Accessories section (from your screenshot)
-        accessories_label = QLabel("Accessories")
-        accessories_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #2c3e50;")
-        form_layout.addRow(accessories_label)
-        
-        # Extra Static Protection
-        self.static_protection = QComboBox()
-        self.static_protection.addItems(["No", "Yes (+$125)"])
-        self.static_protection.setStyleSheet(BabbittStyles.get_input_style())
-        self.static_protection.currentIndexChanged.connect(self.update_configuration)
-        form_layout.addRow("Extra Static Protection:", self.static_protection)
-        
-        # Bent Probe
-        self.bent_probe = QComboBox()
-        self.bent_probe.addItems(["No", "Yes (+$75)"])
-        self.bent_probe.setStyleSheet(BabbittStyles.get_input_style())
-        self.bent_probe.currentIndexChanged.connect(self.update_configuration)
-        form_layout.addRow("Bent Probe:", self.bent_probe)
-        
-        # Stainless Steel Tag
-        self.ss_tag = QComboBox()
-        self.ss_tag.addItems(["No", "Yes (+$25)"])
-        self.ss_tag.setStyleSheet(BabbittStyles.get_input_style())
-        self.ss_tag.currentIndexChanged.connect(self.update_configuration)
-        form_layout.addRow("Stainless Steel Tag:", self.ss_tag)
-        
-        # Connections section
-        connections_label = QLabel("Connections")
-        connections_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #2c3e50; margin-top: 16px;")
-        form_layout.addRow(connections_label)
-        
-        # Connection Type
-        self.connection_type = QComboBox()
-        self.connection_type.addItems(["NPT (Standard)", "BSP (+$50)", "Flanged (+$150)"])
-        self.connection_type.setStyleSheet(BabbittStyles.get_input_style())
-        self.connection_type.currentIndexChanged.connect(self.update_configuration)
-        form_layout.addRow("Connection Type:", self.connection_type)
-        
-        # NPT Size
-        self.npt_size = QComboBox()
-        self.npt_size.addItems(["3/4\" (Standard)", "1\" (+$25)", "1.5\" (+$50)", "2\" (+$75)"])
-        self.npt_size.setStyleSheet(BabbittStyles.get_input_style())
-        self.npt_size.currentIndexChanged.connect(self.update_configuration)
-        form_layout.addRow("NPT Size:", self.npt_size)
-        
-        # Electrical section
-        electrical_label = QLabel("Electrical")
-        electrical_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #2c3e50; margin-top: 16px;")
-        form_layout.addRow(electrical_label)
-        
-        # Voltage
-        self.voltage = QComboBox()
-        self.voltage.addItems(["115 VAC (Standard)", "230 VAC", "24 VDC (+$75)"])
-        self.voltage.setStyleSheet(BabbittStyles.get_input_style())
-        self.voltage.currentIndexChanged.connect(self.update_configuration)
-        form_layout.addRow("Supply Voltage:", self.voltage)
-        
-        # Special Options
-        special_label = QLabel("Special Options")
-        special_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #2c3e50; margin-top: 16px;")
-        form_layout.addRow(special_label)
-        
-        # Time Delay
-        self.time_delay = QCheckBox("Add Time Delay (+$150)")
-        self.time_delay.stateChanged.connect(self.update_configuration)
-        form_layout.addRow("", self.time_delay)
-        
-        # High Temperature
-        self.high_temp = QCheckBox("High Temperature Option (+$200)")
-        self.high_temp.stateChanged.connect(self.update_configuration)
-        form_layout.addRow("", self.high_temp)
-        
-        # Quantity
-        quantity_label = QLabel("Quantity")
-        quantity_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #2c3e50; margin-top: 16px;")
-        form_layout.addRow(quantity_label)
-        
-        self.quantity = QSpinBox()
-        self.quantity.setMinimum(1)
-        self.quantity.setMaximum(100)
-        self.quantity.setValue(1)
-        self.quantity.setStyleSheet(BabbittStyles.get_input_style())
-        self.quantity.valueChanged.connect(self.update_configuration)
-        form_layout.addRow("Quantity:", self.quantity)
-        
-        form_card.setLayout(form_layout)
-        return form_card
-        
-    def create_price_summary(self):
-        """Create price summary widget"""
+    def _create_price_summary(self) -> QFrame:
+        """Create the price summary widget."""
         price_card = QFrame()
         price_card.setObjectName("card")
-        price_card.setStyleSheet(BabbittStyles.get_card_style() + """
+        price_card.setStyleSheet("""
             QFrame#card {
                 background-color: #fff3cd;
                 border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 16px;
             }
         """)
         
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(price_card)
+        layout.setSpacing(12)
         
         # Title
         title = QLabel("Price Summary")
@@ -350,146 +144,437 @@ class ProductConfigurationWidget(QWidget):
         # Price breakdown
         self.price_breakdown = QLabel()
         self.price_breakdown.setWordWrap(True)
+        self.price_breakdown.setStyleSheet("color: #2c3e50; font-size: 14px;")
         layout.addWidget(self.price_breakdown)
         
         # Total
         self.total_label = QLabel()
-        self.total_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50; margin-top: 12px;")
+        self.total_label.setStyleSheet("""
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #ea580c;
+            padding: 8px 12px;
+            background-color: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 6px;
+        """)
         layout.addWidget(self.total_label)
         
-        price_card.setLayout(layout)
-        
-        # Initialize with base price
-        self.update_price_display()
-        
         return price_card
+    
+    def _load_product_configuration(self):
+        """Load and display product configuration options."""
+        if not self.product_data:
+            logger.warning("No product data provided for configuration")
+            return
         
-    def update_configuration(self):
-        """Update configuration and pricing when any option changes"""
-        # Build configuration dictionary
-        self.current_config = {
-            'base_model': 'LS2000',
-            'static_protection': self.static_protection.currentText().startswith("Yes"),
-            'bent_probe': self.bent_probe.currentText().startswith("Yes"),
-            'ss_tag': self.ss_tag.currentText().startswith("Yes"),
-            'connection_type': self.connection_type.currentText(),
-            'npt_size': self.npt_size.currentText(),
-            'voltage': self.voltage.currentText(),
-            'time_delay': self.time_delay.isChecked(),
-            'high_temp': self.high_temp.isChecked(),
-            'quantity': self.quantity.value()
-        }
+        family_name = self.product_data.get('family_name', self.product_data.get('name', ''))
+        if not family_name:
+            logger.warning("No product family name found in product data")
+            return
         
-        # Update price display
-        self.update_price_display()
+        try:
+            # Start configuration session
+            self.config_service.start_configuration(
+                product_family_id=self.product_data.get('id', 1),
+                product_family_name=family_name,
+                base_product_info=self.product_data
+            )
+            
+            # Load available options
+            self.available_options = self.product_service.get_additional_options(self.db, family_name)
+            
+            # Create configuration sections
+            self._create_core_options_section()
+            self._create_additional_options_sections()
+            self._create_quantity_section()
+            
+            # Update pricing
+            self._update_price_display()
+            
+        except Exception as e:
+            logger.error(f"Error loading product configuration: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to load product configuration: {e}")
+    
+    def _create_core_options_section(self):
+        """Create core options section (Material, Voltage)."""
+        group = QGroupBox("Core Configuration")
+        group.setStyleSheet("""
+            QGroupBox {
+                font-weight: 600;
+                color: #2C3E50;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 8px;
+                background-color: white;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 8px;
+                background-color: white;
+            }
+        """)
         
-        # Emit signal for other components
-        self.configuration_changed.emit(self.current_config)
+        layout = QFormLayout(group)
+        layout.setSpacing(16)
+        layout.setContentsMargins(16, 20, 16, 16)
         
-    def update_price_display(self):
-        """Calculate and display updated pricing"""
-        # Base price
-        unit_price = self.base_price
-        breakdown = [f"Base Model (LS2000): ${self.base_price:.2f}"]
+        # Material selection
+        material_options = [opt for opt in self.available_options if opt.get('category') == 'Material']
+        if material_options:
+            self.material_combo = QComboBox()
+            self.material_combo.setStyleSheet("""
+                QComboBox {
+                    border: 1px solid #ced4da;
+                    border-radius: 4px;
+                    padding: 8px;
+                    min-height: 20px;
+                    background-color: white;
+                }
+                QComboBox:focus {
+                    border-color: #2C3E50;
+                }
+            """)
+            
+            material_option = material_options[0]
+            choices = material_option.get('choices', [])
+            adders = material_option.get('adders', {})
+            
+            for choice in choices:
+                if isinstance(choice, dict):
+                    display_name = choice.get('display_name', choice.get('code', ''))
+                    code = choice.get('code', '')
+                else:
+                    display_name = str(choice)
+                    code = str(choice)
+                
+                price_adder = adders.get(code, 0)
+                if price_adder > 0:
+                    display_name += f" (+${price_adder:.2f})"
+                
+                self.material_combo.addItem(display_name, code)
+            
+            self.material_combo.currentIndexChanged.connect(self._on_material_changed)
+            layout.addRow("Material:", self.material_combo)
+            self.option_widgets['Material'] = self.material_combo
         
-        # Add accessory costs
-        if self.static_protection.currentText().startswith("Yes"):
-            unit_price += 125
-            breakdown.append("Extra Static Protection: +$125.00")
+        # Voltage selection
+        voltage_options = [opt for opt in self.available_options if opt.get('category') == 'Voltage']
+        if voltage_options:
+            self.voltage_combo = QComboBox()
+            self.voltage_combo.setStyleSheet("""
+                QComboBox {
+                    border: 1px solid #ced4da;
+                    border-radius: 4px;
+                    padding: 8px;
+                    min-height: 20px;
+                    background-color: white;
+                }
+                QComboBox:focus {
+                    border-color: #2C3E50;
+                }
+            """)
             
-        if self.bent_probe.currentText().startswith("Yes"):
-            unit_price += 75
-            breakdown.append("Bent Probe: +$75.00")
+            voltage_option = voltage_options[0]
+            choices = voltage_option.get('choices', [])
+            adders = voltage_option.get('adders', {})
             
-        if self.ss_tag.currentText().startswith("Yes"):
-            unit_price += 25
-            breakdown.append("Stainless Steel Tag: +$25.00")
+            for choice in choices:
+                price_adder = adders.get(choice, 0)
+                display_name = str(choice)
+                if price_adder > 0:
+                    display_name += f" (+${price_adder:.2f})"
+                
+                self.voltage_combo.addItem(display_name, choice)
             
-        # Connection costs
-        if "BSP" in self.connection_type.currentText():
-            unit_price += 50
-            breakdown.append("BSP Connection: +$50.00")
-        elif "Flanged" in self.connection_type.currentText():
-            unit_price += 150
-            breakdown.append("Flanged Connection: +$150.00")
-            
-        # NPT size costs
-        if "1\"" in self.npt_size.currentText() and "1.5\"" not in self.npt_size.currentText():
-            unit_price += 25
-            breakdown.append("1\" NPT: +$25.00")
-        elif "1.5\"" in self.npt_size.currentText():
-            unit_price += 50
-            breakdown.append("1.5\" NPT: +$50.00")
-        elif "2\"" in self.npt_size.currentText():
-            unit_price += 75
-            breakdown.append("2\" NPT: +$75.00")
-            
-        # Voltage options
-        if "24 VDC" in self.voltage.currentText():
-            unit_price += 75
-            breakdown.append("24 VDC Power: +$75.00")
-            
-        # Special options
-        if self.time_delay.isChecked():
-            unit_price += 150
-            breakdown.append("Time Delay: +$150.00")
-            
-        if self.high_temp.isChecked():
-            unit_price += 200
-            breakdown.append("High Temperature: +$200.00")
-            
-        # Calculate total
-        quantity = self.quantity.value()
-        total = unit_price * quantity
+            self.voltage_combo.currentIndexChanged.connect(self._on_voltage_changed)
+            layout.addRow("Voltage:", self.voltage_combo)
+            self.option_widgets['Voltage'] = self.voltage_combo
         
-        # Update display
-        self.price_breakdown.setText("\n".join(breakdown))
+        self.config_layout.addWidget(group)
+    
+    def _create_additional_options_sections(self):
+        """Create sections for additional options grouped by category."""
+        # Group options by category
+        options_by_category = {}
+        for option in self.available_options:
+            category = option.get('category', 'Other')
+            if category not in ['Material', 'Voltage']:  # Skip core options
+                if category not in options_by_category:
+                    options_by_category[category] = []
+                options_by_category[category].append(option)
         
-        if quantity > 1:
-            self.total_label.setText(f"Unit Price: ${unit_price:.2f}\nQuantity: {quantity}\nTotal: ${total:.2f}")
+        # Create section for each category
+        for category, options in options_by_category.items():
+            group = QGroupBox(category)
+            group.setStyleSheet("""
+                QGroupBox {
+                    font-weight: 600;
+                    color: #2C3E50;
+                    border: 2px solid #e9ecef;
+                    border-radius: 8px;
+                    margin-top: 12px;
+                    padding-top: 8px;
+                    background-color: white;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 12px;
+                    padding: 0 8px;
+                    background-color: white;
+                }
+            """)
+            
+            layout = QFormLayout(group)
+            layout.setSpacing(12)
+            layout.setContentsMargins(16, 20, 16, 16)
+            
+            for option in options:
+                self._create_option_widget(option, layout)
+            
+            self.config_layout.addWidget(group)
+    
+    def _create_option_widget(self, option: Dict, layout: QFormLayout):
+        """Create a widget for a specific option."""
+        option_name = option.get('name', '')
+        choices = option.get('choices', [])
+        adders = option.get('adders', {})
+        
+        if not choices:
+            return
+        
+        if len(choices) <= 4:
+            # Use radio buttons for few choices
+            widget = self._create_radio_group(option_name, choices, adders)
         else:
-            self.total_label.setText(f"Total: ${total:.2f}")
-            
-    def get_configuration_summary(self):
-        """Get configuration summary for quote generation"""
-        config = self.current_config.copy()
+            # Use dropdown for many choices
+            widget = self._create_dropdown(option_name, choices, adders)
         
-        # Calculate pricing
-        unit_price = self.calculate_unit_price()
-        total_price = unit_price * config['quantity']
+        layout.addRow(f"{option_name}:", widget)
+        self.option_widgets[option_name] = widget
+    
+    def _create_radio_group(self, option_name: str, choices: List, adders: Dict) -> QWidget:
+        """Create a radio button group for an option."""
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setSpacing(8)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        button_group = QButtonGroup()
+        
+        for i, choice in enumerate(choices):
+            if isinstance(choice, dict):
+                display_name = choice.get('display_name', choice.get('code', ''))
+                code = choice.get('code', '')
+            else:
+                display_name = str(choice)
+                code = str(choice)
+            
+            price_adder = adders.get(code, 0)
+            if price_adder > 0:
+                display_name += f" (+${price_adder:.2f})"
+            
+            radio = QRadioButton(display_name)
+            radio.setProperty("choice_code", code)
+            radio.setProperty("option_name", option_name)
+            
+            button_group.addButton(radio, i)
+            layout.addWidget(radio)
+            
+            if i == 0:  # Select first option by default
+                radio.setChecked(True)
+        
+        button_group.buttonClicked.connect(self._on_radio_changed)
+        return container
+    
+    def _create_dropdown(self, option_name: str, choices: List, adders: Dict) -> QComboBox:
+        """Create a dropdown for an option."""
+        combo = QComboBox()
+        combo.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 8px;
+                min-height: 20px;
+                background-color: white;
+            }
+            QComboBox:focus {
+                border-color: #2C3E50;
+            }
+        """)
+        
+        for choice in choices:
+            if isinstance(choice, dict):
+                display_name = choice.get('display_name', choice.get('code', ''))
+                code = choice.get('code', '')
+            else:
+                display_name = str(choice)
+                code = str(choice)
+            
+            price_adder = adders.get(code, 0)
+            if price_adder > 0:
+                display_name += f" (+${price_adder:.2f})"
+            
+            combo.addItem(display_name, code)
+        
+        combo.setProperty("option_name", option_name)
+        combo.currentIndexChanged.connect(self._on_dropdown_changed)
+        return combo
+    
+    def _create_quantity_section(self):
+        """Create quantity selection section."""
+        group = QGroupBox("Quantity")
+        group.setStyleSheet("""
+            QGroupBox {
+                font-weight: 600;
+                color: #2C3E50;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 8px;
+                background-color: white;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 8px;
+                background-color: white;
+            }
+        """)
+        
+        layout = QFormLayout(group)
+        layout.setSpacing(16)
+        layout.setContentsMargins(16, 20, 16, 16)
+        
+        self.quantity_spin = QSpinBox()
+        self.quantity_spin.setMinimum(1)
+        self.quantity_spin.setMaximum(999)
+        self.quantity_spin.setValue(1)
+        self.quantity_spin.setStyleSheet("""
+            QSpinBox {
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 8px;
+                min-height: 20px;
+                background-color: white;
+            }
+            QSpinBox:focus {
+                border-color: #2C3E50;
+            }
+        """)
+        self.quantity_spin.valueChanged.connect(self._on_quantity_changed)
+        layout.addRow("Quantity:", self.quantity_spin)
+        
+        self.config_layout.addWidget(group)
+    
+    def _on_material_changed(self):
+        """Handle material selection change."""
+        if hasattr(self, 'material_combo'):
+            value = self.material_combo.currentData()
+            self.config_service.set_option("Material", value)
+            self._update_price_display()
+    
+    def _on_voltage_changed(self):
+        """Handle voltage selection change."""
+        if hasattr(self, 'voltage_combo'):
+            value = self.voltage_combo.currentData()
+            self.config_service.set_option("Voltage", value)
+            self._update_price_display()
+    
+    def _on_radio_changed(self, button):
+        """Handle radio button change."""
+        option_name = button.property("option_name")
+        value = button.property("choice_code")
+        self.config_service.set_option(option_name, value)
+        self._update_price_display()
+    
+    def _on_dropdown_changed(self):
+        """Handle dropdown change."""
+        sender = self.sender()
+        if sender:
+            option_name = sender.property("option_name")
+            value = sender.currentData()
+            self.config_service.set_option(option_name, value)
+            self._update_price_display()
+    
+    def _on_quantity_changed(self, quantity: int):
+        """Handle quantity change."""
+        self._update_price_display()
+    
+    def _update_price_display(self):
+        """Update the price display with current configuration."""
+        try:
+            # Get current configuration
+            config = self.config_service.get_current_configuration()
+            if not config:
+                return
+            
+            # Calculate pricing
+            unit_price = config.get('final_price', self.base_price)
+            quantity = self.quantity_spin.value()
+            total_price = unit_price * quantity
+            
+            # Build price breakdown
+            breakdown = [f"Base Price: ${self.base_price:.2f}"]
+            
+            # Add option costs
+            selected_options = config.get('selected_options', {})
+            for option_name, value in selected_options.items():
+                if option_name in ['Material', 'Voltage']:
+                    # Get price adder for this option
+                    for opt in self.available_options:
+                        if opt.get('name') == option_name:
+                            adders = opt.get('adders', {})
+                            price_adder = adders.get(value, 0)
+                            if price_adder > 0:
+                                breakdown.append(f"{option_name}: +${price_adder:.2f}")
+                            break
+            
+            # Update display
+            self.price_breakdown.setText("\n".join(breakdown))
+            
+            if quantity > 1:
+                self.total_label.setText(f"Unit Price: ${unit_price:.2f}\nQuantity: {quantity}\nTotal: ${total_price:.2f}")
+            else:
+                self.total_label.setText(f"Total: ${total_price:.2f}")
+            
+            # Update current config
+            self.current_config = {
+                'unit_price': unit_price,
+                'quantity': quantity,
+                'total_price': total_price,
+                'selected_options': selected_options
+            }
+            
+        except Exception as e:
+            logger.error(f"Error updating price display: {e}", exc_info=True)
+    
+    def _on_add_to_quote(self):
+        """Handle add to quote button click."""
+        config_summary = self.get_configuration_summary()
+        self.configuration_changed.emit(config_summary)
+    
+    def get_configuration_summary(self) -> Dict:
+        """Get configuration summary for quote generation."""
+        config = self.config_service.get_current_configuration()
+        if not config:
+            return {}
         
         # Build readable configuration description
-        description_parts = ["LS2000 Level Switch"]
+        description_parts = [self.product_data.get('name', 'Product')]
         
-        if config['static_protection']:
-            description_parts.append("Extra Static Protection")
-        if config['bent_probe']:
-            description_parts.append("Bent Probe")
-        if config['ss_tag']:
-            description_parts.append("Stainless Steel Tag")
-            
-        # Create summary
+        selected_options = config.get('selected_options', {})
+        for option_name, value in selected_options.items():
+            if option_name in ['Material', 'Voltage']:
+                description_parts.append(f"{option_name}: {value}")
+        
         return {
-            'product': 'LS2000',
+            'product': self.product_data.get('name', 'Product'),
             'description': ", ".join(description_parts),
-            'configuration': config,
-            'unit_price': unit_price,
-            'quantity': config['quantity'],
-            'total_price': total_price
-        }
-        
-    def calculate_unit_price(self):
-        """Calculate unit price based on current configuration"""
-        price = self.base_price
-        
-        if self.current_config.get('static_protection'):
-            price += 125
-        if self.current_config.get('bent_probe'):
-            price += 75
-        if self.current_config.get('ss_tag'):
-            price += 25
-            
-        # Add other costs based on configuration...
-        # (Same logic as update_price_display)
-        
-        return price
+            'configuration': self.current_config,
+            'unit_price': self.current_config.get('unit_price', 0),
+            'quantity': self.current_config.get('quantity', 1),
+            'total_price': self.current_config.get('total_price', 0)
+        } 

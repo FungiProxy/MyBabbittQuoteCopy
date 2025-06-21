@@ -18,7 +18,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QVBoxLayout,
     QWidget,
+    QGraphicsDropShadowEffect,
 )
+from PySide6.QtGui import QColor
 
 from src.core.database import SessionLocal
 from src.core.services.quote_service import QuoteService
@@ -49,11 +51,22 @@ class StatisticsCard(QFrame):
             }
             QFrame:hover {
                 border-color: #d1d5db;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+                /* box-shadow removed: use QGraphicsDropShadowEffect in code */
             }
         """)
         self.setFixedHeight(120)
         self.setMinimumWidth(200)
+        self.apply_shadow(self)
+    
+    @staticmethod
+    def apply_shadow(widget, blur_radius=24, x_offset=0, y_offset=6, color="#000000", alpha=0.4):
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(blur_radius)
+        effect.setOffset(x_offset, y_offset)
+        qcolor = QColor(color)
+        qcolor.setAlphaF(alpha)
+        effect.setColor(qcolor)
+        widget.setGraphicsEffect(effect)
     
     def _create_layout(self, title: str, value: str, subtitle: str, icon: str):
         """Create the card layout with proper hierarchy."""

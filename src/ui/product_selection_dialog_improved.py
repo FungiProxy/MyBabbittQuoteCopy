@@ -37,7 +37,7 @@ class ModernOptionWidget(QFrame):
         self.choices = choices
         self.adders = adders
         
-        self.setFrameStyle(QFrame.Box)
+        self.setFrameStyle(QFrame.Shape.Box)
         self.setStyleSheet("""
             ModernOptionWidget {
                 background-color: #ffffff;
@@ -223,8 +223,8 @@ class ImprovedProductSelectionDialog(QDialog):
         super().__init__(parent)
         self.setStyleSheet(BabbittTheme.get_main_stylesheet())
         self.product_service = product_service
-        self.config_service = ConfigurationService()
         self.db = SessionLocal()
+        self.config_service = ConfigurationService(db=self.db, product_service=self.product_service)
         self.product_to_edit = product_to_edit
         self.quantity = 1
         self.option_widgets = {}
@@ -273,7 +273,6 @@ class ImprovedProductSelectionDialog(QDialog):
         QuickMigrationHelper.modernize_existing_dialog(self)
         
         # Apply Babbitt theme to this dialog
-        from src.ui.theme.babbitt_theme import BabbittTheme
         self.setStyleSheet(BabbittTheme.get_dialog_stylesheet())
     
     def _setup_ui(self):
@@ -766,17 +765,17 @@ class ImprovedProductSelectionDialog(QDialog):
             QMessageBox.critical(self, "Error", f"Failed to load products: {e}")
     
     def _populate_product_list(self, filter_text=""):
-        """Populate product list with optional filtering."""
+        """Populate the product list, optionally filtering."""
         self.product_list.clear()
-        filtered_products = [
-            p for p in self.products 
-            if filter_text.lower() in p["name"].lower()
-        ]
-        
-        for product in filtered_products:
-            item = QListWidgetItem(f"{product['name']}")
-            item.setData(Qt.UserRole, product)
-            self.product_list.addItem(item)
+        try:
+            products = self.product_service.get_all_product_families(filter_text)
+            for product in products:
+                # Use attribute access (product.family_name) for model objects
+                item = QListWidgetItem(product.family_name)
+                item.setData(Qt.ItemDataRole.UserRole, product.family_name)
+                self.product_list.addItem(item)
+        except Exception as e:
+            logger.error(f"Error populating product list: {e}", exc_info=True)
     
     def _filter_products(self, text):
         """Filter products based on search text."""
@@ -788,8 +787,31 @@ class ImprovedProductSelectionDialog(QDialog):
         if not items:
             return
         
-        product_data = items[0].data(Qt.UserRole)
+        product_name = items[0].data(Qt.ItemDataRole.UserRole)
         try:
+            # Create product data structure
+            product_data = {
+                "name": product_name,
+                "family_name": product_name,
+                "id": 1,  # Default ID, will be updated when we have proper family lookup
+                "base_price": 425.00,  # Default base price for LS2000
+                "description": f"{product_name} Level Switch"
+            }
+            
+            # Try to get actual product family data
+            try:
+                families = self.product_service.get_product_families(self.db)
+                for family in families:
+                    if family.get('name') == product_name:
+                        product_data.update({
+                            "id": family.get('id', 1),
+                            "description": family.get('description', f"{product_name} Level Switch")
+                        })
+                        break
+            except Exception as e:
+                logger.warning(f"Could not get product family data: {e}")
+            
+            # Start configuration
             self.config_service.start_configuration(
                 product_family_id=product_data["id"],
                 product_family_name=product_data["name"],
@@ -803,7 +825,7 @@ class ImprovedProductSelectionDialog(QDialog):
     def _on_option_changed(self, option_name: str, value):
         """Handle option change."""
         try:
-            self.config_service.update_option(option_name, value)
+            self.config_service.set_option(option_name, value)
             self._update_total_price()
             self.progress_bar.setValue(min(100, self.progress_bar.value() + 5))
         except Exception as e:
@@ -817,10 +839,9 @@ class ImprovedProductSelectionDialog(QDialog):
     def _update_total_price(self):
         """Update price display."""
         try:
-            config = self.config_service.get_current_configuration()
-            if config:
-                base_price = config.get('base_price', 0)
-                total_price = config.get('final_price', 0)
+            if self.config_service.current_config:
+                base_price = self.config_service.current_config.base_product.get('base_price', 0)
+                total_price = self.config_service.get_final_price()
                 
                 self.base_price_label.setText(f"Base Price: ${base_price:.2f}")
                 final_total = total_price * self.quantity
@@ -864,9 +885,15 @@ class ImprovedProductSelectionDialog(QDialog):
     def _on_add_to_quote(self):
         """Handle add to quote action."""
         try:
-            config = self.config_service.get_current_configuration()
-            if config:
-                config['quantity'] = self.quantity
+            if self.config_service.current_config:
+                config = {
+                    'product': self.config_service.current_config.product_family_name,
+                    'description': self.config_service.get_final_description(),
+                    'unit_price': self.config_service.get_final_price(),
+                    'quantity': self.quantity,
+                    'total_price': self.config_service.get_final_price() * self.quantity,
+                    'configuration': self.config_service.current_config.selected_options
+                }
                 self.product_added.emit(config)
                 self.accept()
         except Exception as e:

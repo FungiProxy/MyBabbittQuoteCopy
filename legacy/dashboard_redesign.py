@@ -112,11 +112,24 @@ class DashboardRedesign(QWidget):
             }
             QFrame:hover {
                 border-color: #2C3E50;
-                box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
+                /* box-shadow removed: use QGraphicsDropShadowEffect in code */
                 transform: translateY(-2px);
             }
         """)
-        return card    
+        self.apply_shadow(card)
+        return card
+
+    @staticmethod
+    def apply_shadow(widget, blur_radius=24, x_offset=0, y_offset=6, color="#000000", alpha=0.4):
+        from PySide6.QtWidgets import QGraphicsDropShadowEffect
+        from PySide6.QtGui import QColor
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(blur_radius)
+        effect.setOffset(x_offset, y_offset)
+        qcolor = QColor(color)
+        qcolor.setAlphaF(alpha)
+        effect.setColor(qcolor)
+        widget.setGraphicsEffect(effect)
 
     def _create_stats_section(self):
         """Create the statistics cards section."""
