@@ -100,7 +100,7 @@ class ModernLightTheme(QObject):
             border: 1px solid {ModernLightTheme.BORDER_COLOR};
             padding: 10px 20px;
             margin: 10px;
-            border-radius: 6px;
+            border-radius: 4px;
             font-size: 14px;
         }}
 
@@ -130,7 +130,7 @@ class ModernLightTheme(QObject):
         /* Button Styles */
         QPushButton {{
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 10px 18px;
             font-weight: 500;
             font-size: 14px;
@@ -211,7 +211,7 @@ class ModernLightTheme(QObject):
         QFrame.familyCard {{
             background-color: {ModernLightTheme.CARD_BG};
             border: 1px solid {ModernLightTheme.BORDER_COLOR};
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 10px;
             margin: 4px 0;
         }}
@@ -230,7 +230,7 @@ class ModernLightTheme(QObject):
         .quoteItemCard {{
             background-color: {ModernLightTheme.CARD_BG};
             border: 1px solid {ModernLightTheme.BORDER_COLOR};
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 15px;
             margin: 5px 0;
         }}
@@ -297,7 +297,7 @@ class ModernLightTheme(QObject):
             font-size: 14px;
             padding: 40px;
             background-color: {ModernLightTheme.SURFACE_BG};
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px dashed {ModernLightTheme.BORDER_COLOR};
         }}
         QPushButton.info.small {{
@@ -374,6 +374,140 @@ class ModernLightTheme(QObject):
             font-weight: 600;
         }}
 
+        /* Statistics Cards */
+        QFrame.statCard {{
+            background-color: {ModernLightTheme.CARD_BG};
+            border: 1px solid {ModernLightTheme.BORDER_COLOR};
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+        }}
+
+        QLabel.statTitle {{
+            color: {ModernLightTheme.SECONDARY_TEXT};
+            font-size: 14px;
+            font-weight: 500;
+        }}
+
+        QLabel.statValue {{
+            color: {ModernLightTheme.ACCENT_TEXT};
+            font-size: 28px;
+            font-weight: 600;
+            margin: 5px 0;
+        }}
+
+        QLabel.statSubtitle {{
+            color: {ModernLightTheme.SECONDARY_TEXT};
+            font-size: 12px;
+        }}
+
+        QLabel.statIcon {{
+            color: {ModernLightTheme.ACCENT_MINT};
+            font-size: 20px;
+        }}
+
+        /* Product Labels */
+        QLabel.productName {{
+            font-size: 18px;
+            font-weight: 600;
+            color: {ModernLightTheme.ACCENT_TEXT};
+            margin-bottom: 8px;
+        }}
+
+        QLabel.productDescription {{
+            color: {ModernLightTheme.SECONDARY_TEXT};
+            font-size: 14px;
+            margin-bottom: 15px;
+        }}
+
+        QLabel.productPrice {{
+            font-size: 16px;
+            font-weight: 600;
+            color: {ModernLightTheme.SUCCESS_GREEN};
+            margin-bottom: 15px;
+        }}
+
+        QLabel.familyName {{
+            font-size: 16px;
+            font-weight: 600;
+            color: {ModernLightTheme.ACCENT_TEXT};
+        }}
+
+        QLabel.familyDescription {{
+            font-size: 12px;
+            color: {ModernLightTheme.SECONDARY_TEXT};
+        }}
+
+        /* Form Controls */
+        QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {{
+            padding: 10px 14px;
+            border: 1px solid {ModernLightTheme.BORDER_COLOR};
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: {ModernLightTheme.CARD_BG};
+            color: {ModernLightTheme.PRIMARY_TEXT};
+        }}
+
+        QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {{
+            border-color: {ModernLightTheme.ACCENT_MINT};
+            outline: none;
+        }}
+
+        QLabel.formLabel {{
+            font-weight: 500;
+            color: {ModernLightTheme.PRIMARY_TEXT};
+            margin-bottom: 5px;
+        }}
+
+        QLabel.sectionTitle {{
+            font-size: 16px;
+            font-weight: 600;
+            color: {ModernLightTheme.ACCENT_TEXT};
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid {ModernLightTheme.BORDER_COLOR};
+        }}
+
+        /* Progress and Status */
+        QProgressBar {{
+            border-radius: 6px;
+            height: 10px;
+            background-color: {ModernLightTheme.SURFACE_BG};
+            text-align: center;
+        }}
+
+        QProgressBar::chunk {{
+            background-color: {ModernLightTheme.ACCENT_MINT};
+            border-radius: 6px;
+        }}
+
+        QLabel.validationSuccess {{
+            background-color: #C6F6D5;
+            border: 1px solid #9AE6B4;
+            color: #22543D;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }}
+
+        QLabel.validationError {{
+            background-color: #FED7D7;
+            border: 1px solid #FEB2B2;
+            color: #742A2A;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }}
+
+        QLabel.validationWarning {{
+            background-color: #FEEBC8;
+            border: 1px solid #FBD38D;
+            color: #744210;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }}
+
         /* Tables */
         QTableWidget {{
             background-color: {ModernLightTheme.CARD_BG};
@@ -390,7 +524,7 @@ class ModernLightTheme(QObject):
 
         QTableWidget::item:selected {{
             background-color: {ModernLightTheme.HOVER_BG};
-            color: {ModernLightTheme.ACCENT_TEXT};
+            color: {ModernLightTheme.PRIMARY_EMERALD};
         }}
 
         QHeaderView::section {{
@@ -463,7 +597,7 @@ class ModernLightTheme(QObject):
         /* Group Boxes */
         QGroupBox {{
             font-weight: 600;
-            color: {ModernLightTheme.ACCENT_TEXT};
+            color: {ModernLightTheme.PRIMARY_EMERALD};
             border: 2px solid {ModernLightTheme.BORDER_COLOR};
             border-radius: 8px;
             margin-top: 10px;

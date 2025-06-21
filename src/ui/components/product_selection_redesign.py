@@ -5,6 +5,7 @@ Modern card-based product selection with step-by-step workflow, family filtering
 and clean industrial design. Integrates with existing product service and database.
 """
 
+from array import array
 import logging
 from typing import Dict, List
 
@@ -20,12 +21,21 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QComboBox,
+    QStackedWidget,
+    QGroupBox,
+    QRadioButton,
+    QSpinBox,
+    QButtonGroup,
+    QFormLayout,
 )
 
 from src.core.config.base_models import BASE_MODELS
 from src.core.database import SessionLocal
 from src.core.services.product_service import ProductService
+from src.core.services.configuration_service import ConfigurationService
+from src.core.pricing import PricingContext
 from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
+from src.ui.theme.theme_manager import ThemeManager
 from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
 
 logger = logging.getLogger(__name__)
@@ -45,19 +55,45 @@ class ProductSelectionDialog(QDialog):
 
     product_selected = Signal(dict)  # Emitted when product is chosen for configuration
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, theme_name=None):
         super().__init__(parent)
         self.setWindowTitle('Select Product')
         self.setModal(True)
         self.resize(1000, 700)
 
+        # Apply theme if provided or get from parent
+        if theme_name:
+            self.current_theme = theme_name
+        elif parent:
+            # Try to get theme from parent window
+            try:
+                if hasattr(parent, 'settings_service'):
+                    self.current_theme = parent.settings_service.get_theme('Modern Babbitt')
+                else:
+                    self.current_theme = 'Modern Babbitt'
+            except:
+                self.current_theme = 'Modern Babbitt'
+        else:
+            self.current_theme = 'Modern Babbitt'
+        
+        # Apply the theme to this dialog
+        ThemeManager.apply_theme_to_widget(self.current_theme, self)
+
         # Services
         self.db = SessionLocal()
         self.product_service = ProductService()
+        self.config_service = ConfigurationService(self.db, self.product_service)
 
         # State
         self.selected_family = None
         self.product_families = self._get_product_families()
+        self.selected_product = None
+        self.current_config = {}
+        self.available_options = {}
+
+        # Lists to hold the updatable widgets of the progress indicator
+        self.step_circles = []
+        self.step_labels = []
 
         self._setup_ui()
         self._load_default_family()
@@ -80,10 +116,15 @@ class ProductSelectionDialog(QDialog):
         # Progress indicator
         self.progress_widget = self._create_progress_indicator()
         main_layout.addWidget(self.progress_widget)
+        self._update_progress_indicator(1)
 
-        # Main content area
-        content_widget = QWidget()
-        content_layout = QHBoxLayout(content_widget)
+        # Stacked widget for switching between selection and configuration
+        self.main_stack = QStackedWidget()
+        main_layout.addWidget(self.main_stack)
+
+        # Main content area (Page 1: Product Selection)
+        selection_widget = QWidget()
+        content_layout = QHBoxLayout(selection_widget)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
@@ -95,45 +136,77 @@ class ProductSelectionDialog(QDialog):
         self.products_panel = self._create_products_panel()
         content_layout.addWidget(self.products_panel)
 
-        main_layout.addWidget(content_widget)
+        self.main_stack.addWidget(selection_widget)
 
-    def _create_progress_indicator(self) -> QWidget:
-        """Create the step progress indicator."""
-        widget = QFrame()
-        widget.setObjectName('progressIndicator')
-
-        layout = QHBoxLayout(widget)
-        layout.setAlignment(Qt.AlignCenter)
-
-        steps = [
-            ('1', 'Select', True),    # Current step
-            ('2', 'Configure', False),
-            ('3', 'Quote', False)
+    def _update_progress_indicator(self, current_step: int):
+        # 1-based step number
+        steps_config = [
+            {'number': '1', 'label': 'Select'},
+            {'number': '2', 'label': 'Configure'},
+            {'number': '3', 'label': 'Quote'}
         ]
 
-        for i, (number, label, active) in enumerate(steps):
-            if i > 0:
-                line = QFrame()
-                line.setObjectName('progressLine')
-                layout.addWidget(line)
+        for i, config in enumerate(steps_config):
+            is_active = (i + 1) == current_step
+            self.step_circles[i].setProperty('active', is_active)
+            self.step_labels[i].setProperty('active', is_active)
 
-            step_widget = QWidget()
-            step_layout = QVBoxLayout(step_widget)
-            step_layout.setAlignment(Qt.AlignCenter)
-            step_layout.setSpacing(5)
+            # Re-polish to apply style changes
+            self.step_circles[i].style().unpolish(self.step_circles[i])
+            self.step_circles[i].style().polish(self.step_circles[i])
+            self.step_labels[i].style().unpolish(self.step_labels[i])
+            self.step_labels[i].style().polish(self.step_labels[i])
+            
+    def _create_progress_indicator(self) -> QWidget:
+        """Creates a static, perfectly symmetrical progress indicator."""
+        widget = QFrame()
+        widget.setObjectName('progressIndicator')
+        widget.setFixedHeight(80)
+
+        # A QGridLayout is the correct tool for this. It allows us to create
+        # three columns of equal width, guaranteeing perfect symmetry.
+        main_layout = QGridLayout(widget)
+        main_layout.setContentsMargins(20, 0, 20, 0)
+        main_layout.setSpacing(0)
+
+        steps_data = [
+            ('1', 'Select'),
+            ('2', 'Configure'),
+            ('3', 'Quote')
+        ]
+
+        for i, (number, label_text) in enumerate(steps_data):
+            # This container holds the circle and label vertically.
+            step_container = QWidget()
+            step_layout = QVBoxLayout(step_container)
+            step_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            step_layout.setContentsMargins(0, 0, 0, 0)
+            step_layout.setSpacing(8)
 
             circle = QLabel(number)
             circle.setFixedSize(30, 30)
-            circle.setAlignment(Qt.AlignCenter)
+            circle.setAlignment(Qt.AlignmentFlag.AlignCenter)
             circle.setProperty('class', 'stepNumber')
-            circle.setProperty('active', active)
-
-            step_label = QLabel(label)
-            step_label.setProperty('class', 'stepLabel')
+            
+            label = QLabel(label_text)
+            label.setProperty('class', 'stepLabel')
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             step_layout.addWidget(circle)
-            step_layout.addWidget(step_label)
-            layout.addWidget(step_widget)
+            step_layout.addWidget(label)
+
+            # Add the container for this step to the grid, centered.
+            main_layout.addWidget(step_container, 0, i, Qt.AlignmentFlag.AlignCenter)
+            
+            # Store references for later updates
+            self.step_circles.append(circle)
+            self.step_labels.append(label)
+
+        # Set the columns to have equal stretch factor. This is the key
+        # to making them all the same width.
+        main_layout.setColumnStretch(0, 1)
+        main_layout.setColumnStretch(1, 1)
+        main_layout.setColumnStretch(2, 1)
 
         return widget
 
@@ -153,7 +226,7 @@ class ProductSelectionDialog(QDialog):
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         families_widget = QWidget()
         self.families_layout = QVBoxLayout(families_widget)
@@ -167,24 +240,66 @@ class ProductSelectionDialog(QDialog):
         return panel
 
     def _create_products_panel(self) -> QFrame:
-        """Create the products grid panel."""
+        """Create the panel to display the selected product's details."""
         panel = QFrame()
         panel.setObjectName('productsPanel')
 
-        layout = QVBoxLayout(panel)
-        layout.setContentsMargins(20, 20, 20, 20)
+        # Use a QVBoxLayout to align the card to the top
+        panel_layout = QVBoxLayout(panel)
+        panel_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        panel_layout.setContentsMargins(20, 20, 20, 20)
 
-        self.products_scroll = QScrollArea()
-        self.products_scroll.setWidgetResizable(True)
-        self.products_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # The white card that contains the product info
+        content_card = QFrame()
+        content_card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+                border: 1px solid #E0E4E7;
+                border-radius: 12px;
+            }
+        """)
+        content_card.setFixedSize(600, 260)
 
-        self.products_widget = QWidget()
-        self.products_layout = QGridLayout(self.products_widget)
-        self.products_layout.setSpacing(20)
-        self.products_layout.setAlignment(Qt.AlignTop)
+        card_layout = QVBoxLayout(content_card)
+        card_layout.setContentsMargins(35, 35, 35, 35)
+        card_layout.setSpacing(10)
 
-        self.products_scroll.setWidget(self.products_widget)
-        layout.addWidget(self.products_scroll)
+        # Widgets that will be updated
+        self.product_name_label = QLabel("Select a Product Family")
+        self.product_name_label.setProperty('class', 'productName')
+        self.product_name_label.setStyleSheet("border: none; background-color: transparent;")
+
+        self.product_desc_label = QLabel("Details will appear here.")
+        self.product_desc_label.setProperty('class', 'productDescription')
+        self.product_desc_label.setStyleSheet("border: none; background-color: transparent;")
+
+        self.product_price_label = QLabel()
+        self.product_price_label.setProperty('class', 'productPrice')
+        self.product_price_label.setStyleSheet("border: none; background-color: transparent;")
+
+        self.configure_button = QPushButton('Configure')
+        self.configure_button.setProperty('class', 'primary')
+        self.configure_button.setFixedHeight(45)
+
+        card_layout.addWidget(self.product_name_label)
+        card_layout.addWidget(self.product_desc_label)
+        card_layout.addStretch()
+        card_layout.addWidget(self.product_price_label)
+        card_layout.addSpacing(10)
+        card_layout.addWidget(self.configure_button)
+
+        # Wrapper layout for horizontal centering
+        h_wrapper = QHBoxLayout()
+        h_wrapper.addStretch()
+        h_wrapper.addWidget(content_card)
+        h_wrapper.addStretch()
+        
+        panel_layout.addLayout(h_wrapper)
+        panel_layout.addStretch() # Pushes everything up
+
+        # Hide it initially, we'll show it when a product is selected
+        content_card.hide()
+        self.product_display_card = content_card
 
         return panel
 
@@ -281,14 +396,7 @@ class ProductSelectionDialog(QDialog):
                     widget.style().polish(widget)
 
     def _load_products_for_family(self, family_name: str):
-        """Load products for the selected family."""
-        # Clear existing products
-        for i in reversed(range(self.products_layout.count())):
-            item = self.products_layout.itemAt(i)
-            if item and item.widget():
-                item.widget().setParent(None)
-
-        # For now, create a single product card per family based on BASE_MODELS
+        """Load product details for the selected family into the display panel."""
         if family_name in BASE_MODELS:
             base_model = BASE_MODELS[family_name]
             product_data = {
@@ -298,97 +406,280 @@ class ProductSelectionDialog(QDialog):
                 'base_price': base_model['base_price'],
                 'model_number': base_model['model_number']
             }
-
-            product_card = self._create_product_card(product_data)
-            self.products_layout.addWidget(product_card, 0, 0)
-
-    def _create_product_card(self, product: Dict) -> QFrame:
-        """Create a product card."""
-        card = QFrame()
-        card.setProperty('class', 'productCard')
-
-        layout = QVBoxLayout(card)
-        layout.setSpacing(10)
-
-        name_label = QLabel(product['name'])
-        name_label.setProperty('class', 'productName')
-        layout.addWidget(name_label)
-
-        desc_label = QLabel(product['description'])
-        desc_label.setWordWrap(True)
-        desc_label.setProperty('class', 'productDescription')
-        layout.addWidget(desc_label)
-
-        price_label = QLabel(f"Starting at ${product['base_price']:,.2f}")
-        price_label.setProperty('class', 'productPrice')
-        layout.addWidget(price_label)
-
-        configure_btn = QPushButton('Configure')
-        configure_btn.setProperty('class', 'primary')
-        configure_btn.clicked.connect(lambda: self._configure_product(product))
-        layout.addWidget(configure_btn)
-
-        return card
+            
+            # Update the labels
+            self.product_name_label.setText(product_data['name'])
+            self.product_desc_label.setText(product_data['description'])
+            self.product_price_label.setText(f"Starting at ${product_data['base_price']:,.2f}")
+            
+            # Disconnect any old connection and connect the new one
+            try:
+                self.configure_button.clicked.disconnect()
+            except RuntimeError:
+                pass # No connections to disconnect
+            self.configure_button.clicked.connect(lambda: self._configure_product(product_data))
+            
+            # Show the card
+            self.product_display_card.show()
+        else:
+            # Hide the card if no product is found
+            self.product_display_card.hide()
 
     def _configure_product(self, product: Dict):
-        """Handle product configuration selection."""
-        self.product_selected.emit(product)
+        """Switches to configuration view instead of emitting signal."""
+        self._show_configuration_page(product)
+
+    def _show_configuration_page(self, product: Dict):
+        """Switches to the configuration page for the selected product."""
+        self.selected_product = product
+        
+        # Create configuration page
+        config_page = QWidget()
+        config_layout = QHBoxLayout(config_page)
+        config_layout.setContentsMargins(0,0,0,0)
+        config_layout.setSpacing(0)
+
+        config_panel = self._create_config_panel()
+        summary_panel = self._create_summary_panel()
+
+        config_layout.addWidget(config_panel, 2) # Takes 2/3 of the space
+        config_layout.addWidget(summary_panel, 1) # Takes 1/3 of the space
+
+        # Add the new page to the stack and switch to it
+        if self.main_stack.count() > 1:
+            # remove old config page if it exists
+            old_config_page = self.main_stack.widget(1)
+            self.main_stack.removeWidget(old_config_page)
+            old_config_page.deleteLater()
+            
+        self.main_stack.addWidget(config_page)
+        self.main_stack.setCurrentIndex(1)
+        self._update_progress_indicator(2)
+        
+        self._load_options_for_product()
+
+    def _show_selection_page(self):
+        """Switches back to the product selection page."""
+        self.main_stack.setCurrentIndex(0)
+        self._update_progress_indicator(1)
+
+    def _add_to_quote(self):
+        """Finalizes the configuration and emits the signal."""
+        # This would gather the configuration data
+        configured_product = self.selected_product 
+        # configured_product['options'] = self.gather_options() # Example
+        
+        self.product_selected.emit(configured_product)
         self.accept()
 
     def _load_default_family(self):
-        """Load the first family by default."""
-        if self.product_families:
-            first_category = self.product_families[0]
-            if first_category['families']:
-                first_family = first_category['families'][0]
-                self._select_family(first_family)
+        """Load the first product family by default."""
+        if self.product_families and self.product_families[0]['families']:
+            first_family = self.product_families[0]['families'][0]
+            self._select_family(first_family)
 
+    def _create_config_panel(self) -> QFrame:
+        """Creates the main panel for displaying configuration options."""
+        panel = QFrame()
+        panel.setObjectName("configPanel")
 
-class ProductCard(QFrame):
-    """
-    Reusable product card component for grid displays.
-    """
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-    product_selected = Signal(dict)
+        container = QWidget()
+        # Using a QFormLayout for a clean label-widget structure
+        self.config_layout = QFormLayout(container)
+        self.config_layout.setSpacing(20)
+        self.config_layout.setLabelAlignment(Qt.AlignmentFlag.AlignTop)
+        self.config_layout.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
+        
+        scroll.setWidget(container)
+        
+        main_layout = QVBoxLayout(panel)
+        main_layout.addWidget(scroll)
 
-    def __init__(self, product_data: Dict, parent=None):
-        super().__init__(parent)
-        self.product_data = product_data
-        self._setup_ui()
+        return panel
 
-    def _setup_ui(self):
-        """Set up the product card UI."""
-        self.setProperty('class', 'productCard')
-        self.setFixedSize(280, 200)
+    def _create_summary_panel(self) -> QFrame:
+        """Creates the right-side summary panel."""
+        panel = QFrame()
+        panel.setObjectName("summaryPanel")
+        
+        layout = QVBoxLayout(panel)
+        layout.setSpacing(15)
 
-        layout = QVBoxLayout(self)
-        layout.setSpacing(8)
+        title = QLabel("Quote Summary")
+        title.setObjectName("sectionTitle")
+        layout.addWidget(title)
 
-        # Product name
-        name = QLabel(self.product_data.get('name', 'Unknown Product'))
-        name.setProperty('class', 'productName')
-        layout.addWidget(name)
-
-        # Description
-        desc = QLabel(self.product_data.get('description', ''))
-        desc.setProperty('class', 'productDescription')
-        desc.setWordWrap(True)
-        layout.addWidget(desc)
-
-        # Price
-        price = QLabel(f"Starting at ${self.product_data.get('base_price', 0):,.2f}")
-        price.setProperty('class', 'productPrice')
-        layout.addWidget(price)
-
-        # Spacer
+        # Summary content (placeholders for now)
+        self.summary_content_label = QLabel("Select options to see summary.")
+        self.summary_content_label.setWordWrap(True)
+        layout.addWidget(self.summary_content_label)
+        
         layout.addStretch()
 
-        # Configure button
-        btn = QPushButton('Configure')
-        btn.setProperty('class', 'primary')
-        btn.clicked.connect(self._on_configure)
-        layout.addWidget(btn)
+        # Total price
+        total_layout = QHBoxLayout()
+        total_label = QLabel("Total:")
+        self.total_price_label = QLabel("$0.00")
+        self.total_price_label.setObjectName("quoteTotalLabel")
+        total_layout.addWidget(total_label)
+        total_layout.addStretch()
+        total_layout.addWidget(self.total_price_label)
+        layout.addLayout(total_layout)
+        
+        # Action Buttons
+        self.add_to_quote_button = QPushButton("Add to Quote")
+        self.add_to_quote_button.setProperty("class", "success")
+        self.add_to_quote_button.clicked.connect(self._add_to_quote)
+        layout.addWidget(self.add_to_quote_button)
 
-    def _on_configure(self):
-        """Handle configure button click."""
-        self.product_selected.emit(self.product_data)
+        self.back_button = QPushButton("Back")
+        self.back_button.clicked.connect(self._show_selection_page)
+        layout.addWidget(self.back_button)
+
+        return panel
+
+    def _load_options_for_product(self):
+        """Load and display configuration options using QComboBoxes."""
+        if not self.selected_product:
+            logger.error("Cannot load options: no product selected.")
+            return
+
+        logger.info(f"Loading options for product: {self.selected_product['name']}")
+        self.available_options = self.config_service.get_available_options(self.selected_product['name'])
+        logger.info(f"Found {len(self.available_options)} available options.")
+        
+        # Clear previous options from the layout without deleting the layout itself
+        if self.config_layout is not None:
+            while self.config_layout.count():
+                item = self.config_layout.takeAt(0)
+                # The item can be a layout item or a widget item
+                if item.widget():
+                    item.widget().deleteLater()
+                # If it's a layout, it might contain other widgets
+                elif item.layout():
+                    while item.layout().count():
+                        child_item = item.layout().takeAt(0)
+                        if child_item.widget():
+                            child_item.widget().deleteLater()
+
+        grouped_options = self._group_options_by_category(self.available_options)
+        logger.info(f"Grouped options into {len(grouped_options)} categories.")
+
+        for category, options in sorted(grouped_options.items()):
+            if category.lower() == 'base': continue
+
+            # Add section header
+            section_label = QLabel(category)
+            section_label.setObjectName("sectionTitle")
+            self.config_layout.addRow(section_label)
+            logger.info(f"Creating section for category: {category} with {len(options)} options.")
+
+            for option in options:
+                self._create_option_widget(self.config_layout, option)
+        
+        self._update_pricing()
+
+    def _create_option_widget(self, layout: QFormLayout, option_data: Dict):
+        """Creates a QComboBox for a given option and adds it to the form layout."""
+        option_name = option_data.get('name', 'Unnamed Option')
+        choices = option_data.get('choices', [])
+        
+        label = QLabel(option_name)
+        combo = QComboBox()
+        combo.setObjectName(f"combo_{option_name.replace(' ', '_')}")
+        
+        if not choices:
+            combo.addItem("Not available")
+            combo.setEnabled(False)
+        else:
+            if isinstance(choices[0], dict):
+                # Handle list of dicts (e.g., Materials)
+                for choice in choices:
+                    display = choice.get('display_name', choice.get('name', 'Unnamed Choice'))
+                    combo.addItem(display, userData=choice)
+            else:
+                # Handle list of strings
+                for choice in choices:
+                    combo.addItem(str(choice))
+
+        # Store reference to the widget for later value retrieval
+        self.current_config[option_name] = combo
+        
+        # Connect signal for price updates
+        combo.currentTextChanged.connect(self._update_pricing)
+        
+        layout.addRow(label, combo)
+
+    def _create_config_section(self, title: str) -> QGroupBox:
+        """Creates a styled group box for an option category."""
+        box = QGroupBox(title)
+        box.setFlat(True)
+        # Use a QFormLayout for a cleaner look
+        layout = QFormLayout(box)
+        layout.setSpacing(10)
+        layout.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
+        return box
+
+    def _group_options_by_category(self, options: List[Dict]) -> Dict[str, List[Dict]]:
+        """Groups a flat list of options by their 'category' property."""
+        grouped = {}
+        for option in options:
+            category = option.get('category', 'General')
+            if category not in grouped:
+                grouped[category] = []
+            grouped[category].append(option)
+        return grouped
+
+    def _update_pricing(self):
+        """
+        Calculates the total price based on the selected product and options
+        and updates the summary panel.
+        """
+        if not self.selected_product:
+            return
+
+        selected_options = {}
+        for option_name, widget in self.current_config.items():
+            if isinstance(widget, QComboBox):
+                selected_text = widget.currentText()
+                user_data = widget.currentData()
+                # If user_data (dict) is present, we prioritize its 'code' or 'name'
+                if isinstance(user_data, dict):
+                    # This handles complex options like Materials
+                    selected_options[option_name] = user_data.get('code', user_data.get('name', selected_text))
+                else:
+                    selected_options[option_name] = selected_text
+        
+        # Create a pricing context
+        context_data = {
+            'product_family': self.selected_product.get('family_name'),
+            'base_price': self.selected_product.get('base_price', 0),
+            'selected_options': selected_options
+        }
+
+        # Calculate the price using the service
+        total_price = self.config_service.calculate_price(context_data)
+        
+        # Update the UI
+        self.total_price_label.setText(f"${total_price:,.2f}")
+        self._update_summary_details(selected_options, total_price)
+
+    def _update_summary_details(self, selected_options: Dict, total_price: float):
+        """Updates the text in the summary panel."""
+        if not self.selected_product:
+            self.summary_content_label.setText("No product selected.")
+            return
+
+        summary_parts = [f"<b>Base Product:</b> {self.selected_product.get('name')}"]
+        
+        for name, value in sorted(selected_options.items()):
+            if value and value != "N/A":
+                summary_parts.append(f"<b>{name}:</b> {value}")
+
+        summary_text = "<br>".join(summary_parts)
+        self.summary_content_label.setText(summary_text)
+

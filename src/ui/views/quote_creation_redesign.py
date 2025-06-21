@@ -131,7 +131,7 @@ class QuoteCreationPageRedesign(QWidget):
         
         # Quote status and total
         status_layout = QVBoxLayout()
-        status_layout.setAlignment(Qt.AlignRight)
+        status_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         
         self.status_label = QLabel("Status: Draft")
         self.status_label.setProperty("class", "status-draft")
@@ -167,21 +167,21 @@ class QuoteCreationPageRedesign(QWidget):
         
         # Configure table
         header = self.items_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Product
-        header.setSectionResizeMode(1, QHeaderView.Stretch)          # Configuration
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Quantity
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Unit Price
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Total
-        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Actions
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # Product
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)          # Configuration
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Quantity
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Unit Price
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Total
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Actions
         
-        self.items_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.items_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.items_table.setAlternatingRowColors(True)
         
         layout.addWidget(self.items_table)
         
         # Empty state message
         self.empty_state_label = QLabel("No items added yet. Click 'Add Product' to get started.")
-        self.empty_state_label.setAlignment(Qt.AlignCenter)
+        self.empty_state_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_state_label.setProperty("class", "placeholderCard")
         layout.addWidget(self.empty_state_label)
         
@@ -261,28 +261,36 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _add_product(self):
         """Open product selection dialog."""
-        dialog = ProductSelectionDialog(self)
-        dialog.product_selected.connect(self._on_product_selected)
+        # Get current theme from parent window if available
+        theme_name = None
+        if self.parent():
+            try:
+                # Try to get theme from main window
+                main_window = self.parent()
+                while main_window and not hasattr(main_window, 'settings_service'):
+                    main_window = main_window.parent()
+                
+                if main_window and hasattr(main_window, 'settings_service'):
+                    theme_name = main_window.settings_service.get_theme('Modern Babbitt')
+            except:
+                theme_name = 'Modern Babbitt'
+        
+        dialog = ProductSelectionDialog(self, theme_name=theme_name)
+        dialog.product_selected.connect(self._on_product_configured)
         dialog.exec()
-
-    def _on_product_selected(self, product_data: Dict):
-        """Handle product selection from dialog."""
-        # Open configuration wizard
-        config_wizard = ConfigurationWizard(product_data, self)
-        config_wizard.configuration_completed.connect(self._on_product_configured)
-        config_wizard.exec()
 
     def _on_product_configured(self, config_data: Dict):
         """Handle completed product configuration."""
         try:
             # Add to quote items
+            # This part needs to be updated to handle the new unified data structure
             quote_item = {
-                "product_family": config_data["product_family"],
-                "model_number": config_data["model_number"],
-                "configuration": self._format_configuration(config_data["selected_options"]),
+                "product_family": config_data.get("family_name", config_data.get("name")),
+                "model_number": config_data.get("name", "N/A"), # Placeholder
+                "configuration": "Details from new config flow", # Placeholder
                 "quantity": 1,
-                "unit_price": config_data["calculated_price"],
-                "total_price": config_data["calculated_price"],
+                "unit_price": config_data.get("base_price", 0), # Placeholder
+                "total_price": config_data.get("base_price", 0), # Placeholder
                 "config_data": config_data
             }
             
@@ -336,29 +344,29 @@ class QuoteCreationPageRedesign(QWidget):
         for row, item in enumerate(self.current_quote["items"]):
             # Product name
             product_item = QTableWidgetItem(item["product_family"])
-            product_item.setFlags(product_item.flags() & ~Qt.ItemIsEditable)
+            product_item.setFlags(product_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.items_table.setItem(row, 0, product_item)
             
             # Configuration
             config_item = QTableWidgetItem(item["configuration"])
-            config_item.setFlags(config_item.flags() & ~Qt.ItemIsEditable)
+            config_item.setFlags(config_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.items_table.setItem(row, 1, config_item)
             
             # Quantity (editable)
             quantity_item = QTableWidgetItem(str(item["quantity"]))
-            quantity_item.setTextAlignment(Qt.AlignCenter)
+            quantity_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.items_table.setItem(row, 2, quantity_item)
             
             # Unit price
             unit_price_item = QTableWidgetItem(f"${item['unit_price']:,.2f}")
-            unit_price_item.setFlags(unit_price_item.flags() & ~Qt.ItemIsEditable)
-            unit_price_item.setTextAlignment(Qt.AlignRight)
+            unit_price_item.setFlags(unit_price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            unit_price_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
             self.items_table.setItem(row, 3, unit_price_item)
             
             # Total price
             total_price_item = QTableWidgetItem(f"${item['total_price']:,.2f}")
-            total_price_item.setFlags(total_price_item.flags() & ~Qt.ItemIsEditable)
-            total_price_item.setTextAlignment(Qt.AlignRight)
+            total_price_item.setFlags(total_price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            total_price_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
             self.items_table.setItem(row, 4, total_price_item)
             
             # Actions
@@ -425,8 +433,8 @@ class QuoteCreationPageRedesign(QWidget):
                 
                 # Update total price cell
                 total_item = QTableWidgetItem(f"${quote_item['total_price']:,.2f}")
-                total_item.setFlags(total_item.flags() & ~Qt.ItemIsEditable)
-                total_item.setTextAlignment(Qt.AlignRight)
+                total_item.setFlags(total_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                total_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
                 self.items_table.setItem(row, 4, total_item)
                 
                 self._update_quote_totals()
@@ -463,11 +471,11 @@ class QuoteCreationPageRedesign(QWidget):
                 self,
                 "Remove Item",
                 f"Are you sure you want to remove {quote_item['model_number']} from the quote?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
             )
             
-            if reply == QMessageBox.Yes:
+            if reply == QMessageBox.StandardButton.Yes:
                 self.current_quote["items"].pop(row)
                 self._update_items_table()
                 self._update_quote_totals()
@@ -603,11 +611,11 @@ class QuoteCreationPageRedesign(QWidget):
             self,
             "New Quote",
             "Are you sure you want to start a new quote? Any unsaved changes will be lost.",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
         )
         
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             self._reset_quote()
 
     def _reset_quote(self):

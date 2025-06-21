@@ -453,11 +453,6 @@ class ModernBabbittTheme(QObject):
             padding: 16px;
         """
         
-        if elevated:
-            base_style += """
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            """
-        
         return base_style
     
     @staticmethod

@@ -55,7 +55,7 @@ def main():
 
         if QApplication.instance():
             error_box = QMessageBox()
-            error_box.setIcon(QMessageBox.Critical)
+            error_box.setIcon(QMessageBox.Critical) # type: ignore
             error_box.setWindowTitle('Application Error')
             error_box.setText(f'An error occurred: {e!s}')
             error_box.setDetailedText(traceback.format_exc())

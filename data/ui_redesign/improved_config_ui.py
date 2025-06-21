@@ -48,7 +48,6 @@ class ModernOptionWidget(QFrame):
             }
             ModernOptionWidget:hover {
                 border-color: #2C3E50;
-                box-shadow: 0 2px 8px rgba(44, 62, 80, 0.1);
             }
         """)
         
@@ -548,9 +547,6 @@ class ImprovedProductSelectionDialog(QDialog):
         self._create_probe_length_section(product)
         
         # Add stretch at bottom
-        self.config_layout.addStretch()
-        
-        # Set defaults and update pricing
         self._set_default_values(product.get("name", ""))
         self._update_total_price()
         
@@ -821,7 +817,7 @@ class ImprovedProductSelectionDialog(QDialog):
         """Set default values for the product family."""
         default_configs = {
             "LS2000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
-            "LS2100": {"Voltage": "24VDC", "Material": "S", "Probe Length": 10},
+            "LS1000": {"Voltage": "24VDC", "Material": "S", "Probe Length": 10},
             "LS6000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
             "LS7000": {"Voltage": "115VAC", "Material": "S", "Probe Length": 10},
             "LS7000/2": {"Voltage": "115VAC", "Material": "H", "Probe Length": 10},

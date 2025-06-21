@@ -296,44 +296,48 @@ class ConfigurationService:
 
         return f"{family}-{voltage}-{material_code}-{length_str}"
 
-    def calculate_price(self) -> float:
+    def calculate_price(self, context_data: dict) -> float:
         """
-        Calculates the total price for the current configuration.
+        Calculates the final price for the configuration by building a
+        PricingContext and running it through the pricing calculator.
         """
-        if not self.current_config:
-            return 0.0
+        if not self.db:
+            raise ConnectionError("Database session is not available.")
 
-        config = self.current_config
+        product_family = context_data.get('product_family')
+        if not product_family:
+            logger.error("product_family not provided in context_data")
+            return context_data.get('base_price', 0.0)
 
-        # Find the specific variant that matches the current selection
-        variant = self.product_service.find_variant(
-            self.db, config.product_family_id, config.selected_options
-        )
+        selected_options = context_data.get('selected_options', {})
 
-        # If no specific variant is found, we cannot price accurately.
-        # Fallback to base product or handle as an error. For now, return base price.
-        if not variant:
-            # logger.warning(
-            logger.warning(
-                f"No matching variant found for options: {config.selected_options}. Using base price."
+        # Find the base product from the family name
+        base_product_model = self.product_service.get_base_product_for_family(self.db, product_family)
+        if not base_product_model:
+            logger.error(f"Could not find base product for family: {product_family}")
+            return context_data.get('base_price', 0.0)
+
+        # Extract necessary details for PricingContext
+        length = selected_options.get('Length', base_product_model.base_length)
+        material_code = selected_options.get('Material', base_product_model.material)
+        
+        try:
+            # Create the official PricingContext
+            pricing_context = PricingContext(
+                db=self.db,
+                product_id=base_product_model.id,
+                length_in=float(length) if length else None,
+                material_override_code=material_code,
+                specs=selected_options
             )
-            # Attempt to use the family's base product as a fallback
-            return config.base_product.get("base_price", 0.0)
+            
+            # Calculate the price
+            final_price = calculate_product_price(pricing_context)
+            return final_price
 
-        # Now, we have a specific variant, so we can use its ID for pricing
-        price = calculate_product_price(
-            db=self.db,
-            product_id=variant.id,  # Use the specific variant ID
-            length=config.selected_options.get("Probe Length"),
-            material_override=variant.material,  # Use the variant's material
-            specs={
-                "connection_type": config.selected_options.get("Connection"),
-                "flange_rating": config.selected_options.get("Flange Rating"),
-                "flange_size": config.selected_options.get("Flange Size"),
-                "triclamp_size": config.selected_options.get("Tri-Clamp Size"),
-            },
-        )
-        return price
+        except Exception as e:
+            logger.error(f"Error during price calculation: {e}", exc_info=True)
+            return base_product_model.base_price
 
     def get_final_description(self) -> str:
         """
@@ -373,5 +377,24 @@ class ConfigurationService:
         if not self.current_config:
             return 0.0
         return self.current_config.final_price
+
+    def get_available_options(self, product_family_name: str) -> list:
+        """
+        Retrieves all available configuration options for a given product family.
+
+        Args:
+            product_family_name (str): The name of the product family.
+
+        Returns:
+            list: A list of dictionaries, where each dictionary represents an option.
+        """
+        # logger.debug(f"Fetching available options for product family: {product_family_name}")
+        try:
+            options = self.product_service.get_additional_options(self.db, product_family_name)
+            # logger.debug(f"Found {len(options)} options for {product_family_name}")
+            return options
+        except Exception as e:
+            logger.error(f"Error fetching available options for {product_family_name}: {e!s}", exc_info=True)
+            return []
 
     # More methods will be added here to handle validation, etc.

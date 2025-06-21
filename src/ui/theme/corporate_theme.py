@@ -130,8 +130,8 @@ class CorporateTheme(QObject):
         /* Button Styles */
         QPushButton {{
             border: none;
-            border-radius: 4px;
-            padding: 8px 16px;
+            border-radius: 6px;
+            padding: 10px 18px;
             font-weight: 500;
             font-size: 14px;
             min-height: 20px;
@@ -211,7 +211,7 @@ class CorporateTheme(QObject):
         QFrame.familyCard {{
             background-color: {CorporateTheme.CARD_BG};
             border: 1px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 4px;
+            border-radius: 6px;
             padding: 10px;
             margin: 4px 0;
         }}
@@ -230,7 +230,7 @@ class CorporateTheme(QObject):
         .quoteItemCard {{
             background-color: {CorporateTheme.CARD_BG};
             border: 1px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 4px;
+            border-radius: 6px;
             padding: 15px;
             margin: 5px 0;
         }}
@@ -297,23 +297,23 @@ class CorporateTheme(QObject):
             font-size: 14px;
             padding: 40px;
             background-color: {CorporateTheme.SURFACE_BG};
-            border-radius: 4px;
+            border-radius: 6px;
             border: 1px dashed {CorporateTheme.BORDER_COLOR};
         }}
         QPushButton.info.small {{
             background-color: {CorporateTheme.INFO_BLUE};
             color: white;
-            border-radius: 2px;
+            border-radius: 4px;
             padding: 4px 8px;
             font-size: 11px;
         }}
         QPushButton.info.small:hover {{
-            background-color: #1D4ED8;
+            background-color: #1E40AF;
         }}
         QPushButton.danger.small {{
             background-color: {CorporateTheme.ERROR_RED};
             color: white;
-            border-radius: 2px;
+            border-radius: 4px;
             padding: 4px 8px;
             font-size: 11px;
         }}
@@ -351,9 +351,9 @@ class CorporateTheme(QObject):
         }}
         
         .stepNumber[active="true"] {{
-            background-color: {CorporateTheme.PRIMARY_RED};
+            background-color: {CorporateTheme.PRIMARY_NAVY};
             color: white;
-            border-color: {CorporateTheme.PRIMARY_RED};
+            border-color: {CorporateTheme.PRIMARY_NAVY};
         }}
         
         .stepNumber[completed="true"] {{
@@ -374,11 +374,145 @@ class CorporateTheme(QObject):
             font-weight: 600;
         }}
 
+        /* Statistics Cards */
+        QFrame.statCard {{
+            background-color: {CorporateTheme.CARD_BG};
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+        }}
+
+        QLabel.statTitle {{
+            color: {CorporateTheme.SECONDARY_TEXT};
+            font-size: 14px;
+            font-weight: 500;
+        }}
+
+        QLabel.statValue {{
+            color: {CorporateTheme.ACCENT_TEXT};
+            font-size: 28px;
+            font-weight: 600;
+            margin: 5px 0;
+        }}
+
+        QLabel.statSubtitle {{
+            color: {CorporateTheme.SECONDARY_TEXT};
+            font-size: 12px;
+        }}
+
+        QLabel.statIcon {{
+            color: {CorporateTheme.ACCENT_RED};
+            font-size: 20px;
+        }}
+
+        /* Product Labels */
+        QLabel.productName {{
+            font-size: 18px;
+            font-weight: 600;
+            color: {CorporateTheme.ACCENT_TEXT};
+            margin-bottom: 8px;
+        }}
+
+        QLabel.productDescription {{
+            color: {CorporateTheme.SECONDARY_TEXT};
+            font-size: 14px;
+            margin-bottom: 15px;
+        }}
+
+        QLabel.productPrice {{
+            font-size: 16px;
+            font-weight: 600;
+            color: {CorporateTheme.SUCCESS_GREEN};
+            margin-bottom: 15px;
+        }}
+
+        QLabel.familyName {{
+            font-size: 16px;
+            font-weight: 600;
+            color: {CorporateTheme.ACCENT_TEXT};
+        }}
+
+        QLabel.familyDescription {{
+            font-size: 12px;
+            color: {CorporateTheme.SECONDARY_TEXT};
+        }}
+
+        /* Form Controls */
+        QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {{
+            padding: 10px 14px;
+            border: 1px solid {CorporateTheme.BORDER_COLOR};
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: {CorporateTheme.CARD_BG};
+            color: {CorporateTheme.PRIMARY_TEXT};
+        }}
+
+        QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {{
+            border-color: {CorporateTheme.ACCENT_RED};
+            outline: none;
+        }}
+
+        QLabel.formLabel {{
+            font-weight: 500;
+            color: {CorporateTheme.PRIMARY_TEXT};
+            margin-bottom: 5px;
+        }}
+
+        QLabel.sectionTitle {{
+            font-size: 16px;
+            font-weight: 600;
+            color: {CorporateTheme.ACCENT_TEXT};
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid {CorporateTheme.BORDER_COLOR};
+        }}
+
+        /* Progress and Status */
+        QProgressBar {{
+            border-radius: 6px;
+            height: 10px;
+            background-color: {CorporateTheme.SURFACE_BG};
+            text-align: center;
+        }}
+
+        QProgressBar::chunk {{
+            background-color: {CorporateTheme.ACCENT_RED};
+            border-radius: 6px;
+        }}
+
+        QLabel.validationSuccess {{
+            background-color: #C6F6D5;
+            border: 1px solid #9AE6B4;
+            color: #22543D;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }}
+
+        QLabel.validationError {{
+            background-color: #FED7D7;
+            border: 1px solid #FEB2B2;
+            color: #742A2A;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }}
+
+        QLabel.validationWarning {{
+            background-color: #FEEBC8;
+            border: 1px solid #FBD38D;
+            color: #744210;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }}
+
         /* Tables */
         QTableWidget {{
             background-color: {CorporateTheme.CARD_BG};
             border: 1px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 4px;
+            border-radius: 6px;
             gridline-color: {CorporateTheme.BORDER_COLOR};
             color: {CorporateTheme.PRIMARY_TEXT};
         }}
@@ -390,7 +524,7 @@ class CorporateTheme(QObject):
 
         QTableWidget::item:selected {{
             background-color: {CorporateTheme.HOVER_BG};
-            color: {CorporateTheme.ACCENT_TEXT};
+            color: {CorporateTheme.PRIMARY_NAVY};
         }}
 
         QHeaderView::section {{
@@ -409,31 +543,31 @@ class CorporateTheme(QObject):
         }}
 
         QRadioButton::indicator, QCheckBox::indicator {{
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
         }}
 
         QRadioButton::indicator:unchecked {{
             border: 2px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 8px;
+            border-radius: 9px;
             background-color: {CorporateTheme.CARD_BG};
         }}
 
         QRadioButton::indicator:checked {{
             border: 2px solid {CorporateTheme.ACCENT_RED};
-            border-radius: 8px;
+            border-radius: 9px;
             background-color: {CorporateTheme.ACCENT_RED};
         }}
 
         QCheckBox::indicator:unchecked {{
             border: 2px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 2px;
+            border-radius: 3px;
             background-color: {CorporateTheme.CARD_BG};
         }}
 
         QCheckBox::indicator:checked {{
             border: 2px solid {CorporateTheme.ACCENT_RED};
-            border-radius: 2px;
+            border-radius: 3px;
             background-color: {CorporateTheme.ACCENT_RED};
         }}
 
@@ -446,13 +580,13 @@ class CorporateTheme(QObject):
         QScrollBar:vertical {{
             border: none;
             background-color: {CorporateTheme.SURFACE_BG};
-            width: 12px;
-            border-radius: 6px;
+            width: 14px;
+            border-radius: 7px;
         }}
 
         QScrollBar::handle:vertical {{
             background-color: {CorporateTheme.BORDER_COLOR};
-            border-radius: 6px;
+            border-radius: 7px;
             min-height: 20px;
         }}
 
@@ -463,9 +597,9 @@ class CorporateTheme(QObject):
         /* Group Boxes */
         QGroupBox {{
             font-weight: 600;
-            color: {CorporateTheme.ACCENT_TEXT};
+            color: {CorporateTheme.PRIMARY_NAVY};
             border: 2px solid {CorporateTheme.BORDER_COLOR};
-            border-radius: 6px;
+            border-radius: 8px;
             margin-top: 10px;
             padding-top: 10px;
         }}

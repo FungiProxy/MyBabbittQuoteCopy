@@ -48,7 +48,6 @@ class ModernOptionWidget(QFrame):
             }
             ModernOptionWidget:hover {
                 border-color: #2C3E50;
-                box-shadow: 0 2px 8px rgba(44, 62, 80, 0.1);
             }
         """)
         
