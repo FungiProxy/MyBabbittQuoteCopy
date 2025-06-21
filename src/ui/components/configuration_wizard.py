@@ -33,7 +33,6 @@ from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
 from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
-from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
 from src.ui.components.configuration_dialog_helper import ConfigurationDialogHelper
 
 logger = logging.getLogger(__name__)

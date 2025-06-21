@@ -39,7 +39,8 @@ def main():
         
         # Apply modern theme
         print("Applying modern Babbitt theme...")
-        ModernBabbittTheme.apply_modern_theme(app)
+        stylesheet = ModernBabbittTheme.get_main_stylesheet()
+        app.setStyleSheet(stylesheet)
         print("Modern theme applied successfully")
 
         print("Creating MainWindowRedesign...")

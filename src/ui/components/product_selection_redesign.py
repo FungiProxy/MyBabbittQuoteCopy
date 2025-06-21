@@ -29,7 +29,7 @@ from src.core.config.base_models import BASE_MODELS
 from src.core.database import SessionLocal
 from src.core.services.product_service import ProductService
 from src.ui.theme.modern_babbitt_theme import ModernBabbittTheme
-from src.ui.utils.ui_integration import QuickMigrationHelper, ModernWidgetFactory
+from src.ui.helpers.theme_helper import PerfectThemeHelper
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +51,13 @@ class ProductSelectionDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # Apply theme and layout fixes
+        PerfectThemeHelper.apply_complete_theme(self)
+        ConfigurationDialogHelper.apply_dialog_fixes(self)
+
         self.setWindowTitle('Select Product')
         self.setModal(True)
-        self.resize(1000, 700)
+        # self.resize(1000, 700) # This is now handled by PerfectThemeHelper
 
         # Services
         self.db = SessionLocal()
@@ -65,13 +69,6 @@ class ProductSelectionDialog(QDialog):
 
         self._setup_ui()
         self._load_default_family()
-        
-        # Apply modern styling fixes
-        QuickMigrationHelper.fix_oversized_dropdowns(self)
-        QuickMigrationHelper.modernize_existing_dialog(self)
-        
-        # Apply configuration dialog fixes
-        ConfigurationDialogHelper.apply_dialog_fixes(self)
 
     def __del__(self):
         """Clean up database connection."""
