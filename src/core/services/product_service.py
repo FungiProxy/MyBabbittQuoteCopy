@@ -19,14 +19,17 @@ for interacting with product-related data and business rules.
 import logging
 import math
 from typing import Any, Dict, List, Optional, Tuple
+import re
 
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.core.models import (
     BaseModel,
     Option,
     ProductFamily,
+    Material,
 )
 from src.utils.db_utils import get_by_id
 
@@ -65,6 +68,132 @@ class ProductService:
         >>> product_materials = ProductService.get_available_materials_for_product(db, "LS2000")
         >>> voltages = ProductService.get_available_voltages(db, "LS2000")
     """
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_all_product_families(self) -> List[ProductFamily]:
+        """Retrieve all active product families."""
+        return self.db.query(ProductFamily).filter(ProductFamily.is_active == True).order_by(ProductFamily.name).all()
+
+    def get_product_family_by_name(self, family_name: str) -> Optional[ProductFamily]:
+        """Retrieve a single product family by its name."""
+        return self.db.query(ProductFamily).filter_by(name=family_name).first()
+
+    def get_default_probe_length(self, family_name: str) -> float:
+        """Get the default probe length for a product family."""
+        product_family = self.get_product_family_by_name(family_name)
+        return product_family.default_probe_length if product_family and product_family.default_probe_length is not None else 10.0
+
+    def get_base_product_by_model_code(self, model_code: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch the base product for a given model code.
+        Returns: Dict with base product details, or None if not found.
+        """
+        try:
+            family = self.db.query(ProductFamily).options(joinedload(ProductFamily.base_model)).filter(ProductFamily.model_code == model_code).first()
+            if not family or not family.base_model:
+                return None
+            
+            base_model = family.base_model
+            return {
+                "id": base_model.id,
+                "model_number": base_model.model_number,
+                "description": base_model.description,
+                "base_price": float(base_model.base_price),
+                "family_name": family.family_name,
+            }
+        except SQLAlchemyError as e:
+            logger.error(f"Database error fetching base product for {model_code}: {e}")
+            return None
+
+    def get_core_options(self, family_name: str) -> List[Dict[str, Any]]:
+        """
+        Get core configuration options (Material, Voltage) for a product family.
+        """
+        family = self.get_product_family_by_name(family_name)
+        if not family or not family.base_model:
+            return []
+
+        options = []
+        base_model = family.base_model
+
+        # Voltage option
+        if base_model.voltage:
+             options.append({
+                "name": "Voltage",
+                "type": "dropdown",
+                "choices": ["12VDC", "24VDC", "115VAC", "230VAC"], # Example, should be dynamic if needed
+                "default": base_model.voltage,
+                "category": "Core"
+            })
+
+        # Material option
+        if base_model.material:
+             options.append({
+                "name": "Material",
+                "type": "dropdown",
+                "choices": self.get_material_choices_for_family(family_name),
+                "default": base_model.material,
+                "category": "Core"
+            })
+            
+        return options
+
+    def get_material_choices_for_family(self, family_name: str) -> List[str]:
+        """Get available material codes for a given product family."""
+        # This is a placeholder. In a real scenario, this would query a table
+        # that maps materials to product families.
+        if "LS2000" in family_name:
+            return ["S", "H"]
+        return ["S", "H", "C", "M"]
+
+    def get_additional_options(self, family_name: str) -> List[Dict[str, Any]]:
+        """Get all additional options for a product family, excluding core."""
+        try:
+            options_query = self.db.query(Option).filter(
+                Option.product_families.contains(family_name)
+            ).all()
+
+            additional_options = []
+            for option in options_query:
+                # Basic validation
+                if not option.name or not option.category:
+                    logger.warning(f"Skipping option id {option.id} due to missing name or category.")
+                    continue
+
+                additional_options.append({
+                    "id": option.id,
+                    "name": option.name,
+                    "description": option.description,
+                    "price": float(option.price) if option.price is not None else 0.0,
+                    "price_type": option.price_type,
+                    "category": option.category,
+                    "choices": option.choices or [],
+                    "adders": option.adders or {},
+                    "rules": option.rules or {}
+                })
+            return additional_options
+        except SQLAlchemyError as e:
+            logger.error(f"Database error fetching additional options for {family_name}: {e}")
+            return []
+
+    def get_option_details(self, option_name: str) -> Optional[Option]:
+        """Retrieve full details for a single option by name."""
+        return self.db.query(Option).filter_by(name=option_name).first()
+
+    def get_option_choices(self, option_name: str) -> List[Any]:
+        """Get choices for a specific option."""
+        option = self.get_option_details(option_name)
+        return option.choices if option else []
+
+    def get_option_adders(self, option_name: str) -> Dict[str, float]:
+        """Get price adders for a specific option."""
+        option = self.get_option_details(option_name)
+        if not option or not option.adders:
+            return {}
+        # Ensure values are floats
+        return {k: float(v) for k, v in option.adders.items()}
 
     @staticmethod
     def get_products(
@@ -199,117 +328,29 @@ class ProductService:
         # Example: apply length-based adder if needed (not implemented here)
         return product, price
 
-    def get_additional_options(self, db, family_name: str) -> list:
-        """
-        Fetch additional configurable options (add-ons) for a product family by name.
-        Returns: List of dicts with name, description, price, price_type, category, choices, adders.
-        """
-        logger.debug(f"Fetching additional options for family: {family_name}")
-        from src.core.models.option import Option
-        from src.core.models.product_variant import ProductFamily
-
-        # Get the product family
-        family = db.query(ProductFamily).filter_by(name=family_name).first()
-        if not family:
-            logger.warning(f"Product family '{family_name}' not found")
-            return []
-
-        # Query options that are associated with this product family
-        # Use the new many-to-many relationship through ProductFamilyOption
-        options = (
-            db.query(Option)
-            .join(Option.family_associations)
-            .filter(
-                Option.family_associations.any(
-                    product_family_id=family.id, is_available=1
-                )
-            )
-            .all()
-        )
-
-        logger.debug(f"Found {len(options)} options for {family_name}")
-
-        # Log raw options before filtering
-        for opt in options:
-            logger.debug(f"Raw option: {opt.name}")
-            logger.debug(f"  Excluded Products: {opt.excluded_products}")
-            logger.debug(f"  Choices: {opt.choices}")
-            logger.debug(f"  Category: {opt.category}")
-
-        # Don't exclude entire options based on excluded_products
-        # The excluded_products field is used for adder exclusion only
-        filtered = options
-        logger.debug(f"After filtering exclusions: {len(filtered)} options")
-
-        result = []
-        for o in filtered:
-            option_dict = {
-                "name": o.name,
-                "description": o.description,
-                "price": o.price,
-                "price_type": o.price_type,
-                "category": o.category,
-                "choices": o.choices,
-                "adders": o.adders,
-                "excluded_products": o.excluded_products,
-            }
-
-            # Apply family-specific filtering for Material options
-            if o.category == "Material" and o.rules and isinstance(o.rules, dict):
-                family_materials = o.rules.get("family_materials", {})
-                if family_name in family_materials:
-                    allowed_materials = family_materials[family_name]
-                    logger.debug(
-                        f"Filtering materials for {family_name}: {allowed_materials}"
-                    )
-
-                    # Filter choices to only include allowed materials for this family
-                    if isinstance(o.choices, list):
-                        # Handle both simple string choices and dict choices
-                        filtered_choices = []
-                        for choice in o.choices:
-                            if isinstance(choice, dict):
-                                # Choice is a dict like {'code': 'S', 'display_name': 'S - 316 Stainless Steel'}
-                                if choice.get("code") in allowed_materials:
-                                    filtered_choices.append(choice)
-                            elif isinstance(choice, str):
-                                # Choice is a simple string like 'S'
-                                if choice in allowed_materials:
-                                    filtered_choices.append(choice)
-                        option_dict["choices"] = filtered_choices
-                        logger.debug(
-                            f"Filtered material choices for {family_name}: {len(filtered_choices)} materials"
-                        )
-
-                    # Filter adders to only include allowed materials
-                    if isinstance(o.adders, dict):
-                        filtered_adders = {
-                            k: v for k, v in o.adders.items() if k in allowed_materials
-                        }
-                        option_dict["adders"] = filtered_adders
-                        logger.debug(
-                            f"Filtered material adders for {family_name}: {list(filtered_adders.keys())}"
-                        )
-
-            result.append(option_dict)
-
-        # Log details of each option
-        for opt in result:
-            logger.debug(f"Option {opt['name']}:")
-            logger.debug(f"  - Choices: {len(opt['choices']) if opt['choices'] else 0}")
-            logger.debug(f"  - Adders: {len(opt['adders']) if opt['adders'] else 0}")
-            logger.debug(f"  - Category: {opt['category']}")
-
-        return result
-
     def get_product_families(self, db: Session) -> List[Dict]:
         """
-        Fetch all product families from the database.
+        Fetch all product families from the database, sorted logically.
         Returns: List of dicts with id, name, description, category.
         """
         logger.debug("Fetching all product families")
         families = db.query(ProductFamily).all()
-        result = [
+
+        def natural_sort_key(product_dict):
+            name = product_dict['name']
+            # Prioritize LS, then LT, then FS, then others
+            prefix_order = {"LS": 0, "LT": 1, "FS": 2}
+            
+            match = re.match(r'([A-Z]+)(\d+)', name)
+            if match:
+                prefix = match.group(1)
+                number = int(match.group(2))
+                return (prefix_order.get(prefix, 99), number)
+            
+            # Fallback for non-standard names
+            return (99, name)
+
+        families_dicts = [
             {
                 "id": f.id,
                 "name": f.name,
@@ -318,10 +359,13 @@ class ProductService:
             }
             for f in families
         ]
+        
+        families_dicts.sort(key=natural_sort_key)
+        
         logger.debug(
-            f"Found {len(result)} product families: {[f['name'] for f in result]}"
+            f"Found {len(families_dicts)} product families, sorted: {[f['name'] for f in families_dicts]}"
         )
-        return result
+        return families_dicts
 
     def get_variants_for_family(self, db: Session, family_id: int) -> List[Dict]:
         """

@@ -27,14 +27,18 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QSizePolicy,
     QGraphicsDropShadowEffect,
+    QAbstractItemView,
+    QSpacerItem,
+    QScrollArea,
 )
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 
 from src.core.database import SessionLocal
 from src.core.services.quote_service import QuoteService
 from src.core.services.product_service import ProductService
-from src.ui.product_selection_dialog_working import WorkingProductSelectionDialog
+from src.ui.product_selection_dialog_improved import ImprovedProductSelectionDialog
 from src.ui.theme.babbitt_theme import BabbittTheme
+from src.ui.theme.theme_manager import ThemeManager
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +64,7 @@ class QuoteCreationPageRedesign(QWidget):
         # Services
         self.db = SessionLocal()
         self.quote_service = QuoteService()
-        self.product_service = ProductService()
+        self.product_service = ProductService(db=self.db)
         
         # Current quote state
         self.current_quote = {
@@ -343,8 +347,8 @@ class QuoteCreationPageRedesign(QWidget):
     def _add_product(self):
         """Open the product selection dialog to add a new item."""
         try:
-            # Use the working dialog
-            dialog = WorkingProductSelectionDialog(product_service=self.product_service, parent=self)
+            # Use the improved dialog
+            dialog = ImprovedProductSelectionDialog(product_service=self.product_service, parent=self)
             dialog.product_added.connect(self._on_product_configured)
             dialog.exec()
         except Exception as e:
@@ -520,8 +524,8 @@ class QuoteCreationPageRedesign(QWidget):
         product_to_edit = self.current_quote["items"][row]
         
         try:
-            # Use the working dialog for editing
-            dialog = WorkingProductSelectionDialog(
+            # Use the improved dialog for editing
+            dialog = ImprovedProductSelectionDialog(
                 product_service=self.product_service,
                 product_to_edit=product_to_edit,
                 parent=self
