@@ -432,23 +432,32 @@ class ModernOptionWidget(QFrame):
             self.price_label.setStyleSheet("color: #6C757D; font-weight: 400; font-size: 10px; margin-top: 4px;")
     
     def _get_default_choice_index(self) -> int:
-        """Find the index of the default choice, prioritizing zero-cost options."""
+        """Find the index of the default choice, prioritizing zero-cost options, then lowest adder."""
         if not self.choices:
             return -1
-            
         # Priority 1: Find a choice with a price adder of 0.
         if isinstance(self.adders, dict):
             for i, choice_data in enumerate(self.choices):
                 code = choice_data.get("code") if isinstance(choice_data, dict) else choice_data
                 if self.adders.get(code, -1) == 0:
                     return i
-
         # Priority 2: Find a choice that contains common default keywords.
         for i, choice_data in enumerate(self.choices):
             display_name = choice_data.get("display_name", "") if isinstance(choice_data, dict) else choice_data
             if any(keyword in display_name.lower() for keyword in ["standard", "viton", "npt"]):
                 return i
-                
+        # Priority 3: Pick the lowest adder
+        if isinstance(self.adders, dict) and self.choices:
+            min_adder = None
+            min_idx = 0
+            for i, choice_data in enumerate(self.choices):
+                code = choice_data.get("code") if isinstance(choice_data, dict) else choice_data
+                adder = self.adders.get(code, None)
+                if adder is not None:
+                    if min_adder is None or adder < min_adder:
+                        min_adder = adder
+                        min_idx = i
+            return min_idx
         # Fallback to the first item if no better default is found.
         return 0
 
@@ -818,6 +827,14 @@ class ImprovedProductSelectionDialog(QDialog):
 
     def _show_product_config(self, product):
         """Show the configuration options for the selected product."""
+        # DEBUG: Print product details to trace base price issues
+        try:
+            base_model = getattr(product, 'base_model', None)
+            base_price = base_model.base_price if base_model else 'N/A'
+            model_number = base_model.model_number if base_model else 'N/A'
+            print(f"DEBUG: Configuring product: name={getattr(product, 'name', None)}, model_number={model_number}, base_price={base_price}")
+        except Exception as e:
+            print(f"DEBUG: Error printing product details: {e}")
         # Clear previous configuration
         while self.config_layout.count():
             item = self.config_layout.takeAt(0)
@@ -983,27 +1000,27 @@ class ImprovedProductSelectionDialog(QDialog):
         group_box = QGroupBox("Probe Length")
         layout = QHBoxLayout(group_box)
         layout.setSpacing(12)
-        
-        default_length = 10
 
-        # Use QSpinBox for whole numbers only
+        # Determine initial probe length based on product family and material
+        default_length = 10
+        family_name = getattr(product, 'name', '')
+        material_code = getattr(getattr(product, 'base_model', None), 'material', 'S')
+        if family_name == 'FS10000':
+            default_length = 6
+        elif material_code in ['U', 'T', 'CPVC']:
+            default_length = 4
+        elif material_code == 'C':
+            default_length = 12
+
         probe_length_spinner = QSpinBox()
         probe_length_spinner.setRange(1, 200)
         probe_length_spinner.setSingleStep(1)
         probe_length_spinner.setValue(default_length)
         probe_length_spinner.setSuffix(" in.")
         probe_length_spinner.setMinimumWidth(100)
-        probe_length_spinner.setStyleSheet("""
-            QSpinBox { 
-                padding: 6px; 
-                border: 1px solid #ced4da; 
-                border-radius: 4px;
-            }
-        """)
 
         self.probe_length_edit = QLineEdit(str(default_length))
         self.probe_length_edit.setValidator(QIntValidator(1, 999))
-        
         layout.addWidget(probe_length_spinner)
         layout.addWidget(self.probe_length_edit)
         layout.addStretch()
@@ -1012,32 +1029,23 @@ class ImprovedProductSelectionDialog(QDialog):
         self.option_widgets["Probe Length Edit"] = self.probe_length_edit
         group_box.setLayout(layout)
 
-        # Sync logic
         def sync_probe_length_widgets():
-            # Sync spinner to edit
             probe_length_spinner.valueChanged.connect(
-                lambda val: self.probe_length_edit.setText(str(val))
+                lambda val: [self.probe_length_edit.setText(str(val)), self._on_option_changed("Probe Length", val)]
             )
-            
-            # Sync edit to spinner
             def update_spinner(text):
                 try:
                     val = int(text)
-                    if probe_length_spinner.minimum() <= val <= probe_length_spinner.maximum():
-                        probe_length_spinner.blockSignals(True)
+                    if 1 <= val <= 200:
                         probe_length_spinner.setValue(val)
-                        probe_length_spinner.blockSignals(False)
                         self._on_option_changed("Probe Length", val)
-                except ValueError:
+                except Exception:
                     pass
-
             self.probe_length_edit.textChanged.connect(update_spinner)
-
         sync_probe_length_widgets()
-        
+
         # Emit the initial default value to calculate the initial length adder
         self._on_option_changed("Probe Length", default_length)
-        
         return group_box
 
     def _load_product_list(self):
@@ -1152,8 +1160,31 @@ class ImprovedProductSelectionDialog(QDialog):
         self.add_button.setEnabled(False)
 
     def _on_option_changed(self, option_name: str, value):
-        """Handle option change."""
+        """Handle option change and update total price."""
         self.selected_options[option_name] = value
+        # Special handling for Material change to update Probe Length base
+        if option_name == "Material":
+            new_material_code = None
+            if isinstance(value, dict):
+                new_material_code = value.get('code')
+            elif isinstance(value, str) and ' - ' in value:
+                new_material_code = value.split(' - ')[0]
+            elif isinstance(value, str):
+                new_material_code = value
+            if new_material_code:
+                updated_probe_length = 10
+                if new_material_code in ['U', 'T', 'CPVC']:
+                    updated_probe_length = 4
+                elif new_material_code == 'C':
+                    updated_probe_length = 12
+                if self.current_product and getattr(self.current_product, 'name', None) == 'FS10000':
+                    updated_probe_length = 6
+                spin_widget = self.option_widgets.get("Probe Length")
+                edit_widget = self.option_widgets.get("Probe Length Edit")
+                if spin_widget and edit_widget and spin_widget.value() != int(updated_probe_length):
+                    spin_widget.setValue(int(updated_probe_length))
+                    edit_widget.setText(str(int(updated_probe_length)))
+                    self.selected_options["Probe Length"] = updated_probe_length
         self._update_total_price()
     
     def _on_quantity_changed(self, quantity: int):
@@ -1167,54 +1198,57 @@ class ImprovedProductSelectionDialog(QDialog):
             return
 
         base_price = self.current_product.base_model.base_price if self.current_product.base_model else 0.0
-        
         # Calculate adders from selected options
         total_adder = 0.0
         length_adder = 0.0
-        
         # Get current probe length
         probe_length = self.selected_options.get("Probe Length", 10.0)
-        
         # Get selected material to calculate length adder
         material_widget = self.option_widgets.get("Material")
         selected_material = None
         if material_widget and isinstance(material_widget, ModernOptionWidget):
             material_choice = material_widget.get_current_value()
-            # Extract material code from the choice (e.g., "S - 316 Stainless Steel" -> "S")
             if isinstance(material_choice, dict):
-                # Handle dictionary format with 'code' key
                 selected_material = material_choice.get('code')
             elif isinstance(material_choice, str) and ' - ' in material_choice:
                 selected_material = material_choice.split(' - ')[0]
             elif isinstance(material_choice, str):
                 selected_material = material_choice
-        
-        # Calculate length adder if material is selected
         if selected_material and probe_length:
             try:
+                print(f'DEBUG: Calling calculate_length_price with product_name={self.current_product.name}, selected_material={selected_material}, probe_length={probe_length}')
                 length_adder = self.product_service.calculate_length_price(
                     self.current_product.name, 
                     selected_material, 
                     float(probe_length)
                 )
+                print(f'DEBUG: length_adder returned = {length_adder}')
             except Exception as e:
                 logger.warning(f"Error calculating length price: {e}")
                 length_adder = 0.0
-        
+        # Only include adders for the active connection sub-option
+        # Determine selected connection type if present
+        selected_connection_type = None
+        if 'Connection Type' in self.selected_options:
+            selected_connection_type = self.selected_options['Connection Type']
         for option_name, selected_value in self.selected_options.items():
+            # If this is a connection sub-option, only include if it matches the selected type
+            if option_name in ['NPT Size', 'Flange Size', 'Tri-clamp']:
+                if selected_connection_type == 'NPT' and option_name != 'NPT Size':
+                    continue
+                if selected_connection_type == 'Flange' and option_name != 'Flange Size':
+                    continue
+                if selected_connection_type == 'Tri-clamp' and option_name != 'Tri-clamp':
+                    continue
             widget = self.option_widgets.get(option_name)
             if isinstance(widget, ModernOptionWidget):
-                # Use the get_current_adder_value method to handle exotic metals
                 price_adder = widget.get_current_adder_value()
+                if price_adder != 0:
+                    print(f'DEBUG: option adder: option_name={option_name}, selected_value={selected_value}, price_adder={price_adder}')
                 total_adder += price_adder
             elif isinstance(widget, ConnectionOptionsWidget):
-                # For complex widgets, need to get price from sub-options
                 config = widget.get_current_configuration()
-                # This part is still tricky, need to implement adder logic in ConnectionOptionsWidget
-                # For now, let's assume it works, but we need to implement it.
                 pass
-
-        # Calculate spare parts total
         spare_parts_total = 0.0
         if hasattr(self, 'selected_spare_parts'):
             spare_parts_total = sum(
@@ -1222,11 +1256,12 @@ class ImprovedProductSelectionDialog(QDialog):
                 for data in self.selected_spare_parts.values()
             )
         # DEBUG PRINTS
-        print('DEBUG: selected_spare_parts =', self.selected_spare_parts)
+        print('DEBUG: base_price =', base_price)
+        print('DEBUG: total_adder =', total_adder)
+        print('DEBUG: length_adder =', length_adder)
         print('DEBUG: spare_parts_total =', spare_parts_total)
-
         total_price = base_price + total_adder + length_adder + spare_parts_total
-        
+        print('DEBUG: total_price =', total_price)
         # Update price display with length adder information
         self.base_price_label.setText(f"Base Price: ${base_price:.2f}")
         
@@ -1345,14 +1380,16 @@ class ImprovedProductSelectionDialog(QDialog):
             
             if selected_material and probe_length:
                 try:
+                    print(f'DEBUG: Calling calculate_length_price with product_name={self.current_product.name}, selected_material={selected_material}, probe_length={probe_length}')
                     length_adder = self.product_service.calculate_length_price(
                         self.current_product.name, 
                         selected_material, 
                         float(probe_length)
                     )
-                    total_price += length_adder
+                    print(f'DEBUG: length_adder returned = {length_adder}')
                 except Exception as e:
-                    logger.warning(f"Error calculating length price in add to quote: {e}")
+                    logger.warning(f"Error calculating length price: {e}")
+                    length_adder = 0.0
         
         # Add spare parts total
         spare_parts_total = 0.0

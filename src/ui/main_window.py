@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         """Initialize the main window with proper styling."""
         super().__init__()
         self.setWindowTitle("MyBabbittQuote - Babbitt International")
-        self.resize(1400, 900)
+        self.resize(1600, 900)
         self.setMinimumSize(1200, 700)
         
         # Store reference to self for theme switching
@@ -61,8 +61,7 @@ class MainWindow(QMainWindow):
         # Start with dashboard
         self._show_dashboard()
         
-        # Make the window open in full screen by default
-        self.showMaximized()
+        
         
         logger.info("MainWindow initialized with professional styling and Python animations")
 

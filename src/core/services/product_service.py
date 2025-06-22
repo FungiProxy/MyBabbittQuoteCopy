@@ -530,17 +530,10 @@ class ProductService:
     ) -> float:
         """
         Calculate the price adder for a specific length and material using database rules.
-
-        Args:
-            product_family: Product family identifier (e.g., "LS2000")
-            material_code: Material code (e.g., "S", "H", "U", "T", "TS")
-            length: Length in inches
-
-        Returns:
-            float: Price adder for the length
         """
         from src.core.database import SessionLocal
 
+        print(f'DEBUG: calculate_length_price called with product_family={product_family}, material_code={material_code}, length={length}')
         with SessionLocal() as session:
             # Query for length adder rules
             query = text(
@@ -557,29 +550,39 @@ class ProductService:
                 {"product_family": product_family, "material_code": material_code},
             ).fetchone()
 
+            print(f'DEBUG: length adder rule query result = {result}')
+
             if not result:
+                print('DEBUG: No length adder rule found, returning 0.0')
                 return 0.0
 
             adder_type = result.adder_type
             first_threshold = result.first_threshold
             adder_amount = result.adder_amount
 
+            print(f'DEBUG: adder_type={adder_type}, first_threshold={first_threshold}, adder_amount={adder_amount}')
+
             # Handle per-inch adders (U, T, CPVC materials)
             if adder_type == "per_inch":
                 if length > first_threshold:
                     extra_length = length - first_threshold
-                    return extra_length * adder_amount
+                    adder = extra_length * adder_amount
+                    print(f'DEBUG: per_inch adder calculated = {adder}')
+                    return adder
+                print('DEBUG: per_inch, length not above threshold, returning 0.0')
                 return 0.0
 
             # Handle per-foot adders (S, H, TS, C materials)
             elif adder_type == "per_foot":
                 if length >= first_threshold:
-                    # Adder is applied AT the threshold and for every 12" interval after.
-                    # e.g., 24-35" = 1 adder, 36-47" = 2 adders, etc.
                     adder_count = math.floor((length - first_threshold) / 12) + 1
-                    return adder_count * adder_amount
+                    adder = adder_count * adder_amount
+                    print(f'DEBUG: per_foot adder calculated = {adder}')
+                    return adder
+                print('DEBUG: per_foot, length not above threshold, returning 0.0')
                 return 0.0
 
+            print('DEBUG: Unknown adder_type or no adder, returning 0.0')
             return 0.0
 
     def get_length_adder_rules(
