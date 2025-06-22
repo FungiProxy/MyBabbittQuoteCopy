@@ -574,12 +574,10 @@ class ProductService:
             # Handle per-foot adders (S, H, TS, C materials)
             elif adder_type == "per_foot":
                 if length >= first_threshold:
-                    # Calculate how many 12-inch increments starting AT the threshold
-                    extra_inches = length - first_threshold
-                    increments = (
-                        math.floor(extra_inches / 12) + 1
-                    )  # +1 because threshold itself counts
-                    return increments * adder_amount
+                    # Adder is applied AT the threshold and for every 12" interval after.
+                    # e.g., 24-35" = 1 adder, 36-47" = 2 adders, etc.
+                    adder_count = math.floor((length - first_threshold) / 12) + 1
+                    return adder_count * adder_amount
                 return 0.0
 
             return 0.0

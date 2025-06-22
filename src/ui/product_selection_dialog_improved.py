@@ -7,6 +7,7 @@ File: src/ui/product_selection_dialog_improved.py
 
 import logging
 from typing import Dict, List, Optional
+import os
 
 from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QEvent
 from PySide6.QtWidgets import (
@@ -49,7 +50,8 @@ class ConnectionOptionsWidget(QFrame):
         
         # Fetch all connection-related options for this product family
         all_options = self.product_service.get_additional_options(self.family_name)
-        all_connection_options = [opt for opt in all_options if opt.get("category") == "Connections"]
+        # Exclude insulator options from connection options
+        all_connection_options = [opt for opt in all_options if opt.get("category") == "Connections" and not opt.get("name", "").startswith("Insulator")]
 
         # Create the primary connection type dropdown
         connection_type_option = next((opt for opt in all_connection_options if opt['name'] == 'Connection Type'), None)
@@ -494,13 +496,16 @@ class ImprovedProductSelectionDialog(QDialog):
         self.setStyleSheet(BabbittTheme.get_main_stylesheet())
         self.product_service = product_service
         self.db = SessionLocal()
-        # self.config_service = ConfigurationService(db=self.db, product_service=self.product_service)
         self.product_to_edit = product_to_edit
         self.quantity = 1
         self.option_widgets = {}
         self.current_product = None
         self.selected_options = {}
-
+        self.product_image_label = None
+        
+        self.grid_row = 0
+        self.grid_col = 0
+        
         # Enhance the dialog appearance
         self.setWindowTitle("Configure Product - Babbitt International")
         self.resize(1000, 700)  # Slightly larger for better usability
@@ -546,6 +551,9 @@ class ImprovedProductSelectionDialog(QDialog):
         
         # Apply Babbitt theme to this dialog
         self.setStyleSheet(BabbittTheme.get_dialog_stylesheet())
+        
+        # Install a global event filter to handle the Enter key.
+        self.installEventFilter(self)
     
     def _setup_ui(self):
         """Setup the improved UI layout."""
@@ -669,7 +677,7 @@ class ImprovedProductSelectionDialog(QDialog):
         self.config_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         
         self.config_widget = QWidget()
-        self.config_layout = QVBoxLayout(self.config_widget)
+        self.config_layout = QGridLayout(self.config_widget)
         self.config_layout.setContentsMargins(5, 5, 5, 5)
         self.config_layout.setSpacing(15)
         
@@ -697,13 +705,13 @@ class ImprovedProductSelectionDialog(QDialog):
         layout.setSpacing(12)
         
         # Pricing summary
-        pricing_layout = QHBoxLayout()
+        self.pricing_layout = QHBoxLayout()
         
         self.base_price_label = QLabel("Base Price: $0.00")
         self.base_price_label.setStyleSheet("font-size: 14px; color: #6C757D;")
-        pricing_layout.addWidget(self.base_price_label)
+        self.pricing_layout.addWidget(self.base_price_label)
         
-        pricing_layout.addStretch()
+        self.pricing_layout.addStretch()
         
         self.total_price_label = QLabel("Total: $0.00")
         self.total_price_label.setStyleSheet("""
@@ -711,9 +719,9 @@ class ImprovedProductSelectionDialog(QDialog):
             font-weight: 600;
             color: #2C3E50;
         """)
-        pricing_layout.addWidget(self.total_price_label)
+        self.pricing_layout.addWidget(self.total_price_label)
         
-        layout.addLayout(pricing_layout)
+        layout.addLayout(self.pricing_layout)
         
         # Quantity and actions
         bottom_layout = QHBoxLayout()
@@ -789,18 +797,40 @@ class ImprovedProductSelectionDialog(QDialog):
         
         parent_layout.addWidget(actions_frame)
     
+    def _add_widget_to_grid(self, widget: QWidget, full_width: bool = False):
+        """Adds a widget to the configuration grid, handling column and row positioning."""
+        if full_width:
+            # If we're not in the first column, move to a new row to avoid jagged layout
+            if self.grid_col != 0:
+                self.grid_row += 1
+                self.grid_col = 0
+            
+            self.config_layout.addWidget(widget, self.grid_row, 0, 1, 2) # Add widget spanning both columns
+            self.grid_row += 1 # Move to the next row
+        else:
+            self.config_layout.addWidget(widget, self.grid_row, self.grid_col)
+            self.grid_col += 1
+            # If we've filled the second column, move to the next row
+            if self.grid_col > 1:
+                self.grid_col = 0
+                self.grid_row += 1
+
     def _show_product_config(self, product):
         """Show the configuration options for the selected product."""
         # Clear previous configuration
         while self.config_layout.count():
-            child = self.config_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+            item = self.config_layout.takeAt(0)
+            if item and item.widget():
+                item.widget().deleteLater()
         
         self.option_widgets = {}
 
         self.current_product = product
         self.config_title.setText(f"Configure {product.name}")
+
+        # Reset grid layout trackers
+        self.grid_row = 0
+        self.grid_col = 0
 
         # 1. Start with a clean slate for selected options
         self.selected_options = {}
@@ -808,9 +838,9 @@ class ImprovedProductSelectionDialog(QDialog):
         # 2. Additional & Probe Length Options (in specified order)
         self._create_ordered_options_sections(product)
 
-        # Add a spacer to push everything to the top
+        # Add a spacer to push everything to the top, spanning all columns
         spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.config_layout.addSpacerItem(spacer)
+        self.config_layout.addItem(spacer, self.grid_row + 1, 0, 1, 2)
         
         # This seems to be the right place to call this
         self._set_default_values(product.name)
@@ -819,64 +849,61 @@ class ImprovedProductSelectionDialog(QDialog):
 
     def _create_ordered_options_sections(self, product):
         """
-        Creates all dynamic option sections in the user-defined order:
-        1. Voltage
-        2. Material
-        3. Probe Length
-        4. Connection Options
-        5. All others
+        Creates all dynamic option sections in a two-column grid layout.
         """
         all_options = self.product_service.get_additional_options(product.name)
         if not all_options:
             logger.warning(f"No additional options found for {product.name}")
             return
 
+        # --- Data Pre-processing ---
         options_by_category: Dict[str, List] = {}
+        # Group all options by their category
         for option_data in all_options:
             category = option_data.get("category", "General")
-
-            # Dynamically rename "Accessories" to "Extra Options" for display purposes
             if category == "Accessories":
                 category = "Extra Options"
-
-            # We no longer need a separate core options section
-            if category == "Core":
-                category = "General"
-
             if category not in options_by_category:
                 options_by_category[category] = []
             options_by_category[category].append(option_data)
 
-        def create_category_section(category_name):
+        # Move Insulator options from "Connections" into their own categories for layout purposes
+        if "Connections" in options_by_category:
+            connection_opts = options_by_category["Connections"]
+            insulator_opts = [opt for opt in connection_opts if opt.get("name", "").startswith("Insulator")]
+            options_by_category["Connections"] = [opt for opt in connection_opts if not opt.get("name", "").startswith("Insulator")]
+
+            for opt in insulator_opts:
+                cat_name = opt.get("name") # e.g., "Insulator Material"
+                if cat_name:
+                    options_by_category[cat_name] = [opt]
+
+        # --- Widget Creation and Layout ---
+        def create_category_widget(category_name):
+            """Creates the appropriate QGroupBox or QWidget for a given category."""
             options = options_by_category.get(category_name)
             if not options:
-                return
+                return None
 
+            # Connections gets a specialized, complex widget
             if category_name == "Connections":
-                # Use the specialized widget for connections
                 conn_widget = ConnectionOptionsWidget(product.name, self.product_service)
                 conn_widget.option_changed.connect(self._on_option_changed)
                 group_box = QGroupBox(category_name)
                 layout = QVBoxLayout(group_box)
                 layout.addWidget(conn_widget)
-                self.config_layout.addWidget(group_box)
-                self.option_widgets["Connections"] = conn_widget # Store the main widget
-                # Set initial connection values
+                self.option_widgets["Connections"] = conn_widget
                 initial_config = conn_widget.get_current_configuration()
                 for opt_name, value in initial_config.items():
                     self.selected_options[opt_name] = value
-                return
+                return group_box
 
+            # Generic categories get a standard group box
             group_box = QGroupBox(category_name)
             group_layout = QVBoxLayout(group_box)
             group_layout.setSpacing(10)
 
-            # Determine widget type for this category
-            widget_type = 'default'
-            if category_name == "Voltages":
-                widget_type = 'combobox'
-            elif 'material' in category_name.lower():
-                widget_type = 'combobox'
+            widget_type = 'combobox' if category_name == "Voltages" or 'material' in category_name.lower() or 'Insulator' in category_name else 'default'
 
             for option in options:
                 option_name = option.get("name")
@@ -884,70 +911,67 @@ class ImprovedProductSelectionDialog(QDialog):
                 adders = option.get("adders", {})
                 
                 if not choices or not isinstance(choices, list):
-                    logger.warning(f"Skipping option '{option_name}' in '{category_name}' due to invalid choices.")
                     continue
 
                 option_widget = ModernOptionWidget(option_name, choices, adders, widget_type=widget_type)
                 option_widget.option_changed.connect(self._on_option_changed)
                 group_layout.addWidget(option_widget)
                 self.option_widgets[option_name] = option_widget
-                # Store the default value
                 self.selected_options[option_name] = option_widget.get_current_value()
 
-            self.config_layout.addWidget(group_box)
+            return group_box
 
-        # Separate material categories for ordering
+        # --- Category Ordering and Rendering ---
         all_material_categories = sorted([cat for cat in options_by_category if "material" in cat.lower()])
         main_material_categories = [cat for cat in all_material_categories if "o-ring" not in cat.lower()]
         
-        # Define the display order
         priority_order = (
             ["Voltages"] + 
             main_material_categories + 
-            ["Probe Length", "Connections", "O-ring Material"]
+            ["Probe Length", "Connections", "Insulator Material", "Insulator Length", "O-ring Material"]
         )
         
         rendered_categories = set()
-
+        
+        # Render priority categories first
         for category in priority_order:
-            if category == "Probe Length":
-                # Special handling for Probe Length section
-                self._create_probe_length_section(product)
-                rendered_categories.add("Probe Length") # Mark as "rendered"
-            elif category == "Connections":
-                # Handled separately to ensure it's a single block
-                create_category_section("Connections")
-                rendered_categories.add("Connections")
-            else:
-                if category in options_by_category:
-                    create_category_section(category)
+            if category not in rendered_categories:
+                is_full_width = category in ["Probe Length", "Connections"]
+                
+                widget = None
+                if category == "Probe Length":
+                    widget = self._create_probe_length_section(product)
+                elif category in options_by_category:
+                    widget = create_category_widget(category)
+                
+                if widget:
+                    self._add_widget_to_grid(widget, full_width=is_full_width)
                     rendered_categories.add(category)
-
-        # Render remaining categories, sorted for consistent ordering
+        
+        # Render remaining categories
         remaining_keys = sorted([key for key in options_by_category.keys() if key not in rendered_categories])
         for category in remaining_keys:
-            create_category_section(category)
-    
+            widget = create_category_widget(category)
+            if widget:
+                self._add_widget_to_grid(widget, full_width=False)
+
     def _create_probe_length_section(self, product):
-        """Create the specialized probe length input section."""
-        # This section is now enabled for all products.
+        """Create the specialized probe length input section and return it."""
         group_box = QGroupBox("Probe Length")
         layout = QHBoxLayout(group_box)
         layout.setSpacing(12)
         
-        # Use a sensible default since the DB doesn't store one per family
-        default_length = 10.0
+        default_length = 10
 
-        # Use QDoubleSpinBox for decimal increments
-        probe_length_spinner = QDoubleSpinBox()
-        probe_length_spinner.setRange(1.0, 200.0)
-        probe_length_spinner.setSingleStep(0.5)
-        probe_length_spinner.setDecimals(1)
+        # Use QSpinBox for whole numbers only
+        probe_length_spinner = QSpinBox()
+        probe_length_spinner.setRange(1, 200)
+        probe_length_spinner.setSingleStep(1)
         probe_length_spinner.setValue(default_length)
         probe_length_spinner.setSuffix(" in.")
         probe_length_spinner.setMinimumWidth(100)
         probe_length_spinner.setStyleSheet("""
-            QDoubleSpinBox { 
+            QSpinBox { 
                 padding: 6px; 
                 border: 1px solid #ced4da; 
                 border-radius: 4px;
@@ -956,47 +980,43 @@ class ImprovedProductSelectionDialog(QDialog):
 
         self.probe_length_edit = QLineEdit(str(default_length))
         self.probe_length_edit.setValidator(QIntValidator(1, 999))
-        self.probe_length_edit.installEventFilter(self) # Intercept key presses
-        self.option_widgets["Probe Length Edit"] = self.probe_length_edit
         
-        layout.addWidget(QLabel("Length:"))
         layout.addWidget(probe_length_spinner)
-        layout.addWidget(QLabel("Custom:"))
         layout.addWidget(self.probe_length_edit)
         layout.addStretch()
 
         self.option_widgets["Probe Length"] = probe_length_spinner
+        self.option_widgets["Probe Length Edit"] = self.probe_length_edit
         group_box.setLayout(layout)
-        self.config_layout.addWidget(group_box)
 
         # Sync logic
         def sync_probe_length_widgets():
-            # Sync spinner to edit - QDoubleSpinBox emits valueChanged(float)
+            # Sync spinner to edit
             probe_length_spinner.valueChanged.connect(
-                lambda val: self.probe_length_edit.setText(f"{val:.1f}")
+                lambda val: self.probe_length_edit.setText(str(val))
             )
             
             # Sync edit to spinner
             def update_spinner(text):
                 try:
-                    # Use float to handle decimals from the line edit
-                    val = float(text)
+                    val = int(text)
                     if probe_length_spinner.minimum() <= val <= probe_length_spinner.maximum():
-                        # Block signals to prevent feedback loop
                         probe_length_spinner.blockSignals(True)
                         probe_length_spinner.setValue(val)
                         probe_length_spinner.blockSignals(False)
                         self._on_option_changed("Probe Length", val)
                 except ValueError:
-                    pass  # Ignore non-numeric input
+                    pass
 
             self.probe_length_edit.textChanged.connect(update_spinner)
 
         sync_probe_length_widgets()
         
-        # Emit the initial default value
+        # Emit the initial default value to calculate the initial length adder
         self._on_option_changed("Probe Length", default_length)
-    
+        
+        return group_box
+
     def _load_product_list(self):
         """Load product list from the service."""
         try:
@@ -1069,6 +1089,37 @@ class ImprovedProductSelectionDialog(QDialog):
         
         # Calculate adders from selected options
         total_adder = 0.0
+        length_adder = 0.0
+        
+        # Get current probe length
+        probe_length = self.selected_options.get("Probe Length", 10.0)
+        
+        # Get selected material to calculate length adder
+        material_widget = self.option_widgets.get("Material")
+        selected_material = None
+        if material_widget and isinstance(material_widget, ModernOptionWidget):
+            material_choice = material_widget.get_current_value()
+            # Extract material code from the choice (e.g., "S - 316 Stainless Steel" -> "S")
+            if isinstance(material_choice, dict):
+                # Handle dictionary format with 'code' key
+                selected_material = material_choice.get('code')
+            elif isinstance(material_choice, str) and ' - ' in material_choice:
+                selected_material = material_choice.split(' - ')[0]
+            elif isinstance(material_choice, str):
+                selected_material = material_choice
+        
+        # Calculate length adder if material is selected
+        if selected_material and probe_length:
+            try:
+                length_adder = self.product_service.calculate_length_price(
+                    self.current_product.name, 
+                    selected_material, 
+                    float(probe_length)
+                )
+            except Exception as e:
+                logger.warning(f"Error calculating length price: {e}")
+                length_adder = 0.0
+        
         for option_name, selected_value in self.selected_options.items():
             widget = self.option_widgets.get(option_name)
             if isinstance(widget, ModernOptionWidget):
@@ -1082,9 +1133,37 @@ class ImprovedProductSelectionDialog(QDialog):
                 # For now, let's assume it works, but we need to implement it.
                 pass
 
-        total_price = base_price + total_adder
+        total_price = base_price + total_adder + length_adder
         
+        # Update price display with length adder information
         self.base_price_label.setText(f"Base Price: ${base_price:.2f}")
+        
+        # Show length adder if applicable
+        if length_adder > 0:
+            length_info = f"Length Adder: ${length_adder:.2f}"
+            if hasattr(self, 'length_adder_label'):
+                self.length_adder_label.setText(length_info)
+                self.length_adder_label.setVisible(True)
+            else:
+                # Create length adder label if it doesn't exist
+                self.length_adder_label = QLabel(length_info)
+                self.length_adder_label.setStyleSheet("""
+                    QLabel {
+                        font-size: 12px;
+                        color: #059669;
+                        padding: 4px 8px;
+                        background-color: #ecfdf5;
+                        border: 1px solid #a7f3d0;
+                        border-radius: 4px;
+                    }
+                """)
+                # Add the length adder label to the pricing layout
+                if hasattr(self, 'pricing_layout'):
+                    self.pricing_layout.addWidget(self.length_adder_label)
+        else:
+            if hasattr(self, 'length_adder_label'):
+                self.length_adder_label.setVisible(False)
+        
         final_total = total_price * self.quantity
         self.total_price_label.setText(f"Total: ${final_total:.2f}")
 
@@ -1110,11 +1189,37 @@ class ImprovedProductSelectionDialog(QDialog):
 
         # Calculate final price again for safety
         total_price = final_config["base_price"]
+        
+        # Add option adders
         for option_name, selected_value in self.selected_options.items():
              widget = self.option_widgets.get(option_name)
              if isinstance(widget, ModernOptionWidget):
                  # Use the get_current_adder_value method to handle exotic metals
                  total_price += widget.get_current_adder_value()
+        
+        # Add length adder
+        probe_length = self.selected_options.get("Probe Length", 10.0)
+        material_widget = self.option_widgets.get("Material")
+        if material_widget and isinstance(material_widget, ModernOptionWidget):
+            material_choice = material_widget.get_current_value()
+            selected_material = None
+            if isinstance(material_choice, dict):
+                selected_material = material_choice.get('code')
+            elif isinstance(material_choice, str) and ' - ' in material_choice:
+                selected_material = material_choice.split(' - ')[0]
+            elif isinstance(material_choice, str):
+                selected_material = material_choice
+            
+            if selected_material and probe_length:
+                try:
+                    length_adder = self.product_service.calculate_length_price(
+                        self.current_product.name, 
+                        selected_material, 
+                        float(probe_length)
+                    )
+                    total_price += length_adder
+                except Exception as e:
+                    logger.warning(f"Error calculating length price in add to quote: {e}")
         
         final_config["total_price"] = total_price * self.quantity
         
@@ -1162,21 +1267,45 @@ class ImprovedProductSelectionDialog(QDialog):
                     border-radius: 6px;
                 }
             """)
-    
+
     def eventFilter(self, watched, event: QKeyEvent) -> bool:
         """
-        Filter events to catch the Enter key press on the probe length edit.
+        Globally filter for the Enter key to prevent accidental dialog closure.
+        If the key is pressed on a QLineEdit, clear focus as a UX cue.
         """
-        if (hasattr(self, 'probe_length_edit') and
-            watched == self.probe_length_edit and
-            event.type() == QEvent.Type.KeyPress and
-            event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)):
-            # Event is an Enter press on our target QLineEdit.
-            # We clear focus to give a visual cue that input is "done".
-            self.probe_length_edit.clearFocus()
-            # Return True to signify that we have handled this event and it
-            # should not be processed further (i.e., it won't trigger the dialog's default button).
+        # We are only interested in KeyPress events.
+        if event.type() != QEvent.Type.KeyPress:
+            return super().eventFilter(watched, event)
+
+        # Check if the key is Enter or Return.
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            # If the event originated from a QLineEdit, clear its focus.
+            if isinstance(watched, QLineEdit):
+                watched.clearFocus()
+
+            # Return True to signify that we have handled this event.
+            # This prevents the event from being processed further, which stops
+            # it from triggering the dialog's default button (i.e., accept()).
             return True
         
-        # For all other events, pass them along to the default implementation.
-        return super().eventFilter(watched, event) 
+        # For all other events, let the default implementation handle them.
+        return super().eventFilter(watched, event)
+
+    def _update_product_image(self, product_family):
+        """Update the product image based on the selected product family."""
+        if not self.product_image_label:
+            return
+            
+        image_path = self.product_service.get_product_image_path(product_family)
+        if image_path and os.path.exists(image_path):
+            pixmap = QPixmap(image_path)
+            self.product_image_label.setPixmap(pixmap.scaled(
+                self.product_image_label.size(), 
+                Qt.AspectRatioMode.KeepAspectRatio, 
+                Qt.TransformationMode.SmoothTransformation
+            ))
+        else:
+            self.product_image_label.setText("Image not available")
+
+    def _create_product_image_section(self):
+        """Creates the section for displaying the product image."""
