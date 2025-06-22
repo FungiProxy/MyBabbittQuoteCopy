@@ -9,19 +9,20 @@ import logging
 from typing import Dict, List, Optional
 import os
 
-from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QEvent
+from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QEvent, QSize
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QGridLayout,
     QLabel, QComboBox, QSpinBox, QLineEdit, QPushButton, QFrame,
     QScrollArea, QWidget, QGroupBox, QSpacerItem, QSizePolicy,
     QListWidget, QListWidgetItem, QMessageBox, QProgressBar,
-    QButtonGroup, QRadioButton, QCheckBox, QDoubleSpinBox
+    QButtonGroup, QRadioButton, QCheckBox, QDoubleSpinBox, QMenu
 )
-from PySide6.QtGui import QFont, QPixmap, QPalette, QIntValidator, QKeyEvent
+from PySide6.QtGui import QFont, QPixmap, QPalette, QIntValidator, QKeyEvent, QColor
 
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
+from src.core.services.spare_part_service import SparePartService
 from src.ui.theme.babbitt_theme import BabbittTheme
 
 logger = logging.getLogger(__name__)
@@ -834,9 +835,15 @@ class ImprovedProductSelectionDialog(QDialog):
 
         # 1. Start with a clean slate for selected options
         self.selected_options = {}
+        self.selected_spare_parts = {}  # Track selected spare parts (force reset)
 
         # 2. Additional & Probe Length Options (in specified order)
         self._create_ordered_options_sections(product)
+
+        # 3. Add Spare Parts Section (collapsible)
+        spare_parts_widget = self._create_spare_parts_section(product)
+        if spare_parts_widget:
+            self._add_widget_to_grid(spare_parts_widget, full_width=True)
 
         # Add a spacer to push everything to the top, spanning all columns
         spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
@@ -1052,10 +1059,32 @@ class ImprovedProductSelectionDialog(QDialog):
                filter_text.lower() in f.get('description', '').lower()
         ]
 
+        # Add regular product families
         for family in filtered_families:
             item = QListWidgetItem(f"{family['name']}")
             item.setToolTip(family.get('description', 'No description available.'))
             item.setData(Qt.ItemDataRole.UserRole, family)
+            self.product_list.addItem(item)
+        
+        # Add Spare Parts as a special family (only if not filtering or if "spare" is in filter)
+        if not filter_text or "spare" in filter_text.lower() or "parts" in filter_text.lower():
+            # Add a separator
+            separator_item = QListWidgetItem()
+            separator_item.setFlags(Qt.ItemFlag.NoItemFlags)
+            separator_item.setSizeHint(QSize(0, 20))
+            self.product_list.addItem(separator_item)
+            
+            # Add Spare Parts family
+            spare_parts_family = {
+                'name': 'Spare Parts',
+                'description': 'Browse and add spare parts to your quote',
+                'is_spare_parts': True
+            }
+            item = QListWidgetItem("🔧 Spare Parts")
+            item.setToolTip("Browse and add spare parts to your quote")
+            item.setData(Qt.ItemDataRole.UserRole, spare_parts_family)
+            item.setBackground(QColor("#f8f9fa"))
+            item.setForeground(QColor("#6c757d"))
             self.product_list.addItem(item)
     
     def _filter_products(self, text):
@@ -1073,6 +1102,13 @@ class ImprovedProductSelectionDialog(QDialog):
             return
             
         selected_item = selected_items[0]
+        family_data = selected_item.data(Qt.ItemDataRole.UserRole)
+        
+        # Check if this is the special "Spare Parts" selection
+        if family_data.get('is_spare_parts'):
+            self._show_spare_parts_interface()
+            return
+        
         family_name = selected_item.text()
         
         # We need the full object, not just a dict
@@ -1085,6 +1121,35 @@ class ImprovedProductSelectionDialog(QDialog):
         self._show_product_config(product_family_obj)
         
         self.config_area.setVisible(True)
+
+    def _show_spare_parts_interface(self):
+        """Show the spare parts browsing and selection interface."""
+        # Clear the current configuration area
+        for i in reversed(range(self.config_layout.count())):
+            layout_item = self.config_layout.itemAt(i)
+            if layout_item and layout_item.widget():
+                child = layout_item.widget()
+                if child:
+                    child.setParent(None)
+        
+        # Reset grid layout trackers
+        self.grid_row = 0
+        self.grid_col = 0
+        
+        # Update the title
+        self.config_title.setText("Spare Parts")
+        
+        # Reset spare parts selection
+        self.selected_spare_parts = {}  # Force reset when switching to spare parts tab
+        
+        # Create the spare parts interface
+        self._create_spare_parts_browsing_interface()
+        
+        # Show the configuration area
+        self.config_area.setVisible(True)
+        
+        # Disable the add button since we're not configuring a product
+        self.add_button.setEnabled(False)
 
     def _on_option_changed(self, option_name: str, value):
         """Handle option change."""
@@ -1149,7 +1214,18 @@ class ImprovedProductSelectionDialog(QDialog):
                 # For now, let's assume it works, but we need to implement it.
                 pass
 
-        total_price = base_price + total_adder + length_adder
+        # Calculate spare parts total
+        spare_parts_total = 0.0
+        if hasattr(self, 'selected_spare_parts'):
+            spare_parts_total = sum(
+                data['part'].price * data['quantity'] 
+                for data in self.selected_spare_parts.values()
+            )
+        # DEBUG PRINTS
+        print('DEBUG: selected_spare_parts =', self.selected_spare_parts)
+        print('DEBUG: spare_parts_total =', spare_parts_total)
+
+        total_price = base_price + total_adder + length_adder + spare_parts_total
         
         # Update price display with length adder information
         self.base_price_label.setText(f"Base Price: ${base_price:.2f}")
@@ -1180,6 +1256,32 @@ class ImprovedProductSelectionDialog(QDialog):
             if hasattr(self, 'length_adder_label'):
                 self.length_adder_label.setVisible(False)
         
+        # Show spare parts total if applicable
+        if spare_parts_total > 0:
+            spare_parts_info = f"Spare Parts: ${spare_parts_total:.2f}"
+            if hasattr(self, 'spare_parts_total_label'):
+                self.spare_parts_total_label.setText(spare_parts_info)
+                self.spare_parts_total_label.setVisible(True)
+            else:
+                # Create spare parts total label if it doesn't exist
+                self.spare_parts_total_label = QLabel(spare_parts_info)
+                self.spare_parts_total_label.setStyleSheet("""
+                    QLabel {
+                        font-size: 12px;
+                        color: #7c3aed;
+                        padding: 4px 8px;
+                        background-color: #f3f4f6;
+                        border: 1px solid #ddd6fe;
+                        border-radius: 4px;
+                    }
+                """)
+                # Add the spare parts total label to the pricing layout
+                if hasattr(self, 'pricing_layout'):
+                    self.pricing_layout.addWidget(self.spare_parts_total_label)
+        else:
+            if hasattr(self, 'spare_parts_total_label'):
+                self.spare_parts_total_label.setVisible(False)
+        
         final_total = total_price * self.quantity
         self.total_price_label.setText(f"Total: ${final_total:.2f}")
 
@@ -1202,6 +1304,21 @@ class ImprovedProductSelectionDialog(QDialog):
             "selected_options": self.selected_options,
             "base_price": self.current_product.base_model.base_price if self.current_product.base_model else 0.0,
         }
+
+        # Add spare parts to configuration
+        if hasattr(self, 'selected_spare_parts') and self.selected_spare_parts:
+            final_config["spare_parts"] = [
+                {
+                    "part_number": data['part'].part_number,
+                    "name": data['part'].name,
+                    "quantity": data['quantity'],
+                    "unit_price": data['part'].price,
+                    "total_price": data['part'].price * data['quantity']
+                }
+                for data in self.selected_spare_parts.values()
+            ]
+        else:
+            final_config["spare_parts"] = []
 
         # Calculate final price again for safety
         total_price = final_config["base_price"]
@@ -1236,6 +1353,16 @@ class ImprovedProductSelectionDialog(QDialog):
                     total_price += length_adder
                 except Exception as e:
                     logger.warning(f"Error calculating length price in add to quote: {e}")
+        
+        # Add spare parts total
+        spare_parts_total = 0.0
+        if hasattr(self, 'selected_spare_parts'):
+            spare_parts_total = sum(
+                data['part'].price * data['quantity'] 
+                for data in self.selected_spare_parts.values()
+            )
+        
+        total_price += spare_parts_total
         
         final_config["total_price"] = total_price * self.quantity
         
@@ -1325,3 +1452,439 @@ class ImprovedProductSelectionDialog(QDialog):
 
     def _create_product_image_section(self):
         """Creates the section for displaying the product image."""
+
+    def _create_spare_parts_section(self, product):
+        """Creates the spare parts section for the selected product."""
+        # Get spare parts for this product family
+        spare_parts = SparePartService.get_spare_parts_by_family(self.db, product.name)
+        
+        if not spare_parts:
+            return None  # Don't show section if no spare parts available
+        
+        # Create collapsible group box
+        group_box = QGroupBox("Spare Parts")
+        group_box.setCheckable(True)
+        group_box.setChecked(False)  # Start collapsed
+        group_box.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #e0e4e7;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: #2C3E50;
+            }
+            QGroupBox:checked {
+                border-color: #2C3E50;
+            }
+        """)
+        
+        # Main layout for the group box
+        main_layout = QVBoxLayout(group_box)
+        main_layout.setSpacing(12)
+        main_layout.setContentsMargins(16, 20, 16, 16)
+        
+        # Summary label (shown when collapsed)
+        self.spare_parts_summary = QLabel("0 spare parts selected")
+        self.spare_parts_summary.setStyleSheet("""
+            QLabel {
+                color: #6C757D;
+                font-size: 12px;
+                font-weight: normal;
+                padding: 4px 8px;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+            }
+        """)
+        main_layout.addWidget(self.spare_parts_summary)
+        
+        # Content widget (shown when expanded)
+        self.spare_parts_content = QWidget()
+        content_layout = QVBoxLayout(self.spare_parts_content)
+        content_layout.setSpacing(12)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Search box
+        search_layout = QHBoxLayout()
+        search_label = QLabel("Search:")
+        search_label.setStyleSheet("font-weight: 500; color: #2C3E50;")
+        search_layout.addWidget(search_label)
+        
+        self.spare_parts_search = QLineEdit()
+        self.spare_parts_search.setPlaceholderText("Search by part number or name...")
+        self.spare_parts_search.setStyleSheet("""
+            QLineEdit {
+                padding: 8px 12px;
+                border: 1px solid #ced4da;
+                border-radius: 6px;
+                font-size: 13px;
+                background-color: white;
+            }
+            QLineEdit:focus {
+                border-color: #2C3E50;
+            }
+        """)
+        search_layout.addWidget(self.spare_parts_search)
+        content_layout.addLayout(search_layout)
+        
+        # Spare parts list
+        self.spare_parts_list = QListWidget()
+        self.spare_parts_list.setStyleSheet("""
+            QListWidget {
+                border: 1px solid #e9ecef;
+                border-radius: 6px;
+                background-color: white;
+                font-size: 13px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            QListWidget::item:hover {
+                background-color: #f8f9fa;
+            }
+            QListWidget::item:selected {
+                background-color: #e3f2fd;
+                color: #2C3E50;
+            }
+        """)
+        self.spare_parts_list.setMaximumHeight(200)
+        content_layout.addWidget(self.spare_parts_list)
+        
+        # Selected spare parts display
+        self.selected_spare_parts_list = QListWidget()
+        self.selected_spare_parts_list.setStyleSheet("""
+            QListWidget {
+                border: 1px solid #d1ecf1;
+                border-radius: 6px;
+                background-color: #f8f9fa;
+                font-size: 12px;
+            }
+            QListWidget::item {
+                padding: 6px;
+                border-bottom: 1px solid #e9ecef;
+            }
+        """)
+        self.selected_spare_parts_list.setMaximumHeight(120)
+        content_layout.addWidget(self.selected_spare_parts_list)
+        
+        # Add the content widget to main layout
+        main_layout.addWidget(self.spare_parts_content)
+        
+        # Initially hide content (collapsed state)
+        self.spare_parts_content.setVisible(False)
+        
+        # Connect signals
+        group_box.toggled.connect(self._on_spare_parts_toggled)
+        self.spare_parts_search.textChanged.connect(self._filter_spare_parts)
+        self.spare_parts_list.itemDoubleClicked.connect(self._add_spare_part)
+        
+        # Add context menu for selected spare parts
+        self.selected_spare_parts_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.selected_spare_parts_list.customContextMenuRequested.connect(self._show_spare_parts_context_menu)
+        
+        # Populate spare parts
+        self._populate_spare_parts_list(spare_parts)
+        
+        return group_box
+    
+    def _on_spare_parts_toggled(self, checked):
+        """Handle spare parts section toggle (expand/collapse)."""
+        self.spare_parts_content.setVisible(checked)
+        if checked:
+            self.spare_parts_summary.setVisible(False)
+        else:
+            self.spare_parts_summary.setVisible(True)
+            self._update_spare_parts_summary()
+    
+    def _populate_spare_parts_list(self, spare_parts):
+        """Populate the spare parts list."""
+        self.spare_parts_list.clear()
+        self.all_spare_parts = spare_parts  # Store for filtering
+        
+        for part in spare_parts:
+            item = QListWidgetItem()
+            item.setText(f"{part.part_number} - {part.name} (${part.price:.2f})")
+            item.setData(Qt.ItemDataRole.UserRole, part)
+            item.setToolTip(f"Part Number: {part.part_number}\nName: {part.name}\nPrice: ${part.price:.2f}\n\nDouble-click to add")
+            self.spare_parts_list.addItem(item)
+    
+    def _filter_spare_parts(self, search_text):
+        """Filter spare parts based on search text."""
+        for i in range(self.spare_parts_list.count()):
+            item = self.spare_parts_list.item(i)
+            part = item.data(Qt.ItemDataRole.UserRole)
+            
+            # Check if search text matches part number or name
+            matches = (
+                search_text.lower() in part.part_number.lower() or
+                search_text.lower() in part.name.lower()
+            )
+            
+            item.setHidden(not matches)
+    
+    def _add_spare_part(self, item):
+        """Add a spare part to the selected list."""
+        part = item.data(Qt.ItemDataRole.UserRole)
+        part_key = part.part_number
+        
+        # Check if already selected
+        if part_key in self.selected_spare_parts:
+            # Increment quantity
+            self.selected_spare_parts[part_key]['quantity'] += 1
+        else:
+            # Add new part
+            self.selected_spare_parts[part_key] = {
+                'part': part,
+                'quantity': 1
+            }
+        
+        self._update_selected_spare_parts_display()
+        self._update_spare_parts_summary()
+        self._update_total_price()
+    
+    def _update_selected_spare_parts_display(self):
+        """Update the display of selected spare parts."""
+        self.selected_spare_parts_list.clear()
+        
+        for part_key, data in self.selected_spare_parts.items():
+            part = data['part']
+            quantity = data['quantity']
+            total_price = part.price * quantity
+            
+            item = QListWidgetItem()
+            item.setText(f"{part.name} x{quantity} = ${total_price:.2f}")
+            item.setData(Qt.ItemDataRole.UserRole, part_key)
+            
+            # Add remove button or context menu
+            item.setToolTip(f"Part: {part.part_number}\nQuantity: {quantity}\nPrice: ${part.price:.2f}\nTotal: ${total_price:.2f}\n\nRight-click to remove")
+            
+            self.selected_spare_parts_list.addItem(item)
+    
+    def _update_spare_parts_summary(self):
+        """Update the summary text for spare parts."""
+        total_parts = sum(data['quantity'] for data in self.selected_spare_parts.values())
+        total_price = sum(data['part'].price * data['quantity'] for data in self.selected_spare_parts.values())
+        
+        if total_parts == 0:
+            self.spare_parts_summary.setText("0 spare parts selected")
+        else:
+            self.spare_parts_summary.setText(f"{total_parts} spare parts selected - ${total_price:.2f}")
+    
+    def _remove_spare_part(self, part_key):
+        """Remove a spare part from the selected list."""
+        if part_key in self.selected_spare_parts:
+            del self.selected_spare_parts[part_key]
+            self._update_selected_spare_parts_display()
+            self._update_spare_parts_summary()
+            self._update_total_price()
+
+    def _show_spare_parts_context_menu(self, position):
+        """Show context menu for selected spare parts."""
+        item = self.selected_spare_parts_list.itemAt(position)
+        if item:
+            part_key = item.data(Qt.ItemDataRole.UserRole)
+            menu = QMenu()
+            remove_action = menu.addAction("Remove")
+            remove_action.triggered.connect(lambda: self._remove_spare_part(part_key))
+            menu.exec(self.selected_spare_parts_list.mapToGlobal(position))
+
+    def _create_spare_parts_browsing_interface(self):
+        """Create the main spare parts browsing interface."""
+        # Initialize selected spare parts if not already done
+        if not hasattr(self, 'selected_spare_parts'):
+            self.selected_spare_parts = {}
+        
+        # Get all spare parts from all families
+        all_spare_parts = SparePartService.get_all_spare_parts(self.db)
+        
+        # Group spare parts by product family
+        spare_parts_by_family = {}
+        for part in all_spare_parts:
+            family_name = part.product_family.name
+            if family_name not in spare_parts_by_family:
+                spare_parts_by_family[family_name] = []
+            spare_parts_by_family[family_name].append(part)
+        
+        # Create the main interface
+        main_widget = QWidget()
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Header
+        header_label = QLabel("Browse and Add Spare Parts")
+        header_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 10px;
+        """)
+        main_layout.addWidget(header_label)
+        
+        # Search box
+        search_layout = QHBoxLayout()
+        search_label = QLabel("Search:")
+        search_label.setStyleSheet("font-weight: 500; color: #2C3E50;")
+        search_layout.addWidget(search_label)
+        
+        self.spare_parts_search = QLineEdit()
+        self.spare_parts_search.setPlaceholderText("Search by part number, name, or family...")
+        self.spare_parts_search.setStyleSheet("""
+            QLineEdit {
+                padding: 10px 12px;
+                border: 1px solid #ced4da;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+            QLineEdit:focus {
+                border-color: #2C3E50;
+            }
+        """)
+        search_layout.addWidget(self.spare_parts_search)
+        main_layout.addLayout(search_layout)
+        
+        # Create scrollable area for spare parts
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("background-color: transparent; border: none;")
+        
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout(scroll_widget)
+        scroll_layout.setSpacing(15)
+        
+        # Add spare parts grouped by family
+        for family_name in sorted(spare_parts_by_family.keys()):
+            family_parts = spare_parts_by_family[family_name]
+            
+            # Create family group
+            family_group = QGroupBox(family_name)
+            family_group.setStyleSheet("""
+                QGroupBox {
+                    font-weight: 600;
+                    color: #2C3E50;
+                    border: 2px solid #e9ecef;
+                    border-radius: 8px;
+                    margin-top: 10px;
+                    padding-top: 10px;
+                    background-color: white;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 12px;
+                    padding: 0 8px;
+                    background-color: white;
+                }
+            """)
+            
+            family_layout = QVBoxLayout(family_group)
+            family_layout.setSpacing(8)
+            
+            # Add spare parts for this family
+            for part in family_parts:
+                part_widget = self._create_spare_part_widget(part)
+                family_layout.addWidget(part_widget)
+            
+            scroll_layout.addWidget(family_group)
+        
+        scroll_area.setWidget(scroll_widget)
+        main_layout.addWidget(scroll_area)
+        
+        # Add the main widget to the grid
+        self._add_widget_to_grid(main_widget, full_width=True)
+        
+        # Connect search functionality
+        self.spare_parts_search.textChanged.connect(self._filter_spare_parts_browsing)
+        
+        # Store reference to all spare parts for filtering
+        self.all_spare_parts_browsing = all_spare_parts
+        self.spare_parts_by_family = spare_parts_by_family
+
+    def _create_spare_part_widget(self, part):
+        """Create a widget for displaying a single spare part."""
+        widget = QFrame()
+        widget.setStyleSheet("""
+            QFrame {
+                background-color: #f8f9fa;
+                border: 1px solid #e9ecef;
+                border-radius: 6px;
+                padding: 8px;
+            }
+            QFrame:hover {
+                background-color: #e9ecef;
+            }
+        """)
+        
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(12, 8, 12, 8)
+        
+        # Part info
+        info_layout = QVBoxLayout()
+        part_name = QLabel(part.name)
+        part_name.setStyleSheet("font-weight: 500; color: #2C3E50;")
+        info_layout.addWidget(part_name)
+        
+        part_details = QLabel(f"Part #: {part.part_number} | ${part.price:.2f}")
+        part_details.setStyleSheet("font-size: 12px; color: #6c757d;")
+        info_layout.addWidget(part_details)
+        
+        layout.addLayout(info_layout)
+        layout.addStretch()
+        
+        # Add to quote button
+        add_button = QPushButton("Add to Quote")
+        add_button.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+        """)
+        add_button.clicked.connect(lambda: self._add_spare_part_to_quote(part))
+        layout.addWidget(add_button)
+        
+        return widget
+
+    def _add_spare_part_to_quote(self, part):
+        """Add a spare part directly to the quote."""
+        # Create a spare part configuration
+        spare_part_config = {
+            "type": "spare_part",
+            "part_number": part.part_number,
+            "name": part.name,
+            "price": part.price,
+            "quantity": 1,
+            "product_family": part.product_family.name
+        }
+        
+        # Emit the signal to add to quote
+        self.product_added.emit(spare_part_config)
+        
+        # Show confirmation
+        QMessageBox.information(
+            self, 
+            "Spare Part Added", 
+            f"Added {part.name} to your quote.\nPrice: ${part.price:.2f}"
+        )
+
+    def _filter_spare_parts_browsing(self, search_text):
+        """Filter spare parts in the browsing interface."""
+        if not hasattr(self, 'all_spare_parts_browsing'):
+            return
+        
+        # This is a simplified filter - in a full implementation,
+        # you'd want to hide/show the family groups and parts
+        # For now, we'll just log the search
+        logger.info(f"Searching spare parts: {search_text}")
