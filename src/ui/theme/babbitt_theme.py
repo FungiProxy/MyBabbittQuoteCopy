@@ -67,7 +67,7 @@ class BabbittTheme:
         
         QFrame#sidebarFrame {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {cls.PRIMARY_BLUE},
+                stop:0 {cls.PRIMARY_BLUE}, 
                 stop:0.3 #1e40af,
                 stop:0.7 #1d4ed8,
                 stop:1 {cls.SECONDARY_BLUE});

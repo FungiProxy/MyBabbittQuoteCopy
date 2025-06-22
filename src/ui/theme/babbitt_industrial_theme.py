@@ -816,8 +816,8 @@ class BabbittIndustrialIntegration:
                 original_leave_event(event)
             
             # Get all items and reset their positions
-            for i in range(nav_list.count()):
-                item = nav_list.item(i)
+        for i in range(nav_list.count()):
+            item = nav_list.item(i)
                 if item:
                     # Apply leave animation
                     leave_anim = BabbittAnimationSystem.create_leave_animation_group(item, "nav_item")
