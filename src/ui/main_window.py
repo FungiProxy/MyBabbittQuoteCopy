@@ -31,6 +31,7 @@ from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialTheme
 from src.ui.views.customers_page import CustomersPage
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
 from src.ui.views.settings_page import SettingsPage
+from src.ui.theme.theme_manager import ThemeManager
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("MyBabbittQuote - Babbitt International")
         self.resize(1400, 900)
         self.setMinimumSize(1200, 700)
-        
-        # Apply the theme IMMEDIATELY
-        self.setStyleSheet(BabbittIndustrialTheme.get_main_stylesheet())
         
         self._setup_ui()
         self._connect_signals()
@@ -353,8 +351,7 @@ class MainWindow(QMainWindow):
     def _apply_theme(self, theme_name: str):
         """Apply theme changes."""
         try:
-            # Apply the Babbitt theme
-            self.setStyleSheet(BabbittTheme.get_main_stylesheet())
+            ThemeManager.apply_theme(theme_name)
             logger.info(f"Applied theme: {theme_name}")
         except Exception as e:
             logger.error(f"Failed to apply theme: {e}")

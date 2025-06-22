@@ -417,3 +417,12 @@ class BabbittTheme:
             border-radius: 8px;
         }}
         """
+
+    @staticmethod
+    def get_stylesheet(theme_name: str) -> str:
+        """Return the correct stylesheet for the given theme name."""
+        if theme_name == BabbittTheme.DARK_THEME:
+            # For now, just use the main stylesheet (customize for dark if needed)
+            return BabbittTheme.get_main_stylesheet()
+        # Default to corporate theme
+        return BabbittTheme.get_main_stylesheet()
