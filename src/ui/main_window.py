@@ -61,6 +61,9 @@ class MainWindow(QMainWindow):
         # Start with dashboard
         self._show_dashboard()
         
+        # Make the window open in full screen by default
+        self.showMaximized()
+        
         logger.info("MainWindow initialized with professional styling and Python animations")
 
     def _setup_ui(self):

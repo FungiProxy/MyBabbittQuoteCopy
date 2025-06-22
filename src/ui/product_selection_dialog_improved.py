@@ -885,18 +885,34 @@ class ImprovedProductSelectionDialog(QDialog):
             if not options:
                 return None
 
-            # Connections gets a specialized, complex widget
+            # Render Connections in grid format like other options
             if category_name == "Connections":
-                conn_widget = ConnectionOptionsWidget(product.name, self.product_service)
-                conn_widget.option_changed.connect(self._on_option_changed)
-                group_box = QGroupBox(category_name)
-                layout = QVBoxLayout(group_box)
-                layout.addWidget(conn_widget)
-                self.option_widgets["Connections"] = conn_widget
-                initial_config = conn_widget.get_current_configuration()
-                for opt_name, value in initial_config.items():
-                    self.selected_options[opt_name] = value
-                return group_box
+                widgets = []
+                for option in options:
+                    option_name = option.get("name")
+                    choices = option.get("choices", [])
+                    adders = option.get("adders", {})
+                    if not choices or not isinstance(choices, list):
+                        continue
+                    option_widget = ModernOptionWidget(option_name, choices, adders)
+                    option_widget.option_changed.connect(self._on_option_changed)
+                    self.option_widgets[option_name] = option_widget
+                    self.selected_options[option_name] = option_widget.get_current_value()
+                    widgets.append(option_widget)
+                # Return a QWidget containing all connection widgets in a grid
+                group = QWidget()
+                grid = QGridLayout(group)
+                grid.setSpacing(16)
+                grid.setContentsMargins(16, 20, 16, 16)
+                row, col = 0, 0
+                for w in widgets:
+                    grid.addWidget(w, row, col)
+                    col += 1
+                    if col >= 2:
+                        col = 0
+                        row += 1
+                group.setLayout(grid)
+                return group
 
             # Generic categories get a standard group box
             group_box = QGroupBox(category_name)
