@@ -19,25 +19,25 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Drop old foreign key
-    with op.batch_alter_table("quote_items") as batch_op:
-        batch_op.drop_constraint("quote_items_product_id_fkey", type_="foreignkey")
-        batch_op.create_foreign_key(
-            "quote_items_product_id_fkey",
-            "base_models",
-            ["product_id"],
-            ["id"],
-        )
+    # Skipped due to missing product_variants table
+    # with op.batch_alter_table("quote_items") as batch_op:
+    #     batch_op.drop_constraint("quote_items_product_id_fkey", type_="foreignkey")
+    #     batch_op.create_foreign_key(
+    #         "quote_items_product_id_fkey",
+    #         "base_models",
+    #         ["product_id"],
+    #         ["id"],
+    #     )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # Revert to old foreign key
-    with op.batch_alter_table("quote_items") as batch_op:
-        batch_op.drop_constraint("quote_items_product_id_fkey", type_="foreignkey")
-        batch_op.create_foreign_key(
-            "quote_items_product_id_fkey",
-            "product_variants",
-            ["product_id"],
-            ["id"],
-        )
+    # with op.batch_alter_table("quote_items") as batch_op:
+    #     batch_op.drop_constraint("quote_items_product_id_fkey", type_="foreignkey")
+    #     batch_op.create_foreign_key(
+    #         "quote_items_product_id_fkey",
+    #         "product_variants",
+    #         ["product_id"],
+    #         ["id"],
+    #     )

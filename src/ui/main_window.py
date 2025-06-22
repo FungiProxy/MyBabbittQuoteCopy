@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QVBoxLayout,
     QWidget,
+    QDialog,
 )
 
 from src.ui.theme.babbitt_theme import BabbittTheme
@@ -32,6 +33,7 @@ from src.ui.views.customers_page import CustomersPage
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
 from src.ui.views.settings_page import SettingsPage
 from src.ui.theme.theme_manager import ThemeManager
+from src.ui.dialogs.customer_dialog import CustomerDialog
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +63,9 @@ class MainWindow(QMainWindow):
         # Start with dashboard
         self._show_dashboard()
         
-        
+        # Connect customer selection in quote page if button exists
+        if hasattr(self.quote_creation_page, 'select_customer_btn'):
+            self.quote_creation_page.select_customer_btn.clicked.connect(self._select_customer_for_quote)
         
         logger.info("MainWindow initialized with professional styling and Python animations")
 
@@ -323,7 +327,10 @@ class MainWindow(QMainWindow):
             if hasattr(self.quote_creation_page, '_add_product'):
                 self.quote_creation_page._add_product()
         elif current_index == 2:  # Customers
-            QMessageBox.information(self, "Add Customer", "Customer creation will be implemented.")
+            dialog = CustomerDialog(self)
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                if hasattr(self.customers_page, '_filter_customers'):
+                    self.customers_page._filter_customers()
 
     def _apply_theme(self, theme_name: str):
         """Apply theme changes."""
@@ -332,6 +339,12 @@ class MainWindow(QMainWindow):
             logger.info(f"Applied theme: {theme_name}")
         except Exception as e:
             logger.error(f"Failed to apply theme: {e}")
+
+    def _select_customer_for_quote(self):
+        dialog = CustomerDialog(self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # Optionally update the quote page with selected customer info
+            pass
 
     def closeEvent(self, event):
         """Handle application close."""

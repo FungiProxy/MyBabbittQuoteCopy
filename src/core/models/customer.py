@@ -9,8 +9,9 @@ Supports:
 - Relationship to all quotes for the customer
 """
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
+import datetime
 
 from ..database import Base
 
@@ -34,6 +35,8 @@ class Customer(Base):
         zip_code (str): Postal code
         notes (str): Additional notes
         quotes (List[Quote]): List of quotes for this customer
+        created_at (DateTime): Timestamp when the customer was created
+        updated_at (DateTime): Timestamp when the customer was last updated
 
     Example:
         >>> customer = Customer(name="Jane Doe", company="Acme Corp", email="jane@acme.com")
@@ -52,6 +55,8 @@ class Customer(Base):
     state = Column(String)
     zip_code = Column(String)
     notes = Column(String)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     # Relationship to quotes
     quotes = relationship(

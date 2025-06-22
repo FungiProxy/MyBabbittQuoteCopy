@@ -1,23 +1,13 @@
 """
-Service for managing customers.
-
-This module provides a service layer for managing customers in Babbitt International's
-quoting system. It implements business logic for:
-
-- Customer creation and management
-- Customer search and retrieval
-- Customer data validation
-- Customer relationship tracking
-- Contact information management
-- Customer-specific pricing rules
-
-The service follows domain-driven design principles and separates business logic
-from data access, providing a clean interface for customer management operations.
+Service for managing customers - COMPLETE IMPLEMENTATION.
 """
 
 from typing import Any, Dict, List, Optional
+from datetime import datetime
+import logging
 
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, func
 
 from src.core.models import Customer
 from src.utils.db_utils import (
@@ -28,51 +18,11 @@ from src.utils.db_utils import (
     update_and_commit,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class CustomerService:
-    """
-    Service class for managing customers in the quoting system.
-
-    This service provides comprehensive customer management functionality including
-    creating, retrieving, updating, and deleting customer records. It handles all
-    customer-related business logic and data validation.
-
-    The service handles:
-    - Customer record management (CRUD operations)
-    - Customer search and filtering
-    - Contact information validation
-    - Address management
-    - Customer notes and metadata
-    - Customer relationship tracking
-
-    The service is implemented using static methods for simplicity and statelessness,
-    making it easy to use across different parts of the application without
-    managing instance state.
-
-    Example:
-        >>> db = SessionLocal()
-        >>> # Create a new customer
-        >>> customer = CustomerService.create_customer(
-        ...     db,
-        ...     name="Acme Industries",
-        ...     email="contact@acme.com",
-        ...     phone="555-0123"
-        ... )
-        >>>
-        >>> # Retrieve and update customer
-        >>> found = CustomerService.get_customer(db, customer.id)
-        >>> updated = CustomerService.update_customer(
-        ...     db,
-        ...     customer.id,
-        ...     {"address": "123 Main St", "city": "Springfield"}
-        ... )
-        >>>
-        >>> # Search for customers
-        >>> matches = CustomerService.search_customers(db, "Acme")
-        >>>
-        >>> # List all customers
-        >>> all_customers = CustomerService.get_all_customers(db)
-    """
+    """Service class for managing customers in the quoting system."""
 
     @staticmethod
     def create_customer(
@@ -87,24 +37,7 @@ class CustomerService:
         zip_code: Optional[str] = None,
         notes: Optional[str] = None,
     ) -> Customer:
-        """
-        Create a new customer.
-
-        Args:
-            db: Database session
-            name: Customer name
-            company: Company name
-            email: Contact email
-            phone: Contact phone number
-            address: Street address
-            city: City
-            state: State/province
-            zip_code: Postal/zip code
-            notes: Additional notes
-
-        Returns:
-            Newly created Customer object
-        """
+        """Create a new customer."""
         customer = Customer(
             name=name,
             company=company,
@@ -115,98 +48,186 @@ class CustomerService:
             state=state,
             zip_code=zip_code,
             notes=notes,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
         )
-
+        
         return add_and_commit(db, customer)
 
     @staticmethod
     def get_customer(db: Session, customer_id: int) -> Optional[Customer]:
-        """
-        Get a customer by ID.
-
-        Args:
-            db: Database session
-            customer_id: ID of the customer
-
-        Returns:
-            Customer object if found, None otherwise
-        """
+        """Get a customer by ID."""
         return get_by_id(db, Customer, customer_id)
 
     @staticmethod
     def get_all_customers(db: Session) -> List[Customer]:
-        """
-        Get all customers.
-
-        Args:
-            db: Database session
-
-        Returns:
-            List of all Customer objects
-        """
+        """Get all customers."""
         return get_all(db, Customer)
 
     @staticmethod
-    def search_customers(db: Session, search_term: str) -> List[Customer]:
-        """
-        Search for customers by name, company, or email.
-
-        Args:
-            db: Database session
-            search_term: Search term to match against name, company, or email
-
-        Returns:
-            List of matching Customer objects
-        """
-        search_pattern = f"%{search_term}%"
-        return (
-            db.query(Customer)
-            .filter(
-                (Customer.name.ilike(search_pattern))
-                | (Customer.company.ilike(search_pattern))
-                | (Customer.email.ilike(search_pattern))
+    def search_customers(
+        db: Session, 
+        search_term: str
+    ) -> List[Customer]:
+        """Search customers by name, company, email, or phone."""
+        query = db.query(Customer)
+        
+        # Apply search filter
+        if search_term:
+            search_filter = or_(
+                Customer.name.ilike(f"%{search_term}%"),
+                Customer.company.ilike(f"%{search_term}%"),
+                Customer.email.ilike(f"%{search_term}%"),
+                Customer.phone.ilike(f"%{search_term}%"),
             )
-            .all()
-        )
+            query = query.filter(search_filter)
+        
+        # Apply status filter (for future use with active/inactive status)
+        # For now, just return all matching customers
+        
+        return query.order_by(Customer.name).all()
 
     @staticmethod
     def update_customer(
-        db: Session, customer_id: int, values: Dict[str, Any]
+        db: Session, customer_id: int, updates: Dict[str, Any]
     ) -> Optional[Customer]:
-        """
-        Update a customer's information.
-
+        """Update a customer's information.
+        
         Args:
             db: Database session
-            customer_id: ID of the customer to update
-            values: Dictionary of values to update
-
+            customer_id: ID of customer to update
+            updates: Dictionary of fields to update
+            
         Returns:
-            Updated Customer object if found, None otherwise
+            Updated customer or None if not found
         """
         customer = get_by_id(db, Customer, customer_id)
         if not customer:
             return None
-
-        return update_and_commit(db, customer, values)
+        
+        # Update timestamp
+        updates["updated_at"] = datetime.utcnow()
+        
+        return update_and_commit(db, customer, updates)
 
     @staticmethod
     def delete_customer(db: Session, customer_id: int) -> bool:
-        """
-        Delete a customer.
-
+        """Delete a customer.
+        
         Args:
             db: Database session
-            customer_id: ID of the customer to delete
-
+            customer_id: ID of customer to delete
+            
         Returns:
-            True if customer was deleted, False otherwise
-
-        Note:
-            This will fail if the customer has associated quotes
+            True if deleted, False if not found
         """
         customer = get_by_id(db, Customer, customer_id)
         if not customer:
             return False
-
+        
         return delete_and_commit(db, customer)
+
+    @staticmethod
+    def get_customer_quotes(db: Session, customer_id: int) -> List[Dict]:
+        """Get all quotes for a specific customer.
+        
+        Args:
+            db: Database session
+            customer_id: ID of the customer
+            
+        Returns:
+            List of quote dictionaries
+        """
+        from src.core.models import Quote
+        
+        quotes = db.query(Quote).filter(Quote.customer_id == customer_id).all()
+        
+        return [
+            {
+                "id": quote.id,
+                "quote_number": quote.quote_number,
+                "date": quote.created_at.strftime("%Y-%m-%d"),
+                "total": quote.total_price,
+                "status": quote.status,
+                "items_count": len(quote.items) if quote.items else 0,
+            }
+            for quote in quotes
+        ]
+
+    @staticmethod
+    def get_customer_statistics(db: Session, customer_id: int) -> Dict:
+        """Get statistics for a specific customer.
+        
+        Args:
+            db: Database session
+            customer_id: ID of the customer
+            
+        Returns:
+            Dictionary with customer statistics
+        """
+        from src.core.models import Quote
+        
+        stats = db.query(
+            func.count(Quote.id).label("total_quotes"),
+            func.sum(Quote.total_price).label("total_value"),
+            func.max(Quote.created_at).label("last_quote_date"),
+        ).filter(Quote.customer_id == customer_id).first()
+        
+        return {
+            "total_quotes": stats.total_quotes or 0,
+            "total_value": float(stats.total_value or 0),
+            "last_quote_date": stats.last_quote_date.strftime("%Y-%m-%d") 
+                              if stats.last_quote_date else None,
+        }
+
+    @staticmethod
+    def merge_duplicate_customers(
+        db: Session, 
+        primary_id: int, 
+        duplicate_id: int
+    ) -> Optional[Customer]:
+        """Merge two duplicate customer records.
+        
+        Args:
+            db: Database session
+            primary_id: ID of the primary customer to keep
+            duplicate_id: ID of the duplicate customer to merge
+            
+        Returns:
+            The merged customer or None if not found
+        """
+        primary = get_by_id(db, Customer, primary_id)
+        duplicate = get_by_id(db, Customer, duplicate_id)
+        
+        if not primary or not duplicate:
+            return None
+        
+        # Update all quotes from duplicate to primary
+        from src.core.models import Quote
+        db.query(Quote).filter(Quote.customer_id == duplicate_id).update(
+            {"customer_id": primary_id}
+        )
+        
+        # Merge data (keep primary data unless it's empty)
+        updates = {}
+        for field in ["company", "email", "phone", "address", "city", "state", "zip_code"]:
+            primary_value = getattr(primary, field)
+            duplicate_value = getattr(duplicate, field)
+            if not primary_value and duplicate_value:
+                updates[field] = duplicate_value
+        
+        # Merge notes
+        if duplicate.notes:
+            if primary.notes:
+                updates["notes"] = f"{primary.notes}\n\n--- Merged from duplicate ---\n{duplicate.notes}"
+            else:
+                updates["notes"] = duplicate.notes
+        
+        # Update primary customer
+        if updates:
+            primary = update_and_commit(db, primary, updates)
+        
+        # Delete duplicate
+        delete_and_commit(db, duplicate)
+        
+        return primary

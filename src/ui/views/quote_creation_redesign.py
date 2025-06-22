@@ -36,14 +36,17 @@ from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 from src.core.database import SessionLocal
 from src.core.services.quote_service import QuoteService
 from src.core.services.product_service import ProductService
+from src.ui.dialogs.customer_selection_dialog import CustomerSelectionDialog
+from src.ui.dialogs.customer_dialog import CustomerDialog
 from src.ui.product_selection_dialog_improved import ImprovedProductSelectionDialog
 from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.theme.theme_manager import ThemeManager
+from src.ui.views.export_integration import ExportMixin
 
 logger = logging.getLogger(__name__)
 
 
-class QuoteCreationPageRedesign(QWidget):
+class QuoteCreationPageRedesign(QWidget, ExportMixin):
     """
     Redesigned quote creation page with clean workflow and modern interface.
     
@@ -76,6 +79,7 @@ class QuoteCreationPageRedesign(QWidget):
         }
         
         self._setup_ui()
+        self._init_export_actions()
 
     def __del__(self):
         """Clean up database connection."""
@@ -274,78 +278,97 @@ class QuoteCreationPageRedesign(QWidget):
         panel.setProperty("class", "content-section")
         self._apply_shadow_effect(panel)
 
-        layout = QVBoxLayout(panel)
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
-        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignTop)
+        layout = QFormLayout(panel)
 
-        # Title
-        title_label = QLabel("Customer Information")
-        title_label.setProperty("class", "section-title")
-        layout.addWidget(title_label)
-        
-        # Customer form fields
+        # Action buttons for customer
+        action_layout = QHBoxLayout()
+        select_customer_btn = QPushButton("Select Customer")
+        select_customer_btn.clicked.connect(self._select_customer)
+        new_customer_btn = QPushButton("New Customer")
+        new_customer_btn.clicked.connect(self._add_new_customer)
+        action_layout.addWidget(select_customer_btn)
+        action_layout.addWidget(new_customer_btn)
+        layout.addRow(action_layout)
+
+        # Form fields
         self.company_name_edit = QLineEdit()
-        form_layout.addRow("Company Name:", self.company_name_edit)
+        self.company_name_edit.setPlaceholderText("Company Name")
         
         self.contact_person_edit = QLineEdit()
-        form_layout.addRow("Contact Person:", self.contact_person_edit)
-
+        self.contact_person_edit.setPlaceholderText("Contact Person")
+        
         self.email_edit = QLineEdit()
-        form_layout.addRow("Email:", self.email_edit)
-
+        self.email_edit.setPlaceholderText("Email")
+        
         self.phone_edit = QLineEdit()
-        form_layout.addRow("Phone:", self.phone_edit)
-
+        self.phone_edit.setPlaceholderText("Phone")
+        
         self.notes_edit = QTextEdit()
-        form_layout.addRow("Notes:", self.notes_edit)
+        self.notes_edit.setPlaceholderText("Notes")
         
-        layout.addLayout(form_layout)
+        layout.addRow("Company Name:", self.company_name_edit)
+        layout.addRow("Contact Person:", self.contact_person_edit)
+        layout.addRow("Email:", self.email_edit)
+        layout.addRow("Phone:", self.phone_edit)
+        layout.addRow("Notes:", self.notes_edit)
         
-        # Connect signals for customer info changes
-        self.company_name_edit.textChanged.connect(self._on_customer_info_changed)
-        self.contact_person_edit.textChanged.connect(self._on_customer_info_changed)
-        self.email_edit.textChanged.connect(self._on_customer_info_changed)
-        self.phone_edit.textChanged.connect(self._on_customer_info_changed)
-        self.notes_edit.textChanged.connect(self._on_customer_info_changed)
-    
         return panel
 
     def _create_actions_panel(self) -> QWidget:
-        """Create the actions panel as a styled card."""
+        """Create the quote actions panel with save, export, and send buttons."""
         panel = QFrame()
         panel.setProperty("class", "content-section")
         self._apply_shadow_effect(panel)
 
         layout = QVBoxLayout(panel)
-        layout.setSpacing(10)
+        layout.setSpacing(15)
 
-        # Title
         title_label = QLabel("Actions")
         title_label.setProperty("class", "section-title")
         layout.addWidget(title_label)
-        
-        # Action buttons
+
         self.save_draft_btn = QPushButton("Save Draft")
-        self.save_draft_btn.setProperty("buttonStyle", "secondary")
-        self.save_draft_btn.clicked.connect(self._save_draft)
-        
-        self.generate_pdf_btn = QPushButton("Generate PDF")
-        self.generate_pdf_btn.setProperty("buttonStyle", "secondary")
-        self.generate_pdf_btn.clicked.connect(self._generate_pdf)
-        
-        self.send_quote_btn = QPushButton("Send Quote")
-        self.send_quote_btn.setProperty("buttonStyle", "secondary")
-        self.send_quote_btn.clicked.connect(self._send_quote)
-        
         layout.addWidget(self.save_draft_btn)
+
+        self.generate_pdf_btn = QPushButton("Export to PDF")
         layout.addWidget(self.generate_pdf_btn)
+
+        self.generate_word_btn = QPushButton("Export to Word")
+        layout.addWidget(self.generate_word_btn)
+
+        self.send_quote_btn = QPushButton("Send Quote")
+        self.send_quote_btn.setProperty("class", "primary-button")
         layout.addWidget(self.send_quote_btn)
-        
+
         return panel
 
+    def _select_customer(self):
+        """Open a dialog to select an existing customer."""
+        dialog = CustomerSelectionDialog(self)
+        dialog.customer_selected.connect(self._handle_customer_selected)
+        dialog.exec()
+
+    def _add_new_customer(self):
+        """Open a dialog to create a new customer."""
+        dialog = CustomerDialog(self)
+        dialog.customer_saved.connect(self._handle_customer_selected)
+        dialog.exec()
+
+    def _handle_customer_selected(self, customer_data):
+        """Populate customer fields with data from selection."""
+        self.current_quote["customer_info"] = customer_data
+        
+        self.company_name_edit.setText(customer_data.get("company", ""))
+        self.contact_person_edit.setText(customer_data.get("name", ""))
+        self.email_edit.setText(customer_data.get("email", ""))
+        self.phone_edit.setText(customer_data.get("phone", ""))
+        
+        # You may need to fetch and set address fields if they exist
+        # and are returned by the dialog.
+
     def _add_product(self):
-        """Open the product selection dialog to add a new item."""
+        """Show the product selection dialog."""
+        db = SessionLocal()
         try:
             # Use the improved dialog
             dialog = ImprovedProductSelectionDialog(product_service=self.product_service, parent=self)

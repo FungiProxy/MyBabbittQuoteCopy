@@ -1,3 +1,23 @@
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+    QDialog,
+    QMessageBox,
+    QHeaderView,
+)
+from src.ui.dialogs.customer_dialog import CustomerDialog
+from src.core.database import SessionLocal
+from src.core.services.customer_service import CustomerService
+
 """
 Customers Page for the Babbitt Quote Generator.
 
@@ -8,19 +28,6 @@ It provides functionality to:
 - Edit existing customers
 - View customer details and history
 """
-
-from PySide6.QtWidgets import (
-    QComboBox,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QListWidget,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
-
 
 class CustomersPage(QWidget):
     """
@@ -78,16 +85,20 @@ class CustomersPage(QWidget):
         header_layout.addWidget(header_title)
         header_layout.addStretch()
 
-        # Filter dropdown
-        self.filter_combo = QComboBox()
-        self.filter_combo.addItems(["All Customers", "Active", "Inactive"])
-        header_layout.addWidget(self.filter_combo)
-
         customers_layout.addLayout(header_layout)
 
-        # Customers list
-        self.customers_list = QListWidget()
-        customers_layout.addWidget(self.customers_list)
+        # Customers table
+        self.customers_table = QTableWidget()
+        self.customers_table.setColumnCount(5)
+        self.customers_table.setHorizontalHeaderLabels(["Name", "Company", "Email", "Phone", "Actions"])
+        header = self.customers_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        self.customers_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        customers_layout.addWidget(self.customers_table)
 
         main_layout.addWidget(customers_card)
 
@@ -102,21 +113,79 @@ class CustomersPage(QWidget):
 
         # Connect signals
         self.search_bar.textChanged.connect(self._filter_customers)
-        self.filter_combo.currentTextChanged.connect(self._filter_customers)
         self.add_customer_btn.clicked.connect(self._add_customer)
-        self.customers_list.itemClicked.connect(self._on_customer_selected)
+        self._filter_customers() # Initial load
 
     def _filter_customers(self):
-        """Filter customers based on search text and filter selection."""
-        # TODO: Implement customer filtering logic
-        pass
+        """Filter customers based on search text."""
+        search_term = self.search_bar.text()
+        
+        with SessionLocal() as db:
+            customers = CustomerService.search_customers(db, search_term)
+            self.customers_table.setRowCount(0) # Clear table
+            for row, customer in enumerate(customers):
+                self.customers_table.insertRow(row)
+
+                # Store customer ID in the first item's data
+                name_item = QTableWidgetItem(str(customer.name))
+                name_item.setData(Qt.ItemDataRole.UserRole, customer.id)
+                self.customers_table.setItem(row, 0, name_item)
+
+                self.customers_table.setItem(row, 1, QTableWidgetItem(str(customer.company or "")))
+                self.customers_table.setItem(row, 2, QTableWidgetItem(str(customer.email or "")))
+                self.customers_table.setItem(row, 3, QTableWidgetItem(str(customer.phone or "")))
+
+                # Actions buttons
+                edit_btn = QPushButton("Edit")
+                delete_btn = QPushButton("Delete")
+                edit_btn.clicked.connect(lambda _, r=row: self._edit_customer(r))
+                delete_btn.clicked.connect(lambda _, r=row: self._delete_customer(r))
+
+                actions_layout = QHBoxLayout()
+                actions_layout.addWidget(edit_btn)
+                actions_layout.addWidget(delete_btn)
+                actions_layout.setContentsMargins(0, 0, 0, 0)
+                actions_widget = QWidget()
+                actions_widget.setLayout(actions_layout)
+
+                self.customers_table.setCellWidget(row, 4, actions_widget)
+                self.customers_table.setRowHeight(row, 40)
 
     def _add_customer(self):
         """Handle add customer button click."""
-        # TODO: Implement add customer dialog
-        pass
+        dialog = CustomerDialog(self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._filter_customers()
 
-    def _on_customer_selected(self, item):
-        """Handle customer selection from the list."""
-        # TODO: Implement customer details view
-        pass
+    def _edit_customer(self, row):
+        item = self.customers_table.item(row, 0)
+        if not item:
+            return
+        customer_id = item.data(Qt.ItemDataRole.UserRole)
+
+        dialog = CustomerDialog(self, customer_id=customer_id)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._filter_customers()
+
+    def _delete_customer(self, row):
+        item = self.customers_table.item(row, 0)
+        if not item:
+            return
+        customer_id = item.data(Qt.ItemDataRole.UserRole)
+        customer_name = item.text()
+
+        reply = QMessageBox.question(
+            self,
+            "Delete Customer",
+            f"Are you sure you want to delete {customer_name}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            with SessionLocal() as db:
+                success = CustomerService.delete_customer(db, customer_id)
+                if success:
+                    QMessageBox.information(self, "Success", f"{customer_name} has been deleted.")
+                    self._filter_customers()
+                else:
+                    QMessageBox.warning(self, "Error", f"Failed to delete {customer_name}.")
