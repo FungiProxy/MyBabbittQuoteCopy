@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.ui.theme.babbitt_theme import BabbittTheme
-from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialTheme
+from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialTheme, BabbittIndustrialIntegration
 from src.ui.views.customers_page import CustomersPage
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
 from src.ui.views.settings_page import SettingsPage
@@ -49,13 +49,22 @@ class MainWindow(QMainWindow):
         self.resize(1400, 900)
         self.setMinimumSize(1200, 700)
         
+        # Store reference to self for theme switching
+        self._main_window_instance = self
+        
+        # Apply the enhanced industrial theme with Python animations
+        BabbittIndustrialIntegration.apply_premium_theme(self)
+        
         self._setup_ui()
         self._connect_signals()
+        
+        # Ensure all enhanced animations are applied
+        BabbittIndustrialIntegration._setup_all_animations(self)
         
         # Start with dashboard
         self._show_dashboard()
         
-        logger.info("MainWindow initialized with professional styling")
+        logger.info("MainWindow initialized with professional styling and Python animations")
 
     def _setup_ui(self):
         """Set up the main UI layout."""
@@ -220,42 +229,11 @@ class MainWindow(QMainWindow):
         return container
 
     def _create_stat_card(self, title, value, subtitle, icon):
-        """Create a single professional statistics card."""
-        card = QFrame()
-        card.setProperty("class", "stat-card")
+        """Create a single professional statistics card with Python animations."""
+        # Use the enhanced integration to create animated cards
+        card = BabbittIndustrialIntegration.create_metric_card(title, value, subtitle, icon)
         
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(8)
-        
-        # Header with title and icon
-        header_layout = QHBoxLayout()
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        
-        title_label = QLabel(title)
-        title_label.setProperty("class", "stat-title")
-        
-        icon_label = QLabel(icon)
-        icon_label.setProperty("class", "stat-icon")
-        
-        header_layout.addWidget(title_label)
-        header_layout.addStretch()
-        header_layout.addWidget(icon_label)
-        layout.addLayout(header_layout)
-        
-        # Value
-        value_label = QLabel(value)
-        value_label.setProperty("class", "stat-value")
-        layout.addWidget(value_label)
-        
-        # Subtitle
-        subtitle_label = QLabel(subtitle)
-        subtitle_label.setProperty("class", "stat-subtitle")
-        layout.addWidget(subtitle_label)
-        
-        # Apply shadow effect to the card
-        self._apply_shadow_effect(card)
-        
+        # Apply shadow effect to the card (already handled by the integration)
         return card
 
     def _apply_shadow_effect(self, widget):
@@ -351,7 +329,7 @@ class MainWindow(QMainWindow):
     def _apply_theme(self, theme_name: str):
         """Apply theme changes."""
         try:
-            ThemeManager.apply_theme(theme_name)
+            ThemeManager.apply_theme(theme_name, self._main_window_instance)
             logger.info(f"Applied theme: {theme_name}")
         except Exception as e:
             logger.error(f"Failed to apply theme: {e}")

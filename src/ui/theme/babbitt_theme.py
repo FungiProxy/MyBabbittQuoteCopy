@@ -40,17 +40,20 @@ class BabbittTheme:
     
     @classmethod
     def get_main_stylesheet(cls):
-        """Get the complete working stylesheet."""
+        """Get the complete working stylesheet with enhanced styling and animations."""
         return f"""
         /* =====================================================================
-           MAIN APPLICATION WINDOW
+           CORPORATE THEME - ENHANCED PROFESSIONAL STYLING
            ===================================================================== */
         
         QMainWindow {{
-            background-color: {cls.BACKGROUND_LIGHT};
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.BACKGROUND_LIGHT},
+                stop:1 {cls.GRAY_50});
             color: {cls.GRAY_800};
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', 'San Francisco', 'Helvetica Neue', sans-serif;
             font-size: 14px;
+            font-weight: 400;
         }}
         
         QWidget {{
@@ -59,99 +62,121 @@ class BabbittTheme:
         }}
         
         /* =====================================================================
-           BEAUTIFUL BLUE SIDEBAR - RESTORED
+           ENHANCED BLUE SIDEBAR - CORPORATE GRADIENT
            ===================================================================== */
         
         QFrame#sidebarFrame {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {cls.PRIMARY_BLUE}, 
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {cls.PRIMARY_BLUE},
+                stop:0.3 #1e40af,
+                stop:0.7 #1d4ed8,
                 stop:1 {cls.SECONDARY_BLUE});
             border: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             min-width: 260px;
             max-width: 260px;
         }}
         
         QLabel#logoLabel {{
             color: {cls.ACCENT_ORANGE};
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 700;
-            padding: 24px 20px;
-            margin-bottom: 16px;
-            background-color: transparent;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 28px 20px 20px 20px;
+            margin-bottom: 8px;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            letter-spacing: -0.5px;
         }}
         
-        /* NAVIGATION LIST - BEAUTIFUL STYLING */
+        /* ENHANCED NAVIGATION LIST - CORPORATE STYLING */
         QListWidget#navList {{
-            background-color: transparent;
+            background: transparent;
             border: none;
-            color: white;
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 500;
             outline: none;
-            padding: 16px 12px;
+            padding: 8px 0;
         }}
         
         QListWidget#navList::item {{
-            padding: 12px 16px;
+            padding: 14px 24px 14px 20px;
+            margin: 3px 8px 3px 0;
+            border-radius: 0 12px 12px 0;
             border-left: 3px solid transparent;
-            margin: 4px 0;
-            border-radius: 0 8px 8px 0;
-            margin-right: 12px;
-            color: white;
-            font-weight: 500;
         }}
         
         QListWidget#navList::item:hover {{
-            background-color: rgba(255, 255, 255, 0.15);
-            border-left: 3px solid rgba(255, 255, 255, 0.5);
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 rgba(255, 255, 255, 0.08),
+                stop:1 rgba(255, 255, 255, 0.12));
+            color: white;
         }}
         
         QListWidget#navList::item:selected {{
-            background-color: rgba(255, 255, 255, 0.2);
-            border-left: 3px solid {cls.ACCENT_ORANGE};
-            font-weight: 600;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {cls.ACCENT_ORANGE},
+                stop:0.8 #ea580c,
+                stop:1 rgba(234, 88, 12, 0.8));
+            border-left: 3px solid white;
             color: white;
+            font-weight: 600;
         }}
         
-        /* SETTINGS BUTTON */
+        /* ENHANCED SETTINGS BUTTON */
         QPushButton#settingsButton {{
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(255, 255, 255, 0.12),
+                stop:1 rgba(255, 255, 255, 0.08));
+            color: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
             padding: 12px 20px;
-            margin: 16px;
-            border-radius: 6px;
+            margin: 16px 12px 20px 12px;
             font-size: 14px;
             font-weight: 500;
         }}
         
         QPushButton#settingsButton:hover {{
-            background-color: rgba(255, 255, 255, 0.2);
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(255, 255, 255, 0.18),
+                stop:1 rgba(255, 255, 255, 0.14));
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }}
+        
+        QPushButton#settingsButton:pressed {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(255, 255, 255, 0.08),
+                stop:1 rgba(255, 255, 255, 0.04));
         }}
         
         /* =====================================================================
-           CONTENT AREA - PROFESSIONAL STYLING
+           ENHANCED CONTENT AREA - CORPORATE STYLING
            ===================================================================== */
         
         QFrame#contentAreaFrame {{
-            background-color: {cls.BACKGROUND_LIGHT};
+            background: {cls.BACKGROUND_WHITE};
             border: none;
         }}
         
         QFrame#contentHeader {{
-            background-color: {cls.BACKGROUND_WHITE};
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.BACKGROUND_WHITE},
+                stop:1 {cls.GRAY_50});
+            border: none;
             border-bottom: 1px solid {cls.GRAY_200};
             min-height: 70px;
             max-height: 70px;
-            padding: 0px;
         }}
         
         QLabel#pageTitle {{
             color: {cls.GRAY_900};
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
-            padding: 0px;
-            margin: 0px;
+            letter-spacing: -0.5px;
+            margin: 0;
+            padding: 0;
         }}
         
         QLabel[labelType="title"] {{
@@ -167,109 +192,68 @@ class BabbittTheme:
             padding-top: 4px;
         }}
         
-        QLabel[status="Draft"] {{
-            background-color: {cls.GRAY_200};
-            color: {cls.GRAY_600};
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 12px;
-            border-radius: 10px;
-            max-width: 50px;
-        }}
-        
-        QLabel[priceType="total"] {{
-            color: {cls.GRAY_800};
-            font-size: 16px;
-            font-weight: 600;
-        }}
-        
-        QLabel[priceType="total-prominent"] {{
-            color: {cls.GRAY_900};
-            font-size: 28px;
-            font-weight: 700;
-            margin-top: 4px;
-        }}
-        
         /* =====================================================================
-           STATUS BADGES - DYNAMIC AND CLEAR
-           ===================================================================== */
-        
-        QLabel[status] {{
-            font-size: 12px;
-            font-weight: 700;
-            padding: 6px 14px;
-            border-radius: 12px;
-            text-align: center;
-            min-width: 60px;
-        }}
-
-        QLabel[status="Draft"] {{
-            background-color: {cls.GRAY_200};
-            color: {cls.GRAY_600};
-        }}
-
-        QLabel[status="Sent"] {{
-            background-color: #dbeafe; /* Light Blue */
-            color: #1e40af; /* Dark Blue */
-        }}
-
-        QLabel[status="Confirmed"] {{
-            background-color: #dcfce7; /* Light Green */
-            color: #166534; /* Dark Green */
-        }}
-
-        QLabel[status="Cancelled"] {{
-            background-color: #fee2e2; /* Light Red */
-            color: #991b1b; /* Dark Red */
-        }}
-        
-        /* =====================================================================
-           BEAUTIFUL ORANGE BUTTONS - RESTORED
+           ENHANCED BUTTONS - CORPORATE STYLING
            ===================================================================== */
         
         QPushButton {{
-            background-color: {cls.GRAY_100};
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.GRAY_100},
+                stop:1 {cls.GRAY_200});
             color: {cls.GRAY_800};
             border: 1px solid {cls.GRAY_300};
-            padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 8px;
+            padding: 12px 24px;
             font-size: 14px;
             font-weight: 500;
-            min-height: 36px;
+            min-height: 40px;
         }}
         
         QPushButton:hover {{
-            background-color: {cls.GRAY_200};
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.GRAY_200},
+                stop:1 {cls.GRAY_300});
             border-color: {cls.GRAY_400};
+            color: {cls.GRAY_900};
         }}
         
         QPushButton[class="primary"] {{
-            background-color: {cls.ACCENT_ORANGE};
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.ACCENT_ORANGE},
+                stop:1 #c2410c);
             color: white;
             border: 1px solid {cls.ACCENT_ORANGE};
             font-weight: 600;
         }}
         
         QPushButton[class="primary"]:hover {{
-            background-color: #c2410c;
-            border-color: #c2410c;
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #ea580c,
+                stop:1 #dc2626);
+            border-color: #ea580c;
+        }}
+        
+        QPushButton[class="primary"]:pressed {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #c2410c,
+                stop:1 #ea580c);
         }}
         
         /* =====================================================================
-           PROFESSIONAL FORM STYLING
+           ENHANCED FORM STYLING - CORPORATE
            ===================================================================== */
         
         QLineEdit, QTextEdit {{
-            background-color: {cls.BACKGROUND_WHITE};
+            background: {cls.BACKGROUND_WHITE};
             border: 2px solid {cls.GRAY_200};
-            border-radius: 6px;
-            padding: 10px 12px;
+            border-radius: 8px;
+            padding: 12px 16px;
             font-size: 14px;
             color: {cls.GRAY_900};
         }}
 
         QLineEdit {{
-            min-height: 20px;
+            min-height: 24px;
         }}
 
         QTextEdit {{
@@ -278,20 +262,21 @@ class BabbittTheme:
         
         QLineEdit:hover, QTextEdit:hover {{
             border-color: {cls.GRAY_400};
+            background: {cls.GRAY_50};
         }}
         
         QLineEdit:focus, QTextEdit:focus {{
             border-color: {cls.PRIMARY_BLUE};
-            background-color: #fafbfc;
+            background: #f8fafc;
         }}
         
         QComboBox {{
-            background-color: {cls.BACKGROUND_WHITE};
+            background: {cls.BACKGROUND_WHITE};
             border: 2px solid {cls.GRAY_200};
-            border-radius: 6px;
-            padding: 8px 12px;
+            border-radius: 8px;
+            padding: 10px 16px;
             font-size: 14px;
-            min-height: 20px;
+            min-height: 24px;
         }}
         
         QComboBox:focus {{
@@ -312,21 +297,21 @@ class BabbittTheme:
         }}
         
         /* =====================================================================
-           DASHBOARD CARDS - BEAUTIFUL STYLING
+           ENHANCED DASHBOARD CARDS - CORPORATE STYLING
            ===================================================================== */
         
         QFrame[class="stat-card"] {{
-            background-color: {cls.BACKGROUND_WHITE};
+            background: {cls.BACKGROUND_WHITE};
             border: 1px solid {cls.GRAY_200};
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 16px;
+            padding: 28px;
             margin: 8px;
-            min-height: 120px;
+            min-height: 140px;
         }}
         
         QLabel[class="stat-value"] {{
             color: {cls.GRAY_900};
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 700;
             margin: 4px 0px;
         }}
@@ -422,7 +407,360 @@ class BabbittTheme:
     def get_stylesheet(theme_name: str) -> str:
         """Return the correct stylesheet for the given theme name."""
         if theme_name == BabbittTheme.DARK_THEME:
-            # For now, just use the main stylesheet (customize for dark if needed)
-            return BabbittTheme.get_main_stylesheet()
+            return BabbittTheme.get_dark_stylesheet()
         # Default to corporate theme
         return BabbittTheme.get_main_stylesheet()
+    
+    @classmethod
+    def get_dark_stylesheet(cls):
+        """Get the complete dark theme stylesheet with enhanced styling."""
+        return f"""
+        /* =====================================================================
+           DARK THEME - ENHANCED DARK MODE STYLING
+           ===================================================================== */
+        
+        QMainWindow {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.DARK_BG},
+                stop:1 #0f0f23);
+            color: #e5e7eb;
+            font-family: 'Segoe UI', 'Roboto', 'San Francisco', 'Helvetica Neue', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+        }}
+        
+        QWidget {{
+            background-color: transparent;
+            color: #e5e7eb;
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK SIDEBAR - SOPHISTICATED GRADIENT
+           ===================================================================== */
+        
+        QFrame#sidebarFrame {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #1f2937,
+                stop:0.3 #111827,
+                stop:0.7 #0f172a,
+                stop:1 #020617);
+            border: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 260px;
+            max-width: 260px;
+        }}
+        
+        QLabel#logoLabel {{
+            color: {cls.ACCENT_ORANGE};
+            font-size: 26px;
+            font-weight: 700;
+            padding: 28px 20px 20px 20px;
+            margin-bottom: 8px;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            letter-spacing: -0.5px;
+        }}
+        
+        /* ENHANCED NAVIGATION LIST - DARK STYLING */
+        QListWidget#navList {{
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            padding: 8px 0;
+        }}
+        
+        QListWidget#navList::item {{
+            padding: 14px 24px 14px 20px;
+            margin: 3px 8px 3px 0;
+            border-radius: 0 12px 12px 0;
+            border-left: 3px solid transparent;
+        }}
+        
+        QListWidget#navList::item:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 rgba(255, 255, 255, 0.08),
+                stop:1 rgba(255, 255, 255, 0.12));
+            color: white;
+        }}
+        
+        QListWidget#navList::item:selected {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {cls.ACCENT_ORANGE},
+                stop:0.8 #ea580c,
+                stop:1 rgba(234, 88, 12, 0.8));
+            border-left: 3px solid white;
+            color: white;
+            font-weight: 600;
+        }}
+        
+        /* ENHANCED SETTINGS BUTTON - DARK */
+        QPushButton#settingsButton {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(255, 255, 255, 0.12),
+                stop:1 rgba(255, 255, 255, 0.08));
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 12px 20px 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }}
+        
+        QPushButton#settingsButton:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(255, 255, 255, 0.18),
+                stop:1 rgba(255, 255, 255, 0.14));
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }}
+        
+        QPushButton#settingsButton:pressed {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(255, 255, 255, 0.08),
+                stop:1 rgba(255, 255, 255, 0.04));
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK CONTENT AREA
+           ===================================================================== */
+        
+        QFrame#contentAreaFrame {{
+            background: {cls.DARK_BG};
+            border: none;
+        }}
+        
+        QFrame#contentHeader {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #1f2937,
+                stop:1 #111827);
+            border: none;
+            border-bottom: 1px solid #374151;
+            min-height: 70px;
+            max-height: 70px;
+        }}
+        
+        QLabel#pageTitle {{
+            color: #f9fafb;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin: 0;
+            padding: 0;
+        }}
+        
+        QLabel[labelType="title"] {{
+            color: #f9fafb;
+            font-size: 22px;
+            font-weight: 700;
+        }}
+        
+        QLabel[labelType="caption"] {{
+            color: #9ca3af;
+            font-size: 14px;
+            font-weight: 400;
+            padding-top: 4px;
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK BUTTONS
+           ===================================================================== */
+        
+        QPushButton {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #374151,
+                stop:1 #4b5563);
+            color: #e5e7eb;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            min-height: 40px;
+        }}
+        
+        QPushButton:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #4b5563,
+                stop:1 #6b7280);
+            border-color: #6b7280;
+            color: white;
+        }}
+        
+        QPushButton[class="primary"] {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {cls.ACCENT_ORANGE},
+                stop:1 #c2410c);
+            color: white;
+            border: 1px solid {cls.ACCENT_ORANGE};
+            font-weight: 600;
+        }}
+        
+        QPushButton[class="primary"]:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #ea580c,
+                stop:1 #dc2626);
+            border-color: #ea580c;
+        }}
+        
+        QPushButton[class="primary"]:pressed {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #c2410c,
+                stop:1 #ea580c);
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK FORM STYLING
+           ===================================================================== */
+        
+        QLineEdit, QTextEdit {{
+            background: #1f2937;
+            border: 2px solid #374151;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #f9fafb;
+        }}
+
+        QLineEdit {{
+            min-height: 24px;
+        }}
+
+        QTextEdit {{
+            min-height: 80px;
+        }}
+        
+        QLineEdit:hover, QTextEdit:hover {{
+            border-color: #4b5563;
+            background: #111827;
+        }}
+        
+        QLineEdit:focus, QTextEdit:focus {{
+            border-color: {cls.PRIMARY_BLUE};
+            background: #0f172a;
+        }}
+        
+        QComboBox {{
+            background: #1f2937;
+            border: 2px solid #374151;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 14px;
+            min-height: 24px;
+            color: #f9fafb;
+        }}
+        
+        QComboBox:focus {{
+            border-color: {cls.PRIMARY_BLUE};
+        }}
+        
+        QComboBox::drop-down {{
+            border: none;
+            width: 30px;
+        }}
+        
+        QComboBox::down-arrow {{
+            image: none;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #9ca3af;
+            margin-right: 10px;
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK DASHBOARD CARDS
+           ===================================================================== */
+        
+        QFrame[class="stat-card"] {{
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 28px;
+            margin: 8px;
+            min-height: 140px;
+        }}
+        
+        QLabel[class="stat-value"] {{
+            color: #f9fafb;
+            font-size: 36px;
+            font-weight: 700;
+            margin: 4px 0px;
+        }}
+        
+        QLabel[class="stat-title"] {{
+            color: #9ca3af;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        
+        QLabel[class="stat-subtitle"] {{
+            color: #6b7280;
+            font-size: 12px;
+            margin: 2px 0px;
+        }}
+        
+        QLabel[class="stat-icon"] {{
+            color: #6b7280;
+            font-size: 24px;
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK CONTENT SECTIONS
+           ===================================================================== */
+        
+        QFrame[class="content-section"] {{
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 28px;
+            margin: 16px 24px;
+        }}
+        
+        QLabel[class="section-title"] {{
+            color: #f9fafb;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK EMPTY STATES
+           ===================================================================== */
+        
+        QLabel[class="empty-state"] {{
+            color: #6b7280;
+            font-size: 14px;
+            font-style: italic;
+            text-align: center;
+            padding: 40px;
+        }}
+        
+        /* =====================================================================
+           ENHANCED DARK SCROLLBARS
+           ===================================================================== */
+        
+        QScrollBar:vertical {{
+            background: #374151;
+            width: 12px;
+            border-radius: 6px;
+        }}
+        
+        QScrollBar::handle:vertical {{
+            background: #4b5563;
+            border-radius: 6px;
+            min-height: 20px;
+        }}
+        
+        QScrollBar::handle:vertical:hover {{
+            background: #6b7280;
+        }}
+        
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+            height: 0;
+        }}
+        """

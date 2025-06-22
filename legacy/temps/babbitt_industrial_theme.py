@@ -5,24 +5,8 @@ File: src/ui/theme/babbitt_industrial_premium.py
 🔴 Critical - Premium industrial theme with sophisticated styling and micro-interactions
 """
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import (
-    QFrame,
-    QGraphicsDropShadowEffect,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QVBoxLayout,
-    QLineEdit,
-    QComboBox,
-    QSpinBox,
-)
 
-from src.ui.theme.animation_system import BabbittAnimationSystem, setup_widget_animations
-
-
-class BabbittIndustrialTheme:
+class BabbittIndustrialPremium:
     """
     Premium industrial theme system that transforms MyBabbittQuote into a 
     sophisticated, high-end application matching Babbitt International's 
@@ -91,9 +75,9 @@ class BabbittIndustrialTheme:
         /* ====== GLOBAL FOUNDATION ====== */
         QMainWindow {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PLATINUM},
-                stop:1 {BabbittIndustrialTheme.SILVER});
-            color: {BabbittIndustrialTheme.IRON_GRAY};
+                stop:0 {BabbittIndustrialPremium.PLATINUM},
+                stop:1 {BabbittIndustrialPremium.SILVER});
+            color: {BabbittIndustrialPremium.IRON_GRAY};
             font-family: 'Segoe UI', 'Roboto', 'San Francisco', 'Helvetica Neue', sans-serif;
             font-size: 14px;
             font-weight: 400;
@@ -102,10 +86,10 @@ class BabbittIndustrialTheme:
         /* ====== PREMIUM SIDEBAR - INDUSTRIAL GRADIENT ====== */
         QFrame#sidebarFrame {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {BabbittIndustrialTheme.CHARCOAL},
+                stop:0 {BabbittIndustrialPremium.CHARCOAL},
                 stop:0.3 #1e1e1e,
                 stop:0.7 #222222,
-                stop:1 {BabbittIndustrialTheme.DARK_STEEL});
+                stop:1 {BabbittIndustrialPremium.DARK_STEEL});
             border: none;
             border-right: 1px solid rgba(255, 255, 255, 0.1);
             min-width: 220px;
@@ -114,7 +98,7 @@ class BabbittIndustrialTheme:
         
         /* Premium Logo with Industrial Styling */
         QLabel#logoLabel {{
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+            color: {BabbittIndustrialPremium.PURE_WHITE};
             font-size: 22px;
             font-weight: 700;
             padding: 28px 20px 20px 20px;
@@ -139,23 +123,26 @@ class BabbittIndustrialTheme:
             margin: 3px 8px 3px 0;
             border-radius: 0 12px 12px 0;
             border-left: 3px solid transparent;
+            transition: all 0.2s ease-in-out;
         }}
         
         QListWidget#navList::item:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                 stop:0 rgba(255, 255, 255, 0.08),
                 stop:1 rgba(255, 255, 255, 0.12));
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+            color: {BabbittIndustrialPremium.PURE_WHITE};
+            transform: translateX(4px);
         }}
         
         QListWidget#navList::item:selected {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {BabbittIndustrialTheme.PRIMARY_BLUE},
-                stop:0.8 {BabbittIndustrialTheme.ACCENT_BLUE},
+                stop:0 {BabbittIndustrialPremium.PRIMARY_BLUE},
+                stop:0.8 {BabbittIndustrialPremium.ACCENT_BLUE},
                 stop:1 rgba(0, 82, 204, 0.8));
-            border-left: 3px solid {BabbittIndustrialTheme.GOLD_ACCENT};
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+            border-left: 3px solid {BabbittIndustrialPremium.GOLD_ACCENT};
+            color: {BabbittIndustrialPremium.PURE_WHITE};
             font-weight: 600;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }}
         
         /* Premium Settings Button */
@@ -177,7 +164,7 @@ class BabbittIndustrialTheme:
                 stop:0 rgba(255, 255, 255, 0.18),
                 stop:1 rgba(255, 255, 255, 0.14));
             border-color: rgba(255, 255, 255, 0.3);
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+            color: {BabbittIndustrialPremium.PURE_WHITE};
         }}
         
         QPushButton#settingsButton:pressed {{
@@ -188,24 +175,24 @@ class BabbittIndustrialTheme:
         
         /* ====== PREMIUM CONTENT AREA ====== */
         QFrame#contentAreaFrame {{
-            background: {BabbittIndustrialTheme.PURE_WHITE};
+            background: {BabbittIndustrialPremium.PURE_WHITE};
             border: none;
         }}
         
         /* Sophisticated Content Header */
         QFrame#contentHeader {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PURE_WHITE},
-                stop:1 {BabbittIndustrialTheme.CREAM_WHITE});
+                stop:0 {BabbittIndustrialPremium.PURE_WHITE},
+                stop:1 {BabbittIndustrialPremium.CREAM_WHITE});
             border: none;
-            border-bottom: 1px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            border-bottom: 1px solid {BabbittIndustrialPremium.STEEL_GRAY};
             min-height: 70px;
             max-height: 70px;
         }}
         
         /* Premium Page Titles */
         QLabel#pageTitle {{
-            color: {BabbittIndustrialTheme.IRON_GRAY};
+            color: {BabbittIndustrialPremium.IRON_GRAY};
             font-size: 28px;
             font-weight: 700;
             letter-spacing: -0.5px;
@@ -216,24 +203,25 @@ class BabbittIndustrialTheme:
         /* ====== SOPHISTICATED DASHBOARD CARDS ====== */
         QFrame[class="statCard"] {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PURE_WHITE},
-                stop:1 {BabbittIndustrialTheme.OFF_WHITE});
-            border: 1px solid {BabbittIndustrialTheme.STEEL_GRAY};
+                stop:0 {BabbittIndustrialPremium.PURE_WHITE},
+                stop:1 {BabbittIndustrialPremium.OFF_WHITE});
+            border: 1px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 12px;
             padding: 24px;
             margin: 8px;
+            box-shadow: {BabbittIndustrialPremium.CARD_SHADOW};
         }}
         
         QFrame[class="statCard"]:hover {{
-            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            /* box-shadow removed - handled by Python animations */
-            /* transform removed - handled by Python animations */
-            /* transition removed - handled by Python animations */
+            border-color: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            box-shadow: {BabbittIndustrialPremium.PREMIUM_SHADOW};
+            transform: translateY(-2px);
+            transition: all 0.2s ease-out;
         }}
         
         /* Premium Card Typography */
         QLabel[class="statTitle"] {{
-            color: {BabbittIndustrialTheme.CHARCOAL_GRAY};
+            color: {BabbittIndustrialPremium.CHARCOAL_GRAY};
             font-size: 14px;
             font-weight: 600;
             text-transform: uppercase;
@@ -242,7 +230,7 @@ class BabbittIndustrialTheme:
         }}
         
         QLabel[class="statValue"] {{
-            color: {BabbittIndustrialTheme.IRON_GRAY};
+            color: {BabbittIndustrialPremium.IRON_GRAY};
             font-size: 32px;
             font-weight: 800;
             line-height: 1.2;
@@ -250,14 +238,14 @@ class BabbittIndustrialTheme:
         }}
         
         QLabel[class="statSubtitle"] {{
-            color: {BabbittIndustrialTheme.CHARCOAL_GRAY};
+            color: {BabbittIndustrialPremium.CHARCOAL_GRAY};
             font-size: 13px;
             font-weight: 500;
             opacity: 0.8;
         }}
         
         QLabel[class="statIcon"] {{
-            color: {BabbittIndustrialTheme.STEEL_BLUE};
+            color: {BabbittIndustrialPremium.STEEL_BLUE};
             font-size: 24px;
             opacity: 0.7;
         }}
@@ -265,10 +253,10 @@ class BabbittIndustrialTheme:
         /* ====== PREMIUM BUTTONS SYSTEM ====== */
         QPushButton {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PURE_WHITE},
-                stop:1 {BabbittIndustrialTheme.CREAM_WHITE});
-            color: {BabbittIndustrialTheme.IRON_GRAY};
-            border: 1px solid {BabbittIndustrialTheme.STEEL_GRAY};
+                stop:0 {BabbittIndustrialPremium.PURE_WHITE},
+                stop:1 {BabbittIndustrialPremium.CREAM_WHITE});
+            color: {BabbittIndustrialPremium.IRON_GRAY};
+            border: 1px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 8px;
             padding: 10px 20px;
             font-size: 14px;
@@ -278,68 +266,69 @@ class BabbittIndustrialTheme:
         
         QPushButton:hover {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PLATINUM},
-                stop:1 {BabbittIndustrialTheme.SILVER});
-            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            /* box-shadow removed - handled by Python animations */
+                stop:0 {BabbittIndustrialPremium.PLATINUM},
+                stop:1 {BabbittIndustrialPremium.SILVER});
+            border-color: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            box-shadow: 0 2px 8px rgba(0, 82, 204, 0.15);
         }}
         
         QPushButton:pressed {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.SILVER},
-                stop:1 {BabbittIndustrialTheme.STEEL_GRAY});
-            /* transform removed - handled by Python animations */
+                stop:0 {BabbittIndustrialPremium.SILVER},
+                stop:1 {BabbittIndustrialPremium.STEEL_GRAY});
+            transform: translateY(1px);
         }}
         
         /* Primary Buttons - Premium Blue Gradient */
         QPushButton[class="primary"], QPushButton#newQuoteBtn {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PRIMARY_BLUE},
-                stop:0.5 {BabbittIndustrialTheme.STEEL_BLUE},
-                stop:1 {BabbittIndustrialTheme.SECONDARY_BLUE});
-            color: {BabbittIndustrialTheme.PURE_WHITE};
-            border: 1px solid {BabbittIndustrialTheme.SECONDARY_BLUE};
+                stop:0 {BabbittIndustrialPremium.PRIMARY_BLUE},
+                stop:0.5 {BabbittIndustrialPremium.STEEL_BLUE},
+                stop:1 {BabbittIndustrialPremium.SECONDARY_BLUE});
+            color: {BabbittIndustrialPremium.PURE_WHITE};
+            border: 1px solid {BabbittIndustrialPremium.SECONDARY_BLUE};
             font-weight: 600;
-            /* box-shadow removed - handled by Python animations */
+            box-shadow: 0 2px 8px rgba(0, 82, 204, 0.3);
         }}
         
         QPushButton[class="primary"]:hover, QPushButton#newQuoteBtn:hover {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.ACCENT_BLUE},
-                stop:0.5 {BabbittIndustrialTheme.PRIMARY_BLUE},
-                stop:1 {BabbittIndustrialTheme.STEEL_BLUE});
-            /* box-shadow removed - handled by Python animations */
-            /* transform removed - handled by Python animations */
+                stop:0 {BabbittIndustrialPremium.ACCENT_BLUE},
+                stop:0.5 {BabbittIndustrialPremium.PRIMARY_BLUE},
+                stop:1 {BabbittIndustrialPremium.STEEL_BLUE});
+            box-shadow: {BabbittIndustrialPremium.PREMIUM_SHADOW};
+            transform: translateY(-1px);
         }}
         
         /* ====== SOPHISTICATED FORM ELEMENTS ====== */
         QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox {{
-            background: {BabbittIndustrialTheme.PURE_WHITE};
-            border: 2px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            background: {BabbittIndustrialPremium.PURE_WHITE};
+            border: 2px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 6px;
             padding: 10px 14px;
-            color: {BabbittIndustrialTheme.IRON_GRAY};
+            color: {BabbittIndustrialPremium.IRON_GRAY};
             font-size: 14px;
             font-weight: 500;
             min-height: 20px;
-            selection-background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            selection-color: {BabbittIndustrialTheme.PURE_WHITE};
+            selection-background-color: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            selection-color: {BabbittIndustrialPremium.PURE_WHITE};
         }}
         
         QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
-            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            background: {BabbittIndustrialTheme.CREAM_WHITE};
+            border-color: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            box-shadow: {BabbittIndustrialPremium.FOCUS_GLOW};
+            background: {BabbittIndustrialPremium.CREAM_WHITE};
         }}
         
         /* Premium Dropdown System */
         QComboBox {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PURE_WHITE},
-                stop:1 {BabbittIndustrialTheme.CREAM_WHITE});
-            border: 2px solid {BabbittIndustrialTheme.STEEL_GRAY};
+                stop:0 {BabbittIndustrialPremium.PURE_WHITE},
+                stop:1 {BabbittIndustrialPremium.CREAM_WHITE});
+            border: 2px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 6px;
             padding: 8px 12px;
-            color: {BabbittIndustrialTheme.IRON_GRAY};
+            color: {BabbittIndustrialPremium.IRON_GRAY};
             font-size: 14px;
             font-weight: 500;
             min-height: 24px;
@@ -347,44 +336,46 @@ class BabbittIndustrialTheme:
         }}
         
         QComboBox:hover {{
-            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            border-color: {BabbittIndustrialPremium.PRIMARY_BLUE};
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.CREAM_WHITE},
-                stop:1 {BabbittIndustrialTheme.PLATINUM});
+                stop:0 {BabbittIndustrialPremium.CREAM_WHITE},
+                stop:1 {BabbittIndustrialPremium.PLATINUM});
         }}
         
         QComboBox:focus {{
-            border-color: {BabbittIndustrialTheme.ACCENT_BLUE};
+            border-color: {BabbittIndustrialPremium.ACCENT_BLUE};
+            box-shadow: {BabbittIndustrialPremium.FOCUS_GLOW};
         }}
         
         QComboBox::drop-down {{
             subcontrol-origin: padding;
             subcontrol-position: top right;
             width: 24px;
-            border-left: 1px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            border-left: 1px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PLATINUM},
-                stop:1 {BabbittIndustrialTheme.SILVER});
+                stop:0 {BabbittIndustrialPremium.PLATINUM},
+                stop:1 {BabbittIndustrialPremium.SILVER});
         }}
         
         QComboBox::down-arrow {{
             image: none;
             border-left: 4px solid transparent;
             border-right: 4px solid transparent;
-            border-top: 6px solid {BabbittIndustrialTheme.CHARCOAL_GRAY};
+            border-top: 6px solid {BabbittIndustrialPremium.CHARCOAL_GRAY};
             width: 0;
             height: 0;
         }}
         
         QComboBox QAbstractItemView {{
-            background: {BabbittIndustrialTheme.PURE_WHITE};
-            border: 2px solid {BabbittIndustrialTheme.PRIMARY_BLUE};
+            background: {BabbittIndustrialPremium.PURE_WHITE};
+            border: 2px solid {BabbittIndustrialPremium.PRIMARY_BLUE};
             border-radius: 8px;
             padding: 6px 0;
-            selection-background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            selection-color: {BabbittIndustrialTheme.PURE_WHITE};
+            selection-background-color: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            selection-color: {BabbittIndustrialPremium.PURE_WHITE};
+            box-shadow: {BabbittIndustrialPremium.ELEVATED_SHADOW};
         }}
         
         QComboBox QAbstractItemView::item {{
@@ -394,29 +385,30 @@ class BabbittIndustrialTheme:
         }}
         
         QComboBox QAbstractItemView::item:hover {{
-            background: {BabbittIndustrialTheme.HOVER_OVERLAY};
+            background: {BabbittIndustrialPremium.HOVER_OVERLAY};
         }}
         
         /* ====== PREMIUM DIALOG SYSTEM ====== */
         QDialog {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PURE_WHITE},
-                stop:1 {BabbittIndustrialTheme.PLATINUM});
-            border: 2px solid {BabbittIndustrialTheme.STEEL_GRAY};
+                stop:0 {BabbittIndustrialPremium.PURE_WHITE},
+                stop:1 {BabbittIndustrialPremium.PLATINUM});
+            border: 2px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 16px;
+            box-shadow: {BabbittIndustrialPremium.ELEVATED_SHADOW};
         }}
         
         /* Sophisticated Group Boxes */
         QGroupBox {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PURE_WHITE},
-                stop:1 {BabbittIndustrialTheme.OFF_WHITE});
-            border: 2px solid {BabbittIndustrialTheme.STEEL_GRAY};
+                stop:0 {BabbittIndustrialPremium.PURE_WHITE},
+                stop:1 {BabbittIndustrialPremium.OFF_WHITE});
+            border: 2px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 10px;
             margin-top: 14px;
             padding-top: 16px;
             font-weight: 600;
-            color: {BabbittIndustrialTheme.IRON_GRAY};
+            color: {BabbittIndustrialPremium.IRON_GRAY};
             font-size: 15px;
         }}
         
@@ -424,8 +416,8 @@ class BabbittIndustrialTheme:
             subcontrol-origin: margin;
             left: 16px;
             padding: 4px 12px;
-            background: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+            background: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            color: {BabbittIndustrialPremium.PURE_WHITE};
             border-radius: 6px;
             font-weight: 600;
             font-size: 13px;
@@ -435,11 +427,11 @@ class BabbittIndustrialTheme:
         
         /* ====== PREMIUM LISTS AND TABLES ====== */
         QListWidget, QTreeWidget {{
-            background: {BabbittIndustrialTheme.PURE_WHITE};
-            border: 2px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            background: {BabbittIndustrialPremium.PURE_WHITE};
+            border: 2px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 8px;
             padding: 6px;
-            alternate-background-color: {BabbittIndustrialTheme.PLATINUM};
+            alternate-background-color: {BabbittIndustrialPremium.PLATINUM};
             font-size: 14px;
         }}
         
@@ -447,38 +439,39 @@ class BabbittIndustrialTheme:
             padding: 10px 14px;
             border-radius: 6px;
             margin: 2px;
+            transition: all 0.15s ease-in-out;
         }}
         
         QListWidget::item:hover, QTreeWidget::item:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {BabbittIndustrialTheme.HOVER_OVERLAY},
+                stop:0 {BabbittIndustrialPremium.HOVER_OVERLAY},
                 stop:1 rgba(0, 82, 204, 0.04));
         }}
         
         QListWidget::item:selected, QTreeWidget::item:selected {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {BabbittIndustrialTheme.PRIMARY_BLUE},
-                stop:1 {BabbittIndustrialTheme.ACCENT_BLUE});
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+                stop:0 {BabbittIndustrialPremium.PRIMARY_BLUE},
+                stop:1 {BabbittIndustrialPremium.ACCENT_BLUE});
+            color: {BabbittIndustrialPremium.PURE_WHITE};
             font-weight: 500;
         }}
         
         QTableWidget {{
-            background: {BabbittIndustrialTheme.PURE_WHITE};
-            gridline-color: {BabbittIndustrialTheme.STEEL_GRAY};
-            border: 2px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            background: {BabbittIndustrialPremium.PURE_WHITE};
+            gridline-color: {BabbittIndustrialPremium.STEEL_GRAY};
+            border: 2px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 8px;
-            selection-background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            selection-background-color: {BabbittIndustrialPremium.PRIMARY_BLUE};
         }}
         
         QHeaderView::section {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.DARK_STEEL},
-                stop:1 {BabbittIndustrialTheme.GUNMETAL});
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+                stop:0 {BabbittIndustrialPremium.DARK_STEEL},
+                stop:1 {BabbittIndustrialPremium.GUNMETAL});
+            color: {BabbittIndustrialPremium.PURE_WHITE};
             padding: 12px 16px;
             border: none;
-            border-bottom: 1px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            border-bottom: 1px solid {BabbittIndustrialPremium.STEEL_GRAY};
             font-weight: 600;
             font-size: 13px;
             text-transform: uppercase;
@@ -487,7 +480,7 @@ class BabbittIndustrialTheme:
         
         /* ====== PREMIUM SCROLLBARS ====== */
         QScrollBar:vertical {{
-            background: {BabbittIndustrialTheme.PLATINUM};
+            background: {BabbittIndustrialPremium.PLATINUM};
             width: 14px;
             border-radius: 7px;
             margin: 0;
@@ -495,8 +488,8 @@ class BabbittIndustrialTheme:
         
         QScrollBar::handle:vertical {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {BabbittIndustrialTheme.STEEL_GRAY},
-                stop:1 {BabbittIndustrialTheme.CHARCOAL_GRAY});
+                stop:0 {BabbittIndustrialPremium.STEEL_GRAY},
+                stop:1 {BabbittIndustrialPremium.CHARCOAL_GRAY});
             border-radius: 7px;
             min-height: 30px;
             margin: 2px;
@@ -504,8 +497,8 @@ class BabbittIndustrialTheme:
         
         QScrollBar::handle:vertical:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {BabbittIndustrialTheme.PRIMARY_BLUE},
-                stop:1 {BabbittIndustrialTheme.STEEL_BLUE});
+                stop:0 {BabbittIndustrialPremium.PRIMARY_BLUE},
+                stop:1 {BabbittIndustrialPremium.STEEL_BLUE});
         }}
         
         QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
@@ -514,7 +507,7 @@ class BabbittIndustrialTheme:
         
         /* ====== PREMIUM STATUS SYSTEM ====== */
         QLabel[status="success"] {{
-            color: {BabbittIndustrialTheme.SUCCESS_GREEN};
+            color: {BabbittIndustrialPremium.SUCCESS_GREEN};
             font-weight: 600;
             background: rgba(56, 161, 105, 0.1);
             padding: 4px 8px;
@@ -522,7 +515,7 @@ class BabbittIndustrialTheme:
         }}
         
         QLabel[status="warning"] {{
-            color: {BabbittIndustrialTheme.WARNING_AMBER};
+            color: {BabbittIndustrialPremium.WARNING_AMBER};
             font-weight: 600;
             background: rgba(214, 158, 46, 0.1);
             padding: 4px 8px;
@@ -530,7 +523,7 @@ class BabbittIndustrialTheme:
         }}
         
         QLabel[status="error"] {{
-            color: {BabbittIndustrialTheme.ERROR_RED};
+            color: {BabbittIndustrialPremium.ERROR_RED};
             font-weight: 600;
             background: rgba(229, 62, 62, 0.1);
             padding: 4px 8px;
@@ -538,7 +531,7 @@ class BabbittIndustrialTheme:
         }}
         
         QLabel[status="info"] {{
-            color: {BabbittIndustrialTheme.INFO_CYAN};
+            color: {BabbittIndustrialPremium.INFO_CYAN};
             font-weight: 600;
             background: rgba(9, 135, 160, 0.1);
             padding: 4px 8px;
@@ -547,17 +540,17 @@ class BabbittIndustrialTheme:
         
         /* ====== PREMIUM TAB SYSTEM ====== */
         QTabWidget::pane {{
-            background: {BabbittIndustrialTheme.PURE_WHITE};
-            border: 2px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            background: {BabbittIndustrialPremium.PURE_WHITE};
+            border: 2px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 8px;
             margin-top: 4px;
         }}
         
         QTabBar::tab {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.SILVER},
-                stop:1 {BabbittIndustrialTheme.STEEL_GRAY});
-            color: {BabbittIndustrialTheme.IRON_GRAY};
+                stop:0 {BabbittIndustrialPremium.SILVER},
+                stop:1 {BabbittIndustrialPremium.STEEL_GRAY});
+            color: {BabbittIndustrialPremium.IRON_GRAY};
             padding: 12px 20px;
             margin-right: 2px;
             border-top-left-radius: 8px;
@@ -567,25 +560,25 @@ class BabbittIndustrialTheme:
         
         QTabBar::tab:selected {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PRIMARY_BLUE},
-                stop:1 {BabbittIndustrialTheme.STEEL_BLUE});
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+                stop:0 {BabbittIndustrialPremium.PRIMARY_BLUE},
+                stop:1 {BabbittIndustrialPremium.STEEL_BLUE});
+            color: {BabbittIndustrialPremium.PURE_WHITE};
             font-weight: 600;
         }}
         
         QTabBar::tab:hover:!selected {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.PLATINUM},
-                stop:1 {BabbittIndustrialTheme.SILVER});
-            color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+                stop:0 {BabbittIndustrialPremium.PLATINUM},
+                stop:1 {BabbittIndustrialPremium.SILVER});
+            color: {BabbittIndustrialPremium.PRIMARY_BLUE};
         }}
         
         /* ====== PREMIUM MENU SYSTEM ====== */
         QMenuBar {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {BabbittIndustrialTheme.CHARCOAL},
-                stop:1 {BabbittIndustrialTheme.DARK_STEEL});
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+                stop:0 {BabbittIndustrialPremium.CHARCOAL},
+                stop:1 {BabbittIndustrialPremium.DARK_STEEL});
+            color: {BabbittIndustrialPremium.PURE_WHITE};
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 6px 0;
             font-weight: 500;
@@ -599,15 +592,16 @@ class BabbittIndustrialTheme:
         }}
         
         QMenuBar::item:selected, QMenuBar::item:hover {{
-            background: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+            background: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            color: {BabbittIndustrialPremium.PURE_WHITE};
         }}
         
         QMenu {{
-            background: {BabbittIndustrialTheme.PURE_WHITE};
-            border: 2px solid {BabbittIndustrialTheme.PRIMARY_BLUE};
+            background: {BabbittIndustrialPremium.PURE_WHITE};
+            border: 2px solid {BabbittIndustrialPremium.PRIMARY_BLUE};
             border-radius: 8px;
             padding: 6px 0;
+            box-shadow: {BabbittIndustrialPremium.ELEVATED_SHADOW};
         }}
         
         QMenu::item {{
@@ -617,14 +611,14 @@ class BabbittIndustrialTheme:
         }}
         
         QMenu::item:selected {{
-            background: {BabbittIndustrialTheme.PRIMARY_BLUE};
-            color: {BabbittIndustrialTheme.PURE_WHITE};
+            background: {BabbittIndustrialPremium.PRIMARY_BLUE};
+            color: {BabbittIndustrialPremium.PURE_WHITE};
         }}
         
         /* ====== PROGRESS BARS ====== */
         QProgressBar {{
-            background: {BabbittIndustrialTheme.SILVER};
-            border: 1px solid {BabbittIndustrialTheme.STEEL_GRAY};
+            background: {BabbittIndustrialPremium.SILVER};
+            border: 1px solid {BabbittIndustrialPremium.STEEL_GRAY};
             border-radius: 8px;
             text-align: center;
             font-weight: 600;
@@ -633,8 +627,8 @@ class BabbittIndustrialTheme:
         
         QProgressBar::chunk {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {BabbittIndustrialTheme.SUCCESS_GREEN},
-                stop:1 {BabbittIndustrialTheme.PRIMARY_BLUE});
+                stop:0 {BabbittIndustrialPremium.SUCCESS_GREEN},
+                stop:1 {BabbittIndustrialPremium.PRIMARY_BLUE});
             border-radius: 7px;
             margin: 1px;
         }}
@@ -645,14 +639,14 @@ class BabbittIndustrialTheme:
 # PREMIUM INTEGRATION SYSTEM
 # ============================================================================
 
-class BabbittIndustrialIntegration:
+class BabbittPremiumIntegration:
     """Premium integration system with advanced UI enhancements."""
     
     @staticmethod
     def apply_premium_theme(main_window):
-        """Apply the complete premium theme with advanced features and Python animations."""
+        """Apply the complete premium theme with advanced features."""
         # Apply the main stylesheet
-        stylesheet = BabbittIndustrialTheme.get_main_stylesheet()
+        stylesheet = BabbittIndustrialPremium.get_main_stylesheet()
         main_window.setStyleSheet(stylesheet)
         
         # Set advanced window properties
@@ -660,15 +654,12 @@ class BabbittIndustrialIntegration:
         main_window.setMinimumSize(1200, 750)
         
         # Apply premium window effects
-        BabbittIndustrialIntegration._apply_window_effects(main_window)
-        
-        # Setup animations for all widgets in the main window
-        BabbittIndustrialIntegration._setup_all_animations(main_window)
+        BabbittPremiumIntegration._apply_window_effects(main_window)
         
         print("🏭 Babbitt Industrial Premium Theme Applied")
         print("   ✨ Sophisticated gradients and shadows")
         print("   🎯 Premium typography hierarchy")
-        print("   🔥 Advanced Python animations")
+        print("   🔥 Advanced micro-interactions")
         print("   💎 Industrial luxury aesthetic")
     
     @staticmethod
@@ -680,6 +671,10 @@ class BabbittIndustrialIntegration:
         
         # Set premium properties for better rendering
         if hasattr(window, 'setGraphicsEffect'):
+            from PySide6.QtWidgets import QGraphicsDropShadowEffect
+            from PySide6.QtCore import Qt
+            from PySide6.QtGui import QColor
+            
             shadow = QGraphicsDropShadowEffect()
             shadow.setBlurRadius(20)
             shadow.setColor(QColor(0, 0, 0, 30))
@@ -689,18 +684,19 @@ class BabbittIndustrialIntegration:
     @staticmethod
     def create_premium_button(text: str, button_type: str = "primary"):
         """Create premium styled buttons."""
+        from PySide6.QtWidgets import QPushButton
+        
         button = QPushButton(text)
         button.setProperty("class", button_type)
         return button
     
     @staticmethod
     def create_metric_card(title: str, value: str, subtitle: str, icon: str = "📊"):
-        """Create premium styled metric cards with animations."""
+        """Create premium styled metric cards."""
+        from PySide6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel
+        
         card = QFrame()
         card.setProperty("class", "statCard")
-        
-        # Setup animations for the card
-        setup_widget_animations(card, "card")
         
         layout = QVBoxLayout(card)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -710,8 +706,6 @@ class BabbittIndustrialIntegration:
         
         title_label = QLabel(title)
         title_label.setProperty("class", "statTitle")
-        # Apply text transform
-        title_label.setText(title.upper())
         
         icon_label = QLabel(icon)
         icon_label.setProperty("class", "statIcon")
@@ -733,165 +727,6 @@ class BabbittIndustrialIntegration:
         layout.addWidget(subtitle_label)
         
         return card
-    
-    @staticmethod
-    def create_animated_button(text: str, button_type: str = "primary"):
-        """Create a button with enhanced animations."""
-        button = QPushButton(text)
-        
-        if button_type == "primary":
-            button.setStyleSheet(f"""
-                QPushButton {{
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                        stop:0 {BabbittIndustrialTheme.PRIMARY_BLUE},
-                        stop:1 {BabbittIndustrialTheme.SECONDARY_BLUE});
-                    color: {BabbittIndustrialTheme.PURE_WHITE};
-                    border: none;
-                    border-radius: 8px;
-                    padding: 12px 24px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                }}
-                
-                QPushButton:hover {{
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                        stop:0 {BabbittIndustrialTheme.ACCENT_BLUE},
-                        stop:1 {BabbittIndustrialTheme.PRIMARY_BLUE});
-                }}
-                
-                QPushButton:pressed {{
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                        stop:0 {BabbittIndustrialTheme.SECONDARY_BLUE},
-                        stop:1 {BabbittIndustrialTheme.PRIMARY_BLUE});
-                }}
-            """)
-        else:
-            button.setStyleSheet(f"""
-                QPushButton {{
-                    background: {BabbittIndustrialTheme.STEEL_GRAY};
-                    color: {BabbittIndustrialTheme.IRON_GRAY};
-                    border: 1px solid {BabbittIndustrialTheme.CHARCOAL_GRAY};
-                    border-radius: 8px;
-                    padding: 12px 24px;
-                    font-size: 14px;
-                    font-weight: 500;
-                }}
-                
-                QPushButton:hover {{
-                    background: {BabbittIndustrialTheme.CHARCOAL_GRAY};
-                    color: {BabbittIndustrialTheme.PURE_WHITE};
-                }}
-            """)
-        
-        # Apply enhanced animations
-        setup_widget_animations(button, "button")
-        
-        return button
-    
-    @staticmethod
-    def setup_navigation_animations(nav_list):
-        """Setup enhanced navigation animations with all effects."""
-        from src.ui.theme.animation_system import BabbittAnimationSystem
-        
-        # Store original event handlers
-        original_enter_event = nav_list.enterEvent
-        original_leave_event = nav_list.leaveEvent
-        
-        def enhanced_enter_event(event):
-            # Call original if it exists
-            if original_enter_event:
-                original_enter_event(event)
-            
-            # Get hovered item
-            item = nav_list.itemAt(nav_list.mapFromGlobal(nav_list.cursor().pos()))
-            if item:
-                # Apply hover animation with slide effect
-                hover_anim = BabbittAnimationSystem.create_hover_animation_group(item, "nav_item")
-                hover_anim.start()
-        
-        def enhanced_leave_event(event):
-            # Call original if it exists
-            if original_leave_event:
-                original_leave_event(event)
-            
-            # Get all items and reset their positions
-            for i in range(nav_list.count()):
-                item = nav_list.item(i)
-                if item:
-                    # Apply leave animation
-                    leave_anim = BabbittAnimationSystem.create_leave_animation_group(item, "nav_item")
-                    leave_anim.start()
-        
-        # Override event handlers
-        nav_list.enterEvent = enhanced_enter_event
-        nav_list.leaveEvent = enhanced_leave_event
-        
-        # Setup item selection animations
-        def on_item_selection_changed():
-            for i in range(nav_list.count()):
-                item = nav_list.item(i)
-                if item and item.isSelected():
-                    # Apply selected state animation with inset shadow
-                    selected_anim = BabbittAnimationSystem.create_selected_nav_animation(item)
-                    selected_anim.start()
-        
-        nav_list.itemSelectionChanged.connect(on_item_selection_changed)
-    
-    @staticmethod
-    def apply_focus_effects(widget, show=True):
-        """Apply focus glow effects to widgets."""
-        BabbittAnimationSystem.apply_focus_glow_animation(widget, show)
-    
-    @staticmethod
-    def create_animated_dialog(dialog):
-        """Apply animations to dialog windows."""
-        # Apply elevated shadow
-        BabbittAnimationSystem.apply_shadow_effect(dialog, "elevated")
-        
-        # Setup animations for dialog buttons
-        for child in dialog.findChildren(QPushButton):
-            setup_widget_animations(child, "button")
-        
-        return dialog
-    
-    @staticmethod
-    def _setup_all_animations(main_window):
-        """Setup all animations for the main window."""
-        # Setup navigation animations
-        if hasattr(main_window, 'navList'):
-            BabbittIndustrialIntegration.setup_navigation_animations(main_window.navList)
-        
-        # Setup button animations
-        for button in main_window.findChildren(QPushButton):
-            if button.objectName() in ['newQuoteButton', 'settingsButton']:
-                setup_widget_animations(button, "button")
-        
-        # Setup card animations
-        for frame in main_window.findChildren(QFrame):
-            if frame.objectName() in ['metricCard', 'contentCard']:
-                setup_widget_animations(frame, "card")
-        
-        # Setup form animations - search for each type separately
-        for line_edit in main_window.findChildren(QLineEdit):
-            setup_widget_animations(line_edit, "form")
-        
-        for combo in main_window.findChildren(QComboBox):
-            setup_widget_animations(combo, "form")
-        
-        for spinbox in main_window.findChildren(QSpinBox):
-            setup_widget_animations(spinbox, "form")
-    
-    @staticmethod
-    def _apply_text_transforms(main_window):
-        """Apply text transform effects to labels."""
-        from PySide6.QtWidgets import QLabel
-        
-        for label in main_window.findChildren(QLabel):
-            if label.property("class") in ["statTitle", "section-title"]:
-                # Apply uppercase transform
-                current_text = label.text()
-                label.setText(current_text.upper())
 
 
 # ============================================================================
@@ -905,14 +740,14 @@ class BabbittIndustrialIntegration:
 
 2. Apply the premium theme in your MainWindow.__init__():
    
-   from src.ui.theme.babbitt_industrial_premium import BabbittIndustrialIntegration
+   from src.ui.theme.babbitt_industrial_premium import BabbittPremiumIntegration
    
    def __init__(self):
        super().__init__()
        # Your existing setup...
        
        # Apply premium theme
-       BabbittIndustrialIntegration.apply_premium_theme(self)
+       BabbittPremiumIntegration.apply_premium_theme(self)
 
 3. Your dashboard cards will automatically become premium styled
 
