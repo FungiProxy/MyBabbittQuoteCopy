@@ -7,6 +7,7 @@ configuration, and customer information forms. Focuses on user-friendly workflow
 
 import logging
 from typing import Dict, List, Optional
+import os
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -30,23 +31,25 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QSpacerItem,
     QScrollArea,
+    QStackedWidget,
+    QFileDialog,
 )
 from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 
 from src.core.database import SessionLocal
 from src.core.services.quote_service import QuoteService
 from src.core.services.product_service import ProductService
+from src.core.models.quote import Quote
 from src.ui.dialogs.customer_selection_dialog import CustomerSelectionDialog
 from src.ui.dialogs.customer_dialog import CustomerDialog
 from src.ui.product_selection_dialog_improved import ImprovedProductSelectionDialog
 from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.theme.theme_manager import ThemeManager
-from src.ui.views.export_integration import ExportMixin
 
 logger = logging.getLogger(__name__)
 
 
-class QuoteCreationPageRedesign(QWidget, ExportMixin):
+class QuoteCreationPageRedesign(QWidget):
     """
     Redesigned quote creation page with clean workflow and modern interface.
     
@@ -79,7 +82,7 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         }
         
         self._setup_ui()
-        self._init_export_actions()
+        self._update_items_visibility()
 
     def __del__(self):
         """Clean up database connection."""
@@ -178,6 +181,7 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         # Left-aligned content: Quote Number
         self.quote_number_label = QLabel("Quote not yet saved")
         self.quote_number_label.setProperty("labelType", "caption")
+        self.quote_number_label.setStyleSheet("font-size: 26px; font-weight: bold; color: #1A237E; padding: 0 12px 0 0;")
 
         # Center-aligned content: Status and Price
         status_price_container = QWidget()
@@ -187,10 +191,12 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         
         self.status_label = QLabel(self.current_quote['status'].upper())
         self.status_label.setProperty("status", self.current_quote['status'])
+        self.status_label.setStyleSheet("font-size: 22px; font-weight: bold; color: #1565C0; letter-spacing: 2px; padding-bottom: 2px;")
         status_layout.addWidget(self.status_label)
         
         self.total_label = QLabel(f"${self.current_quote['total_value']:.2f}")
         self.total_label.setProperty("priceType", "total-prominent")
+        self.total_label.setStyleSheet("font-size: 36px; font-weight: bold; color: #2E7D32; padding-top: 2px; text-shadow: 0 2px 8px #B2FF59;")
         status_layout.addWidget(self.total_label)
 
         # Right-aligned (but transparent) content to balance the layout
@@ -240,6 +246,9 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         button_layout.addStretch()
         layout.addWidget(button_container)
         
+        # Stack for items table and empty state
+        self.items_stack = QStackedWidget()
+        
         # Items table
         self.items_table = QTableWidget()
         self.items_table.setColumnCount(6)
@@ -261,14 +270,19 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         size_policy = self.items_table.sizePolicy()
         size_policy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
         self.items_table.setSizePolicy(size_policy)
-        
-        layout.addWidget(self.items_table)
-        
+        self.items_stack.addWidget(self.items_table)
+
         # Empty state message
+        empty_state_widget = QWidget()
+        empty_layout = QVBoxLayout(empty_state_widget)
+        empty_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_state_label = QLabel("No items added yet. Click 'Add Product' to get started.")
         self.empty_state_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_state_label.setProperty("class", "placeholderCard")
-        layout.addWidget(self.empty_state_label)
+        empty_layout.addWidget(self.empty_state_label)
+        self.items_stack.addWidget(empty_state_widget)
+        
+        layout.addWidget(self.items_stack)
         
         return panel
 
@@ -328,17 +342,24 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         layout.addWidget(title_label)
 
         self.save_draft_btn = QPushButton("Save Draft")
+        self.save_draft_btn.clicked.connect(self._save_draft)
         layout.addWidget(self.save_draft_btn)
 
-        self.generate_pdf_btn = QPushButton("Export to PDF")
-        layout.addWidget(self.generate_pdf_btn)
-
         self.generate_word_btn = QPushButton("Export to Word")
+        self.generate_word_btn.setProperty("class", "secondary")
+        self.generate_word_btn.clicked.connect(self._export_to_word)
         layout.addWidget(self.generate_word_btn)
 
-        self.send_quote_btn = QPushButton("Send Quote")
-        self.send_quote_btn.setProperty("class", "primary-button")
-        layout.addWidget(self.send_quote_btn)
+        # Add a separator and a clear button
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        layout.addWidget(separator)
+
+        self.clear_quote_btn = QPushButton("Clear Quote")
+        self.clear_quote_btn.setProperty("class", "danger")
+        self.clear_quote_btn.clicked.connect(self.new_quote)
+        layout.addWidget(self.clear_quote_btn)
 
         return panel
 
@@ -383,13 +404,15 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         try:
             # The new widget returns a summary with all the data we need.
             quote_item = {
+                "product_id": config_data.get("product_id"), # Make sure this is passed
                 "product_family": config_data.get("product", "N/A"),
                 "model_number": config_data.get("product", "N/A"), # Use the base product name
                 "configuration": config_data.get("description", "Standard Configuration"),
                 "quantity": config_data.get("quantity", 1),
                 "unit_price": config_data.get("unit_price", 0),
                 "total_price": config_data.get("total_price", 0),
-                "config_data": config_data.get("configuration", {}) # Store the detailed config
+                "config_data": config_data.get("configuration", {}), # Store the detailed config
+                "options": config_data.get("options", []) # Make sure this is passed
             }
             
             self.current_quote["items"].append(quote_item)
@@ -437,32 +460,43 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
 
     def _update_items_table(self):
         """Update the items table with current quote items."""
-        self.items_table.setRowCount(len(self.current_quote["items"]))
+        # Safety check: ensure current_quote exists and has items
+        if not hasattr(self, 'current_quote') or not self.current_quote:
+            self.current_quote = {
+                "items": [],
+                "customer_info": {},
+                "total_value": 0.0,
+                "quote_number": None,
+                "status": "Draft"
+            }
         
-        for row, item in enumerate(self.current_quote["items"]):
+        items = self.current_quote.get("items", [])
+        self.items_table.setRowCount(len(items))
+        
+        for row, item in enumerate(items):
             # Product name
-            product_item = QTableWidgetItem(item["product_family"])
+            product_item = QTableWidgetItem(item.get("product_family", "N/A"))
             product_item.setFlags(product_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.items_table.setItem(row, 0, product_item)
             
             # Configuration
-            config_item = QTableWidgetItem(item["configuration"])
+            config_item = QTableWidgetItem(item.get("configuration", "Standard Configuration"))
             config_item.setFlags(config_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.items_table.setItem(row, 1, config_item)
             
             # Quantity (editable)
-            quantity_item = QTableWidgetItem(str(item["quantity"]))
+            quantity_item = QTableWidgetItem(str(item.get("quantity", 1)))
             quantity_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.items_table.setItem(row, 2, quantity_item)
             
             # Unit price
-            unit_price_item = QTableWidgetItem(f"${item['unit_price']:,.2f}")
+            unit_price_item = QTableWidgetItem(f"${item.get('unit_price', 0):,.2f}")
             unit_price_item.setFlags(unit_price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             unit_price_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
             self.items_table.setItem(row, 3, unit_price_item)
             
             # Total price
-            total_price_item = QTableWidgetItem(f"${item['total_price']:,.2f}")
+            total_price_item = QTableWidgetItem(f"${item.get('total_price', 0):,.2f}")
             total_price_item.setFlags(total_price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             total_price_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
             self.items_table.setItem(row, 4, total_price_item)
@@ -499,15 +533,15 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
     def _update_items_visibility(self):
         """Update visibility of items table vs empty state."""
         has_items = len(self.current_quote["items"]) > 0
-        self.items_table.setVisible(has_items)
-        self.empty_state_label.setVisible(not has_items)
+        self.items_stack.setCurrentIndex(0 if has_items else 1)
         
         # Update action buttons
-        self.generate_pdf_btn.setEnabled(has_items and self._has_customer_info())
-        self.send_quote_btn.setEnabled(has_items and self._has_customer_info())
+        self.save_draft_btn.setEnabled(has_items)
+        self.generate_word_btn.setEnabled(has_items and self._has_customer_info())
+        self.clear_quote_btn.setEnabled(has_items)
 
     def _has_customer_info(self) -> bool:
-        """Check if required customer information is provided."""
+        """Check if customer information is filled in."""
         return bool(
             self.company_name_edit.text().strip() and
             self.contact_person_edit.text().strip() and
@@ -594,11 +628,20 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
             self._update_quote_totals()
 
     def _update_quote_totals(self):
-        """Update quote total calculations."""
-        total_value = sum(item["total_price"] for item in self.current_quote["items"])
-        self.current_quote["total_value"] = total_value
+        """Update the quote totals display."""
+        # Safety check: ensure current_quote exists
+        if not hasattr(self, 'current_quote') or not self.current_quote:
+            self.current_quote = {
+                "items": [],
+                "customer_info": {},
+                "total_value": 0.0,
+                "quote_number": None,
+                "status": "Draft"
+            }
         
-        self.total_label.setText(f"${total_value:,.2f}")
+        total = sum(item.get("total_price", 0) for item in self.current_quote.get("items", []))
+        self.current_quote["total_value"] = total
+        self.total_label.setText(f"${total:.2f}")
 
     def _on_customer_info_changed(self):
         """Handle customer information changes."""
@@ -616,106 +659,342 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
     def _save_draft(self):
         """Save quote as draft."""
         try:
-            if not self.current_quote["items"]:
+            if not self.current_quote.get("items"):
+                QMessageBox.warning(self, "No Items", "Please add at least one product to the quote.")
+                return
+
+            # Prepare quote data for saving, ensuring status is 'Draft'
+            self.current_quote["status"] = "Draft"
+            quote_data = {
+                "id": self.current_quote.get("id"),
+                "customer_info": self.current_quote.get("customer_info", {}),
+                "items": self.current_quote.get("items", []),
+                "total_value": self.current_quote.get("total_value", 0.0),
+                "status": "Draft"
+            }
+
+            # Save to database
+            saved_quote = self._save_quote_to_database(quote_data)
+
+            if saved_quote:
+                # Update the current quote state with the ID from the database
+                self.current_quote["id"] = saved_quote.id
+                self.current_quote["quote_number"] = saved_quote.quote_number
+                self.quote_number_label.setText(f"Quote #: {saved_quote.quote_number}")
+
+                QMessageBox.information(self, "Saved", f"Quote #{saved_quote.quote_number} saved as draft.")
+                self.quote_created.emit(self.current_quote)
+
+        except Exception as e:
+            logger.error(f"Error saving quote: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to save quote: {str(e)}")
+
+    def _export_to_word(self):
+        """Export quote to Word."""
+        try:
+            if not self.current_quote.get("items"):
                 QMessageBox.warning(self, "No Items", "Please add at least one product to the quote.")
                 return
             
-            # Prepare quote data for saving
-            quote_data = {
-                "customer_info": self.current_quote["customer_info"],
-                "items": self.current_quote["items"],
-                "total_value": self.current_quote["total_value"],
-                "status": "Draft"
-            }
+            # Prepare quote data for export
+            quote_data = self._prepare_quote_data_for_export()
             
-            # Save to database (simplified)
-            # In real implementation, this would use the quote service
-            quote_id = self._save_quote_to_database(quote_data)
+            # Get save location
+            default_filename = f"Quote_{quote_data['quote_number']}_{quote_data['customer_name'].replace(' ', '_')}.docx"
+            save_dir = "data/quotes"
+            os.makedirs(save_dir, exist_ok=True)
+            default_path = os.path.join(save_dir, default_filename)
             
-            if quote_id:
-                self.current_quote["quote_number"] = quote_id
-                self.quote_number_label.setText(f"Quote #: {quote_id}")
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save Quote as Word Document",
+                default_path,
+                "Word Documents (*.docx)"
+            )
+            
+            if not file_path:
+                return
+            
+            # Generate Word document
+            self._generate_word_document(quote_data, file_path)
+            
+            QMessageBox.information(self, "Success", f"Quote exported to:\n{file_path}")
+            
+        except Exception as e:
+            logger.error(f"Error exporting to Word: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to export quote to Word: {str(e)}")
+
+    def _prepare_quote_data_for_export(self):
+        """Prepare quote data for Word export."""
+        from datetime import datetime
+        
+        # Get customer info
+        customer_data = {
+            'name': self.company_name_edit.text() or 'N/A',
+            'contact_person': self.contact_person_edit.text() or 'N/A',
+            'email': self.email_edit.text() or 'N/A',
+            'phone': self.phone_edit.text() or 'N/A',
+            'notes': self.notes_edit.toPlainText() or ''
+        }
+        
+        # Get quote items
+        items = []
+        total_price = 0.0
+        
+        for item in self.current_quote.get("items", []):
+            items.append({
+                'product': item.get("product_family", "N/A"),
+                'configuration': item.get("configuration", "Standard Configuration"),
+                'quantity': item.get("quantity", 1),
+                'unit_price': item.get("unit_price", 0.0),
+                'total': item.get("total_price", 0.0)
+            })
+            total_price += item.get("total_price", 0.0)
+        
+        # Generate quote number if not exists
+        quote_number = self.current_quote.get("quote_number")
+        if not quote_number:
+            date_str = datetime.now().strftime('%Y-%m%d')
+            quote_number = f"Q-{date_str}-001"
+        
+        # Prepare complete quote data
+        quote_data = {
+            'quote_number': quote_number,
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'customer_name': customer_data['name'],
+            'contact_person': customer_data['contact_person'],
+            'subject': f"{items[0]['product']} Level Transmitter" if items else "Quote",
+            'items': items,
+            'total_price': total_price,
+            'application_notes': self._get_application_notes(items),
+            'sales_person_name': 'John Nichelosi',
+            'sales_person_phone': '(713) 467-4438',
+            'sales_person_email': 'John@babbitt.us',
+            'company_info': {
+                'name': 'Babbitt International',
+                'address': 'Houston, TX',
+                'contact': 'Email: sales@babbittinternational.com | Phone: (713) 467-4438',
+            },
+            'terms_and_conditions': (
+                '1. All prices are in USD.\n'
+                '2. Terms: Net 30 days W.A.C. or CC\n'
+                '3. Prices are valid for 30 days.\n'
+                '4. Delivery: FCA Factory, Houston, TX'
+            )
+        }
+        
+        return quote_data
+
+    def _get_application_notes(self, items):
+        """Get application notes based on products."""
+        # Default LT9000 application notes from the price list
+        lt9000_notes = """THE LT 9000 IS DESIGNED TO BE USED IN ELECTRICALLY CONDUCTIVE LIQUIDS THAT DO NOT LEAVE A RESIDUE ON THE PROBE. A wet electrically conductive coating will give an indication of level at the highest point that there is a continuous coating from the surface of the fluid.
+
+For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic tanks, extra grounding provisions may be necessary. It is good engineering practice to provide a separate independent high-level alarm in critical applications, rather than using a set point based on the 4-20mA output."""
+        
+        # Check if any LT9000 products in the quote
+        for item in items:
+            if 'LT9000' in item['product']:
+                return lt9000_notes
+        
+        # Default notes for other products
+        return "Please refer to product manual for detailed application notes and installation instructions."
+
+    def _generate_word_document(self, quote_data, output_path):
+        """Generate a Word document from quote data."""
+        try:
+            from docx import Document
+            from docx.shared import Inches, Pt, RGBColor
+            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            from docx.enum.table import WD_TABLE_ALIGNMENT
+            
+            doc = Document()
+            
+            # Set document margins
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(0.75)
+                section.bottom_margin = Inches(0.75)
+                section.left_margin = Inches(0.75)
+                section.right_margin = Inches(0.75)
+            
+            # Header with company name
+            header = doc.sections[0].header
+            header_para = header.paragraphs[0]
+            header_para.text = ""
+            run = header_para.add_run("BABBITT\nINTERNATIONAL")
+            run.font.name = 'Arial'
+            run.font.size = Pt(16)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(0, 0, 139)
+            header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            
+            # Add subtitle
+            subtitle_para = header.add_paragraph()
+            subtitle_run = subtitle_para.add_run("Level Controls & Systems")
+            subtitle_run.font.name = 'Arial'
+            subtitle_run.font.size = Pt(10)
+            subtitle_run.font.italic = True
+            subtitle_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            
+            # Main document content
+            doc.add_paragraph(f"DATE: {quote_data['date']}")
+            doc.add_paragraph(f"CUSTOMER: {quote_data['customer_name']}")
+            doc.add_paragraph(f"ATTN: {quote_data['contact_person']}")
+            
+            # Quote header
+            quote_header = doc.add_paragraph()
+            quote_header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            quote_run = quote_header.add_run(f"Quote # {quote_data['quote_number']}")
+            quote_run.bold = True
+            
+            # Subject line
+            subject = doc.add_paragraph()
+            subject_run = subject.add_run(f"Subject: {quote_data['subject']}")
+            subject_run.bold = True
+            
+            # Introduction text
+            intro = doc.add_paragraph(
+                "We are pleased to quote on the following equipment for your upcoming applications:"
+            )
+            
+            # Add spacing
+            doc.add_paragraph()
+            
+            # Quote items table
+            table = doc.add_table(rows=1, cols=5)
+            table.alignment = WD_TABLE_ALIGNMENT.CENTER
+            table.style = 'Table Grid'
+            
+            # Header row
+            header_cells = table.rows[0].cells
+            header_cells[0].text = 'QTY'
+            header_cells[1].text = 'PRODUCT'
+            header_cells[2].text = 'CONFIGURATION'
+            header_cells[3].text = 'UNIT PRICE'
+            header_cells[4].text = 'TOTAL'
+            
+            # Make header bold
+            for cell in header_cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.bold = True
+            
+            # Add data rows
+            for item in quote_data['items']:
+                row_cells = table.add_row().cells
+                row_cells[0].text = str(item['quantity'])
+                row_cells[1].text = item['product']
+                row_cells[2].text = item['configuration']
+                row_cells[3].text = f"${item['unit_price']:,.2f}"
+                row_cells[4].text = f"${item['total']:,.2f}"
+            
+            # Add total row
+            total_row = table.add_row()
+            total_cells = total_row.cells
+            total_cells[0].text = ""
+            total_cells[1].text = ""
+            total_cells[2].text = ""
+            total_cells[3].text = "TOTAL:"
+            total_cells[4].text = f"${quote_data['total_price']:,.2f}"
+            
+            # Make total row bold
+            for cell in total_cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.bold = True
+            
+            # Add spacing
+            doc.add_paragraph()
+            doc.add_paragraph()
+            
+            # Delivery and terms
+            delivery = doc.add_paragraph("Delivery:")
+            delivery.add_run("\nTerms: Net 30 days W.A.C. or CC")
+            
+            validity = doc.add_paragraph(
+                "FCA: Factory, Houston, TX\nQuotation valid for 30 days."
+            )
+            
+            # Application notes section
+            doc.add_paragraph()
+            app_notes_header = doc.add_paragraph("APPLICATION NOTES")
+            app_notes_header.runs[0].bold = True
+            app_notes_header.runs[0].underline = True
+            
+            # Application notes
+            doc.add_paragraph(quote_data['application_notes'])
+            
+            # Add spacing before footer
+            doc.add_paragraph()
+            doc.add_paragraph()
+            
+            # Footer text
+            footer_text = doc.add_paragraph(
+                "Please contact me directly if you have any questions or require more information."
+            )
+            
+            doc.add_paragraph("Thank you,")
+            doc.add_paragraph()
+            doc.add_paragraph(quote_data['sales_person_name'])
+            doc.add_paragraph(quote_data['sales_person_phone'])
+            doc.add_paragraph(quote_data['sales_person_email'])
+            doc.add_paragraph("www.babbittinternational.com")
+            
+            # Save document
+            doc.save(output_path)
+            
+        except Exception as e:
+            logger.error(f"Error generating Word document: {e}", exc_info=True)
+            raise Exception(f"Failed to generate Word document: {str(e)}")
+
+    def _save_quote_to_database(self, quote_data: Dict) -> Optional['Quote']:
+        """Save quote to database and return the full Quote object."""
+        try:
+            with SessionLocal() as db:
+                # Prepare customer data
+                customer_info = quote_data.get("customer_info", {})
                 
-                QMessageBox.information(self, "Saved", f"Quote #{quote_id} saved as draft.")
-                self.quote_created.emit(self.current_quote)
-            
-        except Exception as e:
-            logger.error(f"Error saving quote: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to save quote: {str(e)}")
+                # Prepare product data
+                products_data = []
+                for item in quote_data.get("items", []):
+                    products_data.append({
+                        "product_id": item.get("product_id"),
+                        "quantity": item.get("quantity", 1),
+                        "base_price": item.get("unit_price", 0),
+                        "part_number": item.get("model_number", "N/A"),
+                        "options": item.get("options", [])
+                    })
 
-    def _generate_pdf(self):
-        """Generate PDF quote."""
-        try:
-            if not self._validate_quote():
-                return
-            
-            # For now, show a placeholder message
-            QMessageBox.information(
-                self,
-                "Generate PDF",
-                "PDF generation will create a professional quote document.\n\n"
-                "This feature will be implemented in the next phase."
-            )
-            
-        except Exception as e:
-            logger.error(f"Error generating PDF: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to generate PDF: {str(e)}")
+                quote_details = {
+                    "notes": customer_info.get("notes")
+                }
 
-    def _send_quote(self):
-        """Send quote to customer."""
-        try:
-            if not self._validate_quote():
-                return
-            
-            # Update status
-            self.current_quote["status"] = "Sent"
-            self.status_label.setProperty("class", "status-sent")
-            self.status_label.setText("Status: Sent")
-            
-            QMessageBox.information(
-                self,
-                "Quote Sent",
-                f"Quote has been sent to {self.current_quote['customer_info']['email']}.\n\n"
-                "The customer will receive a professional PDF quote document."
-            )
-            
-            self.quote_updated.emit(self.current_quote)
-            
+                if quote_data.get("id"):
+                    # Update existing quote
+                    quote = self.quote_service.update_quote_with_items(
+                        db,
+                        quote_id=quote_data["id"],
+                        customer_data=customer_info,
+                        products_data=products_data,
+                        quote_details=quote_details,
+                    )
+                else:
+                    # Create new quote
+                    quote = self.quote_service.create_quote_with_items(
+                        db,
+                        customer_data=customer_info,
+                        products_data=products_data,
+                        quote_details=quote_details,
+                    )
+                
+                db.commit()
+                db.refresh(quote)
+                return quote
+                
         except Exception as e:
-            logger.error(f"Error sending quote: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to send quote: {str(e)}")
-
-    def _validate_quote(self) -> bool:
-        """Validate quote before saving/sending."""
-        if not self.current_quote["items"]:
-            QMessageBox.warning(self, "No Items", "Please add at least one product to the quote.")
-            return False
-        
-        if not self._has_customer_info():
-            QMessageBox.warning(
-                self, 
-                "Missing Customer Info", 
-                "Please provide company name, contact person, and email address."
-            )
-            return False
-        
-        return True
-
-    def _save_quote_to_database(self, quote_data: Dict) -> Optional[str]:
-        """Save quote to database and return quote ID."""
-        try:
-            # Simplified save operation
-            # In real implementation, this would use QuoteService
-            
-            # Generate a temporary quote ID
-            import time
-            quote_id = f"Q{int(time.time())}"
-            
-            logger.info(f"Quote saved with ID: {quote_id}")
-            return quote_id
-            
-        except Exception as e:
-            logger.error(f"Error saving to database: {e}")
+            logger.error(f"Error saving to database: {e}", exc_info=True)
+            QMessageBox.critical(self, "Database Error", f"Could not save quote: {e}")
             return None
 
     def new_quote(self):
@@ -757,26 +1036,38 @@ class QuoteCreationPageRedesign(QWidget, ExportMixin):
         
         self._update_items_visibility()
 
+        # Force re-application of stylesheet to fix styling glitches
+        self.style().unpolish(self)
+        self.style().polish(self)
+
     def load_quote(self, quote_data: Dict):
         """Load an existing quote for editing."""
-        self.current_quote = quote_data.copy()
+        # Ensure all required keys are present with safe defaults
+        self.current_quote = {
+            "items": quote_data.get("items", []),
+            "customer_info": quote_data.get("customer_info", {}),
+            "total_value": quote_data.get("total_value", 0.0),
+            "quote_number": quote_data.get("quote_number"),
+            "status": quote_data.get("status", "Draft"),
+            "id": quote_data.get("id") if "id" in quote_data else None
+        }
         
         # Populate customer info
-        customer_info = quote_data.get("customer_info", {})
-        self.company_name_edit.setText(customer_info.get("company_name", ""))
-        self.contact_person_edit.setText(customer_info.get("contact_name", ""))
+        customer_info = self.current_quote["customer_info"]
+        self.company_name_edit.setText(customer_info.get("company_name", customer_info.get("company", "")))
+        self.contact_person_edit.setText(customer_info.get("contact_name", customer_info.get("name", "")))
         self.email_edit.setText(customer_info.get("email", ""))
         self.phone_edit.setText(customer_info.get("phone", ""))
         self.notes_edit.setPlainText(customer_info.get("notes", ""))
         
         # Update labels
-        quote_number = quote_data.get("quote_number")
+        quote_number = self.current_quote.get("quote_number")
         if quote_number:
             self.quote_number_label.setText(f"Quote #: {quote_number}")
         else:
             self.quote_number_label.setText("Quote not yet saved")
 
-        status = quote_data.get("status", "Draft")
+        status = self.current_quote.get("status", "Draft")
         self.status_label.setText(status.upper())
         self.status_label.setProperty("status", status)
         self.status_label.style().unpolish(self.status_label)

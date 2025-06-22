@@ -6,7 +6,7 @@ File: src/ui/product_selection_dialog_improved.py
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import os
 
 from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QEvent, QSize
@@ -23,6 +23,8 @@ from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
 from src.core.services.spare_part_service import SparePartService
+from src.core.services.pricing_service import PricingService
+from src.core.models import ProductFamily, Option
 from src.ui.theme.babbitt_theme import BabbittTheme
 
 logger = logging.getLogger(__name__)
@@ -546,6 +548,13 @@ class ImprovedProductSelectionDialog(QDialog):
                 background-color: white;
             }
         """)
+        
+        self.pricing_service = PricingService(db=self.db, product_service=self.product_service)
+        self.configuration_service = ConfigurationService(db=self.db, product_service=self.product_service)
+
+        self.selected_options: Dict[str, Any] = {}
+        self.current_product: Optional[ProductFamily] = None
+        self.current_base_model = None
         
         self._setup_ui()
         
@@ -1334,6 +1343,7 @@ class ImprovedProductSelectionDialog(QDialog):
 
         # Build the final configuration dict
         final_config = {
+            "product_id": self.current_product.base_model.id if self.current_product.base_model else None,
             "product_family": self.current_product.name,
             "quantity": self.quantity,
             "selected_options": self.selected_options,

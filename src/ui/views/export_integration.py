@@ -136,10 +136,14 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
             
             # Get save location
             default_filename = f"Quote_{quote_data['quote_number']}_{quote_data['customer_name'].replace(' ', '_')}.pdf"
+            save_dir = "data/quotes"
+            os.makedirs(save_dir, exist_ok=True)
+            default_path = os.path.join(save_dir, default_filename)
+            
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save Quote as PDF",
-                default_filename,
+                default_path,
                 "PDF Files (*.pdf)"
             )
             
@@ -170,10 +174,14 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
             
             # Get save location
             default_filename = f"Quote_{quote_data['quote_number']}_{quote_data['customer_name'].replace(' ', '_')}.docx"
+            save_dir = "data/quotes"
+            os.makedirs(save_dir, exist_ok=True)
+            default_path = os.path.join(save_dir, default_filename)
+            
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save Quote as Word Document",
-                default_filename,
+                default_path,
                 "Word Documents (*.docx)"
             )
             

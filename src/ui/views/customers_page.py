@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
     QDialog,
     QMessageBox,
     QHeaderView,
+    QTextEdit,
+    QSplitter,
 )
 from src.ui.dialogs.customer_dialog import CustomerDialog
 from src.core.database import SessionLocal
@@ -48,10 +50,14 @@ class CustomersPage(QWidget):
     def init_ui(self):
         """Set up the UI components."""
         # Main layout
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(20)
-
+        main_layout = QHBoxLayout(self)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # Left side (Table)
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        
         # Top section with search and add customer
         top_layout = QHBoxLayout()
 
@@ -68,7 +74,7 @@ class CustomersPage(QWidget):
         self.add_customer_btn.setObjectName("primaryButton")
         top_layout.addWidget(self.add_customer_btn)
 
-        main_layout.addLayout(top_layout)
+        left_layout.addLayout(top_layout)
 
         # Customers list section
         customers_card = QFrame()
@@ -98,23 +104,74 @@ class CustomersPage(QWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         self.customers_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        customers_layout.addWidget(self.customers_table)
+        left_layout.addWidget(self.customers_table)
+        
+        splitter.addWidget(left_widget)
 
-        main_layout.addWidget(customers_card)
-
-        # Footer
-        footer_layout = QHBoxLayout()
-        footer_left = QLabel("Babbitt International Inc.")
-        footer_right = QLabel("© 2025 All rights reserved")
-        footer_layout.addWidget(footer_left)
-        footer_layout.addStretch()
-        footer_layout.addWidget(footer_right)
-        main_layout.addLayout(footer_layout)
+        # Right side (Details Panel)
+        details_panel = self._create_details_panel()
+        splitter.addWidget(details_panel)
+        
+        splitter.setSizes([700, 300]) # Adjust initial sizes
+        main_layout.addWidget(splitter)
 
         # Connect signals
         self.search_bar.textChanged.connect(self._filter_customers)
         self.add_customer_btn.clicked.connect(self._add_customer)
+        self.customers_table.itemSelectionChanged.connect(self._on_customer_selected)
         self._filter_customers() # Initial load
+
+    def _create_details_panel(self):
+        """Create the panel to display customer details."""
+        panel = QFrame()
+        panel.setFrameShape(QFrame.Shape.StyledPanel)
+        layout = QVBoxLayout(panel)
+        
+        title = QLabel("Customer Details")
+        title.setStyleSheet("font-size: 15px; font-weight: bold;")
+        layout.addWidget(title)
+        
+        self.details_name = QLabel("Name: ")
+        self.details_company = QLabel("Company: ")
+        self.details_email = QLabel("Email: ")
+        self.details_phone = QLabel("Phone: ")
+        self.details_notes = QTextEdit()
+        self.details_notes.setReadOnly(True)
+        
+        layout.addWidget(self.details_name)
+        layout.addWidget(self.details_company)
+        layout.addWidget(self.details_email)
+        layout.addWidget(self.details_phone)
+        
+        notes_label = QLabel("Notes:")
+        layout.addWidget(notes_label)
+        layout.addWidget(self.details_notes)
+        
+        return panel
+
+    def _on_customer_selected(self):
+        """Handle customer selection from the table."""
+        selected_items = self.customers_table.selectedItems()
+        if not selected_items:
+            # Clear details panel if no selection
+            self.details_name.setText("Name: ")
+            self.details_company.setText("Company: ")
+            self.details_email.setText("Email: ")
+            self.details_phone.setText("Phone: ")
+            self.details_notes.clear()
+            return
+
+        row = selected_items[0].row()
+        customer_id = self.customers_table.item(row, 0).data(Qt.ItemDataRole.UserRole)
+
+        with SessionLocal() as db:
+            customer = CustomerService.get_customer(db, customer_id)
+            if customer:
+                self.details_name.setText(f"Name: {customer.name or ''}")
+                self.details_company.setText(f"Company: {customer.company or ''}")
+                self.details_email.setText(f"Email: {customer.email or ''}")
+                self.details_phone.setText(f"Phone: {customer.phone or ''}")
+                self.details_notes.setPlainText(customer.notes or "No notes for this customer.")
 
     def _filter_customers(self):
         """Filter customers based on search text."""

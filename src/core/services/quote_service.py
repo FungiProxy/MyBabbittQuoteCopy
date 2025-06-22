@@ -154,6 +154,7 @@ class QuoteService:
                 "customer_name": quote.customer.name,
                 "date_created": quote.date_created.strftime("%Y-%m-%d"),
                 "total": quote.total,
+                "status": quote.status,
             }
             for quote in quotes
         ]
@@ -456,3 +457,59 @@ class QuoteService:
             ]
         except Exception:
             return []
+
+    @staticmethod
+    def update_quote_with_items(
+        db: Session,
+        quote_id: int,
+        customer_data: Dict[str, Any],
+        products_data: List[Dict[str, Any]],
+        quote_details: Dict[str, Any],
+    ) -> Quote:
+        """
+        Update a full quote including customer, quote items, and options.
+        """
+        quote = db.query(Quote).filter(Quote.id == quote_id).first()
+        if not quote:
+            raise ValueError("Quote not found")
+
+        # Update customer
+        customer = db.query(Customer).filter(Customer.id == quote.customer_id).first()
+        if customer:
+            CustomerService.update_customer(db, customer.id, customer_data)
+
+        # Update quote details
+        quote.notes = quote_details.get("notes")
+        
+        # Remove old items and options
+        for item in quote.items:
+            db.query(QuoteItemOption).filter(QuoteItemOption.quote_item_id == item.id).delete()
+        db.query(QuoteItem).filter(QuoteItem.quote_id == quote.id).delete()
+        db.flush()
+
+        # Add new items
+        for product_data in products_data:
+            quote_item = QuoteItem(
+                quote_id=quote.id,
+                product_id=product_data.get("product_id"),
+                quantity=product_data.get("quantity", 1),
+                unit_price=product_data.get("base_price", 0),
+                description=product_data.get("part_number"),
+            )
+            db.add(quote_item)
+            db.flush()
+
+            for option_data in product_data.get("options", []):
+                if option_data.get("id"):
+                    db.add(
+                        QuoteItemOption(
+                            quote_item_id=quote_item.id,
+                            option_id=option_data["id"],
+                            quantity=1,
+                            price=option_data.get("price", 0),
+                        )
+                    )
+        
+        db.commit()
+        db.refresh(quote)
+        return quote

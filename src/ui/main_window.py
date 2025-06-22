@@ -31,9 +31,12 @@ from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.theme.babbitt_industrial_theme import BabbittPremiumIntegration
 from src.ui.views.customers_page import CustomersPage
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
+from src.ui.views.quotes_page import QuotesPage
 from src.ui.views.settings_page import SettingsPage
 from src.ui.theme.theme_manager import ThemeManager
 from src.ui.dialogs.customer_dialog import CustomerDialog
+from src.core.services.quote_service import QuoteService
+from src.core.database import SessionLocal
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +63,8 @@ class MainWindow(QMainWindow):
         self._setup_ui()
         self._connect_signals()
         
-        # Start with dashboard
-        self._show_dashboard()
-        
-        # Connect customer selection in quote page if button exists
-        if hasattr(self.quote_creation_page, 'select_customer_btn'):
-            self.quote_creation_page.select_customer_btn.clicked.connect(self._select_customer_for_quote)
+        # Start with quote creator
+        self._show_quote_creation()
         
         logger.info("MainWindow initialized with professional styling and Python animations")
 
@@ -108,8 +107,8 @@ class MainWindow(QMainWindow):
         
         # Core navigation items
         nav_items = [
-            "📊 Dashboard",
-            "📝 New Quote", 
+            "📝 Quote Creator",
+            "📂 Quotes",
             "👥 Customers",
         ]
         
@@ -117,7 +116,7 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(item_text)
             self.nav_list.addItem(item)
         
-        # Set dashboard as default selection
+        # Set quote creator as default selection
         self.nav_list.setCurrentRow(0)
         sidebar_layout.addWidget(self.nav_list)
         
@@ -158,7 +157,7 @@ class MainWindow(QMainWindow):
         header_layout.setContentsMargins(32, 20, 32, 20)
         
         # Page title
-        self.page_title = QLabel("Dashboard")
+        self.page_title = QLabel("Quote Creator")
         self.page_title.setObjectName("pageTitle")
         header_layout.addWidget(self.page_title)
         
@@ -166,19 +165,19 @@ class MainWindow(QMainWindow):
         header_layout.addStretch()
         
         # Beautiful orange action button
-        self.action_button = QPushButton("+ New Quote")
+        self.action_button = QPushButton("+ New Product")
         self.action_button.setProperty("class", "primary")
         header_layout.addWidget(self.action_button)
 
     def _create_pages(self):
         """Create all application pages."""
-        # Dashboard (Index 0) - Create simple professional dashboard
-        self.dashboard_page = self._create_professional_dashboard()
-        self.stacked_widget.addWidget(self.dashboard_page)
-        
-        # Quote Creation (Index 1)
+        # Quote Creation (Index 0)
         self.quote_creation_page = QuoteCreationPageRedesign()
         self.stacked_widget.addWidget(self.quote_creation_page)
+        
+        # Quotes Page (Index 1)
+        self.quotes_page = QuotesPage()
+        self.stacked_widget.addWidget(self.quotes_page)
         
         # Customers (Index 2)
         self.customers_page = CustomersPage()
@@ -188,165 +187,122 @@ class MainWindow(QMainWindow):
         self.settings_page = SettingsPage()
         self.stacked_widget.addWidget(self.settings_page)
         
-        # Connect settings theme changes
-        if hasattr(self.settings_page, 'theme_changed'):
-            self.settings_page.theme_changed.connect(self._apply_theme)
-
-    def _create_professional_dashboard(self):
-        """Create a beautiful professional dashboard page."""
-        dashboard_widget = QWidget()
-        
-        main_layout = QVBoxLayout(dashboard_widget)
-        main_layout.setContentsMargins(24, 24, 24, 24)
-        main_layout.setSpacing(24)
-        
-        # Statistics cards container
-        stats_container = self._create_statistics_cards()
-        main_layout.addWidget(stats_container)
-        
-        # Recent quotes section
-        recent_section = self._create_recent_quotes_section()
-        main_layout.addWidget(recent_section)
-        
-        # Add stretch to push content to top
-        main_layout.addStretch()
-        
-        return dashboard_widget
-
-    def _create_statistics_cards(self):
-        """Create beautiful statistics cards."""
-        container = QWidget()
-        layout = QHBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
-        
-        # Create three professional cards
-        card1 = self._create_stat_card("Total Quotes", "0", "This month", "📋")
-        card2 = self._create_stat_card("Quote Value", "$0.00", "Total pending", "💰")
-        card3 = self._create_stat_card("Active Customers", "0", "This quarter", "👥")
-        
-        layout.addWidget(card1)
-        layout.addWidget(card2)
-        layout.addWidget(card3)
-        
-        return container
-
-    def _create_stat_card(self, title, value, subtitle, icon):
-        """Create a single professional statistics card with Python animations."""
-        # Use the enhanced integration to create animated cards
-        card = BabbittPremiumIntegration.create_metric_card(title, value, subtitle, icon)
-        
-        # Apply shadow effect to the card (already handled by the integration)
-        return card
-
-    def _apply_shadow_effect(self, widget):
-        """Apply a standard drop shadow effect to a widget."""
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        shadow.setOffset(0, 4)
-        widget.setGraphicsEffect(shadow)
-
-    def _create_recent_quotes_section(self):
-        """Create a professional 'Recent Quotes' section."""
-        container = QFrame()
-        container.setProperty("class", "content-section")
-        self._apply_shadow_effect(container)
-        
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
-        
-        # Title
-        title_label = QLabel("Recent Quotes")
-        title_label.setProperty("class", "section-title")
-        layout.addWidget(title_label)
-        
-        # This is where the quote list would go. For now, show a placeholder.
-        empty_label = QLabel("No recent quotes to display.")
-        empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(empty_label)
-        
-        return container
-
     def _connect_signals(self):
-        """Connect navigation and button signals."""
+        """Connect UI element signals to slots."""
         self.nav_list.currentRowChanged.connect(self._on_nav_item_selected)
         self.settings_button.clicked.connect(self._show_settings)
         self.action_button.clicked.connect(self._on_action_button_clicked)
+        
+        # Connect settings theme changes
+        if hasattr(self.settings_page, 'theme_changed'):
+            self.settings_page.theme_changed.connect(self._apply_theme)
+        
+        # Connect quotes page signals
+        self.quotes_page.edit_quote_requested.connect(self._edit_quote)
+        
+        # Connect quote deletion to reset quote creation page
+        if hasattr(self.quotes_page, 'quote_deleted'):
+            self.quotes_page.quote_deleted.connect(self._reset_quote_creation_page)
 
     @Slot(int)
     def _on_nav_item_selected(self, index):
-        """Handle navigation item selection."""
-        if index == 0:  # Dashboard
-            self._show_dashboard()
-        elif index == 1:  # New Quote
-            self._show_quote_creation()
-        elif index == 2:  # Customers
-            self._show_customers()
-
-    def _show_dashboard(self):
-        """Show the dashboard page."""
-        self.stacked_widget.setCurrentIndex(0)
-        self.page_title.setText("Dashboard")
-        self.action_button.setText("+ New Quote")
-        self.action_button.show()
+        """Handle navigation selection."""
+        if index == 0: self._show_quote_creation()
+        elif index == 1: self._show_quotes()
+        elif index == 2: self._show_customers()
 
     def _show_quote_creation(self):
-        """Show the quote creation page."""
-        self.stacked_widget.setCurrentIndex(1)
-        self.page_title.setText("New Quote")
-        self.action_button.setText("+ Add Product")
+        """Show quote creation page."""
+        self.page_title.setText("Quote Creator")
+        self.action_button.setText("+ New Product")
         self.action_button.show()
+        self.stacked_widget.setCurrentIndex(0)
+
+    def _show_quotes(self):
+        """Show quotes page."""
+        self.page_title.setText("All Quotes")
+        self.action_button.setText("+ New Quote")
+        self.quotes_page.load_quotes() # Refresh quotes
+        self.stacked_widget.setCurrentIndex(1)
 
     def _show_customers(self):
-        """Show the customers page."""
-        self.stacked_widget.setCurrentIndex(2)
+        """Show customers page."""
         self.page_title.setText("Customers")
         self.action_button.setText("+ Add Customer")
         self.action_button.show()
+        self.stacked_widget.setCurrentIndex(2)
 
     @Slot()
     def _show_settings(self):
         """Show the settings page."""
-        self.stacked_widget.setCurrentWidget(self.settings_page)
         self.page_title.setText("Settings")
         self.action_button.hide()
-        
+        self.stacked_widget.setCurrentWidget(self.settings_page)
         # Clear navigation selection
         self.nav_list.clearSelection()
 
     @Slot()
     def _on_action_button_clicked(self):
-        """Handle action button clicks."""
+        """Handle the main action button click based on the current page."""
         current_index = self.stacked_widget.currentIndex()
-        
-        if current_index == 0:  # Dashboard
-            self._show_quote_creation()
-        elif current_index == 1:  # Quote Creation
+        if current_index == 0: # Quote Creator
             if hasattr(self.quote_creation_page, '_add_product'):
                 self.quote_creation_page._add_product()
-        elif current_index == 2:  # Customers
+        elif current_index == 1: # Quotes
+            self._show_quote_creation()
+        elif current_index == 2: # Customers
             dialog = CustomerDialog(self)
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 if hasattr(self.customers_page, '_filter_customers'):
                     self.customers_page._filter_customers()
 
-    def _apply_theme(self, theme_name: str):
-        """Apply theme changes."""
+    @Slot(int)
+    def _edit_quote(self, quote_id: int):
+        """Open a quote in the editor."""
         try:
-            ThemeManager.apply_theme(theme_name, self._main_window_instance)
-            logger.info(f"Applied theme: {theme_name}")
+            with SessionLocal() as db:
+                quote_data = QuoteService.get_full_quote_details(db, quote_id)
+            
+            if quote_data:
+                self.quote_creation_page.load_quote(quote_data)
+                self.stacked_widget.setCurrentWidget(self.quote_creation_page)
+                self.page_title.setText(f"Editing Quote: {quote_data['quote_number']}")
+                # Select the "Quote Creator" in nav
+                self.nav_list.setCurrentRow(0)
+            else:
+                QMessageBox.warning(self, "Error", "Could not load quote details.")
         except Exception as e:
-            logger.error(f"Failed to apply theme: {e}")
+            logger.error(f"Error loading quote for editing: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to load quote: {e}")
 
-    def _select_customer_for_quote(self):
-        dialog = CustomerDialog(self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            # Optionally update the quote page with selected customer info
-            pass
+    @Slot(int)
+    def _reset_quote_creation_page(self, deleted_quote_id: int):
+        """Reset quote creation page when a quote is deleted."""
+        try:
+            # Check if we're currently editing the deleted quote
+            current_quote = getattr(self.quote_creation_page, 'current_quote', {})
+            current_quote_id = current_quote.get('id')
+            
+            if current_quote_id == deleted_quote_id:
+                # Reset the quote creation page to a clean state
+                self.quote_creation_page.new_quote()
+                self.page_title.setText("Quote Creator")
+                # Show a message to the user
+                QMessageBox.information(
+                    self, 
+                    "Quote Deleted", 
+                    "The quote you were editing has been deleted. A new quote has been started."
+                )
+        except Exception as e:
+            logger.error(f"Error resetting quote creation page: {e}", exc_info=True)
+
+    def _apply_theme(self, theme_name: str):
+        """Apply the selected theme."""
+        ThemeManager.apply_theme(theme_name, self)
 
     def closeEvent(self, event):
-        """Handle application close."""
-        logger.info("Application closing")
+        """Handle widget close event."""
+        # Clean up database connections if they exist
+        if hasattr(self.quote_creation_page, 'db'):
+            self.quote_creation_page.db.close()
         event.accept()
