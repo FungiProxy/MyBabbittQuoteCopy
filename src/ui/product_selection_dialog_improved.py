@@ -21,7 +21,7 @@ from PySide6.QtGui import QFont, QPixmap, QPalette, QIntValidator
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
-from src.ui.theme.babbitt_theme import BabbittTheme
+from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialIntegration
 
 logger = logging.getLogger(__name__)
 
@@ -176,9 +176,10 @@ class ModernOptionWidget(QFrame):
     
     def _on_dropdown_changed(self):
         """Handle dropdown change."""
-        code = self.input_widget.currentData()
-        self._update_price_display(code)
-        self.option_changed.emit(self.option_name, code)
+        if isinstance(self.input_widget, QComboBox):
+            code = self.input_widget.currentData()
+            self._update_price_display(code)
+            self.option_changed.emit(self.option_name, code)
     
     def _update_price_display(self, code: str):
         """Update the price display for selected option."""
@@ -198,10 +199,26 @@ class ModernOptionWidget(QFrame):
         if hasattr(self, 'button_group'):
             # Radio button group
             checked_button = self.button_group.checkedButton()
-            return checked_button.property("choice_code") if checked_button else ""
-        else:
+            if checked_button:
+                return checked_button.property("choice_code")
+        elif isinstance(self.input_widget, QComboBox):
             # Dropdown
-            return self.input_widget.currentData() or ""
+            return self.input_widget.currentData()
+        return ""
+    
+    def set_value(self, value: str):
+        """Set the current value."""
+        if hasattr(self, 'button_group'):
+            # Radio button group
+            for button in self.button_group.buttons():
+                if button.property("choice_code") == value:
+                    button.setChecked(True)
+                    break
+        elif isinstance(self.input_widget, QComboBox):
+            # Dropdown
+            index = self.input_widget.findData(value)
+            if index >= 0:
+                self.input_widget.setCurrentIndex(index)
 
 
 class ImprovedProductSelectionDialog(QDialog):
@@ -221,44 +238,19 @@ class ImprovedProductSelectionDialog(QDialog):
     def __init__(self, product_service, parent=None, product_to_edit=None):
         """Initialize with enhanced styling."""
         super().__init__(parent)
-        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
         self.product_service = product_service
         self.db = SessionLocal()
-        self.config_service = ConfigurationService(db=self.db, product_service=self.product_service)
+        self.config_service = ConfigurationService(self.db, self.product_service)
         self.product_to_edit = product_to_edit
         self.quantity = 1
         self.option_widgets = {}
         
-        # Enhance the dialog appearance
-        self.setWindowTitle("Configure Product - Babbitt International")
-        self.resize(1000, 700)  # Slightly larger for better usability
+        self.setWindowTitle("Configure Product" if product_to_edit else "Select & Configure Product")
         self.setModal(True)
+        self.resize(1000, 700)
         
-        # Apply modern styling
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #f8f9fa;
-            }
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-            QGroupBox {
-                font-weight: 600;
-                color: #2C3E50;
-                border: 2px solid #e9ecef;
-                border-radius: 8px;
-                margin-top: 12px;
-                padding-top: 8px;
-                background-color: white;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 12px;
-                padding: 0 8px;
-                background-color: white;
-            }
-        """)
+        # Apply industrial theme integration
+        BabbittIndustrialIntegration.setup_dialog(self, "large")
         
         self._setup_ui()
         
@@ -272,8 +264,7 @@ class ImprovedProductSelectionDialog(QDialog):
         QuickMigrationHelper.fix_oversized_dropdowns(self)
         QuickMigrationHelper.modernize_existing_dialog(self)
         
-        # Apply Babbitt theme to this dialog
-        self.setStyleSheet(BabbittTheme.get_dialog_stylesheet())
+        # Theme is applied globally in main.py
     
     def _setup_ui(self):
         """Setup the improved UI layout."""
@@ -414,8 +405,8 @@ class ImprovedProductSelectionDialog(QDialog):
         # Scrollable configuration area
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         
         self.config_container = QWidget()
         self.config_layout = QVBoxLayout(self.config_container)

@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.views.customers_page import CustomersPage
 from src.ui.views.quote_creation_redesign import QuoteCreationPageRedesign
 from src.ui.views.settings_page import SettingsPage
@@ -47,8 +46,8 @@ class MainWindow(QMainWindow):
         self.resize(1400, 900)
         self.setMinimumSize(1200, 700)
         
-        # Apply the theme IMMEDIATELY
-        self.setStyleSheet(BabbittTheme.get_main_stylesheet())
+        # Theme is now applied globally in main.py
+        # self.setStyleSheet(BabbittWebsiteTheme.get_main_stylesheet())
         
         self._setup_ui()
         self._connect_signals()
@@ -56,7 +55,7 @@ class MainWindow(QMainWindow):
         # Start with dashboard
         self._show_dashboard()
         
-        logger.info("MainWindow initialized with professional styling")
+        logger.info("MainWindow initialized with industrial theme")
 
     def _setup_ui(self):
         """Set up the main UI layout."""
@@ -176,10 +175,6 @@ class MainWindow(QMainWindow):
         # Settings
         self.settings_page = SettingsPage()
         self.stacked_widget.addWidget(self.settings_page)
-        
-        # Connect settings theme changes
-        if hasattr(self.settings_page, 'theme_changed'):
-            self.settings_page.theme_changed.connect(self._apply_theme)
 
     def _create_professional_dashboard(self):
         """Create a beautiful professional dashboard page."""
@@ -326,15 +321,11 @@ class MainWindow(QMainWindow):
         self.action_button.setText("+ Add Customer")
         self.action_button.show()
 
-    @Slot()
     def _show_settings(self):
-        """Show the settings page."""
         self.stacked_widget.setCurrentWidget(self.settings_page)
         self.page_title.setText("Settings")
         self.action_button.hide()
-        
-        # Clear navigation selection
-        self.nav_list.clearSelection()
+        logger.info("Switched to Settings page")
 
     @Slot()
     def _on_action_button_clicked(self):
@@ -348,15 +339,6 @@ class MainWindow(QMainWindow):
                 self.quote_creation_page._add_product()
         elif current_index == 2:  # Customers
             QMessageBox.information(self, "Add Customer", "Customer creation will be implemented.")
-
-    def _apply_theme(self, theme_name: str):
-        """Apply theme changes."""
-        try:
-            # Apply the Babbitt theme
-            self.setStyleSheet(BabbittTheme.get_main_stylesheet())
-            logger.info(f"Applied theme: {theme_name}")
-        except Exception as e:
-            logger.error(f"Failed to apply theme: {e}")
 
     def closeEvent(self, event):
         """Handle application close."""
