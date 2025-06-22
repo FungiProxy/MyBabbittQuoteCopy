@@ -154,6 +154,13 @@ class QuoteCreationPageRedesign(QWidget):
         main_layout.addLayout(left_column_layout, 2)
         main_layout.addLayout(right_column_layout, 1)
 
+    def mousePressEvent(self, event):
+        """Clear focus from input widgets when clicking on the background."""
+        focused_widget = self.focusWidget()
+        if focused_widget and isinstance(focused_widget, (QLineEdit, QTextEdit)):
+            focused_widget.clearFocus()
+        super().mousePressEvent(event)
+
     def _create_quote_header(self) -> QWidget:
         """Create the quote header with title and basic info."""
         header = QWidget()
