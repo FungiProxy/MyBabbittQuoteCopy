@@ -16,7 +16,7 @@ print(f"🐍 Python version: {sys.version}")
 
 try:
     from src.ui.main_window import MainWindow
-    from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialTheme
+    from src.ui.theme.babbitt_theme import BabbittTheme
     print("✅ Imports successful")
 except Exception as e:
     print(f"❌ Import error: {e}")
@@ -32,14 +32,14 @@ def main():
         app.setApplicationName("MyBabbittQuote")
         app.setOrganizationName("Babbitt International")
         
-        # Apply the new industrial theme
-        BabbittIndustrialTheme.apply_theme(app)
+        # Apply global theme
+        app.setStyleSheet(BabbittTheme.get_main_stylesheet())
         
         # Create and show main window
         window = MainWindow()
         window.show()
         
-        print("✨ Industrial theme applied!")
+        print("✨ Professional UI restored!")
         
         # Run application
         sys.exit(app.exec())

@@ -21,7 +21,7 @@ from PySide6.QtGui import QFont, QIntValidator
 from src.core.database import SessionLocal
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
-from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialIntegration
+from src.ui.theme.babbitt_theme import BabbittTheme
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +53,31 @@ class WorkingProductSelectionDialog(QDialog):
         self.setModal(True)
         self.resize(1000, 700)
         
-        # Apply industrial theme integration
-        BabbittIndustrialIntegration.setup_dialog(self, "large")
+        # Apply modern styling
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #f8f9fa;
+            }
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
+            QGroupBox {
+                font-weight: 600;
+                color: #2C3E50;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 8px;
+                background-color: white;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 8px;
+                background-color: white;
+            }
+        """)
         
         self._setup_ui()
         
@@ -62,6 +85,9 @@ class WorkingProductSelectionDialog(QDialog):
             self._load_product_for_editing()
         else:
             self._load_product_list()
+        
+        # Apply Babbitt theme
+        self.setStyleSheet(BabbittTheme.get_dialog_stylesheet())
     
     def _setup_ui(self):
         """Setup the UI layout."""

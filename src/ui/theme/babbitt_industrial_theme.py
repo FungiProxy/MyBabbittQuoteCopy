@@ -1,17 +1,15 @@
 """
-Babbitt Industrial Theme - Inspired by Babbitt International Website
+Babbitt Industrial Theme - Fixed for MainWindow Integration
 File: src/ui/theme/babbitt_industrial_theme.py
 
-🔴 Critical - New theme matching Babbitt International's website aesthetic
+🔴 Critical - Fixed theme that works with your existing apply_theme() system
 """
 
-from src.ui.theme.standardized_theme_base import StandardizedThemeBase
 
-
-class BabbittIndustrialTheme(StandardizedThemeBase):
+class BabbittIndustrialTheme:
     """
-    Professional industrial theme inspired by Babbitt International's website.
-    Features dark navigation, bright blue accents, and clean white content areas.
+    Professional industrial theme matching Babbitt International's website.
+    Compatible with your existing MainWindow.apply_theme() system.
     """
     
     # ============================================================================
@@ -19,449 +17,426 @@ class BabbittIndustrialTheme(StandardizedThemeBase):
     # ============================================================================
     
     # Primary Colors - Matching website palette
-    PRIMARY_COLOR = "#0052cc"         # Bright blue (CTAs, links, active states)
-    SECONDARY_COLOR = "#003d99"       # Darker blue (hover states)
-    ACCENT_COLOR = "#0066ff"          # Vibrant blue (highlights)
+    PRIMARY_BLUE = "#0052cc"         # Bright blue (CTAs, links, active states)
+    SECONDARY_BLUE = "#003d99"       # Darker blue (hover states)
+    ACCENT_BLUE = "#0066ff"          # Vibrant blue (highlights)
     
     # Navigation Colors - Dark industrial header
-    NAV_BACKGROUND = "#1a1a1a"        # Very dark gray/black (header)
-    NAV_TEXT = "#ffffff"              # White text on dark
-    NAV_ACCENT = "#0052cc"            # Blue accent for active items
+    NAV_BACKGROUND = "#1a1a1a"       # Very dark gray/black (header)
+    NAV_TEXT = "#ffffff"             # White text on dark
+    NAV_ACCENT = "#0052cc"           # Blue accent for active items
     
-    # Status Colors - Clear industrial indicators
-    SUCCESS_COLOR = "#28a745"         # Professional green
-    WARNING_COLOR = "#ffc107"         # Industrial yellow
-    ERROR_COLOR = "#dc3545"           # Alert red
-    INFO_COLOR = "#0052cc"            # Uses primary blue
+    # Status Colors
+    SUCCESS_GREEN = "#28a745"
+    WARNING_ORANGE = "#ffc107"
+    ERROR_RED = "#dc3545"
+    INFO_BLUE = "#0052cc"
     
-    # Background Colors - Clean and professional
-    BACKGROUND_PRIMARY = "#ffffff"     # Pure white content areas
-    BACKGROUND_SECONDARY = "#f8f9fa"   # Light gray secondary areas
-    BACKGROUND_CARD = "#ffffff"        # White cards with borders
-    BACKGROUND_SURFACE = "#f5f5f5"     # Subtle gray for panels
-    BACKGROUND_DARK = "#1a1a1a"        # Dark panels (navigation style)
+    # Background Colors
+    WHITE = "#ffffff"
+    LIGHT_GRAY = "#f8f9fa"
+    MEDIUM_GRAY = "#6c757d"
+    DARK_GRAY = "#212529"
+    BORDER_GRAY = "#dee2e6"
+    CARD_BORDER = "#e9ecef"
     
-    # Text Colors - Professional hierarchy
-    TEXT_PRIMARY = "#212529"           # Dark charcoal (primary text)
-    TEXT_SECONDARY = "#6c757d"         # Medium gray (secondary text)
-    TEXT_MUTED = "#adb5bd"             # Light gray (muted text)
-    TEXT_ON_DARK = "#ffffff"           # White text on dark backgrounds
-    TEXT_ACCENT = "#0052cc"            # Blue text for links/accents
+    # Interactive States
+    HOVER_BACKGROUND = "#f8f9fa"
+    HOVER_BLUE = "#004299"
+    ACTIVE_BACKGROUND = "#0052cc"
+    FOCUS_BORDER = "#0052cc"
+    FOCUS_SHADOW = "0 0 0 3px rgba(0, 82, 204, 0.25)"
     
-    # Border Colors - Subtle industrial styling
-    BORDER_COLOR = "#dee2e6"           # Light gray borders
-    BORDER_COLOR_LIGHT = "#e9ecef"     # Very light borders
-    BORDER_ACCENT = "#0052cc"          # Blue accent borders
-    
-    # Interactive States - Smooth professional interactions
-    HOVER_BACKGROUND = "#f8f9fa"       # Light hover
-    HOVER_BLUE = "#004299"             # Blue hover (darker)
-    ACTIVE_BACKGROUND = "#0052cc"      # Blue active
-    FOCUS_BORDER = "#0052cc"           # Blue focus
-    FOCUS_SHADOW = "0 0 0 3px rgba(0, 82, 204, 0.25)"  # Blue focus shadow
-    
-    @classmethod
-    def get_complete_stylesheet(cls):
-        """Get the complete stylesheet matching Babbitt International's aesthetic."""
+    @staticmethod
+    def get_main_stylesheet():
+        """
+        Get the main stylesheet compatible with your existing MainWindow.apply_theme() system.
+        This method is called by your current MainWindow._apply_theme() method.
+        """
         return f"""
         /* ========================================================================
            BABBITT INDUSTRIAL THEME - MAIN APPLICATION STYLING
-           Inspired by Babbitt International website design
+           Compatible with existing MainWindow.apply_theme() system
         ======================================================================== */
         
         /* Main Application Window */
         QMainWindow {{
-            background-color: {cls.BACKGROUND_PRIMARY};
-            color: {cls.TEXT_PRIMARY};
+            background-color: {BabbittIndustrialTheme.WHITE};
+            color: {BabbittIndustrialTheme.DARK_GRAY};
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: {cls.FONT_SIZE_BASE};
+            font-size: 14px;
         }}
         
-        /* ====== NAVIGATION & HEADERS (Dark Industrial Style) ====== */
-        QMenuBar {{
-            background-color: {cls.NAV_BACKGROUND};
-            color: {cls.NAV_TEXT};
+        /* ====== SIDEBAR (Dark Industrial Style like website) ====== */
+        QFrame#sidebarFrame {{
+            background-color: {BabbittIndustrialTheme.NAV_BACKGROUND};
+            border: none;
+            min-width: 200px;
+            max-width: 200px;
+        }}
+        
+        QLabel#logoLabel {{
+            color: {BabbittIndustrialTheme.NAV_TEXT};
+            font-size: 18px;
+            font-weight: 600;
+            padding: 20px 16px;
             border-bottom: 1px solid #333333;
-            padding: 8px 0;
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
         }}
         
-        QMenuBar::item {{
+        /* Navigation List - Dark theme with blue accents */
+        QListWidget#navList {{
             background-color: transparent;
-            padding: 8px 16px;
-            border-radius: {cls.BORDER_RADIUS_SM};
-            margin: 0 4px;
+            border: none;
+            color: {BabbittIndustrialTheme.NAV_TEXT};
+            font-size: 14px;
+            outline: none;
+            padding: 10px 0;
         }}
         
-        QMenuBar::item:selected, QMenuBar::item:hover {{
-            background-color: {cls.NAV_ACCENT};
-            color: {cls.NAV_TEXT};
+        QListWidget#navList::item {{
+            padding: 12px 20px;
+            border-left: 3px solid transparent;
+            margin: 2px 0;
+            border-radius: 0;
         }}
         
-        QMenu {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-            padding: 8px 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        QListWidget#navList::item:hover {{
+            background-color: rgba(255, 255, 255, 0.1);
+            color: {BabbittIndustrialTheme.NAV_TEXT};
         }}
         
-        QMenu::item {{
-            padding: 8px 20px;
-            margin: 0 8px;
-            border-radius: {cls.BORDER_RADIUS_SM};
+        QListWidget#navList::item:selected {{
+            background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            border-left: 3px solid {BabbittIndustrialTheme.ACCENT_BLUE};
+            color: {BabbittIndustrialTheme.NAV_TEXT};
+            font-weight: 500;
         }}
         
-        QMenu::item:selected {{
-            background-color: {cls.HOVER_BACKGROUND};
-            color: {cls.PRIMARY_COLOR};
+        /* ====== CONTENT AREA (Clean White like website) ====== */
+        QFrame#contentFrame {{
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: none;
+        }}
+        
+        /* Page Headers */
+        QLabel#pageTitle {{
+            color: {BabbittIndustrialTheme.DARK_GRAY};
+            font-size: 24px;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+            padding: 0 20px;
         }}
         
         /* ====== BUTTONS (Industrial Blue Accents) ====== */
         QPushButton {{
-            background-color: {cls.BACKGROUND_CARD};
-            color: {cls.TEXT_PRIMARY};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-            padding: {cls.SPACING_MD} {cls.SPACING_XL};
-            font-size: {cls.FONT_SIZE_BASE};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
-            min-height: {cls.BUTTON_HEIGHT};
+            background-color: {BabbittIndustrialTheme.WHITE};
+            color: {BabbittIndustrialTheme.DARK_GRAY};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            min-height: 36px;
         }}
         
         QPushButton:hover {{
-            background-color: {cls.HOVER_BACKGROUND};
-            border-color: {cls.PRIMARY_COLOR};
+            background-color: {BabbittIndustrialTheme.HOVER_BACKGROUND};
+            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
         }}
         
         QPushButton:pressed {{
-            background-color: {cls.PRIMARY_COLOR};
-            color: {cls.NAV_TEXT};
+            background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            color: {BabbittIndustrialTheme.NAV_TEXT};
         }}
         
         /* Primary Button - Bright Blue (like website CTAs) */
-        QPushButton[buttonStyle="primary"] {{
-            background-color: {cls.PRIMARY_COLOR};
-            color: {cls.NAV_TEXT};
-            border: 1px solid {cls.PRIMARY_COLOR};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
+        QPushButton#newQuoteBtn, QPushButton[buttonStyle="primary"] {{
+            background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            color: {BabbittIndustrialTheme.NAV_TEXT};
+            border: 1px solid {BabbittIndustrialTheme.PRIMARY_BLUE};
+            font-weight: 600;
         }}
         
-        QPushButton[buttonStyle="primary"]:hover {{
-            background-color: {cls.HOVER_BLUE};
-            border-color: {cls.HOVER_BLUE};
+        QPushButton#newQuoteBtn:hover, QPushButton[buttonStyle="primary"]:hover {{
+            background-color: {BabbittIndustrialTheme.HOVER_BLUE};
+            border-color: {BabbittIndustrialTheme.HOVER_BLUE};
         }}
         
-        /* Secondary Button */
-        QPushButton[buttonStyle="secondary"] {{
+        /* ====== DASHBOARD CARDS (Clean Industrial Style) ====== */
+        QFrame#metricsContainer {{
             background-color: transparent;
-            color: {cls.PRIMARY_COLOR};
-            border: 1px solid {cls.PRIMARY_COLOR};
+            border: none;
+            padding: 20px;
         }}
         
-        QPushButton[buttonStyle="secondary"]:hover {{
-            background-color: {cls.PRIMARY_COLOR};
-            color: {cls.NAV_TEXT};
+        QFrame.metricCard {{
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: 1px solid {BabbittIndustrialTheme.CARD_BORDER};
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
         }}
         
-        /* ====== INPUTS & DROPDOWNS (Clean Industrial Style) ====== */
+        QFrame.metricCard:hover {{
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+        }}
+        
+        /* Metric Card Content */
+        QLabel.metricTitle {{
+            color: {BabbittIndustrialTheme.MEDIUM_GRAY};
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }}
+        
+        QLabel.metricValue {{
+            color: {BabbittIndustrialTheme.DARK_GRAY};
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }}
+        
+        QLabel.metricSubtext {{
+            color: {BabbittIndustrialTheme.MEDIUM_GRAY};
+            font-size: 12px;
+        }}
+        
+        /* ====== INPUTS & DROPDOWNS ====== */
         QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_SM};
-            padding: {cls.SPACING_MD};
-            color: {cls.TEXT_PRIMARY};
-            font-size: {cls.FONT_SIZE_BASE};
-            min-height: {cls.INPUT_HEIGHT};
-            max-height: {cls.INPUT_HEIGHT};
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: {BabbittIndustrialTheme.DARK_GRAY};
+            font-size: 14px;
+            min-height: 20px;
         }}
         
         QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
-            border-color: {cls.PRIMARY_COLOR};
-            box-shadow: {cls.FOCUS_SHADOW};
+            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            box-shadow: {BabbittIndustrialTheme.FOCUS_SHADOW};
         }}
         
         QComboBox {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_SM};
-            padding: {cls.SPACING_MD};
-            color: {cls.TEXT_PRIMARY};
-            font-size: {cls.FONT_SIZE_BASE};
-            min-height: 32px;
-            max-height: 32px;
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: {BabbittIndustrialTheme.DARK_GRAY};
+            font-size: 14px;
+            min-height: 20px;
         }}
         
         QComboBox:hover {{
-            border-color: {cls.PRIMARY_COLOR};
-        }}
-        
-        QComboBox:focus {{
-            border-color: {cls.PRIMARY_COLOR};
-            box-shadow: {cls.FOCUS_SHADOW};
+            border-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
         }}
         
         QComboBox::drop-down {{
             subcontrol-origin: padding;
             subcontrol-position: top right;
             width: 20px;
-            border-left: 1px solid {cls.BORDER_COLOR};
-            border-top-right-radius: {cls.BORDER_RADIUS_SM};
-            border-bottom-right-radius: {cls.BORDER_RADIUS_SM};
-        }}
-        
-        QComboBox::down-arrow {{
-            image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzZjNzU3ZCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+);
-            width: 12px;
-            height: 8px;
+            border-left: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
         }}
         
         QComboBox QAbstractItemView {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-            padding: 4px 0;
-            selection-background-color: {cls.PRIMARY_COLOR};
-            selection-color: {cls.NAV_TEXT};
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            selection-background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            selection-color: {BabbittIndustrialTheme.NAV_TEXT};
         }}
         
-        /* ====== CARDS & PANELS (Clean White Style) ====== */
-        QFrame[frameType="card"] {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_LG};
-            padding: {cls.SPACING_XL};
-            margin: {cls.SPACING_MD};
+        /* ====== TABLES & LISTS ====== */
+        QListWidget, QTreeWidget {{
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-radius: 6px;
+            alternate-background-color: {BabbittIndustrialTheme.LIGHT_GRAY};
         }}
         
-        QFrame[frameType="card"][elevated="true"] {{
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-color: {cls.BORDER_COLOR_LIGHT};
+        QListWidget::item, QTreeWidget::item {{
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 1px;
+        }}
+        
+        QListWidget::item:selected, QTreeWidget::item:selected {{
+            background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            color: {BabbittIndustrialTheme.NAV_TEXT};
+        }}
+        
+        QListWidget::item:hover, QTreeWidget::item:hover {{
+            background-color: {BabbittIndustrialTheme.HOVER_BACKGROUND};
+        }}
+        
+        QTableWidget {{
+            background-color: {BabbittIndustrialTheme.WHITE};
+            gridline-color: {BabbittIndustrialTheme.CARD_BORDER};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-radius: 6px;
+        }}
+        
+        QHeaderView::section {{
+            background-color: {BabbittIndustrialTheme.LIGHT_GRAY};
+            color: {BabbittIndustrialTheme.DARK_GRAY};
+            padding: 8px 12px;
+            border: none;
+            border-bottom: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            font-weight: 600;
+        }}
+        
+        /* ====== DIALOGS & WINDOWS ====== */
+        QDialog {{
+            background-color: {BabbittIndustrialTheme.WHITE};
+            color: {BabbittIndustrialTheme.DARK_GRAY};
         }}
         
         QGroupBox {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-            margin-top: {cls.SPACING_LG};
-            padding-top: {cls.SPACING_LG};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
-            color: {cls.TEXT_PRIMARY};
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-radius: 6px;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: 600;
+            color: {BabbittIndustrialTheme.DARK_GRAY};
         }}
         
         QGroupBox::title {{
             subcontrol-origin: margin;
-            left: {cls.SPACING_LG};
-            padding: 0 {cls.SPACING_MD} 0 {cls.SPACING_MD};
-            color: {cls.PRIMARY_COLOR};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
+            left: 10px;
+            padding: 0 8px 0 8px;
+            color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            font-weight: 600;
         }}
         
-        /* ====== LISTS & TABLES (Industrial Clean Style) ====== */
-        QListWidget, QTreeWidget {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-            padding: {cls.SPACING_SM};
-            alternate-background-color: {cls.BACKGROUND_SURFACE};
-        }}
-        
-        QListWidget::item, QTreeWidget::item {{
-            padding: {cls.SPACING_MD};
-            border-radius: {cls.BORDER_RADIUS_SM};
-            margin: 2px;
-        }}
-        
-        QListWidget::item:selected, QTreeWidget::item:selected {{
-            background-color: {cls.PRIMARY_COLOR};
-            color: {cls.NAV_TEXT};
-        }}
-        
-        QListWidget::item:hover, QTreeWidget::item:hover {{
-            background-color: {cls.HOVER_BACKGROUND};
-        }}
-        
-        QTableWidget {{
-            background-color: {cls.BACKGROUND_CARD};
-            gridline-color: {cls.BORDER_COLOR_LIGHT};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-        }}
-        
-        QHeaderView::section {{
-            background-color: {cls.BACKGROUND_SURFACE};
-            color: {cls.TEXT_PRIMARY};
-            padding: {cls.SPACING_MD};
-            border: none;
-            border-bottom: 1px solid {cls.BORDER_COLOR};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
-        }}
-        
-        /* ====== LABELS & TEXT (Professional Hierarchy) ====== */
-        QLabel {{
-            color: {cls.TEXT_PRIMARY};
-            background-color: transparent;
-        }}
-        
-        QLabel[labelType="title"] {{
-            font-size: {cls.FONT_SIZE_XL};
-            font-weight: {cls.FONT_WEIGHT_BOLD};
-            color: {cls.TEXT_PRIMARY};
-            margin-bottom: {cls.SPACING_LG};
-        }}
-        
-        QLabel[labelType="subtitle"] {{
-            font-size: {cls.FONT_SIZE_LG};
-            font-weight: {cls.FONT_WEIGHT_SEMIBOLD};
-            color: {cls.TEXT_SECONDARY};
-            margin-bottom: {cls.SPACING_MD};
-        }}
-        
-        QLabel[labelType="caption"] {{
-            font-size: {cls.FONT_SIZE_SM};
-            color: {cls.TEXT_MUTED};
-        }}
-        
-        /* Price Labels */
-        QLabel[priceType="total"] {{
-            font-size: {cls.FONT_SIZE_XL};
-            font-weight: {cls.FONT_WEIGHT_BOLD};
-            color: {cls.PRIMARY_COLOR};
-        }}
-        
-        QLabel[priceType="adder"][adderType="positive"] {{
-            color: {cls.SUCCESS_COLOR};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
-        }}
-        
-        QLabel[priceType="adder"][adderType="negative"] {{
-            color: {cls.ERROR_COLOR};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
-        }}
-        
-        /* ====== DIALOGS & WINDOWS (Professional Layout) ====== */
-        QDialog {{
-            background-color: {cls.BACKGROUND_PRIMARY};
-            color: {cls.TEXT_PRIMARY};
-        }}
-        
-        QTabWidget::pane {{
-            background-color: {cls.BACKGROUND_CARD};
-            border: 1px solid {cls.BORDER_COLOR};
-            border-radius: {cls.BORDER_RADIUS_MD};
-        }}
-        
-        QTabBar::tab {{
-            background-color: {cls.BACKGROUND_SURFACE};
-            color: {cls.TEXT_SECONDARY};
-            padding: {cls.SPACING_MD} {cls.SPACING_XL};
-            margin-right: 2px;
-            border-top-left-radius: {cls.BORDER_RADIUS_MD};
-            border-top-right-radius: {cls.BORDER_RADIUS_MD};
-        }}
-        
-        QTabBar::tab:selected {{
-            background-color: {cls.PRIMARY_COLOR};
-            color: {cls.NAV_TEXT};
-        }}
-        
-        QTabBar::tab:hover:!selected {{
-            background-color: {cls.HOVER_BACKGROUND};
-            color: {cls.PRIMARY_COLOR};
-        }}
-        
-        /* ====== SCROLLBARS (Minimal Industrial Style) ====== */
+        /* ====== SCROLLBARS ====== */
         QScrollBar:vertical {{
-            background-color: {cls.BACKGROUND_SURFACE};
+            background-color: {BabbittIndustrialTheme.LIGHT_GRAY};
             width: 12px;
             border-radius: 6px;
-            margin: 0;
         }}
         
         QScrollBar::handle:vertical {{
-            background-color: {cls.BORDER_COLOR};
+            background-color: {BabbittIndustrialTheme.BORDER_GRAY};
             border-radius: 6px;
             min-height: 20px;
             margin: 2px;
         }}
         
         QScrollBar::handle:vertical:hover {{
-            background-color: {cls.PRIMARY_COLOR};
+            background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
         }}
         
-        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
-            height: 0px;
-        }}
-        
-        /* ====== STATUS INDICATORS ====== */
+        /* ====== STATUS LABELS ====== */
         QLabel[status="success"] {{
-            color: {cls.SUCCESS_COLOR};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
+            color: {BabbittIndustrialTheme.SUCCESS_GREEN};
+            font-weight: 500;
         }}
         
         QLabel[status="warning"] {{
-            color: {cls.WARNING_COLOR};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
+            color: {BabbittIndustrialTheme.WARNING_ORANGE};
+            font-weight: 500;
         }}
         
         QLabel[status="error"] {{
-            color: {cls.ERROR_COLOR};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
+            color: {BabbittIndustrialTheme.ERROR_RED};
+            font-weight: 500;
         }}
         
         QLabel[status="info"] {{
-            color: {cls.INFO_COLOR};
-            font-weight: {cls.FONT_WEIGHT_MEDIUM};
+            color: {BabbittIndustrialTheme.INFO_BLUE};
+            font-weight: 500;
+        }}
+        
+        /* ====== MENU BAR (Dark theme) ====== */
+        QMenuBar {{
+            background-color: {BabbittIndustrialTheme.NAV_BACKGROUND};
+            color: {BabbittIndustrialTheme.NAV_TEXT};
+            border-bottom: 1px solid #333333;
+            padding: 4px 0;
+            font-weight: 500;
+        }}
+        
+        QMenuBar::item {{
+            background-color: transparent;
+            padding: 6px 12px;
+            margin: 0 2px;
+        }}
+        
+        QMenuBar::item:selected, QMenuBar::item:hover {{
+            background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            color: {BabbittIndustrialTheme.NAV_TEXT};
+        }}
+        
+        QMenu {{
+            background-color: {BabbittIndustrialTheme.WHITE};
+            border: 1px solid {BabbittIndustrialTheme.BORDER_GRAY};
+            border-radius: 6px;
+            padding: 4px 0;
+        }}
+        
+        QMenu::item {{
+            padding: 6px 16px;
+            margin: 0 4px;
+        }}
+        
+        QMenu::item:selected {{
+            background-color: {BabbittIndustrialTheme.PRIMARY_BLUE};
+            color: {BabbittIndustrialTheme.NAV_TEXT};
         }}
         """
-    
-    @classmethod
-    def apply_theme(cls, app):
-        """Apply the Babbitt Industrial theme to the entire application."""
-        app.setStyleSheet(cls.get_complete_stylesheet())
-        
-        # Set application-wide properties
-        app.setProperty("theme", "babbitt_industrial")
-        
-        print("🏭 Babbitt Industrial Theme applied successfully!")
-        print("   ✓ Dark navigation with bright blue accents")
-        print("   ✓ Clean white content areas")
-        print("   ✓ Professional industrial styling")
 
 
-# Quick integration helper
+# Integration helper to update your settings service
 class BabbittIndustrialIntegration:
-    """Helper class for integrating the Babbitt Industrial theme."""
+    """Helper for integrating the Babbitt Industrial theme with your existing system."""
     
     @staticmethod
-    def setup_main_window(main_window):
-        """Setup main window with Babbitt Industrial styling."""
-        main_window.setProperty("windowType", "main")
-        main_window.setMinimumSize(1200, 700)
-        
-    @staticmethod
-    def setup_dialog(dialog, dialog_type="standard"):
-        """Setup dialog with appropriate Babbitt Industrial styling."""
-        dialog.setProperty("dialogType", dialog_type)
-        if dialog_type == "large":
-            dialog.setMinimumSize(1000, 600)
-        elif dialog_type == "medium":
-            dialog.setMinimumSize(800, 500)
-        else:
-            dialog.setMinimumSize(600, 400)
+    def register_theme():
+        """
+        Register this theme with your settings service.
+        Add this to your SettingsService theme options.
+        """
+        return {
+            'name': 'babbitt_industrial',
+            'display_name': 'Babbitt Industrial',
+            'description': 'Professional industrial theme matching Babbitt International website',
+            'theme_class': BabbittIndustrialTheme
+        }
     
     @staticmethod
-    def create_primary_button(text: str):
-        """Create a primary button with Babbitt Industrial styling."""
-        from PySide6.QtWidgets import QPushButton
-        button = QPushButton(text)
-        button.setProperty("buttonStyle", "primary")
-        return button
-    
-    @staticmethod
-    def create_secondary_button(text: str):
-        """Create a secondary button with Babbitt Industrial styling."""
-        from PySide6.QtWidgets import QPushButton
-        button = QPushButton(text)
-        button.setProperty("buttonStyle", "secondary")
-        return button
+    def apply_to_main_window(main_window):
+        """Apply theme directly to main window if needed."""
+        stylesheet = BabbittIndustrialTheme.get_main_stylesheet()
+        main_window.setStyleSheet(stylesheet)
+        print("🏭 Babbitt Industrial Theme applied to main window")
+
+
+# ===== QUICK INTEGRATION INSTRUCTIONS =====
+"""
+1. Replace your theme file with this version:
+   📁 src/ui/theme/babbitt_industrial_theme.py
+
+2. Update your SettingsService to include this theme:
+   
+   # In your settings service file, add:
+   from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialTheme
+   
+   AVAILABLE_THEMES = {
+       'babbitt': BabbittTheme,
+       'babbitt_industrial': BabbittIndustrialTheme,  # Add this line
+   }
+
+3. Your existing apply_theme() method should now work:
+   
+   # This will now work with your existing MainWindow.apply_theme():
+   window.apply_theme('babbitt_industrial')
+
+4. OR test directly:
+   
+   # Add this to your MainWindow.__init__() to test immediately:
+   from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialTheme
+   self.setStyleSheet(BabbittIndustrialTheme.get_main_stylesheet())
+"""
