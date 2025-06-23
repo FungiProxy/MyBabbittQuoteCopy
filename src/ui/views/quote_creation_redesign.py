@@ -73,6 +73,7 @@ class QuoteCreationPageRedesign(QWidget):
         self.product_service = ProductService(db=self.db)
         
         # Current quote state
+        self.current_quote_id = None
         self.current_quote = {
             "items": [],
             "customer_info": {},
@@ -978,17 +979,16 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
                     "notes": customer_info.get("notes")
                 }
 
-                if quote_data.get("id"):
-                    # Update existing quote
+                # If quote has an ID, it's an update. Otherwise, it's a new quote.
+                if self.current_quote_id is not None:
                     quote = self.quote_service.update_quote_with_items(
                         db,
-                        quote_id=quote_data["id"],
+                        quote_id=self.current_quote_id,
                         customer_data=customer_info,
                         products_data=products_data,
                         quote_details=quote_details,
                     )
                 else:
-                    # Create new quote
                     quote = self.quote_service.create_quote_with_items(
                         db,
                         customer_data=customer_info,
@@ -996,8 +996,15 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
                         quote_details=quote_details,
                     )
                 
-                db.commit()
+                # After saving, get the updated quote ID and number
                 db.refresh(quote)
+                self.current_quote["id"] = quote.id
+                self.current_quote["quote_number"] = quote.quote_number
+                
+                # This is the critical fix: update the tracked quote ID
+                self.current_quote_id = quote.id
+
+                logger.info(f"Successfully saved quote {quote.quote_number} with ID {quote.id}")
                 return quote
                 
         except Exception as e:
@@ -1049,26 +1056,33 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
         self.style().polish(self)
 
     def load_quote(self, quote_data: Dict):
-        """Load an existing quote for editing."""
-        # Ensure all required keys are present with safe defaults
+        """Loads an existing quote into the editor."""
+        self._reset_quote()
+        
+        self.current_quote_id = quote_data.get("id")
         self.current_quote = {
-            "items": quote_data.get("items", []),
-            "customer_info": quote_data.get("customer_info", {}),
-            "total_value": quote_data.get("total_value", 0.0),
+            "items": quote_data.get("products", []),
+            "customer_info": quote_data.get("customer", {}),
+            "total_value": quote_data.get("total", 0.0),
             "quote_number": quote_data.get("quote_number"),
             "status": quote_data.get("status", "Draft"),
-            "id": quote_data.get("id") if "id" in quote_data else None
+            "notes": quote_data.get("notes")
         }
         
+        self._update_ui_from_quote()
+        logger.info(f"Loaded quote {self.current_quote_id} into creator.")
+
+    def _update_ui_from_quote(self):
+        """Populates all UI fields from the self.current_quote data."""
         # Populate customer info
-        customer_info = self.current_quote["customer_info"]
+        customer_info = self.current_quote.get("customer_info", {})
         self.company_name_edit.setText(customer_info.get("company_name", customer_info.get("company", "")))
         self.contact_person_edit.setText(customer_info.get("contact_name", customer_info.get("name", "")))
         self.email_edit.setText(customer_info.get("email", ""))
         self.phone_edit.setText(customer_info.get("phone", ""))
-        self.notes_edit.setPlainText(customer_info.get("notes", ""))
+        self.notes_edit.setPlainText(self.current_quote.get("notes", ""))
         
-        # Update labels
+        # Update quote header labels
         quote_number = self.current_quote.get("quote_number")
         if quote_number:
             self.quote_number_label.setText(f"Quote #: {quote_number}")
@@ -1081,12 +1095,32 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
         self.status_label.style().unpolish(self.status_label)
         self.status_label.style().polish(self.status_label)
         
-        # Populate items table
+        # Update items table and totals
         self._update_items_table()
         self._update_quote_totals()
+        self._update_items_visibility()
+
+    def clear_if_quote_matches(self, deleted_quote_id: int):
+        """Clears the form if the deleted quote ID matches the current one."""
+        if self.current_quote_id and self.current_quote_id == deleted_quote_id:
+            logger.info(f"Clearing quote creator because quote {deleted_quote_id} was deleted.")
+            self._reset_quote()
 
     def closeEvent(self, event):
-        """Handle widget close event."""
+        """Handle the window closing."""
         if hasattr(self, 'db') and self.db:
             self.db.close()
         event.accept()
+
+    def clear_form(self, deleted_quote_id: int):
+        """
+        Clears the form if the deleted quote matches the one currently loaded.
+        """
+        if self.current_quote_id == deleted_quote_id:
+            logger.info(f"Quote {deleted_quote_id} was deleted while being edited. Clearing form.")
+            self.new_quote()
+            QMessageBox.information(
+                self, 
+                "Quote Deleted", 
+                "The quote you were editing has been deleted. The form has been reset."
+            )

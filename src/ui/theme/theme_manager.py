@@ -7,7 +7,7 @@ between light and dark modes.
 
 from PySide6.QtWidgets import QApplication, QListWidget, QPushButton, QFrame, QLineEdit, QComboBox, QSpinBox
 from src.ui.theme.babbitt_theme import BabbittTheme
-from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialPremium, BabbittPremiumIntegration
+from src.ui.theme.babbitt_industrial_theme import BabbittIndustrialProfessional, BabbittProfessionalIntegration
 
 
 class ThemeManager:
@@ -37,12 +37,12 @@ class ThemeManager:
             return
 
         # Apply Industrial theme with animations
-        stylesheet = BabbittIndustrialPremium.get_main_stylesheet()
+        stylesheet = BabbittIndustrialProfessional.get_main_stylesheet()
         app.setStyleSheet(stylesheet)
         
         # If main window is provided, apply Industrial theme animations
         if main_window:
-            BabbittPremiumIntegration.apply_premium_theme(main_window)
+            BabbittProfessionalIntegration.apply_theme_to_application(app)
         
     @staticmethod
     def _apply_enhanced_animations(main_window, theme_name):
@@ -122,8 +122,8 @@ class ThemeManager:
         Gets basic color information for a theme preview.
         """
         return {
-            'primary_color': BabbittIndustrialPremium.PRIMARY_BLUE,
-            'accent_color': BabbittIndustrialPremium.GOLD_ACCENT,
-            'background_color': BabbittIndustrialPremium.PLATINUM,
-            'description': 'Premium industrial theme with sophisticated gradients and animations'
+            'primary_color': BabbittIndustrialProfessional.PRIMARY_BLUE,
+            'accent_color': BabbittIndustrialProfessional.ACCENT_BLUE,
+            'background_color': BabbittIndustrialProfessional.OFF_WHITE,
+            'description': 'Professional industrial theme with clean layout and proper spacing'
         } 

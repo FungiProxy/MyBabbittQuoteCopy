@@ -154,3 +154,76 @@ class SettingsService:
         """Set the application theme."""
         self.settings["theme"] = theme_name
         self._save_settings()
+    
+    def get_startup_page(self, default: str = "Dashboard") -> str:
+        """Get the saved startup page."""
+        return self.settings.get("startup_page", default)
+    
+    def set_startup_page(self, page_name: str):
+        """Set the startup page."""
+        self.settings["startup_page"] = page_name
+        self._save_settings()
+    
+    def get_confirm_on_delete(self, default: bool = True) -> bool:
+        """Get the confirm on delete setting."""
+        return self.settings.get("confirm_delete", default)
+    
+    def set_confirm_on_delete(self, confirm: bool):
+        """Set the confirm on delete setting."""
+        self.settings["confirm_delete"] = confirm
+        self._save_settings()
+    
+    def get_default_export_path(self, default: str = "") -> str:
+        """Get the default export path."""
+        return self.settings.get("default_export_path", default)
+    
+    def set_default_export_path(self, path: str):
+        """Set the default export path."""
+        self.settings["default_export_path"] = path
+        self._save_settings()
+    
+    def get_export_with_logo(self, default: bool = True) -> bool:
+        """Get the export with logo setting."""
+        return self.settings.get("export_with_logo", default)
+    
+    def set_export_with_logo(self, with_logo: bool):
+        """Set the export with logo setting."""
+        self.settings["export_with_logo"] = with_logo
+        self._save_settings()
+    
+    def sync(self):
+        """Sync settings to file (for compatibility)."""
+        self._save_settings()
+    
+    def get_nested(self, category: str, key: str, default=None, value_type=str):
+        """Generic getter for nested setting values."""
+        category_settings = self.settings.get(category, {})
+        if not isinstance(category_settings, dict):
+            return default
+        
+        value = category_settings.get(key, default)
+        
+        if value_type == bool:
+            return bool(value) if value is not None else default
+        elif value_type == int:
+            try:
+                return int(value) if value is not None else default
+            except (ValueError, TypeError):
+                return default
+        elif value_type == float:
+            try:
+                return float(value) if value is not None else default
+            except (ValueError, TypeError):
+                return default
+        else:
+            return str(value) if value is not None else default
+    
+    def set_nested(self, category: str, key: str, value):
+        """Generic setter for nested setting values."""
+        if category not in self.settings:
+            self.settings[category] = {}
+        elif not isinstance(self.settings[category], dict):
+            self.settings[category] = {}
+        
+        self.settings[category][key] = value
+        self._save_settings()

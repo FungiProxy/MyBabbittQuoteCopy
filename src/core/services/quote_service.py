@@ -206,6 +206,7 @@ class QuoteService:
         ]
 
         return {
+            "id": quote.id,
             "quote_number": quote.quote_number,
             "customer": {
                 "name": quote.customer.name,
@@ -217,6 +218,8 @@ class QuoteService:
             "expiration_date": quote.expiration_date,
             "date_created": quote.date_created,
             "notes": quote.notes,
+            "total": quote.total,
+            "status": quote.status,
         }
 
     @staticmethod
@@ -466,28 +469,45 @@ class QuoteService:
         products_data: List[Dict[str, Any]],
         quote_details: Dict[str, Any],
     ) -> Quote:
-        """
-        Update a full quote including customer, quote items, and options.
-        """
-        quote = db.query(Quote).filter(Quote.id == quote_id).first()
+        quote = get_by_id(db, Quote, quote_id)
         if not quote:
-            raise ValueError("Quote not found")
+            raise ValueError(f"Quote with ID {quote_id} not found.")
 
-        # Update customer
-        customer = db.query(Customer).filter(Customer.id == quote.customer_id).first()
-        if customer:
-            CustomerService.update_customer(db, customer.id, customer_data)
-
-        # Update quote details
+        # Update customer if needed
+        customer_id = quote.customer_id
+        if customer_data.get("id") and customer_data.get("id") != customer_id:
+            customer_id = customer_data["id"]
+        elif not customer_data.get("id") and customer_data.get("email"):
+            # This logic might need refinement based on how you want to handle
+            # creating/updating customers during quote updates.
+            # For now, let's assume we find or create one.
+            customer = (
+                db.query(Customer)
+                .filter(Customer.email == customer_data["email"])
+                .first()
+            )
+            if not customer:
+                customer = CustomerService.create_customer(db, **customer_data)
+            customer_id = customer.id
+        
+        quote.customer_id = customer_id
         quote.notes = quote_details.get("notes")
         
-        # Remove old items and options
-        for item in quote.items:
-            db.query(QuoteItemOption).filter(QuoteItemOption.quote_item_id == item.id).delete()
-        db.query(QuoteItem).filter(QuoteItem.quote_id == quote.id).delete()
+        # Get IDs of the quote items to be deleted
+        item_ids_to_delete = db.query(QuoteItem.id).filter(QuoteItem.quote_id == quote_id).scalar_subquery()
+
+        # Delete options associated with those items first
+        db.query(QuoteItemOption).filter(
+            QuoteItemOption.quote_item_id.in_(item_ids_to_delete)
+        ).delete(synchronize_session=False)
+
+        # Now delete the items themselves
+        db.query(QuoteItem).filter(QuoteItem.quote_id == quote_id).delete(
+            synchronize_session=False
+        )
         db.flush()
 
-        # Add new items
+        # Add updated items
         for product_data in products_data:
             quote_item = QuoteItem(
                 quote_id=quote.id,
@@ -505,7 +525,7 @@ class QuoteService:
                         QuoteItemOption(
                             quote_item_id=quote_item.id,
                             option_id=option_data["id"],
-                            quantity=1,
+                            quantity=1, # Assuming quantity 1 for options
                             price=option_data.get("price", 0),
                         )
                     )
