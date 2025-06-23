@@ -196,7 +196,15 @@ class QuoteCreationPageRedesign(QWidget):
         
         self.total_label = QLabel(f"${self.current_quote['total_value']:.2f}")
         self.total_label.setProperty("priceType", "total-prominent")
-        self.total_label.setStyleSheet("font-size: 36px; font-weight: bold; color: #2E7D32; padding-top: 2px; text-shadow: 0 2px 8px #B2FF59;")
+        self.total_label.setStyleSheet("font-size: 36px; font-weight: bold; color: #2E7D32; padding-top: 2px;")
+        
+        # Apply proper Qt shadow effect instead of CSS text-shadow
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(8)
+        shadow.setColor(QColor("#B2FF59"))
+        shadow.setOffset(0, 2)
+        self.total_label.setGraphicsEffect(shadow)
+        
         status_layout.addWidget(self.total_label)
 
         # Right-aligned (but transparent) content to balance the layout
