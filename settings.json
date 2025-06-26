@@ -1,0 +1,38 @@
+{
+  "window_size": [
+    1400,
+    800
+  ],
+  "window_position": null,
+  "theme": "Babbitt Industrial",
+  "recent_files": [],
+  "auto_save": true,
+  "auto_save_interval": 300,
+  "default_currency": "USD",
+  "company_name": "Babbitt International",
+  "company_address": "",
+  "company_phone": "",
+  "company_email": "",
+  "default_quote_validity_days": 30,
+  "email_settings": {
+    "smtp_server": "",
+    "smtp_port": 587,
+    "username": "",
+    "password": "",
+    "use_tls": true
+  },
+  "startup_page": "Dashboard",
+  "confirm_delete": true,
+  "quotes": {
+    "default_currency": "USD ($)",
+    "validity_days": 30
+  },
+  "default_export_path": "",
+  "export_with_logo": true,
+  "company": {
+    "name": "Babbitt International",
+    "phone": "",
+    "email": "",
+    "website": "https://www.babbittinternational.com"
+  }
+}

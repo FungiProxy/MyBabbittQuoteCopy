@@ -536,7 +536,6 @@ class BabbittTheme:
         }}
         
         QCheckBox::indicator:checked::after {{
-            content: "✓";
             color: white;
             font-weight: bold;
             font-size: 12px;
@@ -566,7 +565,6 @@ class BabbittTheme:
         }}
         
         QRadioButton::indicator:checked::after {{
-            content: "";
             width: 8px;
             height: 8px;
             border-radius: 4px;
