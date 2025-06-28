@@ -16,7 +16,10 @@ from src.core.pricing.strategies import (
     MaterialAvailabilityStrategy,
     MaterialPremiumStrategy,
     NonStandardLengthSurchargeStrategy,
+    OringMaterialStrategy,
     PricingStrategy,
+    AccessoryOptionStrategy,
+    InsulatorOptionStrategy,
 )
 
 
@@ -72,9 +75,12 @@ def calculate_product_price(context: PricingContext) -> float:
         MaterialAvailabilityStrategy(),
         BasePriceStrategy(),
         MaterialPremiumStrategy(),
+        InsulatorOptionStrategy(),
+        AccessoryOptionStrategy(),
         ExtraLengthStrategy(),
         NonStandardLengthSurchargeStrategy(),
         ConnectionOptionStrategy(),
+        OringMaterialStrategy(),
     ]
 
     print(f"[DEBUG] About to run pricing strategies")

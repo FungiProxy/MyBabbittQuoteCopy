@@ -17,4 +17,7 @@ dist/
 .DS_Store
 Thumbs.db
 .vscode/
-.idea/ 
+.idea/
+# Temporary and one-time scripts
+extra/
+legacy/ 

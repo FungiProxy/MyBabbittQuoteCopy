@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple test to verify the modern product selection dialog is working correctly
+Test script to verify material length reset functionality
 """
 
 import sys
@@ -12,17 +12,18 @@ from PySide6.QtCore import Qt
 from src.ui.product_selection_dialog_modern import ModernProductSelectionDialog
 from src.core.services.product_service import ProductService
 from src.core.database import SessionLocal
+from src.core.config.material_defaults import get_material_default_length
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class TestWindow(QMainWindow):
-    """Test window for the modern product selection dialog"""
+class TestMaterialLengthReset(QMainWindow):
+    """Test window for material length reset functionality"""
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Test Modern Product Selection Dialog")
+        self.setWindowTitle("Test Material Length Reset")
         self.setGeometry(100, 100, 400, 200)
         
         # Create central widget
@@ -33,18 +34,25 @@ class TestWindow(QMainWindow):
         layout = QVBoxLayout(central_widget)
         
         # Add test button
-        test_button = QPushButton("Open Modern Product Selection Dialog")
-        test_button.clicked.connect(self.open_dialog)
+        test_button = QPushButton("Test Material Length Reset")
+        test_button.clicked.connect(self.test_material_reset)
         layout.addWidget(test_button)
         
         # Add status label
-        self.status_label = QLabel("Click the button to test the dialog")
+        self.status_label = QLabel("Click the button to test material length reset")
         layout.addWidget(self.status_label)
         
-    def open_dialog(self):
-        """Open the modern product selection dialog"""
+    def test_material_reset(self):
+        """Test the material length reset functionality"""
         try:
-            print("=== OPENING MODERN PRODUCT SELECTION DIALOG ===")
+            print("=== TESTING MATERIAL LENGTH RESET ===")
+            
+            # Test material default lengths
+            test_materials = ["S", "H", "TS", "U", "T", "C", "CPVC"]
+            print("\n--- Material Default Lengths ---")
+            for material in test_materials:
+                default_length = get_material_default_length(material)
+                print(f"{material}: {default_length}\"")
             
             # Create database session and product service
             db = SessionLocal()
@@ -57,12 +65,12 @@ class TestWindow(QMainWindow):
             result = dialog.exec()
             
             if result == QDialog.DialogCode.Accepted:
-                self.status_label.setText("Dialog accepted - product added to quote")
+                self.status_label.setText("Dialog accepted - material length reset tested")
             else:
                 self.status_label.setText("Dialog cancelled")
                 
         except Exception as e:
-            print(f"Error opening dialog: {e}")
+            print(f"Error testing material reset: {e}")
             import traceback
             traceback.print_exc()
             self.status_label.setText(f"Error: {e}")
@@ -72,7 +80,7 @@ def main():
     app = QApplication(sys.argv)
     
     # Create and show the test window
-    window = TestWindow()
+    window = TestMaterialLengthReset()
     window.show()
     
     # Run the application

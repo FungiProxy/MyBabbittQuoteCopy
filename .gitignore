@@ -138,4 +138,8 @@ Thumbs.db
 # Editor/IDE
 .vscode/
 .idea/
-*.swp 
+*.swp
+
+# Temporary and one-time scripts
+extra/
+legacy/ 

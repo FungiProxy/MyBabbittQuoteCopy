@@ -151,6 +151,39 @@ class MaterialPremiumStrategy(PricingStrategy):
         return context.price
 
 
+class AccessoryOptionStrategy(PricingStrategy):
+    def calculate(self, context: PricingContext) -> float:
+        # Loop through all selected options
+        for option_name, value in context.specs.items():
+            if not value:
+                continue  # Only add price if accessory is checked/True
+            # Query for the option in the database
+            option = (
+                context.db.query(Option)
+                .filter(
+                    Option.name == option_name,
+                    Option.category == "Accessories",
+                    Option.product_families.like(f"%{context.product.model_number.split('-')[0]}%"),
+                )
+                .first()
+            )
+            if option and option.adders:
+                print(f"[DEBUG] Accessory: {option_name}, value: {value}, adders: {option.adders}")
+                adder_value = 0.0
+                # Normalize lookup
+                keys_to_try = [
+                    True, 'True', 'true', 'Yes', 'yes', '1', str(value).lower()
+                ]
+                for key in keys_to_try:
+                    if key in option.adders:
+                        adder_value = option.adders[key]
+                        break
+                if adder_value:
+                    print(f"[DEBUG] Accessory adder applied: {option_name} = {adder_value}")
+                    context.price += float(adder_value)
+        return context.price
+
+
 class ExtraLengthStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
         effective_length = float(context.effective_length_in or 0.0)
@@ -287,4 +320,96 @@ class ConnectionOptionStrategy(PricingStrategy):
             if adder_value:
                 context.price += float(adder_value)
 
+        return context.price
+
+
+class OringMaterialStrategy(PricingStrategy):
+    def calculate(self, context: PricingContext) -> float:
+        """Calculate O-ring material pricing (e.g., Kalrez $295 adder)."""
+        o_ring_material = context.specs.get("O-Rings")
+        if not o_ring_material:
+            return context.price
+
+        # Get product type from model number
+        product_type = context.product.model_number.split("-")[0]
+        if product_type == "LS7000" and "/2" in context.product.model_number:
+            product_type = "LS7000/2"
+
+        # Get O-ring option from database
+        o_ring_option = (
+            context.db.query(Option)
+            .filter(
+                Option.name == "O-Rings",
+                Option.category == "O-ring Material",
+                Option.product_families.like(f"%{product_type}%"),
+            )
+            .first()
+        )
+
+        if not o_ring_option or not o_ring_option.adders:
+            return context.price
+
+        # Get the adder value for the selected O-ring material
+        adder_value = 0.0
+        
+        # Try direct string key first
+        if o_ring_material in o_ring_option.adders:
+            adder_value = o_ring_option.adders[o_ring_material]
+        else:
+            # Try to find dict key with matching code or name
+            for key, value in o_ring_option.adders.items():
+                if isinstance(key, dict):
+                    if key.get('code') == o_ring_material or key.get('name') == o_ring_material:
+                        adder_value = value
+                        break
+                elif isinstance(key, str) and key == o_ring_material:
+                    adder_value = value
+                    break
+
+        if adder_value:
+            context.price += float(adder_value)
+            print(f"[DEBUG] O-ring material {o_ring_material} adder: ${adder_value}")
+
+        return context.price
+
+
+class InsulatorOptionStrategy(PricingStrategy):
+    def calculate(self, context: PricingContext) -> float:
+        # Print all option names and categories for the product family
+        all_options = context.db.query(Option).filter(
+            Option.product_families.like(f"%{context.product.model_number.split('-')[0]}%")
+        ).all()
+        print("[DEBUG] All options for product family:")
+        for opt in all_options:
+            print(f"  Option: {opt.name}, Category: {opt.category}")
+        for ins_opt in ["Insulator Material", "Insulator Length"]:
+            value = context.specs.get(ins_opt)
+            if not value or value == "Standard":
+                continue  # No adder for default/standard
+            # Query for the option in the database
+            option_query = context.db.query(Option).filter(
+                Option.name == ins_opt,
+                Option.category.in_(["Insulator", "Insulator Material", "Insulator Length", "Connections"]),
+                Option.product_families.like(f"%{context.product.model_number.split('-')[0]}%"),
+            )
+            option = option_query.first()
+            if not option:
+                print(f"[WARNING] Insulator option not found: {ins_opt}")
+                continue
+            if option and option.adders:
+                print(f"[DEBUG] Insulator: {ins_opt}, value: {value}, adders: {option.adders}")
+                adder_value = 0.0
+                # Try direct value, and lowercased string
+                keys_to_try = [value, str(value).lower()]
+                found = False
+                for key in keys_to_try:
+                    if key in option.adders:
+                        adder_value = option.adders[key]
+                        found = True
+                        break
+                if not found:
+                    print(f"[WARNING] No adder found for {ins_opt} value: {value} (tried keys: {keys_to_try})")
+                if adder_value:
+                    print(f"[DEBUG] Insulator adder applied: {ins_opt} = {adder_value}")
+                    context.price += float(adder_value)
         return context.price

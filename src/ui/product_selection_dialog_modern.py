@@ -66,11 +66,6 @@ class ModernProductSelectionDialog(QDialog):
         self.option_widgets = {}
         self.enter_key_filter = EnterKeyFilter()
         
-        # Add flag to track material changes that need probe length reset
-        self._pending_material_change = None
-        self._material_changed_during_setup = False
-        self._pending_material_default_length = None
-        
         # Add flag to track model changes that need probe length reset
         self._pending_model_change = None
         self._model_changed_during_setup = False
@@ -463,7 +458,7 @@ class ModernProductSelectionDialog(QDialog):
                 form = QFormLayout()
                 form.setSpacing(10)
                 form.setContentsMargins(8, 8, 8, 8)
-                widget = self._create_dynamic_option_widget(opt)
+                widget = self._create_dynamic_option_widget(opt, force_dropdown=False)
                 if widget:
                     label = QLabel(opt.get('name', ''))
                     label.setStyleSheet('font-weight: 500; color: #2C3E50;')
@@ -476,23 +471,153 @@ class ModernProductSelectionDialog(QDialog):
                 group.setStyleSheet('font-weight: bold; font-size: 15px;')
                 group.setLayout(form)
                 vbox.addWidget(group)
+            # Remove Insulator options from Connections and prepare for Insulator section
+            insulator_material_option = None
+            insulator_length_option = None
+            if 'Connections' in options_by_category:
+                new_conn_opts = []
+                for opt in options_by_category['Connections']:
+                    if opt.get('name') == 'Insulator Material':
+                        insulator_material_option = opt
+                    elif opt.get('name') == 'Insulator Length':
+                        insulator_length_option = opt
+                    else:
+                        new_conn_opts.append(opt)
+                options_by_category['Connections'] = new_conn_opts
+            # Render all sections as before, but insert Insulator section right after Connections
             for cat, opts in options_by_category.items():
                 opts = [opt for opt in opts if opt.get('name') not in ordered_core_names]
                 if not opts:
                     continue
                 group = QGroupBox(cat)
                 group.setStyleSheet('font-weight: bold; font-size: 15px;')
-                form = QFormLayout()
-                form.setSpacing(10)
-                form.setContentsMargins(8, 8, 8, 8)
-                for option in opts:
-                    widget = self._create_dynamic_option_widget(option)
-                    if widget:
-                        label = QLabel(option.get('name', ''))
-                        label.setStyleSheet('font-weight: 500; color: #2C3E50;')
-                        form.addRow(label, widget)
-                group.setLayout(form)
-                vbox.addWidget(group)
+                if cat == 'Connections':
+                    # Define combo_style for use in this block
+                    combo_style = """
+                        QComboBox {
+                            border: 1px solid #ced4da;
+                            border-radius: 4px;
+                            padding: 8px;
+                            min-height: 32px;
+                            background-color: white;
+                        }
+                        QComboBox:focus {
+                            border-color: #2C3E50;
+                        }
+                    """
+                    # --- New: Dynamic Connection Type/Sub-options Workflow ---
+                    form = QFormLayout()
+                    form.setSpacing(10)
+                    form.setContentsMargins(8, 8, 8, 8)
+
+                    # Find the Connection Type option
+                    connection_type_option = next((o for o in opts if o.get('name') == 'Connection Type'), None)
+                    sub_option_map = {
+                        'NPT': ['NPT Size'],
+                        'Flange': ['Flange Size', 'Flange Type'],
+                        'Tri-clamp': ['Tri-clamp']
+                    }
+                    # Create Connection Type dropdown
+                    if connection_type_option:
+                        conn_type_combo = QComboBox()
+                        conn_type_combo.setFixedWidth(200)
+                        conn_type_combo.setMinimumHeight(32)
+                        conn_type_combo.setStyleSheet(combo_style)
+                        conn_type_choices = connection_type_option.get('choices', [])
+                        for choice in conn_type_choices:
+                            display_name = choice.get('display_name', choice.get('code', str(choice))) if isinstance(choice, dict) else str(choice)
+                            code = choice.get('code', str(choice)) if isinstance(choice, dict) else str(choice)
+                            conn_type_combo.addItem(display_name, code)
+                        form.addRow(QLabel('Connection Type'), conn_type_combo)
+                    else:
+                        conn_type_combo = None
+
+                    # Prepare sub-option widgets (all as dropdowns)
+                    sub_option_widgets = {}
+                    for sub_opt in opts:
+                        name = sub_opt.get('name')
+                        if name == 'Connection Type':
+                            continue
+                        choices = sub_opt.get('choices', [])
+                        adders = sub_opt.get('adders', {})
+                        combo = QComboBox()
+                        combo.setFixedWidth(200)
+                        combo.setMinimumHeight(32)
+                        combo.setStyleSheet(combo_style)
+                        if choices and isinstance(choices[0], dict):
+                            for choice in choices:
+                                display_name = choice.get('display_name', choice.get('code', str(choice)))
+                                code = choice.get('code', str(choice))
+                                combo.addItem(display_name, code)
+                        elif choices:
+                            for choice in choices:
+                                combo.addItem(str(choice), str(choice))
+                        sub_option_widgets[name] = combo
+                        form.addRow(QLabel(name), combo)
+                        combo.hide()
+
+                    def on_conn_type_changed(idx):
+                        selected_type = conn_type_combo.currentData() if conn_type_combo else ''
+                        if not isinstance(selected_type, str):
+                            selected_type = str(selected_type) if selected_type is not None else ''
+                        # Hide all sub-options first
+                        for w in sub_option_widgets.values():
+                            w.hide()
+                        # Show only relevant sub-options
+                        if selected_type in sub_option_map:
+                            for name in sub_option_map[selected_type]:
+                                if name in sub_option_widgets:
+                                    sub_option_widgets[name].show()
+                    if conn_type_combo:
+                        conn_type_combo.currentIndexChanged.connect(on_conn_type_changed)
+                        # Show sub-options for default selection
+                        on_conn_type_changed(conn_type_combo.currentIndex())
+                    group.setLayout(form)
+                    vbox.addWidget(group)
+                    # Insert Insulator section immediately after Connections
+                    if insulator_material_option or insulator_length_option:
+                        ins_group = QGroupBox('Insulator')
+                        ins_group.setStyleSheet('font-weight: bold; font-size: 15px;')
+                        ins_form = QFormLayout()
+                        ins_form.setSpacing(10)
+                        ins_form.setContentsMargins(8, 8, 8, 8)
+                        if insulator_material_option:
+                            widget = self._create_dynamic_option_widget(insulator_material_option, force_dropdown=True)
+                            if widget:
+                                label = QLabel(insulator_material_option.get('name', ''))
+                                label.setStyleSheet('font-weight: 500; color: #2C3E50;')
+                                ins_form.addRow(label, widget)
+                        if insulator_length_option:
+                            widget = self._create_dynamic_option_widget(insulator_length_option, force_dropdown=True)
+                            if widget:
+                                label = QLabel(insulator_length_option.get('name', ''))
+                                label.setStyleSheet('font-weight: 500; color: #2C3E50;')
+                                ins_form.addRow(label, widget)
+                        ins_group.setLayout(ins_form)
+                        vbox.addWidget(ins_group)
+                else:
+                    form = QFormLayout()
+                    form.setSpacing(10)
+                    form.setContentsMargins(8, 8, 8, 8)
+                    for option in opts:
+                        # Special handling for Accessories: single checkbox per option
+                        if cat == 'Accessories':
+                            name = option.get('name', '')
+                            cb = QCheckBox()
+                            cb.setChecked(False)  # Default to No
+                            cb.stateChanged.connect(lambda state, n=name: self._on_option_changed(n, bool(state)))
+                            self.option_widgets[name] = cb
+                            label = QLabel(name)
+                            label.setStyleSheet('font-weight: 500; color: #2C3E50;')
+                            form.addRow(label, cb)
+                        else:
+                            widget = self._create_dynamic_option_widget(option, cat)
+                            if widget:
+                                label = QLabel(option.get('name', ''))
+                                label.setStyleSheet('font-weight: 500; color: #2C3E50;')
+                                form.addRow(label, widget)
+                    group.setLayout(form)
+                    vbox.addWidget(group)
             vbox.addStretch()
             scroll.setWidget(container)
             while self.config_layout.count():
@@ -521,7 +646,7 @@ class ModernProductSelectionDialog(QDialog):
             print(traceback.format_exc())
             self._show_error_message(f"Error rendering config UI: {e}")
 
-    def _create_dynamic_option_widget(self, option):
+    def _create_dynamic_option_widget(self, option, force_dropdown=False):
         """Create the appropriate widget for an option based on its data."""
         name = option.get('name', '')
         choices = option.get('choices', None)
@@ -552,6 +677,23 @@ class ModernProductSelectionDialog(QDialog):
                 border-color: #2C3E50;
             }
         """
+        # Force dropdown for insulator options (must be first)
+        if force_dropdown and choices:
+            combo = QComboBox()
+            combo.setFixedWidth(200)
+            combo.setMinimumHeight(32)
+            combo.setStyleSheet(combo_style)
+            if isinstance(choices[0], dict):
+                for choice in choices:
+                    display_name = choice.get('display_name', choice.get('code', str(choice)))
+                    code = str(choice.get('code', str(choice)))
+                    combo.addItem(display_name, code)
+            else:
+                for choice in choices:
+                    combo.addItem(str(choice), str(choice))
+            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
+            self.option_widgets[name] = combo
+            return combo
         # Probe Length (always numeric input)
         if name == 'Probe Length':
             spin = QSpinBox()
@@ -567,6 +709,8 @@ class ModernProductSelectionDialog(QDialog):
             spin.valueChanged.connect(lambda val, n=name: self._on_option_changed(n, val))
             # Prevent Enter from closing dialog
             spin.installEventFilter(self.enter_key_filter)
+            # Store the widget in option_widgets so it can be found later
+            self.option_widgets[name] = spin
             return spin
         # Quantity (special case)
         if name == 'Quantity':
@@ -672,16 +816,13 @@ class ModernProductSelectionDialog(QDialog):
             # Check if this is a material change
             if option_name == 'Material':
                 print(f"[DEBUG] Material changed to: {value}")
-                # Store the material change for later processing
-                self._pending_material_change = value
-                self._material_changed_during_setup = True
                 
                 # Get the default length for this material
                 material_default_length = get_material_default_length(value)
                 print(f"[DEBUG] Material default length for {value}: {material_default_length}")
                 
-                # Store the material default length for deferred processing
-                self._pending_material_default_length = material_default_length
+                # Immediately reset the probe length to the material's default
+                self._reset_probe_length_to_material_default(material_default_length)
             
             self.config_service.set_option(option_name, value)
             print(f"[DEBUG] UI _on_option_changed: selected_options after set: {self.config_service.current_config.selected_options if self.config_service.current_config else None}")
@@ -695,25 +836,12 @@ class ModernProductSelectionDialog(QDialog):
     
     def _handle_deferred_changes(self):
         """Handle material and model changes that were deferred during setup."""
-        # Process any deferred material change
-        if self._pending_material_change and self._material_changed_during_setup:
-            print(f"[DEBUG] Processing deferred material change to: {self._pending_material_change}")
-            self._reset_probe_length_to_base()
-            self._pending_material_change = None
-            self._material_changed_during_setup = False
-        
         # Process any deferred model change
         if self._pending_model_base_length is not None and self._model_changed_during_setup:
             print(f"[DEBUG] Processing deferred model change, resetting probe length to: {self._pending_model_base_length}")
             self._reset_probe_length_to_specific_base(self._pending_model_base_length)
             self._model_changed_during_setup = False
             self._pending_model_base_length = None
-        
-        # Process any deferred material default length change
-        if hasattr(self, '_pending_material_default_length') and self._pending_material_default_length is not None:
-            print(f"[DEBUG] Processing deferred material default length change to: {self._pending_material_default_length}")
-            self._reset_probe_length_to_material_default(self._pending_material_default_length)
-            self._pending_material_default_length = None
     
     def _reset_probe_length_to_base(self):
         """Reset the probe length to the base length for the current product."""
@@ -767,9 +895,12 @@ class ModernProductSelectionDialog(QDialog):
         """Reset the probe length to the default length for the given material."""
         try:
             print(f"[DEBUG] Resetting probe length to material default: {material_default_length}")
+            print(f"[DEBUG] Available option widgets: {list(self.option_widgets.keys())}")
             
             # Find the probe length widget and update it
             probe_length_widget = self.option_widgets.get('Probe Length')
+            print(f"[DEBUG] Probe length widget found: {probe_length_widget}")
+            
             if probe_length_widget and hasattr(probe_length_widget, 'setValue'):
                 print(f"[DEBUG] Updating probe length widget to material default: {material_default_length}")
                 probe_length_widget.setValue(material_default_length)
@@ -778,6 +909,8 @@ class ModernProductSelectionDialog(QDialog):
                 print(f"[DEBUG] Probe length reset to material default: {material_default_length}")
             else:
                 print(f"[DEBUG] Probe length widget not found or not a spin box")
+                print(f"[DEBUG] Widget type: {type(probe_length_widget) if probe_length_widget else 'None'}")
+                print(f"[DEBUG] Has setValue: {hasattr(probe_length_widget, 'setValue') if probe_length_widget else False}")
                 
         except Exception as e:
             print(f"[DEBUG] Error resetting probe length to material default: {e}")
