@@ -19,6 +19,7 @@
     },
     {
       "name": "LS 2100 LOOP POWERED LEVEL SWITCH",
+      "base_length": 10,
       "variants": [],
       "options": [],
       "spare_parts": [],
@@ -142,6 +143,7 @@
     },
     {
       "name": "LS 7000/2 DUAL POINT LEVEL SWITCH",
+      "base_length": 10,
       "variants": [],
       "options": [],
       "spare_parts": [],
@@ -250,6 +252,7 @@
     },
     {
       "name": "LT 9000 LEVEL TRANSMITTER",
+      "base_length": 10,
       "variants": [],
       "options": [],
       "spare_parts": [],
@@ -288,6 +291,7 @@
     },
     {
       "name": "FS 10000 DRY MATERIAL FLOW SWITCH",
+      "base_length": 10,
       "variants": [],
       "options": [],
       "spare_parts": [],

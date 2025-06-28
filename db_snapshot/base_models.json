@@ -1,0 +1,112 @@
+[
+  {
+    "id": 1,
+    "product_family_id": 1,
+    "model_number": "LS2000-115VAC-S-10\"",
+    "description": "LS2000 Level Switch - Base Configuration",
+    "base_price": 425.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "S"
+  },
+  {
+    "id": 2,
+    "product_family_id": 2,
+    "model_number": "LS2100-24VDC-S-10\"",
+    "description": "LS2100 Level Switch - Base Configuration",
+    "base_price": 460.0,
+    "base_length": 10.0,
+    "voltage": "24VDC",
+    "material": "S"
+  },
+  {
+    "id": 3,
+    "product_family_id": 3,
+    "model_number": "LS6000-115VAC-S-10\"",
+    "description": "LS6000 Level Switch - Base Configuration",
+    "base_price": 550.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "S"
+  },
+  {
+    "id": 4,
+    "product_family_id": 4,
+    "model_number": "LS7000-115VAC-S-10\"",
+    "description": "LS7000 Level Switch - Base Configuration",
+    "base_price": 680.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "S"
+  },
+  {
+    "id": 5,
+    "product_family_id": 5,
+    "model_number": "LS7000/2-115VAC-H-10\"",
+    "description": "LS7000/2 Level Switch - Base Configuration",
+    "base_price": 770.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "H"
+  },
+  {
+    "id": 6,
+    "product_family_id": 6,
+    "model_number": "LS8000-115VAC-S-10\"",
+    "description": "LS8000 Level Switch - Base Configuration",
+    "base_price": 715.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "S"
+  },
+  {
+    "id": 7,
+    "product_family_id": 7,
+    "model_number": "LS8000/2-115VAC-H-10\"",
+    "description": "LS8000/2 Level Switch - Base Configuration",
+    "base_price": 850.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "H"
+  },
+  {
+    "id": 8,
+    "product_family_id": 8,
+    "model_number": "LT9000-115VAC-H-10\"",
+    "description": "LT9000 Level Transmitter - Base Configuration",
+    "base_price": 855.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "H"
+  },
+  {
+    "id": 9,
+    "product_family_id": 9,
+    "model_number": "FS10000-115VAC-S-6\"",
+    "description": "FS10000 Flow Switch - Base Configuration",
+    "base_price": 1885.0,
+    "base_length": 6.0,
+    "voltage": "115VAC",
+    "material": "S"
+  },
+  {
+    "id": 10,
+    "product_family_id": 10,
+    "model_number": "LS7500-BASE",
+    "description": "LS7500 Presence/Absence Switch - Base Configuration",
+    "base_price": 0.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "S"
+  },
+  {
+    "id": 11,
+    "product_family_id": 11,
+    "model_number": "LS8500-BASE",
+    "description": "LS8500 Presence/Absence Switch - Base Configuration",
+    "base_price": 0.0,
+    "base_length": 10.0,
+    "voltage": "115VAC",
+    "material": "S"
+  }
+]

@@ -25,8 +25,19 @@ class PriceCalculator:
         self.strategies = strategies
 
     def calculate(self, context: PricingContext) -> float:
-        for strategy in self.strategies:
-            strategy.calculate(context)
+        print(f"[DEBUG] PriceCalculator.calculate() called with {len(self.strategies)} strategies")
+        for i, strategy in enumerate(self.strategies):
+            strategy_name = strategy.__class__.__name__
+            print(f"[DEBUG] Running strategy {i+1}/{len(self.strategies)}: {strategy_name}")
+            try:
+                strategy.calculate(context)
+                print(f"[DEBUG] Strategy {strategy_name} completed successfully, price: ${context.price}")
+            except Exception as e:
+                print(f"[DEBUG] Error in strategy {strategy_name}: {e}")
+                print(f"[DEBUG] Error type: {type(e)}")
+                import traceback
+                print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+                raise
         return context.price
 
 
@@ -46,6 +57,15 @@ def calculate_product_price(context: PricingContext) -> float:
     Raises:
         ValueError: If the product, material, or options are invalid or unavailable.
     """
+    print(f"[DEBUG] calculate_product_price() called")
+    print(f"[DEBUG] Context specs: {context.specs}")
+    print(f"[DEBUG] Context specs types:")
+    if context.specs:
+        for k, v in context.specs.items():
+            print(f"  {k}: {v} (type: {type(v)})")
+    else:
+        print("  Context specs is None or empty")
+    
     # Define the sequence of pricing strategies
     # The order is critical for correct calculation
     pricing_strategies = [
@@ -57,11 +77,20 @@ def calculate_product_price(context: PricingContext) -> float:
         ConnectionOptionStrategy(),
     ]
 
+    print(f"[DEBUG] About to run pricing strategies")
+    
     # Create and run the calculator
     calculator = PriceCalculator(pricing_strategies)
-    final_price = calculator.calculate(context)
-
-    return final_price
+    try:
+        final_price = calculator.calculate(context)
+        print(f"[DEBUG] Price calculation completed: ${final_price}")
+        return final_price
+    except Exception as e:
+        print(f"[DEBUG] Error in PriceCalculator.calculate: {e}")
+        print(f"[DEBUG] Error type: {type(e)}")
+        import traceback
+        print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+        raise
 
 
 def calculate_option_price(

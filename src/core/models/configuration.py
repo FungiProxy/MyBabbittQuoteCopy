@@ -33,9 +33,16 @@ class Configuration:
     is_valid: bool = False
     validation_errors: list[str] = field(default_factory=list)
 
+    def __post_init__(self):
+        print(f"[DEBUG] Configuration __init__: product_family_id={self.product_family_id}, product_family_name={self.product_family_name}")
+        print(f"[DEBUG] base_product: {self.base_product} (type: {type(self.base_product)})")
+        print(f"[DEBUG] selected_options: {self.selected_options} (type: {type(self.selected_options)})")
+
     def set_option(self, option_name: str, value: Any):
         """Set an option in the configuration."""
+        print(f"[DEBUG] Configuration.set_option: {option_name} = {value} (type: {type(value)})")
         self.selected_options[option_name] = value
+        print(f"[DEBUG] Configuration.selected_options after set: {self.selected_options}")
 
     def get_effective_length(self) -> float:
         """Get the effective probe length from selected options or base product."""

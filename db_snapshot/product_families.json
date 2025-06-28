@@ -1,0 +1,90 @@
+[
+  {
+    "id": 1,
+    "name": "LS2000",
+    "description": "LS2000 Level Switch",
+    "category": "Point Level Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 2,
+    "name": "LS2100",
+    "description": "LS2100 Level Switch",
+    "category": "Point Level Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 3,
+    "name": "LS6000",
+    "description": "LS6000 Level Switch",
+    "category": "Point Level Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 4,
+    "name": "LS7000",
+    "description": "LS7000 Level Switch",
+    "category": "Point Level Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 5,
+    "name": "LS7000/2",
+    "description": "LS7000/2 Level Switch",
+    "category": "Multi-Point Level Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 6,
+    "name": "LS8000",
+    "description": "LS8000 Level Switch",
+    "category": "Point Level Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 7,
+    "name": "LS8000/2",
+    "description": "LS8000/2 Level Switch",
+    "category": "Multi-Point Level Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 8,
+    "name": "LT9000",
+    "description": "LT9000 Level Switch",
+    "category": "Continuous Level Transmitter",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 9,
+    "name": "FS10000",
+    "description": "FS10000 Level Switch",
+    "category": "Flow Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 10,
+    "name": "LS7500",
+    "description": "LS7500 Integral Flange Sensor",
+    "category": "Presence/Absence Switch",
+    "base_model_number": null,
+    "base_price": null
+  },
+  {
+    "id": 11,
+    "name": "LS8500",
+    "description": "LS8500 Remote Mount Flange Sensor",
+    "category": "Presence/Absence Switch",
+    "base_model_number": null,
+    "base_price": null
+  }
+]

@@ -1,0 +1,317 @@
+[
+  {
+    "id": 1,
+    "product_family": "LS2000",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 2,
+    "product_family": "LS2000",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 3,
+    "product_family": "LS2000",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 4,
+    "product_family": "LS2000",
+    "material_code": "C",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 5,
+    "product_family": "LS2100",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 6,
+    "product_family": "LS2100",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 7,
+    "product_family": "LS2100",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 8,
+    "product_family": "LS2100",
+    "material_code": "C",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 9,
+    "product_family": "LS6000",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 10,
+    "product_family": "LS6000",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 11,
+    "product_family": "LS6000",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 12,
+    "product_family": "LS6000",
+    "material_code": "C",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 13,
+    "product_family": "LS7000",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 14,
+    "product_family": "LS7000",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 15,
+    "product_family": "LS7000",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 16,
+    "product_family": "LS7000",
+    "material_code": "C",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 17,
+    "product_family": "LS7000/2",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 18,
+    "product_family": "LS7000/2",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 19,
+    "product_family": "LS8000",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 20,
+    "product_family": "LS8000",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 21,
+    "product_family": "LS8000",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 22,
+    "product_family": "LS8000",
+    "material_code": "C",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 23,
+    "product_family": "LS8000/2",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 24,
+    "product_family": "LS8000/2",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 25,
+    "product_family": "LT9000",
+    "material_code": "H",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 26,
+    "product_family": "LT9000",
+    "material_code": "TS",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 110.0,
+    "description": "$110 per foot starting at 24\""
+  },
+  {
+    "id": 27,
+    "product_family": "LS7500",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 28,
+    "product_family": "LS8500",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 24.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 24\""
+  },
+  {
+    "id": 29,
+    "product_family": "FS10000",
+    "material_code": "S",
+    "adder_type": "per_foot",
+    "first_threshold": 18.0,
+    "adder_amount": 45.0,
+    "description": "$45 per foot starting at 18\""
+  },
+  {
+    "id": 30,
+    "product_family": "LS2000",
+    "material_code": "U",
+    "adder_type": "per_inch",
+    "first_threshold": 4.0,
+    "adder_amount": 40.0,
+    "description": "$40 per inch starting at 5\""
+  },
+  {
+    "id": 31,
+    "product_family": "LS2000",
+    "material_code": "T",
+    "adder_type": "per_inch",
+    "first_threshold": 4.0,
+    "adder_amount": 50.0,
+    "description": "$50 per inch starting at 5\""
+  },
+  {
+    "id": 32,
+    "product_family": "LS2100",
+    "material_code": "U",
+    "adder_type": "per_inch",
+    "first_threshold": 4.0,
+    "adder_amount": 40.0,
+    "description": "$40 per inch starting at 5\""
+  },
+  {
+    "id": 33,
+    "product_family": "LS2100",
+    "material_code": "T",
+    "adder_type": "per_inch",
+    "first_threshold": 4.0,
+    "adder_amount": 50.0,
+    "description": "$50 per inch starting at 5\""
+  },
+  {
+    "id": 34,
+    "product_family": "LS6000",
+    "material_code": "CPVC",
+    "adder_type": "per_inch",
+    "first_threshold": 4.0,
+    "adder_amount": 50.0,
+    "description": "$50 per inch starting at 5\""
+  },
+  {
+    "id": 35,
+    "product_family": "LS7000",
+    "material_code": "CPVC",
+    "adder_type": "per_inch",
+    "first_threshold": 4.0,
+    "adder_amount": 50.0,
+    "description": "$50 per inch starting at 5\""
+  }
+]

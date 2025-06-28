@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from src.core.models import (
     Option,
-    Product,
+    BaseModel,
 )
 
 from .context import PricingContext
@@ -18,12 +18,21 @@ class PricingStrategy(ABC):
 
 class MaterialAvailabilityStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
+        print(f"[DEBUG] MaterialAvailabilityStrategy.calculate() called")
+        if not context.product:
+            print(f"[DEBUG] Context product is None")
+            return context.price
+            
+        print(f"[DEBUG] Product model number: {context.product.model_number}")
+        
         # Get product type from model number
         product_type = context.product.model_number.split("-")[0]
+        print(f"[DEBUG] Product type: {product_type}")
 
         # Handle special cases for dual point switches
         if product_type == "LS7000" and "/2" in context.product.model_number:
             product_type = "LS7000/2"
+            print(f"[DEBUG] Adjusted product type to: {product_type}")
 
         # Get material option for this product type
         material_option = (
@@ -41,22 +50,35 @@ class MaterialAvailabilityStrategy(PricingStrategy):
                 f"No material options found for product type {product_type}"
             )
 
+        print(f"[DEBUG] Found material option: {material_option.name}")
+        print(f"[DEBUG] Material option choices: {material_option.choices}")
+        print(f"[DEBUG] Material option choices type: {type(material_option.choices)}")
+
         # Handle different choice formats
         available_materials = []
-        if material_option.choices:
-            for choice in material_option.choices:
+        if material_option.choices and isinstance(material_option.choices, list):
+            print(f"[DEBUG] Processing {len(material_option.choices)} choices")
+            for i, choice in enumerate(material_option.choices):
+                print(f"[DEBUG] Choice {i}: {choice} (type: {type(choice)})")
                 if isinstance(choice, dict):
                     # New format: {'code': 'S', 'display_name': 'S - 316 Stainless Steel'}
-                    available_materials.append(choice.get('code', ''))
+                    code = choice.get('code', '')
+                    print(f"[DEBUG] Dict choice, extracted code: {code}")
+                    available_materials.append(code)
                 else:
                     # Old format: simple string
+                    print(f"[DEBUG] String choice: {choice}")
                     available_materials.append(str(choice))
+
+        print(f"[DEBUG] Available materials: {available_materials}")
+        print(f"[DEBUG] Material override code: {context.material_override_code}")
 
         if context.material_override_code not in available_materials:
             raise ValueError(
                 f"Material {context.material_override_code} is not available for product type {product_type}. Available materials: {available_materials}"
             )
 
+        print(f"[DEBUG] Material availability check passed")
         return context.price
 
 
@@ -67,18 +89,18 @@ class BasePriceStrategy(PricingStrategy):
 
         # For exotic materials, price is based on Stainless Steel 'S' version
         if material_code in ["U", "T"]:
-            s_material_product = (
-                context.db.query(Product)
+            s_material_base_model = (
+                context.db.query(BaseModel)
                 .filter(
-                    Product.model_number == context.product.model_number,
-                    Product.voltage == context.product.voltage,
-                    Product.material == "S",
+                    BaseModel.model_number == context.product.model_number,
+                    BaseModel.voltage == context.product.voltage,
+                    BaseModel.material == "S",
                 )
                 .first()
             )
 
-            if s_material_product:
-                price = s_material_product.base_price
+            if s_material_base_model:
+                price = s_material_base_model.base_price
             else:
                 price = context.product.base_price
         else:
@@ -105,8 +127,26 @@ class MaterialPremiumStrategy(PricingStrategy):
             .first()
         )
 
-        if material_option and material_option.adders and context.material.code in material_option.adders:
-            context.price += material_option.adders[context.material.code]
+        if material_option and material_option.adders:
+            # Handle both string and dict keys in adders
+            material_code = context.material.code
+            adder_value = 0.0
+            
+            # Try direct string key first
+            if material_code in material_option.adders:
+                adder_value = material_option.adders[material_code]
+            else:
+                # Try to find dict key with matching code
+                for key, value in material_option.adders.items():
+                    if isinstance(key, dict) and key.get('code') == material_code:
+                        adder_value = value
+                        break
+                    elif isinstance(key, str) and key == material_code:
+                        adder_value = value
+                        break
+            
+            if adder_value:
+                context.price += float(adder_value)
 
         return context.price
 
@@ -226,7 +266,25 @@ class ConnectionOptionStrategy(PricingStrategy):
         else:
             return context.price
 
-        if key in connection_option.adders:
-            context.price += connection_option.adders[key]
+        # Handle both string and dict keys in adders
+        if connection_option.adders:
+            adder_value = 0.0
+            
+            # Try direct string key first
+            if key in connection_option.adders:
+                adder_value = connection_option.adders[key]
+            else:
+                # Try to find dict key with matching code or name
+                for dict_key, value in connection_option.adders.items():
+                    if isinstance(dict_key, dict):
+                        if dict_key.get('code') == key or dict_key.get('name') == key:
+                            adder_value = value
+                            break
+                    elif isinstance(dict_key, str) and dict_key == key:
+                        adder_value = value
+                        break
+            
+            if adder_value:
+                context.price += float(adder_value)
 
         return context.price

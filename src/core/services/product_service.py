@@ -20,6 +20,7 @@ import logging
 import math
 from typing import Any, Dict, List, Optional, Tuple
 import re
+import json
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session, joinedload
@@ -148,10 +149,10 @@ class ProductService:
             return ["S", "H"]
         return ["S", "H", "C", "M"]
 
-    def get_additional_options(self, family_name: str) -> List[Dict[str, Any]]:
+    def get_additional_options(self, db: Session, family_name: str) -> List[Dict[str, Any]]:
         """Get all additional options for a product family, excluding core."""
         try:
-            options_query = self.db.query(Option).filter(
+            options_query = db.query(Option).filter(
                 Option.product_families.contains(family_name)
             ).all()
 
@@ -162,6 +163,28 @@ class ProductService:
                     logger.warning(f"Skipping option id {option.id} due to missing name or category.")
                     continue
 
+                # Handle potentially corrupted JSON fields
+                choices = option.choices
+                if isinstance(choices, str):
+                    try:
+                        choices = json.loads(choices) if choices else []
+                    except json.JSONDecodeError:
+                        choices = []
+                
+                adders = option.adders
+                if isinstance(adders, str):
+                    try:
+                        adders = json.loads(adders) if adders else {}
+                    except json.JSONDecodeError:
+                        adders = {}
+                
+                rules = option.rules
+                if isinstance(rules, str):
+                    try:
+                        rules = json.loads(rules) if rules else {}
+                    except json.JSONDecodeError:
+                        rules = {}
+
                 additional_options.append({
                     "id": option.id,
                     "name": option.name,
@@ -169,9 +192,9 @@ class ProductService:
                     "price": float(option.price) if option.price is not None else 0.0,
                     "price_type": option.price_type,
                     "category": option.category,
-                    "choices": option.choices or [],
-                    "adders": option.adders or {},
-                    "rules": option.rules or {}
+                    "choices": choices,
+                    "adders": adders,
+                    "rules": rules
                 })
             return additional_options
         except SQLAlchemyError as e:
@@ -232,17 +255,44 @@ class ProductService:
                     )
                 )
         materials = query.all()
-        return [
-            {
-                "name": o.name,
-                "description": o.description,
-                "price": o.price,
-                "price_type": o.price_type,
-                "choices": o.choices,
-                "adders": o.adders,
-            }
-            for o in materials
-        ]
+        result = []
+        for o in materials:
+            try:
+                # Handle potentially corrupted JSON fields
+                choices = o.choices
+                if isinstance(choices, str):
+                    try:
+                        choices = json.loads(choices) if choices else []
+                    except json.JSONDecodeError:
+                        choices = []
+                
+                adders = o.adders
+                if isinstance(adders, str):
+                    try:
+                        adders = json.loads(adders) if adders else {}
+                    except json.JSONDecodeError:
+                        adders = {}
+                
+                result.append({
+                    "name": o.name,
+                    "description": o.description,
+                    "price": o.price,
+                    "price_type": o.price_type,
+                    "choices": choices,
+                    "adders": adders,
+                })
+            except Exception as e:
+                logger.warning(f"Error processing material option {o.name}: {e}")
+                # Add a fallback entry with empty choices/adders
+                result.append({
+                    "name": o.name,
+                    "description": o.description,
+                    "price": o.price,
+                    "price_type": o.price_type,
+                    "choices": [],
+                    "adders": {},
+                })
+        return result
 
     @staticmethod
     def get_available_voltages(db: Session, family_name: str) -> List[str]:
@@ -250,26 +300,40 @@ class ProductService:
         Retrieve available voltage options for a specific product family using the unified options structure.
         Returns a list of voltage names.
         """
-        family = db.query(ProductFamily).filter_by(name=family_name).first()
-        if not family:
-            return []
+        # Use the product_families field directly instead of complex joins
+        # Note: The category is "Voltages" (plural), not "Voltage" (singular)
         options = (
             db.query(Option)
-            .filter(Option.category == "Voltage")
-            .join(Option.family_associations)
-            .filter(
-                Option.family_associations.any(
-                    product_family_id=family.id, is_available=1
-                )
-            )
+            .filter(Option.category == "Voltages")
+            .filter(Option.product_families.contains(family_name))
             .all()
         )
+        
         voltages = []
         for o in options:
             if o.choices:
-                voltages.extend(o.choices)
+                # If choices is a list of strings, use them directly
+                if isinstance(o.choices, list) and all(isinstance(c, str) for c in o.choices):
+                    voltages.extend(o.choices)
+                # If choices is a list of dicts, extract the 'code' field
+                elif isinstance(o.choices, list) and all(isinstance(c, dict) for c in o.choices):
+                    for choice in o.choices:
+                        if isinstance(choice, dict) and 'code' in choice:
+                            voltages.append(choice['code'])
+                        elif isinstance(choice, dict) and 'display_name' in choice:
+                            # Extract code from display_name like "115VAC" from "115VAC - 115VAC"
+                            display_name = choice['display_name']
+                            if ' - ' in display_name:
+                                code = display_name.split(' - ')[0]
+                                voltages.append(code)
+                            else:
+                                voltages.append(display_name)
+                else:
+                    # Fallback: use the choice as string
+                    voltages.extend([str(c) for c in o.choices])
             else:
                 voltages.append(o.name)
+        
         return sorted(set(voltages))
 
     @staticmethod
@@ -345,10 +409,11 @@ class ProductService:
             if match:
                 prefix = match.group(1)
                 number = int(match.group(2))
-                return (prefix_order.get(prefix, 99), number)
+                prefix_priority = prefix_order.get(prefix, 99)
+                return (prefix_priority, number)
             
             # Fallback for non-standard names
-            return (99, name)
+            return (99, 0)
 
         families_dicts = [
             {
@@ -638,6 +703,31 @@ class ProductService:
         Returns:
             The matching ProductVariant object, or None if not found.
         """
+        print(f"[DEBUG] find_variant called with family_id={family_id}")
+        print(f"[DEBUG] options: {options}")
+        print(f"[DEBUG] options type: {type(options)}")
+        
+        # Check each option for dict values
+        dict_options = []
+        for k, v in options.items():
+            print(f"[DEBUG] Option: {k} = {v} (type: {type(v)})")
+            if isinstance(v, dict):
+                print(f"[DEBUG] ERROR: Option value for {k} is a dict! This will cause unhashable errors.")
+                print(f"[DEBUG] Dict contents: {v}")
+                dict_options.append((k, v))
+        
+        if dict_options:
+            print(f"[DEBUG] Found {len(dict_options)} dict options that will cause errors:")
+            for k, v in dict_options:
+                print(f"[DEBUG]   {k}: {v}")
+            # Convert dicts to strings to prevent the error
+            for k, v in dict_options:
+                if isinstance(v, dict) and 'code' in v:
+                    options[k] = v['code']
+                else:
+                    options[k] = str(v)
+            print(f"[DEBUG] Converted options: {options}")
+        
         # Get the product family name
         family = db.query(ProductFamily).filter_by(id=family_id).first()
         if not family:

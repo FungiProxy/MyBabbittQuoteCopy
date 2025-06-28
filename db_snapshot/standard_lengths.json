@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "material_code": "H",
+    "length": 6.0
+  },
+  {
+    "id": 2,
+    "material_code": "H",
+    "length": 12.0
+  },
+  {
+    "id": 3,
+    "material_code": "H",
+    "length": 18.0
+  },
+  {
+    "id": 4,
+    "material_code": "H",
+    "length": 24.0
+  },
+  {
+    "id": 5,
+    "material_code": "H",
+    "length": 36.0
+  },
+  {
+    "id": 6,
+    "material_code": "H",
+    "length": 48.0
+  },
+  {
+    "id": 7,
+    "material_code": "H",
+    "length": 60.0
+  },
+  {
+    "id": 8,
+    "material_code": "H",
+    "length": 72.0
+  },
+  {
+    "id": 9,
+    "material_code": "H",
+    "length": 84.0
+  },
+  {
+    "id": 10,
+    "material_code": "H",
+    "length": 96.0
+  }
+]
