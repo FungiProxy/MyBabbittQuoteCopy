@@ -43,7 +43,7 @@ class ConfigurationService:
             pass
 
     def start_configuration(
-        self, product_family_id: int, product_family_name: str, base_product_info: dict, selected_options: dict = None
+        self, product_family_id: int, product_family_name: str, base_product_info: dict, selected_options: Optional[dict] = None
     ):
         """
         Start a new configuration session for a product family.
@@ -91,9 +91,14 @@ class ConfigurationService:
             if (not normalized_options or 'Material' not in normalized_options) and "material" in base_product_info:
                 print(f"[DEBUG] set_option Material: {base_product_info['material']} (type: {type(base_product_info['material'])})")
                 self.set_option("Material", base_product_info["material"])
-            if (not normalized_options or 'Voltage' not in normalized_options) and "voltage" in base_product_info:
+            # Skip voltage for TRAN-EX since it has no voltage options
+            if (product_family_name != "TRAN-EX" and 
+                (not normalized_options or 'Voltage' not in normalized_options) and 
+                "voltage" in base_product_info):
                 print(f"[DEBUG] set_option Voltage: {base_product_info['voltage']} (type: {type(base_product_info['voltage'])})")
                 self.set_option("Voltage", base_product_info["voltage"])
+            elif product_family_name == "TRAN-EX":
+                print(f"[DEBUG] Skipping voltage for TRAN-EX - no voltage options")
             print(f"[DEBUG] About to call _update_price()")
             self._update_price()
             print(f"[DEBUG] About to call _update_model_number()")
@@ -336,6 +341,46 @@ class ConfigurationService:
         config = self.current_config
         family = config.product_family_name
 
+        # Special handling for TRAN-EX
+        if family == "TRAN-EX":
+            # Get values from selected options, with proper fallbacks
+            material = config.selected_options.get("Material")
+            length = config.selected_options.get("Probe Length", config.base_product.get("base_length", 10))
+
+            # If material is not set, set a default
+            if not material:
+                material = "S"  # Default to S material
+                config.selected_options["Material"] = material
+
+            # Map material names to their single-letter codes
+            material_map = {
+                "316SS": "S",
+                "304SS": "S",
+                "Hastelloy C": "H",
+                "Monel": "M",
+                "Titanium": "T",
+                "Inconel": "I",
+            }
+
+            # Get the single-letter material code
+            material_code = (
+                material
+                if len(str(material)) == 1
+                else material_map.get(str(material), material)
+            )
+
+            # Format the length to remove decimals if it's a whole number
+            try:
+                length_val = float(length)
+                length_str = (
+                    f'{int(length_val)}"' if length_val.is_integer() else f'{length_val}"'
+                )
+            except (ValueError, TypeError):
+                length_str = f'{length}"' if length else 'LENGTH"'
+
+            return f"LS8000/2-TRAN-EX-{material_code}-{length_str}"
+
+        # Standard model number generation for other products
         # Get values from selected options, with proper fallbacks
         voltage = config.selected_options.get("Voltage")
         material = config.selected_options.get("Material")

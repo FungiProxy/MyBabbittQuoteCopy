@@ -245,15 +245,11 @@ class ProductService:
         Retrieve all available material options for a product family (or all families if not specified).
         Returns a list of dicts with name, description, price, choices, adders, etc.
         """
+        # Use the new unified options structure with product_families field
         query = db.query(Option).filter(Option.category == "Material")
         if family_name:
-            family = db.query(ProductFamily).filter_by(name=family_name).first()
-            if family:
-                query = query.join(Option.family_associations).filter(
-                    Option.family_associations.any(
-                        product_family_id=family.id, is_available=1
-                    )
-                )
+            query = query.filter(Option.product_families.contains(family_name))
+        
         materials = query.all()
         result = []
         for o in materials:

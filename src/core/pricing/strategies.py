@@ -25,14 +25,22 @@ class MaterialAvailabilityStrategy(PricingStrategy):
             
         print(f"[DEBUG] Product model number: {context.product.model_number}")
         
-        # Get product type from model number
-        product_type = context.product.model_number.split("-")[0]
-        print(f"[DEBUG] Product type: {product_type}")
+        # Special handling for TRAN-EX products
+        if "TRAN-EX" in context.product.model_number:
+            # TRAN-EX allows S and H materials only
+            allowed_materials = ['S', 'H']
+            if context.material_override_code not in allowed_materials:
+                raise ValueError(
+                    f"Material {context.material_override_code} is not available for TRAN-EX. Available materials: {allowed_materials}"
+                )
+            print(f"[DEBUG] TRAN-EX material availability check passed")
+            return context.price
 
-        # Handle special cases for dual point switches
+        # Determine product type from model number
+        product_type = context.product.model_number.split("-")[0]
         if product_type == "LS7000" and "/2" in context.product.model_number:
             product_type = "LS7000/2"
-            print(f"[DEBUG] Adjusted product type to: {product_type}")
+        print(f"[DEBUG] Product type: {product_type}")
 
         # Get material option for this product type
         material_option = (

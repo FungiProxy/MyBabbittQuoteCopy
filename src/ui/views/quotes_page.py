@@ -122,6 +122,7 @@ class QuotesPage(QWidget):
         self.details_date = self._add_detail_to_layout("Date")
         self.details_total = self._add_detail_to_layout("Total")
         self.details_status = self._add_detail_to_layout("Status")
+        self.details_notes = self._add_detail_to_layout("Notes", is_multiline=True)
         
         self.details_layout.addStretch()
         scroll_area.setWidget(scroll_content)
@@ -209,6 +210,7 @@ class QuotesPage(QWidget):
         self.details_date.setText("—")
         self.details_total.setText("—")
         self.details_status.setText("—")
+        self.details_notes.setPlainText("")
 
     def _update_details_panel(self, quote_id):
         self.no_quote_selected_label.setVisible(False)
@@ -222,8 +224,7 @@ class QuotesPage(QWidget):
                 self.details_date.setText(date_created.strftime("%Y-%m-%d") if date_created else "—")
                 self.details_total.setText(f"${details.get('total', 0):,.2f}")
                 self.details_status.setText(details.get("status", "—"))
-                if isinstance(self.details_notes, QTextEdit):
-                    self.details_notes.setPlainText(details.get("notes") or "")
+                self.details_notes.setPlainText(details.get("notes") or "")
 
     def load_quotes(self):
         """Loads all quotes from the database and populates the table."""

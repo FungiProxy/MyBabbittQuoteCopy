@@ -42,7 +42,7 @@ from src.core.services.product_service import ProductService
 from src.core.models.quote import Quote
 from src.ui.dialogs.customer_selection_dialog import CustomerSelectionDialog
 from src.ui.dialogs.customer_dialog import CustomerDialog
-from src.ui.product_selection_dialog_improved import ImprovedProductSelectionDialog
+from src.ui.product_selection_dialog_modern import ModernProductSelectionDialog
 from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.theme.theme_manager import ThemeManager
 
@@ -400,8 +400,8 @@ class QuoteCreationPageRedesign(QWidget):
         """Show the product selection dialog."""
         db = SessionLocal()
         try:
-            # Use the improved dialog
-            dialog = ImprovedProductSelectionDialog(product_service=self.product_service, parent=self)
+            # Use the modern dialog
+            dialog = ModernProductSelectionDialog(product_service=self.product_service, parent=self)
             dialog.product_added.connect(self._on_product_configured)
             dialog.exec()
         except Exception as e:
@@ -590,8 +590,8 @@ class QuoteCreationPageRedesign(QWidget):
         product_to_edit = self.current_quote["items"][row]
         
         try:
-            # Use the improved dialog for editing
-            dialog = ImprovedProductSelectionDialog(
+            # Use the modern dialog for editing
+            dialog = ModernProductSelectionDialog(
                 product_service=self.product_service,
                 product_to_edit=product_to_edit,
                 parent=self

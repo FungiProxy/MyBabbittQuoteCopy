@@ -28,6 +28,7 @@ from .components import (
 from PySide6.QtWidgets import QComboBox, QSpinBox
 
 from src.core.database import SessionLocal
+from src.core.models.product import Product
 from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
 from src.ui.theme.babbitt_theme import BabbittTheme
@@ -313,25 +314,40 @@ class ModernProductSelectionDialog(QDialog):
         product_data = items[0].data(Qt.ItemDataRole.UserRole)
         print(f"[DEBUG] Product selected: {product_data}")
         selected_name = product_data.get('name', '')
-        if '/2' in selected_name:
-            print(f"[DEBUG] Selected product family name includes /2: {selected_name}")
+
+        # PATCH: Special handling for TRAN-EX family
+        if selected_name == "TRAN-EX":
+            # Hardcode the correct model number for TRAN-EX
+            base_product_info = self.db.query(Product).filter(Product.model_number == "LS8000/2-TRAN-EX-S-10").first()
+            if base_product_info:
+                print(f"[PATCH] Using TRAN-EX base product: {base_product_info.model_number} (ID: {base_product_info.id})")
+                # Convert SQLAlchemy object to dict for compatibility
+                product_data = {
+                    'id': base_product_info.id,
+                    'name': selected_name,
+                    'model_number': base_product_info.model_number,
+                    'description': base_product_info.description,
+                    'category': base_product_info.category,
+                    'base_price': base_product_info.base_price,
+                    'base_length': getattr(base_product_info, 'base_length', 10),
+                    'voltage': getattr(base_product_info, 'voltage', '115VAC'),
+                    'material': getattr(base_product_info, 'material', 'S'),
+                }
+            else:
+                print("[PATCH] TRAN-EX base product not found!")
         else:
-            print(f"[WARNING] Selected product family name does NOT include /2: {selected_name}")
-        
-        # Get the base product information with correct base length
-        base_product_info = self.product_service.get_base_product_for_family(self.db, selected_name)
-        if base_product_info:
-            print(f"[DEBUG] Base product info: {base_product_info}")
-            # Use the base product info instead of the family info
-            product_data = base_product_info
-        else:
-            print(f"[WARNING] No base product found for {selected_name}, using family info")
-        
+            base_product_info = self.product_service.get_base_product_for_family(self.db, selected_name)
+            if base_product_info:
+                print(f"[DEBUG] Base product info: {base_product_info}")
+                product_data = base_product_info
+            else:
+                print(f"[WARNING] No base product found for {selected_name}, using family info")
+
         # Set flag for model change and store the base length
         self._model_changed_during_setup = True
         self._pending_model_base_length = product_data.get('base_length', 10)
         print(f"[DEBUG] Model changed, base length will be reset to: {self._pending_model_base_length}")
-        
+
         try:
             # Get the first valid material code for this product
             materials = self.product_service.get_available_materials_for_product(self.db, selected_name)
@@ -375,17 +391,20 @@ class ModernProductSelectionDialog(QDialog):
         seen_option_names = set()
         try:
             print(f"[DEBUG] Gathering core options for: {product.get('name', '')}")
-            # Voltage
-            voltages = self.product_service.get_available_voltages(self.db, product.get('name', ''))
-            print(f"[DEBUG] Voltages for {product.get('name', '')}: {voltages}")
-            if voltages:
-                core_options.append({
-                    'name': 'Voltage',
-                    'choices': voltages,
-                    'adders': {},
-                    'category': 'Electrical',
-                })
-                seen_option_names.add('Voltage')
+            # Voltage - skip for TRAN-EX since it has no voltage options
+            if product.get('name') != 'TRAN-EX':
+                voltages = self.product_service.get_available_voltages(self.db, product.get('name', ''))
+                print(f"[DEBUG] Voltages for {product.get('name', '')}: {voltages}")
+                if voltages:
+                    core_options.append({
+                        'name': 'Voltage',
+                        'choices': voltages,
+                        'adders': {},
+                        'category': 'Electrical',
+                    })
+                    seen_option_names.add('Voltage')
+            else:
+                print(f"[DEBUG] Skipping voltage for TRAN-EX - no voltage options")
             # Material
             materials = self.product_service.get_available_materials_for_product(self.db, product.get('name', ''))
             print(f"[DEBUG] Materials for {product.get('name', '')}: {materials}")
@@ -398,7 +417,20 @@ class ModernProductSelectionDialog(QDialog):
                 elif choices and isinstance(choices[0], str):
                     material_option['default'] = choices[0]
                 material_option['category'] = 'Material'
+                if product.get('name') == 'TRAN-EX':
+                    material_option['type'] = 'dropdown'
                 core_options.append(material_option)
+                seen_option_names.add('Material')
+            # Special handling for TRAN-EX (fixed material)
+            elif product.get('name') == 'TRAN-EX':
+                core_options.append({
+                    'name': 'Material',
+                    'choices': ['S', 'H'],
+                    'adders': {},
+                    'category': 'Material',
+                    'default': 'S',
+                    'type': 'dropdown',
+                })
                 seen_option_names.add('Material')
             # Probe Length (always present unless already in options)
             if 'Probe Length' not in seen_option_names:
@@ -648,6 +680,9 @@ class ModernProductSelectionDialog(QDialog):
 
     def _create_dynamic_option_widget(self, option, force_dropdown=False):
         """Create the appropriate widget for an option based on its data."""
+        print(f"[DEBUG] _create_dynamic_option_widget called for option: {option.get('name')}")
+        print(f"[DEBUG] Option dict: {option}")
+        print(f"[DEBUG] opt_type: {option.get('type')}")
         name = option.get('name', '')
         choices = option.get('choices', None)
         adders = option.get('adders', {})
@@ -677,8 +712,8 @@ class ModernProductSelectionDialog(QDialog):
                 border-color: #2C3E50;
             }
         """
-        # Force dropdown for insulator options (must be first)
-        if force_dropdown and choices:
+        # Force dropdown if type is explicitly set to 'dropdown'
+        if opt_type == 'dropdown' and choices:
             combo = QComboBox()
             combo.setFixedWidth(200)
             combo.setMinimumHeight(32)
