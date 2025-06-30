@@ -751,8 +751,8 @@ class ModernProductSelectionDialog(QDialog):
                 border-color: #2C3E50;
             }
         """
-        # Force dropdown if type is explicitly set to 'dropdown'
-        if opt_type == 'dropdown' and choices:
+        # Force dropdown if force_dropdown is set, regardless of number of choices
+        if force_dropdown and choices:
             combo = QComboBox()
             combo.setFixedWidth(200)
             combo.setMinimumHeight(32)
