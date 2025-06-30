@@ -593,8 +593,11 @@ class ModernProductSelectionDialog(QDialog):
                         elif choices:
                             for choice in choices:
                                 combo.addItem(str(choice), str(choice))
-                        sub_option_widgets[name] = combo
-                        form.addRow(QLabel(name), combo)
+                        label = QLabel(name)
+                        form.addRow(label, combo)
+                        # Store both label and combo together
+                        sub_option_widgets[name] = (label, combo)
+                        label.hide()
                         combo.hide()
                     # Add any other sub-options not in sub_option_map (fallback, rare)
                     for sub_opt in opts:
@@ -615,8 +618,10 @@ class ModernProductSelectionDialog(QDialog):
                         elif choices:
                             for choice in choices:
                                 combo.addItem(str(choice), str(choice))
-                        sub_option_widgets[name] = combo
-                        form.addRow(QLabel(name), combo)
+                        label = QLabel(name)
+                        form.addRow(label, combo)
+                        sub_option_widgets[name] = (label, combo)
+                        label.hide()
                         combo.hide()
 
                     def on_conn_type_changed(idx):
@@ -624,13 +629,16 @@ class ModernProductSelectionDialog(QDialog):
                         if not isinstance(selected_type, str):
                             selected_type = str(selected_type) if selected_type is not None else ''
                         # Hide all sub-options first
-                        for w in sub_option_widgets.values():
+                        for label, w in sub_option_widgets.values():
+                            label.hide()
                             w.hide()
                         # Show only relevant sub-options
                         if selected_type in sub_option_map:
                             for name in sub_option_map[selected_type]:
                                 if name in sub_option_widgets:
-                                    sub_option_widgets[name].show()
+                                    label, w = sub_option_widgets[name]
+                                    label.show()
+                                    w.show()
                     if conn_type_combo:
                         conn_type_combo.currentIndexChanged.connect(on_conn_type_changed)
                         # Show sub-options for default selection
