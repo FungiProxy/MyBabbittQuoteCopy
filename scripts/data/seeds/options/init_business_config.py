@@ -482,8 +482,8 @@ def init_business_config():
             ),
             # Flange Types
             Option(
-                name="Flange Type",
-                description="Flange type selection",
+                name="Flange Rating",
+                description="Flange pressure rating selection",
                 price=0.0,
                 price_type="fixed",
                 category="Connections",
@@ -508,6 +508,34 @@ def init_business_config():
                     '2"': 0,
                     '3"': 0,
                     '4"': 0,
+                },
+                product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
+            ),
+            # Flange Type
+            Option(
+                name="Flange Type",
+                description="Flange material type selection",
+                price=0.0,
+                price_type="fixed",
+                category="Connections",
+                choices=["SS", "CS"],
+                adders={
+                    "SS": 0,  # Stainless Steel (default)
+                    "CS": 0,  # Carbon Steel
+                },
+                product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
+            ),
+            # Insulator Types
+            Option(
+                name="Insulator Type",
+                description="Insulator material type selection",
+                price=0.0,
+                price_type="fixed",
+                category="Connections",
+                choices=["SS", "CS"],
+                adders={
+                    "SS": 0,  # Stainless Steel (default)
+                    "CS": 0,  # Carbon Steel
                 },
                 product_families="LS2000,LS2100,LS6000,LS7000,LS7000/2,LS8000,LS8000/2,LT9000,FS10000,LS7500,LS8500",
             ),

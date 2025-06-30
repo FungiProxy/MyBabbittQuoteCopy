@@ -97,7 +97,7 @@ class ConnectionOptionsWidget(QFrame):
         """Create and store all potential sub-option widgets."""
         sub_option_map = {
             "NPT": ["NPT Size"],
-            "Flange": ["Flange Size", "Flange Type"],
+            "Flange": ["Flange Size", "Flange Rating", "Insulator Type"],
             "Tri-clamp": ["Tri-clamp"]
         }
 
@@ -120,7 +120,7 @@ class ConnectionOptionsWidget(QFrame):
 
         sub_option_map = {
             "NPT": ["NPT Size"],
-            "Flange": ["Flange Size", "Flange Type"],
+            "Flange": ["Flange Size", "Flange Rating", "Insulator Type"],
             "Tri-clamp": ["Tri-clamp"]
         }
 
@@ -147,7 +147,7 @@ class ConnectionOptionsWidget(QFrame):
         selected_type = config.get("Connection Type", "")
         sub_option_map = {
             "NPT": ["NPT Size"],
-            "Flange": ["Flange Size", "Flange Type"],
+            "Flange": ["Flange Size", "Flange Rating", "Insulator Type"],
             "Tri-clamp": ["Tri-clamp"]
         }
         

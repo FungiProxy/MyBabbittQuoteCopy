@@ -546,7 +546,7 @@ class ModernProductSelectionDialog(QDialog):
                     connection_type_option = next((o for o in opts if o.get('name') == 'Connection Type'), None)
                     sub_option_map = {
                         'NPT': ['NPT Size'],
-                        'Flange': ['Flange Size', 'Flange Type'],
+                        'Flange': ['Flange Type', 'Flange Rating', 'Flange Size'],
                         'Tri-clamp': ['Tri-clamp']
                     }
                     # Create Connection Type dropdown
@@ -566,9 +566,40 @@ class ModernProductSelectionDialog(QDialog):
 
                     # Prepare sub-option widgets (all as dropdowns)
                     sub_option_widgets = {}
+                    # Build a lookup for options by name
+                    opts_by_name = {opt.get('name'): opt for opt in opts if opt.get('name') != 'Connection Type'}
+                    # Add widgets in the order specified by sub_option_map
+                    for name in sub_option_map.get('Flange', []):
+                        opt = opts_by_name.get(name)
+                        if not opt:
+                            continue
+                        choices = opt.get('choices', [])
+                        adders = opt.get('adders', {})
+                        combo = QComboBox()
+                        combo.setFixedWidth(200)
+                        combo.setMinimumHeight(32)
+                        combo.setStyleSheet(combo_style)
+                        # Special handling for Flange Type descriptive labels
+                        if name == 'Flange Type' and choices:
+                            label_map = {'SS': 'SS - Stainless Steel', 'CS': 'CS - Carbon Steel'}
+                            for choice in choices:
+                                display = label_map.get(choice, str(choice))
+                                combo.addItem(display, choice)
+                        elif choices and isinstance(choices[0], dict):
+                            for choice in choices:
+                                display_name = choice.get('display_name', choice.get('code', str(choice)))
+                                code = choice.get('code', str(choice))
+                                combo.addItem(display_name, code)
+                        elif choices:
+                            for choice in choices:
+                                combo.addItem(str(choice), str(choice))
+                        sub_option_widgets[name] = combo
+                        form.addRow(QLabel(name), combo)
+                        combo.hide()
+                    # Add any other sub-options not in sub_option_map (fallback, rare)
                     for sub_opt in opts:
                         name = sub_opt.get('name')
-                        if name == 'Connection Type':
+                        if name == 'Connection Type' or name in sub_option_widgets:
                             continue
                         choices = sub_opt.get('choices', [])
                         adders = sub_opt.get('adders', {})
@@ -823,6 +854,19 @@ class ModernProductSelectionDialog(QDialog):
             else:
                 for choice in choices:
                     combo.addItem(str(choice), str(choice))
+            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
+            self.option_widgets[name] = combo
+            return combo
+        # Flange Type: show descriptive labels
+        if name == 'Flange Type' and choices:
+            combo = QComboBox()
+            combo.setFixedWidth(200)
+            combo.setMinimumHeight(32)
+            combo.setStyleSheet(combo_style)
+            label_map = {'SS': 'SS - Stainless Steel', 'CS': 'CS - Carbon Steel'}
+            for choice in choices:
+                display = label_map.get(choice, str(choice))
+                combo.addItem(display, choice)
             combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
             self.option_widgets[name] = combo
             return combo
