@@ -45,6 +45,7 @@ from src.ui.dialogs.customer_dialog import CustomerDialog
 from src.ui.product_selection_dialog_modern import ModernProductSelectionDialog
 from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.theme.theme_manager import ThemeManager
+from src.ui.theme import COLORS, FONTS
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +183,12 @@ class QuoteCreationPageRedesign(QWidget):
         # Left-aligned content: Quote Number
         self.quote_number_label = QLabel("Quote not yet saved")
         self.quote_number_label.setProperty("labelType", "caption")
-        self.quote_number_label.setStyleSheet("font-size: 26px; font-weight: bold; color: #1A237E; padding: 0 12px 0 0;")
+        self.quote_number_label.setStyleSheet(f"""
+            font-size: {FONTS['sizes']['lg']}px;
+            font-weight: {FONTS['weights']['medium']};
+            color: {COLORS['text_primary']};
+            padding: 0 {FONTS['sizes']['sm']}px 0 0;
+        """)
 
         # Center-aligned content: Status and Price
         status_price_container = QWidget()
@@ -192,34 +198,28 @@ class QuoteCreationPageRedesign(QWidget):
         
         self.status_label = QLabel(self.current_quote['status'].upper())
         self.status_label.setProperty("status", self.current_quote['status'])
-        self.status_label.setStyleSheet("font-size: 22px; font-weight: bold; color: #1565C0; letter-spacing: 2px; padding-bottom: 2px;")
+        self.status_label.setStyleSheet(f"""
+            font-size: {FONTS['sizes']['xl']}px;
+            font-weight: {FONTS['weights']['bold']};
+            color: {COLORS['primary']};
+            letter-spacing: 1px;
+            padding-bottom: 4px;
+        """)
         status_layout.addWidget(self.status_label)
         
         self.total_label = QLabel(f"${self.current_quote['total_value']:.2f}")
         self.total_label.setProperty("priceType", "total-prominent")
-        self.total_label.setStyleSheet("font-size: 36px; font-weight: bold; color: #2E7D32; padding-top: 2px;")
-        
-        # Apply proper Qt shadow effect instead of CSS text-shadow
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(8)
-        shadow.setColor(QColor("#B2FF59"))
-        shadow.setOffset(0, 2)
-        self.total_label.setGraphicsEffect(shadow)
-        
+        self.total_label.setStyleSheet(f"""
+            font-size: {FONTS['sizes']['3xl']}px;
+            font-weight: {FONTS['weights']['bold']};
+            color: {COLORS['success']};
+            padding-top: 2px;
+        """)
         status_layout.addWidget(self.total_label)
 
-        # Right-aligned (but transparent) content to balance the layout
-        balancing_label = QLabel("Quote not yet saved")
-        balancing_label.setProperty("labelType", "caption")
-        balancing_label.setStyleSheet("color: transparent;")
-
-        # Add widgets to the layout to achieve perfect centering
-        layout.addWidget(self.quote_number_label)
+        layout.addWidget(self.quote_number_label, 0, Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(status_price_container, 0, Qt.AlignmentFlag.AlignCenter)
         layout.addStretch()
-        layout.addWidget(status_price_container)
-        layout.addStretch()
-        layout.addWidget(balancing_label)
-
         return header
 
     def _apply_shadow_effect(self, widget):

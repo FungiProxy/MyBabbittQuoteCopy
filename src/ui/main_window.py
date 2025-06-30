@@ -39,6 +39,7 @@ from src.ui.theme.theme_manager import ThemeManager
 from src.ui.dialogs.customer_dialog import CustomerDialog
 from src.core.services.quote_service import QuoteService
 from src.core.database import SessionLocal
+from src.ui.theme import COLORS, FONTS, SPACING, RADIUS, get_button_style
 
 logger = logging.getLogger(__name__)
 
@@ -78,15 +79,88 @@ class MainWindow(QMainWindow):
 
     def _apply_modern_window_styling(self):
         """Apply modern window styling and effects."""
-        # Set window properties for modern appearance
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
-        
-        # Add subtle shadow effect to main window
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 30))
-        shadow.setOffset(0, 2)
-        self.setGraphicsEffect(shadow)
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {COLORS['bg_secondary']};
+                color: {COLORS['text_primary']};
+                font-family: {FONTS['family']};
+                font-size: {FONTS['sizes']['base']}px;
+            }}
+            QFrame#sidebarFrame {{
+                background-color: {COLORS['bg_sidebar']};
+                border: none;
+                min-width: 220px;
+                max-width: 220px;
+            }}
+            QLabel#logoLabel {{
+                color: {COLORS['primary']};
+                font-size: {FONTS['sizes']['3xl']}px;
+                font-weight: {FONTS['weights']['bold']};
+                padding: {SPACING['xl']}px {SPACING['lg']}px {SPACING['md']}px {SPACING['lg']}px;
+                margin-bottom: {SPACING['md']}px;
+                background: transparent;
+                border-bottom: 1px solid {COLORS['gray_700']};
+                letter-spacing: -0.5px;
+            }}
+            QListWidget#navList {{
+                background: transparent;
+                border: none;
+                color: {COLORS['text_secondary']};
+                font-size: {FONTS['sizes']['lg']}px;
+                font-weight: {FONTS['weights']['medium']};
+                outline: none;
+                padding: {SPACING['md']}px 0;
+            }}
+            QListWidget#navList::item {{
+                padding: {SPACING['lg']}px {SPACING['xl']}px {SPACING['lg']}px {SPACING['lg']}px;
+                margin: {SPACING['xs']}px {SPACING['md']}px {SPACING['xs']}px 0;
+                border-radius: {RADIUS['md']}px;
+                border-left: 4px solid transparent;
+            }}
+            QListWidget#navList::item:hover {{
+                background: {COLORS['gray_800']};
+                color: {COLORS['primary']};
+            }}
+            QListWidget#navList::item:selected {{
+                background: {COLORS['primary']};
+                border-left: 4px solid {COLORS['primary']};
+                color: {COLORS['bg_primary']};
+                font-weight: {FONTS['weights']['bold']};
+            }}
+            QPushButton#settingsButton {{
+                {get_button_style('secondary')}
+                margin: {SPACING['lg']}px;
+                font-size: {FONTS['sizes']['base']}px;
+                font-weight: {FONTS['weights']['medium']};
+            }}
+            QPushButton#settingsButton:hover {{
+                background-color: {COLORS['primary']};
+                color: {COLORS['bg_primary']};
+            }}
+            QFrame#contentAreaFrame {{
+                background: {COLORS['bg_primary']};
+                border: none;
+            }}
+            QFrame#contentHeader {{
+                background: {COLORS['bg_primary']};
+                border: none;
+                border-bottom: 1px solid {COLORS['border_light']};
+                min-height: 80px;
+                max-height: 80px;
+            }}
+            QLabel#pageTitle {{
+                color: {COLORS['text_primary']};
+                font-size: {FONTS['sizes']['3xl']}px;
+                font-weight: {FONTS['weights']['bold']};
+                letter-spacing: -0.5px;
+                margin: 0;
+                padding: 0;
+            }}
+            QStackedWidget#contentStackedWidget {{
+                background: {COLORS['bg_primary']};
+                border: none;
+            }}
+        """)
 
     def _setup_ui(self):
         """Set up the modernized UI layout with enhanced spacing."""

@@ -27,6 +27,9 @@ from src.ui.utils.layout_helpers import (
     LayoutStandardizer, FormLayoutHelper, DialogFixHelper, QuickFixApplicator
 )
 
+# Import modern theme
+from src.ui.theme import COLORS, FONTS, SPACING, RADIUS, get_button_style, get_input_style, get_card_style
+
 logger = logging.getLogger(__name__)
 
 
@@ -676,12 +679,125 @@ class ModernProductConfigurationDialog(QDialog):
                 child.widget().deleteLater()
     
     def _apply_professional_styling(self):
-        """Apply professional styling to the dialog."""
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #f8f9fa;
-            }
-        """)
+        """Apply professional styling using the centralized theme system."""
+        # Dialog background
+        dialog_style = f"""
+        QDialog {{
+            background-color: {COLORS['bg_secondary']};
+            border-radius: {RADIUS['lg']}px;
+        }}
+        """
+        
+        # Panel styling
+        panel_style = f"""
+        QFrame {{
+            background-color: {COLORS['bg_primary']};
+            border-radius: {RADIUS['lg']}px;
+            border: 2px solid {COLORS['border_light']};
+        }}
+        """
+        
+        # List widget styling
+        list_style = f"""
+        QListWidget {{
+            background-color: {COLORS['bg_primary']};
+            border: 1px solid {COLORS['border_light']};
+            border-radius: {RADIUS['md']}px;
+            padding: {SPACING['md']}px;
+        }}
+        QListWidget::item {{
+            padding: {SPACING['md']}px;
+            border-radius: {RADIUS['sm']}px;
+            margin: 2px 0;
+        }}
+        QListWidget::item:hover {{
+            background-color: {COLORS['gray_100']};
+        }}
+        QListWidget::item:selected {{
+            background-color: {COLORS['primary']};
+            color: white;
+        }}
+        """
+        
+        # Input field styling
+        input_style = f"""
+        QLineEdit {{
+            border: 2px solid {COLORS['border_light']};
+            border-radius: {RADIUS['md']}px;
+            padding: {SPACING['md']}px {SPACING['lg']}px;
+            background-color: {COLORS['bg_primary']};
+            font-size: {FONTS['sizes']['lg']}px;
+            color: {COLORS['text_primary']};
+            font-family: {FONTS['family']};
+            min-height: 36px;
+        }}
+        QLineEdit:focus {{
+            border-color: {COLORS['primary']};
+            outline: none;
+        }}
+        QLineEdit::placeholder {{
+            color: {COLORS['text_muted']};
+        }}
+        """
+        
+        # Button styling
+        button_style = f"""
+        QPushButton {{
+            padding: {SPACING['md']}px {SPACING['lg']}px;
+            border: none;
+            border-radius: {RADIUS['md']}px;
+            font-weight: {FONTS['weights']['semibold']};
+            font-size: {FONTS['sizes']['base']}px;
+            font-family: {FONTS['family']};
+            min-height: 40px;
+        }}
+        QPushButton[text="Cancel"] {{
+            background-color: {COLORS['secondary']};
+            color: {COLORS['text_secondary']};
+            border: 2px solid {COLORS['border_light']};
+        }}
+        QPushButton[text="Cancel"]:hover {{
+            background-color: {COLORS['secondary_hover']};
+            border-color: {COLORS['border_medium']};
+        }}
+        QPushButton[text="Add to Quote"] {{
+            background-color: {COLORS['primary']};
+            color: white;
+        }}
+        QPushButton[text="Add to Quote"]:hover {{
+            background-color: {COLORS['primary_hover']};
+        }}
+        QPushButton[text="Add to Quote"]:disabled {{
+            background-color: {COLORS['gray_400']};
+            color: {COLORS['gray_100']};
+        }}
+        """
+        
+        # Label styling
+        label_style = f"""
+        QLabel {{
+            font-family: {FONTS['family']};
+            color: {COLORS['text_primary']};
+        }}
+        """
+        
+        # Progress bar styling
+        progress_style = f"""
+        QProgressBar {{
+            border: 1px solid {COLORS['border_light']};
+            border-radius: {RADIUS['sm']}px;
+            background-color: {COLORS['gray_100']};
+            text-align: center;
+        }}
+        QProgressBar::chunk {{
+            background-color: {COLORS['primary']};
+            border-radius: {RADIUS['sm']}px;
+        }}
+        """
+        
+        # Combine all styles
+        combined_style = dialog_style + panel_style + list_style + input_style + button_style + label_style + progress_style
+        self.setStyleSheet(combined_style)
     
     def closeEvent(self, event):
         """Handle dialog close event."""

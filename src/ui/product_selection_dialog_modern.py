@@ -1,46 +1,52 @@
 """
 Modern Product Selection Dialog
 
-A modernized version of the product selection dialog using the new
-modern UI components for consistent styling and enhanced UX.
+A modern, professional product selection and configuration dialog
+that integrates with the existing business logic and services.
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
-from PySide6.QtCore import Qt, Signal, QObject, QEvent
+from PySide6.QtCore import Qt, Signal, QTimer, QObject, QEvent
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QGridLayout,
-    QLabel, QFrame, QScrollArea, QWidget, QGroupBox, QListWidget, 
-    QListWidgetItem, QMessageBox, QProgressBar, QButtonGroup, QRadioButton,
-    QTextEdit, QPushButton, QComboBox, QSpinBox, QCheckBox, QLineEdit
+    QLabel, QComboBox, QSpinBox, QLineEdit, QPushButton, QFrame,
+    QScrollArea, QWidget, QGroupBox, QListWidget, QListWidgetItem,
+    QMessageBox, QProgressBar, QSplitter, QTextEdit, QDoubleSpinBox,
+    QCheckBox, QRadioButton, QButtonGroup
 )
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPalette
 
-# Import our modern components
-from .components import (
-    ModernButton, ModernLineEdit, ModernTextEdit, ModernComboBox,
-    ModernSpinBox, ModernCheckBox, ModernRadioButton,
-    Card, PriceDisplay, LoadingSpinner, EmptyState
-)
-
-# Import standard Qt widgets as fallback
-from PySide6.QtWidgets import QComboBox, QSpinBox
-
+# Import existing business logic (unchanged)
 from src.core.database import SessionLocal
 from src.core.models.product import Product
-from src.core.services.configuration_service import ConfigurationService
 from src.core.services.product_service import ProductService
-from src.ui.theme.babbitt_theme import BabbittTheme
+from src.core.services.configuration_service import ConfigurationService
 from src.core.config.material_defaults import get_material_default_length
+
+# Import modern components
+from src.ui.components import (
+    ModernButton, ModernLineEdit, ModernTextEdit, ModernComboBox,
+    ModernSpinBox, ModernCheckBox, ModernRadioButton, PriceDisplay
+)
+
+# Import modern theme
+from src.ui.theme import COLORS, FONTS, SPACING, RADIUS, get_button_style, get_input_style, get_card_style
 
 logger = logging.getLogger(__name__)
 
 
 class EnterKeyFilter(QObject):
+    """Filter to handle Enter key presses in the dialog."""
+    
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Type.KeyPress and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            return True  # Ignore Enter/Return key
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Return:
+            # Find the Add to Quote button and trigger it
+            dialog = obj
+            if hasattr(dialog, 'add_button') and dialog.add_button.isEnabled():
+                dialog.add_button.click()
+                return True
         return super().eventFilter(obj, event)
 
 
@@ -91,14 +97,126 @@ class ModernProductSelectionDialog(QDialog):
         self.setModal(True)
         self.resize(1000, 900)
         
-        # Apply Babbitt theme
-        self.setStyleSheet(BabbittTheme.get_dialog_stylesheet())
+        # Apply modern styling
+        self._apply_modern_styling()
+    
+    def _apply_modern_styling(self):
+        """Apply modern styling using the centralized theme system."""
+        # Dialog background
+        dialog_style = f"""
+        QDialog {{
+            background-color: {COLORS['bg_secondary']};
+            border-radius: {RADIUS['lg']}px;
+        }}
+        """
+        
+        # Panel styling
+        panel_style = f"""
+        QFrame {{
+            background-color: {COLORS['bg_primary']};
+            border-radius: {RADIUS['lg']}px;
+            border: 2px solid {COLORS['border_light']};
+        }}
+        """
+        
+        # List widget styling
+        list_style = f"""
+        QListWidget {{
+            border: 2px solid {COLORS['border_light']};
+            border-radius: {RADIUS['md']}px;
+            background-color: {COLORS['bg_primary']};
+            padding: {SPACING['md']}px;
+            margin-top: {SPACING['sm']}px;
+        }}
+        QListWidget::item {{
+            padding: {SPACING['lg']}px;
+            border-bottom: 1px solid {COLORS['gray_100']};
+            border-radius: {RADIUS['sm']}px;
+            margin: 2px 0px;
+        }}
+        QListWidget::item:selected {{
+            background-color: {COLORS['primary']};
+            color: white;
+            border: 2px solid {COLORS['primary']};
+        }}
+        QListWidget::item:hover {{
+            background-color: {COLORS['gray_100']};
+            border: 1px solid {COLORS['border_light']};
+        }}
+        """
+        
+        # Scroll area styling
+        scroll_style = f"""
+        QScrollArea {{
+            border: none;
+            background-color: transparent;
+        }}
+        QScrollBar:vertical {{
+            background-color: {COLORS['gray_100']};
+            width: 12px;
+            border-radius: 6px;
+        }}
+        QScrollBar::handle:vertical {{
+            background-color: {COLORS['gray_300']};
+            border-radius: 6px;
+            min-height: 20px;
+        }}
+        QScrollBar::handle:vertical:hover {{
+            background-color: {COLORS['gray_400']};
+        }}
+        """
+        
+        # Button styling
+        button_style = f"""
+        QPushButton {{
+            padding: {SPACING['md']}px {SPACING['lg']}px;
+            border: none;
+            border-radius: {RADIUS['md']}px;
+            font-weight: {FONTS['weights']['semibold']};
+            font-size: {FONTS['sizes']['base']}px;
+            font-family: {FONTS['family']};
+            min-height: 32px;
+            max-height: 32px;
+        }}
+        QPushButton[text="Cancel"] {{
+            background-color: {COLORS['secondary']};
+            color: {COLORS['text_secondary']};
+            border: 2px solid {COLORS['border_light']};
+        }}
+        QPushButton[text="Cancel"]:hover {{
+            background-color: {COLORS['secondary_hover']};
+            border-color: {COLORS['border_medium']};
+        }}
+        QPushButton[text="Add to Quote"] {{
+            background-color: {COLORS['primary']};
+            color: white;
+        }}
+        QPushButton[text="Add to Quote"]:hover {{
+            background-color: {COLORS['primary_hover']};
+        }}
+        QPushButton[text="Add to Quote"]:disabled {{
+            background-color: {COLORS['gray_400']};
+            color: {COLORS['gray_100']};
+        }}
+        """
+        
+        # Label styling
+        label_style = f"""
+        QLabel {{
+            font-family: {FONTS['family']};
+            color: {COLORS['text_primary']};
+        }}
+        """
+        
+        # Combine all styles
+        combined_style = dialog_style + panel_style + list_style + scroll_style + button_style + label_style
+        self.setStyleSheet(combined_style)
     
     def _setup_ui(self):
         """Setup the UI layout."""
         main_layout = QHBoxLayout(self)
-        main_layout.setSpacing(24)
-        main_layout.setContentsMargins(24, 24, 24, 24)
+        main_layout.setSpacing(SPACING['2xl'])
+        main_layout.setContentsMargins(SPACING['2xl'], SPACING['2xl'], SPACING['2xl'], SPACING['2xl'])
         
         # Left panel - Product selection (narrower)
         self.left_panel = self._create_left_panel()
@@ -115,48 +233,23 @@ class ModernProductSelectionDialog(QDialog):
     def _create_left_panel(self) -> QWidget:
         """Create left panel for product selection."""
         panel = QFrame()
-        panel.setStyleSheet("QFrame { background-color: #f8f9fa; border-radius: 12px; }")
         
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(24, 24, 24, 24)  # Increased margins
-        layout.setSpacing(20)  # Increased spacing
+        layout.setContentsMargins(SPACING['2xl'], SPACING['2xl'], SPACING['2xl'], SPACING['2xl'])
+        layout.setSpacing(SPACING['xl'])
         
         # Header
         header_label = QLabel("Select Product Family")
-        header_label.setStyleSheet("""
-            font-size: 16px;
-            font-weight: 700;
-            color: #2C3E50;
-            margin-bottom: 8px;
+        header_label.setStyleSheet(f"""
+            font-size: {FONTS['sizes']['xl']}px;
+            font-weight: {FONTS['weights']['bold']};
+            color: {COLORS['text_primary']};
+            margin-bottom: {SPACING['sm']}px;
         """)
         layout.addWidget(header_label)
         
         # Product list
         self.product_list = QListWidget()
-        self.product_list.setStyleSheet("""
-            QListWidget {
-                border: 2px solid #e9ecef;
-                border-radius: 8px;
-                background-color: white;
-                padding: 12px;
-                margin-top: 8px;
-            }
-            QListWidget::item {
-                padding: 16px;
-                border-bottom: 1px solid #f8f9fa;
-                border-radius: 6px;
-                margin: 2px 0px;
-            }
-            QListWidget::item:selected {
-                background-color: #e3f2fd;
-                color: #1976d2;
-                border: 2px solid #1976d2;
-            }
-            QListWidget::item:hover {
-                background-color: #f5f5f5;
-                border: 1px solid #dee2e6;
-            }
-        """)
         self.product_list.itemClicked.connect(self._on_product_selected)
         layout.addWidget(self.product_list)
         
@@ -165,11 +258,10 @@ class ModernProductSelectionDialog(QDialog):
     def _create_right_panel(self) -> QWidget:
         """Create right panel for configuration."""
         panel = QFrame()
-        panel.setStyleSheet("QFrame { background-color: #f8f9fa; border-radius: 12px; }")
         
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(20)
+        layout.setContentsMargins(SPACING['2xl'], SPACING['2xl'], SPACING['2xl'], SPACING['2xl'])
+        layout.setSpacing(SPACING['xl'])
         
         # Header area with total price
         header_layout = QHBoxLayout()
@@ -177,14 +269,25 @@ class ModernProductSelectionDialog(QDialog):
         
         # Model number label (dynamic)
         self.model_number_label = QLabel("")
-        self.model_number_label.setStyleSheet('font-size: 20px; font-weight: bold; color: #222;')
+        self.model_number_label.setStyleSheet(f"""
+            font-size: {FONTS['sizes']['2xl']}px;
+            font-weight: {FONTS['weights']['bold']};
+            color: {COLORS['text_primary']};
+        """)
         header_layout.addWidget(self.model_number_label)
         
         header_layout.addStretch()
         
         # Total price display
         self.total_price_display = QLabel("Total: $0.00")
-        self.total_price_display.setStyleSheet('font-size: 18px; font-weight: bold; background: #e6f0fa; border-radius: 8px; padding: 8px 18px; color: #2563eb;')
+        self.total_price_display.setStyleSheet(f"""
+            font-size: {FONTS['sizes']['xl']}px;
+            font-weight: {FONTS['weights']['bold']};
+            background: {COLORS['success_light']};
+            border-radius: {RADIUS['md']}px;
+            padding: {SPACING['sm']}px {SPACING['lg']}px;
+            color: {COLORS['success']};
+        """)
         header_layout.addWidget(self.total_price_display)
         
         layout.addLayout(header_layout)
@@ -194,87 +297,31 @@ class ModernProductSelectionDialog(QDialog):
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-            QScrollBar:vertical {
-                background-color: #f8f9fa;
-                width: 12px;
-                border-radius: 6px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: #dee2e6;
-                border-radius: 6px;
-                min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background-color: #adb5bd;
-            }
-        """)
         
         self.config_container = QWidget()
         self.config_layout = QVBoxLayout(self.config_container)
-        self.config_layout.setSpacing(16)
+        self.config_layout.setSpacing(SPACING['lg'])
         self.config_layout.setContentsMargins(0, 0, 0, 0)
         
         scroll_area.setWidget(self.config_container)
         layout.addWidget(scroll_area)
 
-        # --- Add action buttons directly at the bottom ---
+        # Action buttons
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(12)
+        button_layout.setSpacing(SPACING['md'])
         
         # Cancel button
         cancel_button = QPushButton("Cancel")
-        cancel_button.setStyleSheet("""
-            QPushButton {
-                padding: 8px 16px;
-                border: 2px solid #6c757d;
-                border-radius: 6px;
-                background-color: white;
-                color: #6c757d;
-                font-weight: 600;
-                font-size: 14px;
-                min-height: 32px;
-                max-height: 32px;
-            }
-            QPushButton:hover {
-                background-color: #6c757d;
-                color: white;
-            }
-        """)
         cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(cancel_button)
         button_layout.addStretch()
+        
         # Add to Quote button
         self.add_button = QPushButton("Add to Quote")
-        self.add_button.setStyleSheet("""
-            QPushButton {
-                padding: 12px 24px;
-                border: none;
-                border-radius: 6px;
-                background-color: #007bff;
-                color: white;
-                font-weight: 600;
-                font-size: 14px;
-                min-height: 32px;
-                max-height: 32px;
-            }
-            QPushButton:hover {
-                background-color: #0056b3;
-            }
-            QPushButton:disabled {
-                background-color: #6c757d;
-                color: #adb5bd;
-            }
-        """)
         self.add_button.setEnabled(False)
         self.add_button.clicked.connect(self._on_add_to_quote)
         button_layout.addWidget(self.add_button)
         layout.addLayout(button_layout)
-        # --- End action buttons ---
 
         return panel
     
@@ -483,27 +530,59 @@ class ModernProductSelectionDialog(QDialog):
             scroll.setWidgetResizable(True)
             container = QWidget()
             vbox = QVBoxLayout(container)
-            vbox.setSpacing(16)
-            vbox.setContentsMargins(8, 8, 8, 8)
+            vbox.setSpacing(SPACING['lg'])
+            vbox.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
             default_values_to_set = []
-            for opt in ordered_core:
-                form = QFormLayout()
-                form.setSpacing(10)
-                form.setContentsMargins(8, 8, 8, 8)
-                widget = self._create_dynamic_option_widget(opt, force_dropdown=False)
+            # --- VOLTAGE SECTION FIRST ---
+            voltage_opt = next((o for o in ordered_core if o.get('name') == 'Voltage'), None)
+            if voltage_opt:
+                voltage_form = QFormLayout()
+                voltage_form.setSpacing(SPACING['md'])
+                voltage_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
+                widget = self._create_dynamic_option_widget(voltage_opt, force_dropdown=False)
                 if widget:
-                    label = QLabel(opt.get('name', ''))
-                    label.setStyleSheet('font-weight: 500; color: #2C3E50;')
-                    form.addRow(label, widget)
-                    if opt.get('name') in ['Probe Length', 'Voltage', 'Material']:
+                    label = QLabel(voltage_opt.get('name', ''))
+                    label.setStyleSheet(f"""
+                        font-weight: {FONTS['weights']['semibold']};
+                        color: {COLORS['text_primary']};
+                    """)
+                    voltage_form.addRow(label, widget)
+                    default_val = voltage_opt.get('default')
+                    if default_val is not None:
+                        default_values_to_set.append((voltage_opt.get('name'), default_val, widget))
+                voltage_group = QGroupBox('Electrical')
+                voltage_group.setStyleSheet(f"""
+                    font-weight: {FONTS['weights']['bold']};
+                    font-size: {FONTS['sizes']['base']}px;
+                """)
+                voltage_group.setLayout(voltage_form)
+                vbox.addWidget(voltage_group)
+            # --- PROBE SECTION: Material + Probe Length together ---
+            probe_form = QFormLayout()
+            probe_form.setSpacing(SPACING['md'])
+            probe_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
+            for name in ['Material', 'Probe Length']:
+                opt = next((o for o in ordered_core if o.get('name') == name), None)
+                if opt:
+                    widget = self._create_dynamic_option_widget(opt, force_dropdown=False)
+                    if widget:
+                        label = QLabel(opt.get('name', ''))
+                        label.setStyleSheet(f"""
+                            font-weight: {FONTS['weights']['semibold']};
+                            color: {COLORS['text_primary']};
+                        """)
+                        probe_form.addRow(label, widget)
                         default_val = opt.get('default')
                         if default_val is not None:
                             default_values_to_set.append((opt.get('name'), default_val, widget))
-                group = QGroupBox(opt.get('category', 'Other'))
-                group.setStyleSheet('font-weight: bold; font-size: 15px;')
-                group.setLayout(form)
-                vbox.addWidget(group)
-            # Remove Insulator options from Connections and prepare for Insulator section
+            probe_group = QGroupBox('Probe')
+            probe_group.setStyleSheet(f"""
+                font-weight: {FONTS['weights']['bold']};
+                font-size: {FONTS['sizes']['base']}px;
+            """)
+            probe_group.setLayout(probe_form)
+            vbox.addWidget(probe_group)
+            # --- INSULATOR SECTION: Insulator Material + Insulator Length ---
             insulator_material_option = None
             insulator_length_option = None
             if 'Connections' in options_by_category:
@@ -516,32 +595,30 @@ class ModernProductSelectionDialog(QDialog):
                     else:
                         new_conn_opts.append(opt)
                 options_by_category['Connections'] = new_conn_opts
-            # Render all sections as before, but insert Insulator section right after Connections
-            for cat, opts in options_by_category.items():
-                opts = [opt for opt in opts if opt.get('name') not in ordered_core_names]
-                if not opts:
-                    continue
-                group = QGroupBox(cat)
-                group.setStyleSheet('font-weight: bold; font-size: 15px;')
-                if cat == 'Connections':
-                    # Define combo_style for use in this block
-                    combo_style = """
-                        QComboBox {
-                            border: 1px solid #ced4da;
-                            border-radius: 4px;
-                            padding: 8px;
+            # --- CONNECTIONS SECTION ---
+            if 'Connections' in options_by_category:
+                opts = [opt for opt in options_by_category['Connections'] if opt.get('name') not in ['Voltage', 'Material', 'Probe Length', 'Insulator Material', 'Insulator Length']]
+                if opts:
+                    group = QGroupBox('Connections')
+                    group.setStyleSheet(f"""
+                        font-weight: {FONTS['weights']['bold']};
+                        font-size: {FONTS['sizes']['base']}px;
+                    """)
+                    combo_style = f"""
+                        QComboBox {{
+                            border: 1px solid {COLORS['border_light']};
+                            border-radius: {RADIUS['md']}px;
+                            padding: {SPACING['md']}px;
                             min-height: 32px;
-                            background-color: white;
-                        }
-                        QComboBox:focus {
-                            border-color: #2C3E50;
-                        }
+                            background-color: {COLORS['bg_primary']};
+                        }}
+                        QComboBox:focus {{
+                            border-color: {COLORS['primary']};
+                        }}
                     """
-                    # --- New: Dynamic Connection Type/Sub-options Workflow ---
                     form = QFormLayout()
-                    form.setSpacing(10)
-                    form.setContentsMargins(8, 8, 8, 8)
-
+                    form.setSpacing(SPACING['md'])
+                    form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
                     # Find the Connection Type option
                     connection_type_option = next((o for o in opts if o.get('name') == 'Connection Type'), None)
                     sub_option_map = {
@@ -563,7 +640,6 @@ class ModernProductSelectionDialog(QDialog):
                         form.addRow(QLabel('Connection Type'), conn_type_combo)
                     else:
                         conn_type_combo = None
-
                     # Prepare sub-option widgets (all as dropdowns)
                     sub_option_widgets = {}
                     # Build a lookup for options by name
@@ -623,7 +699,6 @@ class ModernProductSelectionDialog(QDialog):
                         sub_option_widgets[name] = (label, combo)
                         label.hide()
                         combo.hide()
-
                     def on_conn_type_changed(idx):
                         selected_type = conn_type_combo.currentData() if conn_type_combo else ''
                         if not isinstance(selected_type, str):
@@ -645,50 +720,58 @@ class ModernProductSelectionDialog(QDialog):
                         on_conn_type_changed(conn_type_combo.currentIndex())
                     group.setLayout(form)
                     vbox.addWidget(group)
-                    # Insert Insulator section immediately after Connections
-                    if insulator_material_option or insulator_length_option:
-                        ins_group = QGroupBox('Insulator')
-                        ins_group.setStyleSheet('font-weight: bold; font-size: 15px;')
-                        ins_form = QFormLayout()
-                        ins_form.setSpacing(10)
-                        ins_form.setContentsMargins(8, 8, 8, 8)
-                        if insulator_material_option:
-                            widget = self._create_dynamic_option_widget(insulator_material_option, force_dropdown=True)
-                            if widget:
-                                label = QLabel(insulator_material_option.get('name', ''))
-                                label.setStyleSheet('font-weight: 500; color: #2C3E50;')
-                                ins_form.addRow(label, widget)
-                        if insulator_length_option:
-                            widget = self._create_dynamic_option_widget(insulator_length_option, force_dropdown=True)
-                            if widget:
-                                label = QLabel(insulator_length_option.get('name', ''))
-                                label.setStyleSheet('font-weight: 500; color: #2C3E50;')
-                                ins_form.addRow(label, widget)
-                        ins_group.setLayout(ins_form)
-                        vbox.addWidget(ins_group)
-                else:
+            # --- ACCESSORIES SECTION ---
+            if 'Accessories' in options_by_category:
+                opts = [opt for opt in options_by_category['Accessories'] if opt.get('name') not in ['O-Rings']]
+                if opts:
+                    group = QGroupBox('Accessories')
+                    group.setStyleSheet(f"""
+                        font-weight: {FONTS['weights']['bold']};
+                        font-size: {FONTS['sizes']['base']}px;
+                    """)
                     form = QFormLayout()
-                    form.setSpacing(10)
-                    form.setContentsMargins(8, 8, 8, 8)
+                    form.setSpacing(SPACING['md'])
+                    form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
                     for option in opts:
-                        # Special handling for Accessories: single checkbox per option
-                        if cat == 'Accessories':
-                            name = option.get('name', '')
-                            cb = QCheckBox()
-                            cb.setChecked(False)  # Default to No
-                            cb.stateChanged.connect(lambda state, n=name: self._on_option_changed(n, bool(state)))
-                            self.option_widgets[name] = cb
-                            label = QLabel(name)
-                            label.setStyleSheet('font-weight: 500; color: #2C3E50;')
-                            form.addRow(label, cb)
-                        else:
-                            widget = self._create_dynamic_option_widget(option, cat)
-                            if widget:
-                                label = QLabel(option.get('name', ''))
-                                label.setStyleSheet('font-weight: 500; color: #2C3E50;')
-                                form.addRow(label, widget)
+                        name = option.get('name', '')
+                        cb = QCheckBox()
+                        cb.setChecked(False)
+                        cb.stateChanged.connect(lambda state, n=name: self._on_option_changed(n, bool(state)))
+                        self.option_widgets[name] = cb
+                        label = QLabel(name)
+                        label.setStyleSheet(f"""
+                            font-weight: {FONTS['weights']['semibold']};
+                            color: {COLORS['text_primary']};
+                        """)
+                        form.addRow(label, cb)
                     group.setLayout(form)
                     vbox.addWidget(group)
+            # --- O-RING MATERIAL SECTION AT THE END ---
+            o_ring_opt = None
+            if 'O-ring Material' in options_by_category:
+                for opt in options_by_category['O-ring Material']:
+                    if opt.get('name') == 'O-Rings':
+                        o_ring_opt = opt
+                        break
+            if o_ring_opt:
+                o_ring_form = QFormLayout()
+                o_ring_form.setSpacing(SPACING['md'])
+                o_ring_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
+                widget = self._create_dynamic_option_widget(o_ring_opt, force_dropdown=False)
+                if widget:
+                    label = QLabel(o_ring_opt.get('name', ''))
+                    label.setStyleSheet(f"""
+                        font-weight: {FONTS['weights']['semibold']};
+                        color: {COLORS['text_primary']};
+                    """)
+                    o_ring_form.addRow(label, widget)
+                o_ring_group = QGroupBox('O-ring Material')
+                o_ring_group.setStyleSheet(f"""
+                    font-weight: {FONTS['weights']['bold']};
+                    font-size: {FONTS['sizes']['base']}px;
+                """)
+                o_ring_group.setLayout(o_ring_form)
+                vbox.addWidget(o_ring_group)
             vbox.addStretch()
             scroll.setWidget(container)
             while self.config_layout.count():
@@ -711,6 +794,37 @@ class ModernProductSelectionDialog(QDialog):
             # Handle any deferred changes after all widgets are created
             self._handle_deferred_changes()
             
+            # After rendering all other sections, render the Insulator section if needed
+            if insulator_material_option or insulator_length_option:
+                ins_group = QGroupBox('Insulator')
+                ins_group.setStyleSheet(f"""
+                    font-weight: {FONTS['weights']['bold']};
+                    font-size: {FONTS['sizes']['base']}px;
+                """)
+                ins_form = QFormLayout()
+                ins_form.setSpacing(SPACING['md'])
+                ins_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
+                if insulator_material_option:
+                    widget = self._create_dynamic_option_widget(insulator_material_option, force_dropdown=True)
+                    if widget:
+                        label = QLabel(insulator_material_option.get('name', ''))
+                        label.setStyleSheet(f"""
+                            font-weight: {FONTS['weights']['semibold']};
+                            color: {COLORS['text_primary']};
+                        """)
+                        ins_form.addRow(label, widget)
+                if insulator_length_option:
+                    widget = self._create_dynamic_option_widget(insulator_length_option, force_dropdown=True)
+                    if widget:
+                        label = QLabel(insulator_length_option.get('name', ''))
+                        label.setStyleSheet(f"""
+                            font-weight: {FONTS['weights']['semibold']};
+                            color: {COLORS['text_primary']};
+                        """)
+                        ins_form.addRow(label, widget)
+                ins_group.setLayout(ins_form)
+                vbox.addWidget(ins_group)
+            
         except Exception as e:
             print(f"[ERROR] Exception rendering config UI for {product.get('name', '')}: {e}")
             import traceback
@@ -726,30 +840,30 @@ class ModernProductSelectionDialog(QDialog):
         choices = option.get('choices', None)
         adders = option.get('adders', {})
         opt_type = option.get('type', None)
-        combo_style = """
-            QComboBox {
-                border: 1px solid #ced4da;
-                border-radius: 4px;
-                padding: 8px;
+        combo_style = f"""
+            QComboBox {{
+                border: 1px solid {COLORS['border_light']};
+                border-radius: {RADIUS['md']}px;
+                padding: {SPACING['md']}px;
                 min-height: 32px;
-                background-color: white;
-            }
-            QComboBox:focus {
-                border-color: #2C3E50;
-            }
+                background-color: {COLORS['bg_primary']};
+            }}
+            QComboBox:focus {{
+                border-color: {COLORS['primary']};
+            }}
         """
-        spin_style = """
-            QSpinBox {
-                border: 1px solid #ced4da;
-                border-radius: 4px;
-                padding: 8px;
+        spin_style = f"""
+            QSpinBox {{
+                border: 1px solid {COLORS['border_light']};
+                border-radius: {RADIUS['md']}px;
+                padding: {SPACING['md']}px;
                 min-height: 32px;
-                background-color: white;
-                font-size: 14px;
-            }
-            QSpinBox:focus {
-                border-color: #2C3E50;
-            }
+                background-color: {COLORS['bg_primary']};
+                font-size: {FONTS['sizes']['base']}px;
+            }}
+            QSpinBox:focus {{
+                border-color: {COLORS['primary']};
+            }}
         """
         # Force dropdown if force_dropdown is set, regardless of number of choices
         if force_dropdown and choices:
@@ -830,7 +944,7 @@ class ModernProductSelectionDialog(QDialog):
             group = QWidget()
             layout = QHBoxLayout(group)
             layout.setContentsMargins(0, 0, 0, 0)
-            layout.setSpacing(8)
+            layout.setSpacing(SPACING['md'])
             button_group = QButtonGroup(group)
             for i, choice in enumerate(choices):
                 if isinstance(choice, dict):
@@ -1099,7 +1213,11 @@ class ModernProductSelectionDialog(QDialog):
             if child.widget():
                 child.widget().deleteLater()
         error_label = QLabel(message)
-        error_label.setStyleSheet('color: red; font-weight: bold; font-size: 16px;')
+        error_label.setStyleSheet(f"""
+            color: {COLORS['error']};
+            font-weight: {FONTS['weights']['bold']};
+            font-size: {FONTS['sizes']['base']}px;
+        """)
         self.config_layout.addWidget(error_label)
 
     def _update_price(self):

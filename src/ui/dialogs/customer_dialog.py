@@ -19,6 +19,8 @@ import logging
 from src.core.database import SessionLocal
 from src.core.models import Customer
 from src.core.services.customer_service import CustomerService
+from src.ui.theme import COLORS, FONTS, SPACING, RADIUS, get_button_style, get_input_style, get_card_style
+
 logger = logging.getLogger(__name__)
 
 
@@ -43,6 +45,7 @@ class CustomerDialog(QDialog):
         self.setMinimumWidth(500)
         
         self._init_ui()
+        self._apply_modern_styling()
         
         if self.is_edit_mode:
             self._load_customer_data()
@@ -50,12 +53,12 @@ class CustomerDialog(QDialog):
     def _init_ui(self):
         """Initialize the UI components."""
         layout = QVBoxLayout(self)
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(SPACING['lg'])
+        layout.setContentsMargins(SPACING['2xl'], SPACING['2xl'], SPACING['2xl'], SPACING['2xl'])
         
         # Form layout
         form_layout = QFormLayout()
-        form_layout.setSpacing(10)
+        form_layout.setSpacing(SPACING['md'])
         form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         
         # Contact Name (required)
@@ -112,32 +115,81 @@ class CustomerDialog(QDialog):
         button_box.rejected.connect(self.reject)
         
         layout.addWidget(button_box)
-        
-        # Apply styling
-        self._apply_styling()
     
-    def _apply_styling(self):
-        """Apply consistent styling to the dialog."""
-        style = """
-        QDialog {
-            background-color: #f5f5f5;
-        }
-        QLineEdit, QTextEdit {
-            padding: 8px;
-            border: 1px solid #e0e4e7;
-            border-radius: 4px;
-            background-color: white;
-            font-size: 13px;
-        }
-        QLineEdit:focus, QTextEdit:focus {
-            border-color: #2C3E50;
-        }
-        QLabel {
-            font-size: 13px;
-            color: #333;
-        }
+    def _apply_modern_styling(self):
+        """Apply modern styling to the dialog."""
+        # Dialog background
+        dialog_style = f"""
+        QDialog {{
+            background-color: {COLORS['bg_secondary']};
+            border-radius: {RADIUS['lg']}px;
+        }}
         """
-        self.setStyleSheet(style)
+        
+        # Input field styling
+        input_style = f"""
+        QLineEdit, QTextEdit {{
+            border: 2px solid {COLORS['border_light']};
+            border-radius: {RADIUS['md']}px;
+            padding: {SPACING['md']}px {SPACING['lg']}px;
+            background-color: {COLORS['bg_primary']};
+            font-size: {FONTS['sizes']['lg']}px;
+            color: {COLORS['text_primary']};
+            font-family: {FONTS['family']};
+            min-height: 20px;
+        }}
+        QLineEdit:focus, QTextEdit:focus {{
+            border-color: {COLORS['primary']};
+            outline: none;
+        }}
+        QLineEdit::placeholder, QTextEdit::placeholder {{
+            color: {COLORS['text_muted']};
+        }}
+        """
+        
+        # Label styling
+        label_style = f"""
+        QLabel {{
+            font-size: {FONTS['sizes']['lg']}px;
+            color: {COLORS['text_secondary']};
+            font-family: {FONTS['family']};
+            font-weight: {FONTS['weights']['medium']};
+        }}
+        """
+        
+        # Button styling
+        button_style = f"""
+        QDialogButtonBox QPushButton {{
+            background-color: {COLORS['primary']};
+            color: white;
+            border: none;
+            border-radius: {RADIUS['md']}px;
+            padding: {SPACING['md']}px {SPACING['2xl']}px;
+            font-weight: {FONTS['weights']['semibold']};
+            font-size: {FONTS['sizes']['base']}px;
+            font-family: {FONTS['family']};
+            min-height: 20px;
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            background-color: {COLORS['primary_hover']};
+        }}
+        QDialogButtonBox QPushButton:pressed {{
+            background-color: {COLORS['primary_pressed']};
+        }}
+        QDialogButtonBox QPushButton[text="Cancel"] {{
+            background-color: {COLORS['secondary']};
+            color: {COLORS['text_secondary']};
+            border: 2px solid {COLORS['border_light']};
+        }}
+        QDialogButtonBox QPushButton[text="Cancel"]:hover {{
+            background-color: {COLORS['secondary_hover']};
+            border-color: {COLORS['border_medium']};
+        }}
+        """
+        
+        # Combine all styles
+        combined_style = dialog_style + input_style + label_style + button_style
+        self.setStyleSheet(combined_style)
     
     def _load_customer_data(self):
         """Load existing customer data for editing."""

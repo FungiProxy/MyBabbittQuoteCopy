@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.ui.views.customers_page import CustomersPage
+from src.ui.theme import COLORS, FONTS, SPACING, RADIUS, get_button_style
 
 
 class CustomerSelectionDialog(QDialog):
@@ -24,6 +25,8 @@ class CustomerSelectionDialog(QDialog):
 
         # Main layout
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(SPACING['2xl'], SPACING['2xl'], SPACING['2xl'], SPACING['2xl'])
+        layout.setSpacing(SPACING['lg'])
 
         # Customer page widget
         self.customers_page = CustomersPage(self)
@@ -38,6 +41,53 @@ class CustomerSelectionDialog(QDialog):
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         layout.addWidget(self.button_box)
+        
+        # Apply modern styling
+        self._apply_modern_styling()
+        
+    def _apply_modern_styling(self):
+        """Apply modern styling to the dialog."""
+        # Dialog background
+        dialog_style = f"""
+        QDialog {{
+            background-color: {COLORS['bg_secondary']};
+            border-radius: {RADIUS['lg']}px;
+        }}
+        """
+        
+        # Button styling
+        button_style = f"""
+        QDialogButtonBox QPushButton {{
+            background-color: {COLORS['primary']};
+            color: white;
+            border: none;
+            border-radius: {RADIUS['md']}px;
+            padding: {SPACING['md']}px {SPACING['2xl']}px;
+            font-weight: {FONTS['weights']['semibold']};
+            font-size: {FONTS['sizes']['base']}px;
+            font-family: {FONTS['family']};
+            min-height: 20px;
+        }}
+        QDialogButtonBox QPushButton:hover {{
+            background-color: {COLORS['primary_hover']};
+        }}
+        QDialogButtonBox QPushButton:pressed {{
+            background-color: {COLORS['primary_pressed']};
+        }}
+        QDialogButtonBox QPushButton[text="Cancel"] {{
+            background-color: {COLORS['secondary']};
+            color: {COLORS['text_secondary']};
+            border: 2px solid {COLORS['border_light']};
+        }}
+        QDialogButtonBox QPushButton[text="Cancel"]:hover {{
+            background-color: {COLORS['secondary_hover']};
+            border-color: {COLORS['border_medium']};
+        }}
+        """
+        
+        # Combine styles
+        combined_style = dialog_style + button_style
+        self.setStyleSheet(combined_style)
         
     def get_selected_customer_data(self):
         """Returns the data of the selected customer."""
