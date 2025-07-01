@@ -173,41 +173,120 @@ def create_quote_template():
 def generate_quote_from_template(template_path, output_path, context):
     """
     Generate a quote from a Word template by replacing placeholders.
+    Enhanced version that handles complex template data structures.
     """
     try:
         doc = Document(template_path)
         
+        # Debug: Print context keys to see what's available
+        print(f"🔍 Available context keys: {list(context.keys())}")
+        
         # Replace placeholders in paragraphs
         for para in doc.paragraphs:
-            for key, value in context.items():
-                if f"{{{{{key}}}}}" in para.text:
-                    # Using a loop to replace all occurrences, as .replace() only does one
-                    inline = para.runs
-                    # Replace strings and retain formatting
-                    for i in range(len(inline)):
-                        if f"{{{{{key}}}}}" in inline[i].text:
-                            text = inline[i].text.replace(f"{{{{{key}}}}}", str(value))
-                            inline[i].text = text
+            original_text = para.text
+            if "{{" in original_text and "}}" in original_text:
+                print(f"🔍 Found paragraph with placeholders: {original_text}")
+                
+                # Replace all placeholders in this paragraph
+                new_text = original_text
+                for key, value in context.items():
+                    # Skip complex data structures like lists
+                    if isinstance(value, (list, dict)):
+                        continue
+                    
+                    placeholder = f"{{{{{key}}}}}"
+                    if placeholder in new_text:
+                        print(f"  🔄 Replacing {placeholder} with '{value}'")
+                        new_text = new_text.replace(placeholder, str(value))
+                
+                # Update the paragraph text if it changed
+                if new_text != original_text:
+                    para.text = new_text
+                    print(f"  ✅ Updated paragraph: {new_text}")
         
         # Replace placeholders in tables
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    for para in cell.paragraphs:
-                        for key, value in context.items():
-                            if f"{{{{{key}}}}}" in para.text:
-                                inline = para.runs
-                                # Replace strings and retain formatting
-                                for i in range(len(inline)):
-                                    if f"{{{{{key}}}}}" in inline[i].text:
-                                        text = inline[i].text.replace(f"{{{{{key}}}}}", str(value))
-                                        inline[i].text = text
+        for table_idx, table in enumerate(doc.tables):
+            for row_idx, row in enumerate(table.rows):
+                for cell_idx, cell in enumerate(row.cells):
+                    for para_idx, para in enumerate(cell.paragraphs):
+                        original_text = para.text
+                        if "{{" in original_text and "}}" in original_text:
+                            print(f"🔍 Found table cell with placeholders: {original_text}")
+                            
+                            # Replace all placeholders in this paragraph
+                            new_text = original_text
+                            for key, value in context.items():
+                                # Skip complex data structures like lists
+                                if isinstance(value, (list, dict)):
+                                    continue
+                                
+                                placeholder = f"{{{{{key}}}}}"
+                                if placeholder in new_text:
+                                    print(f"  🔄 Replacing {placeholder} with '{value}'")
+                                    new_text = new_text.replace(placeholder, str(value))
+                            
+                            # Update the paragraph text if it changed
+                            if new_text != original_text:
+                                para.text = new_text
+                                print(f"  ✅ Updated table cell: {new_text}")
+
+        # Replace placeholders in headers
+        for section in doc.sections:
+            header = section.header
+            for para in header.paragraphs:
+                original_text = para.text
+                if "{{" in original_text and "}}" in original_text:
+                    print(f"🔍 Found header with placeholders: {original_text}")
+                    
+                    # Replace all placeholders in this paragraph
+                    new_text = original_text
+                    for key, value in context.items():
+                        # Skip complex data structures like lists
+                        if isinstance(value, (list, dict)):
+                            continue
+                        
+                        placeholder = f"{{{{{key}}}}}"
+                        if placeholder in new_text:
+                            print(f"  🔄 Replacing {placeholder} with '{value}'")
+                            new_text = new_text.replace(placeholder, str(value))
+                    
+                    # Update the paragraph text if it changed
+                    if new_text != original_text:
+                        para.text = new_text
+                        print(f"  ✅ Updated header: {new_text}")
+
+        # Replace placeholders in footers
+        for section in doc.sections:
+            footer = section.footer
+            for para in footer.paragraphs:
+                original_text = para.text
+                if "{{" in original_text and "}}" in original_text:
+                    print(f"🔍 Found footer with placeholders: {original_text}")
+                    
+                    # Replace all placeholders in this paragraph
+                    new_text = original_text
+                    for key, value in context.items():
+                        # Skip complex data structures like lists
+                        if isinstance(value, (list, dict)):
+                            continue
+                        
+                        placeholder = f"{{{{{key}}}}}"
+                        if placeholder in new_text:
+                            print(f"  🔄 Replacing {placeholder} with '{value}'")
+                            new_text = new_text.replace(placeholder, str(value))
+                    
+                    # Update the paragraph text if it changed
+                    if new_text != original_text:
+                        para.text = new_text
+                        print(f"  ✅ Updated footer: {new_text}")
 
         doc.save(output_path)
-        print(f"Quote generated at: {output_path}")
+        print(f"✅ Quote generated at: {output_path}")
         return True
     except Exception as e:
-        print(f"Error generating quote: {e}")
+        print(f"❌ Error generating quote: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 

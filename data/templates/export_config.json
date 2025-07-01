@@ -1,0 +1,156 @@
+{
+  "company_info": {
+    "company_name": "Babbitt International",
+    "company_tagline": "Level Controls & Systems",
+    "company_address": "123 Business Ave, Houston, TX 77001",
+    "company_phone": "(555) 987-6543",
+    "company_email": "quotes@babbitt.com",
+    "company_website": "www.babbittinternational.com",
+    "company_logo_path": "data/templates/assets/logo.png"
+  },
+  "default_terms": {
+    "payment_terms": "Net 30 days",
+    "payment_method": "Check, Credit Card, Wire Transfer",
+    "delivery_terms": "FCA Factory, Houston, TX",
+    "warranty_period": "12 months",
+    "quote_validity_period": "30 days",
+    "restocking_fee": "15%",
+    "shipping_method": "Ground Freight",
+    "expected_delivery_days": 14
+  },
+  "document_settings": {
+    "default_template": "quote_template.docx",
+    "pdf_template": "pdf_template.py",
+    "email_template": "email_template.html",
+    "output_directory": "data/quotes",
+    "filename_format": "Quote_{quote_number}_{customer_name}_{date}.{extension}"
+  },
+  "formatting": {
+    "currency_symbol": "$",
+    "currency_code": "USD",
+    "date_format": "%Y-%m-%d",
+    "time_format": "%H:%M:%S",
+    "number_format": "{:,.2f}",
+    "percentage_format": "{:.2f}%"
+  },
+  "product_families": {
+    "LS2000": {
+      "description": "High-temperature level sensors",
+      "insulator_description": "High-temperature ceramic insulator, rated to 500°F",
+      "housing_description": "NEMA 4X, IP65 rated 316 Stainless Steel or HALAR coated enclosure",
+      "template": "LS2000 Quote Template.docx"
+    },
+    "LS2100": {
+      "description": "Enhanced level sensors for extreme environments",
+      "insulator_description": "Enhanced ceramic insulator with improved thermal characteristics",
+      "housing_description": "NEMA 4X, IP67 rated enclosure with enhanced sealing",
+      "template": "LS2100 Quote Template.docx"
+    },
+    "LS6000": {
+      "description": "Continuous service level sensors",
+      "insulator_description": "Continuous service ceramic insulator, rated to 600°F",
+      "housing_description": "NEMA 4X, IP68 rated enclosure designed for continuous operation",
+      "template": "LS6000 Quote Template.docx"
+    },
+    "LS7000": {
+      "description": "Explosion-proof level sensors",
+      "insulator_description": "Advanced ceramic insulator with extended temperature range",
+      "housing_description": "NEMA 7, explosion-proof enclosure for hazardous locations",
+      "template": "LS7000 Quote Template.docx"
+    },
+    "LS8000": {
+      "description": "Industrial transmitter level sensors",
+      "insulator_description": "Industrial transmitter ceramic insulator, rated to 700°F",
+      "housing_description": "NEMA 4X/7 dual-rated enclosure for versatile installation",
+      "template": "LS8000 Quote Template.docx"
+    },
+    "FS10000": {
+      "description": "Float switch level sensors",
+      "insulator_description": "Standard ceramic insulator, rated to 450°F",
+      "housing_description": "NEMA 4X, IP65 rated aluminum enclosure",
+      "template": "FS10000 Quote Template.docx"
+    },
+    "LT9000": {
+      "description": "Level transmitter sensors",
+      "insulator_description": "Level transmitter ceramic insulator",
+      "housing_description": "Compact NEMA 4X enclosure designed for space-constrained installations",
+      "template": "LT9000 Quote Template.docx"
+    }
+  },
+  "material_display_names": {
+    "S": "Stainless Steel",
+    "H": "HALAR",
+    "TS": "Teflon Sleeve",
+    "U": "UHMWPE",
+    "T": "Teflon",
+    "C": "Cable",
+    "A": "Alloy 20",
+    "HC": "Hastelloy C-276",
+    "HB": "Hastelloy B",
+    "TT": "Titanium"
+  },
+  "connection_material_display_names": {
+    "S": "316SS",
+    "A": "Alloy 20",
+    "HC": "Hastelloy C-276",
+    "HB": "Hastelloy B",
+    "TT": "Titanium"
+  },
+  "technical_specs": {
+    "default_temperature_range": "-100°F to 350°F",
+    "default_pressure_rating": "1500 PSI continuous operation",
+    "default_electrical_rating": "115VAC or 24VDC",
+    "default_enclosure_rating": "NEMA 4X, IP65",
+    "default_output_signal": "4-20mA or relay contact"
+  },
+  "application_notes": {
+    "chemical_processing": "Designed for chemical processing applications with aggressive media. All wetted components selected for chemical compatibility.",
+    "food_beverage": "FDA compliant materials and construction. 3-A sanitary standards compliance available. CIP/SIP compatible design.",
+    "hazardous_locations": "Certified for use in Class I Div 1 and Div 2 hazardous locations. FM and CSA approved.",
+    "general_industrial": "Designed for industrial level measurement applications with standard environmental conditions."
+  },
+  "material_notes": {
+    "S": "316 Stainless Steel construction provides excellent corrosion resistance for most industrial applications. Suitable for temperatures up to 750°F and pressures up to 3000 PSI.",
+    "H": "HALAR (ECTFE) coating provides superior chemical resistance to acids, bases, and organic solvents. Temperature range: -100°F to 350°F. Pressure rating: 1500 PSI maximum.",
+    "A": "Alloy 20 construction provides excellent resistance to sulfuric acid and other aggressive chemicals. Temperature range: -100°F to 400°F.",
+    "HC": "Hastelloy C-276 provides exceptional resistance to oxidizing and reducing acids, including nitric, sulfuric, and hydrochloric acids.",
+    "TT": "Titanium construction provides excellent corrosion resistance in oxidizing environments and seawater applications."
+  },
+  "installation_notes": {
+    "standard": "Mount vertically with minimum 1\" clearance from tank wall. Ensure proper grounding for electrical safety.",
+    "hazardous": "Explosion-proof installation must be performed by qualified personnel. Follow all applicable safety codes.",
+    "sanitary": "Use sanitary fittings and ensure proper cleaning procedures. Follow 3-A sanitary standards."
+  },
+  "maintenance_notes": {
+    "standard": "Annual calibration recommended. Inspect for damage or wear during routine maintenance.",
+    "hazardous": "Special maintenance procedures required for explosion-proof installations. Follow manufacturer guidelines.",
+    "sanitary": "Regular cleaning and sanitization required. Follow FDA and 3-A maintenance procedures."
+  },
+  "safety_notes": {
+    "standard": "Follow all applicable safety codes and regulations. Ensure proper electrical grounding.",
+    "hazardous": "Explosion-proof installation must be performed by qualified personnel. Follow Class I Div 1 requirements.",
+    "high_pressure": "High-pressure applications require special attention to pressure ratings and installation procedures."
+  },
+  "email_settings": {
+    "subject_template": "Quote {{quote_number}} - {{customer_company}}",
+    "signature_template": "Best regards,\n{{sales_rep_name}}\n{{company_name}}\n{{company_phone}}\n{{company_email}}",
+    "attachment_name": "Quote_{{quote_number}}_{{customer_name}}.pdf"
+  },
+  "pdf_settings": {
+    "page_size": "letter",
+    "margins": {
+      "top": 0.75,
+      "bottom": 0.75,
+      "left": 0.75,
+      "right": 0.75
+    },
+    "font_family": "Arial",
+    "font_size": 11,
+    "line_spacing": 1.15,
+    "colors": {
+      "primary": "#002347",
+      "secondary": "#666666",
+      "accent": "#1976d2"
+    }
+  }
+} 

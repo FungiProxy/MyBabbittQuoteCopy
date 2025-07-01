@@ -7,7 +7,7 @@ Clean, simple settings page with just the essential Phase 7 features.
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QPushButton
 )
 
 # Import Phase 7 features
@@ -91,6 +91,26 @@ class EnhancedSettingsPage(QWidget):
         
         main_layout.addWidget(theme_group)
         
+        # --- Add Manage Users button for admins ---
+        from src.ui.auth_manager import AuthManager
+        self.manage_users_button = QPushButton("Manage Users")
+        self.manage_users_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 12px 24px;
+                font-size: 16px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: #2980b9;
+            }}
+        """)
+        self.manage_users_button.setVisible(False)
+        main_layout.addWidget(self.manage_users_button)
+        
         # Add spacer to push content to top
         main_layout.addStretch()
         
@@ -117,4 +137,13 @@ class EnhancedSettingsPage(QWidget):
     
     def _on_breakpoint_changed(self, breakpoint):
         """Handle responsive breakpoint changes."""
-        self.responsive_status_label.setText(f"Responsive Design: {breakpoint.name} ({breakpoint.value}px)") 
+        self.responsive_status_label.setText(f"Responsive Design: {breakpoint.name} ({breakpoint.value}px)")
+    
+    def set_auth_manager(self, auth_manager):
+        """Set the auth manager and show the manage users button if admin."""
+        self._auth_manager = auth_manager
+        if auth_manager and auth_manager.get_user_role() == "admin":
+            self.manage_users_button.setVisible(True)
+            self.manage_users_button.clicked.connect(lambda: auth_manager.show_user_management())
+        else:
+            self.manage_users_button.setVisible(False) 

@@ -49,6 +49,9 @@ from src.ui.components import (
     Breakpoint
 )
 
+# Import authentication
+from src.ui.auth_manager import AuthManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,12 +61,15 @@ class MainWindow(QMainWindow):
     Maintains all existing functionality while providing a more polished interface.
     """
 
-    def __init__(self):
+    def __init__(self, auth_manager: AuthManager | None = None):
         """Initialize the main window with enhanced styling."""
         super().__init__()
         self.setWindowTitle("MyBabbittQuote - Babbitt International")
         self.resize(1600, 900)
         self.setMinimumSize(1200, 700)
+        
+        # Initialize authentication
+        self.auth_manager = auth_manager
         
         # Initialize services
         self.quote_service = QuoteService()
@@ -86,8 +92,12 @@ class MainWindow(QMainWindow):
         # Start responsive monitoring
         self.responsive_manager.update_breakpoint()
         
-        # Start with quote creator
-        self._show_quote_creation()
+        # Check authentication before showing main window
+        if self.auth_manager and not self.auth_manager.is_logged_in():
+            self.hide()  # Hide window until authenticated
+        else:
+            # Start with quote creator
+            self._show_quote_creation()
         
         logger.info("MainWindow initialized with modern styling and enhanced UX")
 
@@ -297,6 +307,44 @@ class MainWindow(QMainWindow):
         # Enhanced spacer
         header_layout.addStretch()
         
+        # User info and logout section
+        if self.auth_manager:
+            # User info label
+            self.user_info_label = QLabel("")
+            self.user_info_label.setStyleSheet("""
+                QLabel {
+                    color: #7f8c8d;
+                    font-size: 12px;
+                    padding: 8px 12px;
+                    background-color: #ecf0f1;
+                    border-radius: 4px;
+                    margin-right: 8px;
+                }
+            """)
+            header_layout.addWidget(self.user_info_label)
+            
+            # Logout button
+            self.logout_button = QPushButton("🚪 Logout")
+            self.logout_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #e74c3c;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 8px 16px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #c0392b;
+                }
+                QPushButton:pressed {
+                    background-color: #a93226;
+                }
+            """)
+            self.logout_button.clicked.connect(self._logout)
+            header_layout.addWidget(self.logout_button)
+        
         # Enhanced action button with modern styling
         self.action_button = QPushButton("+ New Product")
         self.action_button.setProperty("class", "primary")
@@ -331,6 +379,8 @@ class MainWindow(QMainWindow):
             
             # Settings
             self.settings_page = SettingsPage()
+            if self.auth_manager and hasattr(self.settings_page, 'set_auth_manager'):
+                self.settings_page.set_auth_manager(self.auth_manager)
             self.stacked_widget.addWidget(self.settings_page)
             
         except Exception as e:
@@ -386,6 +436,12 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'quotes_page') and hasattr(self, 'quote_creation_page'):
             if hasattr(self.quotes_page, 'quote_deleted') and hasattr(self.quote_creation_page, 'clear_if_quote_matches'):
                 self.quotes_page.quote_deleted.connect(self.quote_creation_page.clear_if_quote_matches)
+        
+        # Connect authentication signals
+        if self.auth_manager:
+            self.auth_manager.user_logged_in.connect(self._on_user_logged_in)
+            self.auth_manager.user_logged_out.connect(self._on_user_logged_out)
+            self.auth_manager.authentication_required.connect(self._on_authentication_required)
 
     @Slot(int)
     def _on_nav_item_selected(self, index):
@@ -499,8 +555,9 @@ class MainWindow(QMainWindow):
     def _on_quote_created(self, quote_id):
         """Handle quote creation."""
         print(f"Quote created with ID: {quote_id}")
-        # Switch to quotes page to show the new quote
-        self._show_quotes()
+        # Don't automatically switch to quotes page - let user stay in quote builder
+        # The quote has been saved and can now be exported
+        pass
     
     def _apply_theme(self, theme_name: str):
         """Apply theme to the application."""
@@ -510,6 +567,41 @@ class MainWindow(QMainWindow):
             logger.info(f"Applied theme: {theme_name}")
         except Exception as e:
             logger.error(f"Error applying theme {theme_name}: {e}")
+    
+    def _on_user_logged_in(self, user):
+        """Handle user login."""
+        logger.info(f"User logged in: {user.username}")
+        
+        # Update user info label
+        if hasattr(self, 'user_info_label'):
+            self.user_info_label.setText(f"👤 {user.full_name} ({user.role.title()})")
+        
+        # Update settings page with auth manager for admin access
+        if hasattr(self, 'settings_page') and hasattr(self.settings_page, 'set_auth_manager'):
+            self.settings_page.set_auth_manager(self.auth_manager)
+        
+        self.show()  # Show the main window
+        self._show_quote_creation()  # Start with quote creation
+    
+    def _on_user_logged_out(self):
+        """Handle user logout."""
+        logger.info("User logged out")
+        self.hide()  # Hide the main window
+        
+        # Show login dialog again
+        if self.auth_manager:
+            self.auth_manager.show_login_dialog()
+    
+    def _on_authentication_required(self):
+        """Handle authentication requirement."""
+        logger.info("Authentication required")
+        if self.auth_manager:
+            self.auth_manager.show_login_dialog()
+    
+    def _logout(self):
+        """Handle logout action."""
+        if self.auth_manager:
+            self.auth_manager.logout()
 
     def closeEvent(self, event):
         """Handle widget close event with proper cleanup."""

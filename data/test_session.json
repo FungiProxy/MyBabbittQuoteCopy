@@ -1,0 +1,8 @@
+{
+  "user_id": 1,
+  "username": "testuser",
+  "full_name": "Test User",
+  "role": "user",
+  "login_time": "2025-07-01T12:39:00.722385",
+  "remember_me": true
+}

@@ -6,9 +6,19 @@ MyBabbittQuote Application Entry Point - Working Version
 import os
 import sys
 import traceback
+import logging
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtCore import Qt
+
+# Set up logging to show INFO level messages in console
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 print("🚀 Starting MyBabbittQuote...")
 print(f"📁 Working directory: {os.getcwd()}")
@@ -17,6 +27,7 @@ print(f"🐍 Python version: {sys.version}")
 try:
     from src.ui.main_window import MainWindow
     from src.ui.theme.babbitt_theme import BabbittTheme
+    from src.ui.auth_manager import AuthManager
     print("✅ Imports successful")
 except Exception as e:
     print(f"❌ Import error: {e}")
@@ -25,7 +36,7 @@ except Exception as e:
     sys.exit(1)
 
 def main():
-    """Launch the application with proper styling."""
+    """Launch the application with proper styling and authentication."""
     try:
         # Create application
         app = QApplication(sys.argv)
@@ -35,11 +46,19 @@ def main():
         # Apply global theme
         app.setStyleSheet(BabbittTheme.get_main_stylesheet())
         
-        # Create and show main window
-        window = MainWindow()
-        window.show()
+        # Initialize authentication manager
+        auth_manager = AuthManager(app)
         
-        print("✨ Professional UI restored!")
+        # Create main window with authentication
+        window = MainWindow(auth_manager)
+        
+        # Show login dialog if not authenticated
+        if not auth_manager.is_logged_in():
+            if not auth_manager.show_login_dialog():
+                print("❌ Login cancelled or failed")
+                sys.exit(0)
+        
+        print("✨ Professional UI restored with authentication!")
         
         # Run application
         sys.exit(app.exec())

@@ -321,17 +321,22 @@ class QuoteCreationPageRedesign(QWidget):
         # Form fields
         self.company_name_edit = QLineEdit()
         self.company_name_edit.setPlaceholderText("Company Name")
+        self.company_name_edit.textChanged.connect(self._on_customer_info_changed)
         
         self.contact_person_edit = QLineEdit()
         self.contact_person_edit.setPlaceholderText("Contact Person")
+        self.contact_person_edit.textChanged.connect(self._on_customer_info_changed)
         
         self.email_edit = QLineEdit()
         self.email_edit.setPlaceholderText("Email")
+        self.email_edit.textChanged.connect(self._on_customer_info_changed)
         
         self.phone_edit = PhoneNumberInput()
+        self.phone_edit.textChanged.connect(self._on_customer_info_changed)
         
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes")
+        self.notes_edit.textChanged.connect(self._on_customer_info_changed)
         
         layout.addRow("Company Name:", self.company_name_edit)
         layout.addRow("Contact Person:", self.contact_person_edit)
@@ -444,7 +449,11 @@ class QuoteCreationPageRedesign(QWidget):
                 "unit_price": config_data.get("unit_price", 0),
                 "total_price": config_data.get("total_price", 0),
                 "config_data": config_data.get("configuration", {}), # Store the detailed config
-                "options": config_data.get("options", []) # Make sure this is passed
+                "options": config_data.get("options", []), # Make sure this is passed
+                # Additional fields for better editing support
+                "is_spare_part": config_data.get("is_spare_part", False),
+                "spare_part_data": config_data.get("spare_part_data", {}),
+                "base_product_info": config_data.get("base_product_info", {})
             }
             
             logger.info(f"Adding quote_item to current_quote: {quote_item}")
@@ -552,20 +561,30 @@ class QuoteCreationPageRedesign(QWidget):
     def _update_items_visibility(self):
         """Update visibility of items table vs empty state."""
         has_items = len(self.current_quote["items"]) > 0
+        has_customer_info = self._has_customer_info()
+        
         self.items_stack.setCurrentIndex(0 if has_items else 1)
         
-        # Update action buttons
+        # Update action buttons - enable export even for unsaved quotes
         self.save_draft_btn.setEnabled(has_items)
-        self.generate_word_btn.setEnabled(has_items and self._has_customer_info())
+        self.generate_word_btn.setEnabled(has_items and has_customer_info)
         self.clear_quote_btn.setEnabled(has_items)
+        
+        # Debug logging
+        logger.info(f"Update items visibility - Has items: {has_items}, Has customer info: {has_customer_info}, Export button enabled: {has_items and has_customer_info}")
 
     def _has_customer_info(self) -> bool:
         """Check if customer information is filled in."""
-        return bool(
-            self.company_name_edit.text().strip() and
-            self.contact_person_edit.text().strip() and
-            self.email_edit.text().strip()
-        )
+        company = self.company_name_edit.text().strip()
+        contact = self.contact_person_edit.text().strip()
+        email = self.email_edit.text().strip()
+        
+        has_info = bool(company and contact and email)
+        
+        # Debug logging
+        logger.info(f"Customer info check - Company: '{company}', Contact: '{contact}', Email: '{email}', Has info: {has_info}")
+        
+        return has_info
 
     def _on_item_changed(self, item: QTableWidgetItem):
         """Handle changes to table items (e.g., quantity)."""
@@ -620,11 +639,46 @@ class QuoteCreationPageRedesign(QWidget):
         Handle the updated configuration for an existing item.
         This replaces the old item at the given row with the new one.
         """
-        # Replace the item in the quote data
-        self.current_quote["items"][row] = new_config
-        
-        # Refresh the table to show updated item
-        self._update_items_table()
+        try:
+            logger.info(f"Updating quote item at row {row} with new config: {new_config}")
+            
+            # Determine the correct part number based on item type
+            if new_config.get("is_spare_part"):
+                # For spare parts, use the full part number
+                part_number = new_config.get("model_number", "N/A")
+            else:
+                # For configured products, use the dynamic part number
+                part_number = new_config.get("model_number", new_config.get("product", "N/A"))
+            
+            # Create the updated quote item with consistent structure
+            updated_quote_item = {
+                "product_id": new_config.get("product_id"),
+                "product_family": new_config.get("product", "N/A"),
+                "model_number": part_number,
+                "configuration": new_config.get("description", "Standard Configuration"),
+                "quantity": new_config.get("quantity", 1),
+                "unit_price": new_config.get("unit_price", 0),
+                "total_price": new_config.get("total_price", 0),
+                "config_data": new_config.get("configuration", {}),
+                "options": new_config.get("options", []),
+                # Additional fields for better editing support
+                "is_spare_part": new_config.get("is_spare_part", False),
+                "spare_part_data": new_config.get("spare_part_data", {}),
+                "base_product_info": new_config.get("base_product_info", {})
+            }
+            
+            # Replace the item in the quote data
+            self.current_quote["items"][row] = updated_quote_item
+            
+            # Refresh the table to show updated item
+            self._update_items_table()
+            self._update_quote_totals()
+            
+            logger.info(f"Successfully updated quote item: {updated_quote_item['model_number']}")
+            
+        except Exception as e:
+            logger.error(f"Error updating quote item: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to update quote item: {str(e)}")
 
     def _remove_item(self, row: int):
         """Remove an item from the quote."""
@@ -664,6 +718,8 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _on_customer_info_changed(self):
         """Handle customer information changes."""
+        logger.info("Customer info changed - updating quote data and button states")
+        
         self.current_quote["customer_info"] = {
             "company_name": self.company_name_edit.text().strip(),
             "contact_name": self.contact_person_edit.text().strip(),
@@ -734,8 +790,14 @@ class QuoteCreationPageRedesign(QWidget):
             if not file_path:
                 return
             
-            # Generate Word document
-            self._generate_word_document(quote_data, file_path)
+            # Use the QuoteExportService for proper template selection
+            from src.core.services.export_service import QuoteExportService
+            
+            # Create export service - it will automatically determine the correct template
+            export_service = QuoteExportService()
+            
+            # Generate Word document using the service
+            export_service.generate_word_document(quote_data, file_path)
             
             QMessageBox.information(self, "Success", f"Quote exported to:\n{file_path}")
             
@@ -763,7 +825,7 @@ class QuoteCreationPageRedesign(QWidget):
         for item in self.current_quote.get("items", []):
             items.append({
                 'product': item.get("product_family", "N/A"),
-                'configuration': item.get("configuration", "Standard Configuration"),
+                'configuration': item.get("config_data", {}),  # Use config_data instead of configuration string
                 'quantity': item.get("quantity", 1),
                 'unit_price': item.get("unit_price", 0.0),
                 'total': item.get("total_price", 0.0)
@@ -819,161 +881,15 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
         # Default notes for other products
         return "Please refer to product manual for detailed application notes and installation instructions."
 
-    def _generate_word_document(self, quote_data, output_path):
-        """Generate a Word document from quote data."""
-        try:
-            from docx import Document
-            from docx.shared import Inches, Pt, RGBColor
-            from docx.enum.text import WD_ALIGN_PARAGRAPH
-            from docx.enum.table import WD_TABLE_ALIGNMENT
-            
-            doc = Document()
-            
-            # Set document margins
-            sections = doc.sections
-            for section in sections:
-                section.top_margin = Inches(0.75)
-                section.bottom_margin = Inches(0.75)
-                section.left_margin = Inches(0.75)
-                section.right_margin = Inches(0.75)
-            
-            # Header with company name
-            header = doc.sections[0].header
-            header_para = header.paragraphs[0]
-            header_para.text = ""
-            run = header_para.add_run("BABBITT\nINTERNATIONAL")
-            run.font.name = 'Arial'
-            run.font.size = Pt(16)
-            run.font.bold = True
-            run.font.color.rgb = RGBColor(0, 0, 139)
-            header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            
-            # Add subtitle
-            subtitle_para = header.add_paragraph()
-            subtitle_run = subtitle_para.add_run("Level Controls & Systems")
-            subtitle_run.font.name = 'Arial'
-            subtitle_run.font.size = Pt(10)
-            subtitle_run.font.italic = True
-            subtitle_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            
-            # Main document content
-            doc.add_paragraph(f"DATE: {quote_data['date']}")
-            doc.add_paragraph(f"CUSTOMER: {quote_data['customer_name']}")
-            doc.add_paragraph(f"ATTN: {quote_data['contact_person']}")
-            
-            # Quote header
-            quote_header = doc.add_paragraph()
-            quote_header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-            quote_run = quote_header.add_run(f"Quote # {quote_data['quote_number']}")
-            quote_run.bold = True
-            
-            # Subject line
-            subject = doc.add_paragraph()
-            subject_run = subject.add_run(f"Subject: {quote_data['subject']}")
-            subject_run.bold = True
-            
-            # Introduction text
-            intro = doc.add_paragraph(
-                "We are pleased to quote on the following equipment for your upcoming applications:"
-            )
-            
-            # Add spacing
-            doc.add_paragraph()
-            
-            # Quote items table
-            table = doc.add_table(rows=1, cols=5)
-            table.alignment = WD_TABLE_ALIGNMENT.CENTER
-            table.style = 'Table Grid'
-            
-            # Header row
-            header_cells = table.rows[0].cells
-            header_cells[0].text = 'QTY'
-            header_cells[1].text = 'PRODUCT'
-            header_cells[2].text = 'CONFIGURATION'
-            header_cells[3].text = 'UNIT PRICE'
-            header_cells[4].text = 'TOTAL'
-            
-            # Make header bold
-            for cell in header_cells:
-                for paragraph in cell.paragraphs:
-                    for run in paragraph.runs:
-                        run.font.bold = True
-            
-            # Add data rows
-            for item in quote_data['items']:
-                row_cells = table.add_row().cells
-                row_cells[0].text = str(item['quantity'])
-                row_cells[1].text = item['product']
-                row_cells[2].text = item['configuration']
-                row_cells[3].text = f"${item['unit_price']:,.2f}"
-                row_cells[4].text = f"${item['total']:,.2f}"
-            
-            # Add total row
-            total_row = table.add_row()
-            total_cells = total_row.cells
-            total_cells[0].text = ""
-            total_cells[1].text = ""
-            total_cells[2].text = ""
-            total_cells[3].text = "TOTAL:"
-            total_cells[4].text = f"${quote_data['total_price']:,.2f}"
-            
-            # Make total row bold
-            for cell in total_cells:
-                for paragraph in cell.paragraphs:
-                    for run in paragraph.runs:
-                        run.font.bold = True
-            
-            # Add spacing
-            doc.add_paragraph()
-            doc.add_paragraph()
-            
-            # Delivery and terms
-            delivery = doc.add_paragraph("Delivery:")
-            delivery.add_run("\nTerms: Net 30 days W.A.C. or CC")
-            
-            validity = doc.add_paragraph(
-                "FCA: Factory, Houston, TX\nQuotation valid for 30 days."
-            )
-            
-            # Application notes section
-            doc.add_paragraph()
-            app_notes_header = doc.add_paragraph("APPLICATION NOTES")
-            app_notes_header.runs[0].bold = True
-            app_notes_header.runs[0].underline = True
-            
-            # Application notes
-            doc.add_paragraph(quote_data['application_notes'])
-            
-            # Add spacing before footer
-            doc.add_paragraph()
-            doc.add_paragraph()
-            
-            # Footer text
-            footer_text = doc.add_paragraph(
-                "Please contact me directly if you have any questions or require more information."
-            )
-            
-            doc.add_paragraph("Thank you,")
-            doc.add_paragraph()
-            doc.add_paragraph(quote_data['sales_person_name'])
-            doc.add_paragraph(quote_data['sales_person_phone'])
-            doc.add_paragraph(quote_data['sales_person_email'])
-            doc.add_paragraph("www.babbittinternational.com")
-            
-            # Save document
-            doc.save(output_path)
-            
-        except Exception as e:
-            logger.error(f"Error generating Word document: {e}", exc_info=True)
-            raise Exception(f"Failed to generate Word document: {str(e)}")
+
 
     def _save_quote_to_database(self, quote_data: Dict) -> Optional['Quote']:
         """Save quote to database and return the full Quote object."""
         try:
+            from sqlalchemy.sql.schema import Column
             with SessionLocal() as db:
                 # Prepare customer data
                 customer_info = quote_data.get("customer_info", {})
-                
                 # Prepare product data
                 products_data = []
                 for item in quote_data.get("items", []):
@@ -984,16 +900,21 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
                         "part_number": item.get("model_number", "N/A"),
                         "options": item.get("options", [])
                     })
-
                 quote_details = {
                     "notes": customer_info.get("notes")
                 }
-
                 # If quote has an ID, it's an update. Otherwise, it's a new quote.
-                if self.current_quote_id is not None:
+                quote_id = self.current_quote_id
+                # Only cast to int if it's not already an int, not None, and not a SQLAlchemy Column
+                if quote_id is not None and not isinstance(quote_id, int) and not isinstance(quote_id, Column):
+                    try:
+                        quote_id = int(quote_id)
+                    except Exception:
+                        quote_id = None
+                if quote_id is not None and not isinstance(quote_id, Column):
                     quote = self.quote_service.update_quote_with_items(
                         db,
-                        quote_id=self.current_quote_id,
+                        quote_id=quote_id,
                         customer_data=customer_info,
                         products_data=products_data,
                         quote_details=quote_details,
@@ -1005,18 +926,14 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
                         products_data=products_data,
                         quote_details=quote_details,
                     )
-                
                 # After saving, get the updated quote ID and number
                 db.refresh(quote)
                 self.current_quote["id"] = quote.id
                 self.current_quote["quote_number"] = quote.quote_number
-                
                 # This is the critical fix: update the tracked quote ID
                 self.current_quote_id = quote.id
-
                 logger.info(f"Successfully saved quote {quote.quote_number} with ID {quote.id}")
                 return quote
-                
         except Exception as e:
             logger.error(f"Error saving to database: {e}", exc_info=True)
             QMessageBox.critical(self, "Database Error", f"Could not save quote: {e}")
@@ -1068,17 +985,40 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
     def load_quote(self, quote_data: Dict):
         """Loads an existing quote into the editor."""
         self._reset_quote()
-        
-        self.current_quote_id = quote_data.get("id")
+        from sqlalchemy.sql.schema import Column
+        quote_id = quote_data.get("id")
+        # Only cast to int if it's not already an int, not None, and not a SQLAlchemy Column
+        if quote_id is not None and not isinstance(quote_id, int) and not isinstance(quote_id, Column):
+            try:
+                quote_id = int(quote_id)
+            except Exception:
+                quote_id = None
+        self.current_quote_id = quote_id
+        # Patch: transform products to expected item format
+        loaded_items = []
+        for prod in quote_data.get("products", []):
+            unit_price = prod.get("base_price", 0)
+            quantity = prod.get("quantity", 1)
+            total_price = unit_price * quantity
+            loaded_items.append({
+                "model_number": prod.get("part_number", "N/A"),
+                "product_id": prod.get("product_id"),
+                "product_family": prod.get("name", "N/A"),
+                "quantity": quantity,
+                "unit_price": unit_price,
+                "total_price": total_price,
+                "options": prod.get("options", []),
+                "description": prod.get("description", ""),
+                # Add any other fields as needed
+            })
         self.current_quote = {
-            "items": quote_data.get("products", []),
+            "items": loaded_items,
             "customer_info": quote_data.get("customer", {}),
             "total_value": quote_data.get("total", 0.0),
             "quote_number": quote_data.get("quote_number"),
             "status": quote_data.get("status", "Draft"),
             "notes": quote_data.get("notes")
         }
-        
         self._update_ui_from_quote()
         logger.info(f"Loaded quote {self.current_quote_id} into creator.")
 
@@ -1112,7 +1052,8 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
 
     def clear_if_quote_matches(self, deleted_quote_id: int):
         """Clears the form if the deleted quote ID matches the current one."""
-        if self.current_quote_id and self.current_quote_id == deleted_quote_id:
+        from sqlalchemy.sql.schema import Column
+        if self.current_quote_id is not None and not isinstance(self.current_quote_id, Column) and self.current_quote_id == deleted_quote_id:
             logger.info(f"Clearing quote creator because quote {deleted_quote_id} was deleted.")
             self._reset_quote()
 
@@ -1126,7 +1067,8 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
         """
         Clears the form if the deleted quote matches the one currently loaded.
         """
-        if self.current_quote_id == deleted_quote_id:
+        from sqlalchemy.sql.schema import Column
+        if self.current_quote_id is not None and not isinstance(self.current_quote_id, Column) and self.current_quote_id == deleted_quote_id:
             logger.info(f"Quote {deleted_quote_id} was deleted while being edited. Clearing form.")
             self.new_quote()
             QMessageBox.information(

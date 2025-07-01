@@ -1,5 +1,6 @@
 import logging
 from typing import Optional, Any
+import re
 
 from sqlalchemy.orm import Session
 
@@ -467,28 +468,25 @@ class ConfigurationService:
         elif connection_type == "Flange":
             flange_size = selected_options.get("Flange Size", "2")
             flange_rating = selected_options.get("Flange Rating", "150#")
-            code = f'{flange_size}"{flange_rating}'
+            # Only add a quote if not already present
+            if not str(flange_size).endswith('"'):
+                flange_size = str(flange_size) + '"'
+            code = f'{flange_size}{flange_rating}FLANGE'
             print(f"[DEBUG] Flange connection code (non-base): {code}")
             return code
         elif connection_type == "Tri-clamp":
             tri_clamp = selected_options.get("Tri-clamp", "")
             print(f"[DEBUG] Tri-clamp value: {tri_clamp}")
-            
+
+            # Extract the size (e.g., 1.5" or 2") from the tri_clamp string
+            size_match = re.search(r'(\d+(?:\.\d+)?)\"', tri_clamp)
+            size_str = size_match.group(0) if size_match else ''
+
             if "Spud" in tri_clamp:
-                if "1-1/2" in tri_clamp:
-                    code = 'TC1-1/2"SPD'
-                elif "2" in tri_clamp:
-                    code = 'TC2"SPD'
-                else:
-                    code = "TC"
+                code = f'{size_str}TCSPUD'
             else:
-                if "1-1/2" in tri_clamp:
-                    code = 'TC1-1/2"'
-                elif "2" in tri_clamp:
-                    code = 'TC2"'
-                else:
-                    code = "TC"
-            
+                code = f'{size_str}TC'
+
             print(f"[DEBUG] Tri-clamp connection code (non-base): {code}")
             return code
         else:
@@ -562,17 +560,17 @@ class ConfigurationService:
             # Define base insulator materials for each product family
             # These are the default/standard insulator materials that should NOT add codes
             base_insulator_materials = {
-                "LS2000": ["Standard", "Default", "", "S"],  # S material is base for LS2000
-                "LS2100": ["Standard", "Default", "", "S"],
-                "LS6000": ["Standard", "Default", "", "S"],
-                "LS7000": ["Standard", "Default", "", "S"],
-                "LS7500": ["Standard", "Default", "", "S"],
-                "LS8000": ["Standard", "Default", "", "S"],
-                "LS8500": ["Standard", "Default", "", "S"],
-                "LT9000": ["Standard", "Default", "", "S"],
-                "FS10000": ["Standard", "Default", "", "S"],
-                "LS1000": ["Standard", "Default", "", "S"],
-                "TRAN-EX": ["Standard", "Default", "", "S"],
+                "LS2000": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for LS2000
+                "LS2100": ["Standard", "Default", "", "TEF"],  # TEF (Teflon) material is base for LS2100
+                "LS6000": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for LS6000
+                "LS7000": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for LS7000
+                "LS7500": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for LS7500
+                "LS8000": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for LS8000
+                "LS8500": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for LS8500
+                "LT9000": ["Standard", "Default", "", "TEF"],  # TEF (Teflon) material is base for LT9000
+                "FS10000": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for FS10000
+                "LS1000": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for LS1000
+                "TRAN-EX": ["Standard", "Default", "", "U"],  # U (UHMWPE) material is base for TRAN-EX
             }
             
             # Get the current product family
@@ -586,7 +584,7 @@ class ConfigurationService:
             
             # Special handling for H material with automatic TEF insulator
             if product_family in ["LS2000", "LS6000"] and current_material == "H":
-                # If user has manually set insulator to S (base), don't add TEFINS code
+                # If user has manually set insulator to U (base), don't add TEFINS code
                 if str(ins_mat).strip() in base_insulators:
                     print(f"[DEBUG] Skipping insulator material code for {ins_mat} (user manually set to base for H material)")
                 else:

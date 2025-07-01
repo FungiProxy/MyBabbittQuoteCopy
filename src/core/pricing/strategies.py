@@ -303,7 +303,11 @@ class ConnectionOptionStrategy(PricingStrategy):
             key = f"Flange_{rating}_{size}"
         elif connection_type == "Tri-Clamp":
             size = context.specs.get("triclamp_size")
-            key = f"TriClamp_{size}"
+            spud = context.specs.get("spud", False)
+            if spud:
+                key = f"TriClamp_{size}_SPUD"
+            else:
+                key = f"TriClamp_{size}"
         else:
             return context.price
 

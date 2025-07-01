@@ -1,0 +1,146 @@
+# SAMPLE QUOTE TEMPLATE CONTENT
+# Copy this content into Microsoft Word and apply professional formatting
+
+{{company_name}}
+{{company_tagline}}
+
+{{company_address}}
+Phone: {{company_phone}} | Email: {{company_email}}
+Website: {{company_website}}
+
+================================================================================
+
+QUOTATION
+
+Quote #: {{quote_number}}
+Date: {{quote_date}}
+Valid Until: {{expiration_date}}
+Status: {{quote_status}}
+
+================================================================================
+
+BILL TO:                                    SHIP TO:
+{{customer_name}}                           {{shipping_name}}
+{{customer_company}}                        {{shipping_company}}
+{{customer_address}}                        {{shipping_address}}
+{{customer_city}}, {{customer_state}} {{customer_zip}}    {{shipping_city}}, {{shipping_state}} {{shipping_zip}}
+{{customer_country}}                        {{shipping_country}}
+
+Contact: {{customer_contact_name}}          Delivery Notes: {{delivery_instructions}}
+Phone: {{customer_phone}}
+Email: {{customer_email}}
+Reference: {{customer_reference}}
+
+================================================================================
+
+Project: {{project_name}}
+Sales Representative: {{sales_rep_name}}
+Payment Terms: {{payment_terms}}
+Delivery Terms: {{delivery_terms}}
+Warranty: {{warranty_period}}
+Quote Valid: {{quote_validity_period}}
+
+================================================================================
+
+PRODUCT SPECIFICATIONS:
+
+Product Family: {{product_family}}
+Description: {{product_family_description}}
+Insulator: {{base_insulator_description}}
+Housing: {{base_housing_description}}
+
+Technical Specifications:
+{{technical_specs}}
+
+Material Notes:
+{{material_notes}}
+
+Application Notes:
+{{application_notes}}
+
+================================================================================
+
+LINE ITEMS:
+
+QTY | PRODUCT | CONFIGURATION | UNIT PRICE | TOTAL
+----|---------|---------------|------------|-------
+{{product_1_quantity}} | {{product_1_name}} | {{product_1_model}} | {{product_1_unit_price}} | {{product_1_total}}
+    | {{product_1_description}} | {{product_1_specs}} | | |
+    | Material: {{product_1_material}} | Connection: {{product_1_connection}} {{product_1_connection_material}} | | |
+    | Options: {{product_1_options}} | | | |
+
+{{product_2_quantity}} | {{product_2_name}} | {{product_2_model}} | {{product_2_unit_price}} | {{product_2_total}}
+    | {{product_2_description}} | {{product_2_specs}} | | |
+    | Material: {{product_2_material}} | Connection: {{product_2_connection}} {{product_2_connection_material}} | | |
+    | Options: {{product_2_options}} | | | |
+
+{{product_3_quantity}} | {{product_3_name}} | {{product_3_model}} | {{product_3_unit_price}} | {{product_3_total}}
+    | {{product_3_description}} | {{product_3_specs}} | | |
+    | Material: {{product_3_material}} | Connection: {{product_3_connection}} {{product_3_connection_material}} | | |
+    | Options: {{product_3_options}} | | | |
+
+================================================================================
+
+PRICING SUMMARY:
+
+Subtotal: {{subtotal}}
+Tax ({{tax_rate}}): {{tax_amount}}
+Shipping: {{shipping_cost}}
+Discount: {{discount_amount}}
+----------------------------------------
+TOTAL: {{total_price}}
+
+================================================================================
+
+INSTALLATION & MAINTENANCE:
+
+Installation Notes:
+{{installation_notes}}
+
+Maintenance Requirements:
+{{maintenance_notes}}
+
+Safety Information:
+{{safety_notes}}
+
+================================================================================
+
+TERMS & CONDITIONS:
+
+Payment Method: {{payment_method}}
+Expected Delivery: {{expected_delivery_date}}
+Shipping Method: {{shipping_method}}
+Restocking Fee: {{restocking_fee}}
+
+================================================================================
+
+SPECIAL INSTRUCTIONS:
+{{special_instructions}}
+
+================================================================================
+
+QUOTE NOTES:
+{{quote_notes}}
+
+================================================================================
+
+Generated on: {{current_date}} at {{current_time}}
+Document Type: {{document_type}} v{{document_version}}
+
+================================================================================
+
+For questions or additional information, please contact:
+
+{{sales_rep_name}}
+{{sales_rep_phone}}
+{{sales_rep_email}}
+
+{{company_name}}
+{{company_address}}
+{{company_phone}}
+{{company_email}}
+{{company_website}}
+
+================================================================================
+
+Page {{page_number}} of {{total_pages}} 
