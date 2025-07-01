@@ -27,6 +27,9 @@ from .modern_form_components import (
     ModernRadioButton
 )
 
+# Phone input component
+from .phone_input import PhoneNumberInput
+
 # Navigation components
 from .modern_navigation import (
     ModernTabWidget,
@@ -94,6 +97,9 @@ __all__ = [
     'ModernSpinBox',
     'ModernCheckBox',
     'ModernRadioButton',
+    
+    # Phone input component
+    'PhoneNumberInput',
     
     # Navigation components
     'ModernTabWidget',

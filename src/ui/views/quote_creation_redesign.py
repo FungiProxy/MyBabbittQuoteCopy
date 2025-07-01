@@ -47,6 +47,7 @@ from src.ui.product_selection_dialog_modern import ModernProductSelectionDialog
 from src.ui.theme.babbitt_theme import BabbittTheme
 from src.ui.theme.theme_manager import ThemeManager
 from src.ui.theme import COLORS, FONTS
+from src.ui.components.phone_input import PhoneNumberInput
 
 logger = logging.getLogger(__name__)
 
@@ -327,8 +328,7 @@ class QuoteCreationPageRedesign(QWidget):
         self.email_edit = QLineEdit()
         self.email_edit.setPlaceholderText("Email")
         
-        self.phone_edit = QLineEdit()
-        self.phone_edit.setPlaceholderText("Phone")
+        self.phone_edit = PhoneNumberInput()
         
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes")

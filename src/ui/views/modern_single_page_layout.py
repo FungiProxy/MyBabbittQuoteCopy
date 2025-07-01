@@ -23,6 +23,7 @@ from src.core.database import SessionLocal
 from src.core.services.quote_service import QuoteService
 from src.core.services.product_service import ProductService
 from src.core.services.customer_service import CustomerService
+from src.ui.components.phone_input import PhoneNumberInput
 
 logger = logging.getLogger(__name__)
 
@@ -586,7 +587,7 @@ class ModernQuoteWorkspace(QWidget):
             ("Company Name:", QLineEdit()),
             ("Contact Person:", QLineEdit()),
             ("Email:", QLineEdit()),
-            ("Phone:", QLineEdit()),
+            ("Phone:", PhoneNumberInput()),
         ]
         
         for i, (label_text, widget) in enumerate(fields):

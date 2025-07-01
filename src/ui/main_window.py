@@ -375,15 +375,17 @@ class MainWindow(QMainWindow):
         # Phase 7: Connect theme system
         theme_manager.theme_changed.connect(self._on_theme_changed)
         
-        # Connect quote service signals
-        if hasattr(self.quote_creation_page, 'quote_created'):
+        # Connect quote service signals - with defensive programming
+        if hasattr(self, 'quote_creation_page') and hasattr(self.quote_creation_page, 'quote_created'):
             self.quote_creation_page.quote_created.connect(self._on_quote_created)
         
-        if hasattr(self.quotes_page, 'edit_quote_requested'):
+        if hasattr(self, 'quotes_page') and hasattr(self.quotes_page, 'edit_quote_requested'):
             self.quotes_page.edit_quote_requested.connect(self._edit_quote)
         
-        # Connect quotes page signals
-        self.quotes_page.quote_deleted.connect(self.quote_creation_page.clear_if_quote_matches)
+        # Connect quotes page signals - with defensive programming
+        if hasattr(self, 'quotes_page') and hasattr(self, 'quote_creation_page'):
+            if hasattr(self.quotes_page, 'quote_deleted') and hasattr(self.quote_creation_page, 'clear_if_quote_matches'):
+                self.quotes_page.quote_deleted.connect(self.quote_creation_page.clear_if_quote_matches)
 
     @Slot(int)
     def _on_nav_item_selected(self, index):

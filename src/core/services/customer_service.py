@@ -17,6 +17,7 @@ from src.utils.db_utils import (
     get_by_id,
     update_and_commit,
 )
+from src.utils.phone_formatter import format_phone_number
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +39,14 @@ class CustomerService:
         notes: Optional[str] = None,
     ) -> Customer:
         """Create a new customer."""
+        # Format phone number if provided
+        formatted_phone = format_phone_number(phone) if phone else None
+        
         customer = Customer(
             name=name,
             company=company,
             email=email,
-            phone=phone,
+            phone=formatted_phone,
             address=address,
             city=city,
             state=state,
@@ -104,6 +108,10 @@ class CustomerService:
         customer = get_by_id(db, Customer, customer_id)
         if not customer:
             return None
+        
+        # Format phone number if it's being updated
+        if "phone" in updates and updates["phone"]:
+            updates["phone"] = format_phone_number(updates["phone"])
         
         # Update timestamp
         updates["updated_at"] = datetime.utcnow()

@@ -20,6 +20,7 @@ from src.core.database import SessionLocal
 from src.core.models import Customer
 from src.core.services.customer_service import CustomerService
 from src.ui.theme import COLORS, FONTS, SPACING, RADIUS, get_button_style, get_input_style, get_card_style
+from src.ui.components.phone_input import PhoneNumberInput
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +77,7 @@ class CustomerDialog(QDialog):
         form_layout.addRow("Email:", self.email_edit)
         
         # Phone
-        self.phone_edit = QLineEdit()
-        self.phone_edit.setPlaceholderText("(555) 123-4567")
+        self.phone_edit = PhoneNumberInput()
         form_layout.addRow("Phone:", self.phone_edit)
         
         # Address
@@ -200,7 +200,7 @@ class CustomerDialog(QDialog):
                     self.name_edit.setText(customer.name or "")
                     self.company_edit.setText(customer.company or "")
                     self.email_edit.setText(customer.email or "")
-                    self.phone_edit.setText(customer.phone or "")
+                    self.phone_edit.setPhoneNumber(customer.phone or "")
                     self.address_edit.setText(customer.address or "")
                     self.city_edit.setText(customer.city or "")
                     self.state_edit.setText(customer.state or "")
@@ -228,7 +228,7 @@ class CustomerDialog(QDialog):
                     "name": self.name_edit.text().strip(),
                     "company": self.company_edit.text().strip() or None,
                     "email": self.email_edit.text().strip() or None,
-                    "phone": self.phone_edit.text().strip() or None,
+                    "phone": self.phone_edit.getPhoneNumber().strip() or None,
                     "address": self.address_edit.text().strip() or None,
                     "city": self.city_edit.text().strip() or None,
                     "state": self.state_edit.text().strip().upper() or None,
