@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 from sqlalchemy.orm import Session
 
@@ -111,7 +111,7 @@ class ConfigurationService:
             print(f"[DEBUG] Traceback: {traceback.format_exc()}")
             raise
 
-    def set_option(self, option_name: str, value: any):
+    def set_option(self, option_name: str, value: Any):
         """Set an option in the current configuration."""
         print(f"[DEBUG] set_option called: {option_name} = {value} (type: {type(value)})")
         if self._current_config:
@@ -129,7 +129,7 @@ class ConfigurationService:
             self._update_price()
             self._update_model_number()
 
-    def select_option(self, option_name: str, value: any):
+    def select_option(self, option_name: str, value: Any):
         """
         Updates the current configuration with a selected option.
 
@@ -227,7 +227,7 @@ class ConfigurationService:
             logger.error(f"Error getting current variant: {e!s}", exc_info=True)
             return None
 
-    def _get_option_price(self, option_name: str, value: any) -> float:
+    def _get_option_price(self, option_name: str, value: Any) -> float:
         """Get the price for a given option and its selected value using the unified options structure."""
         if not self.current_config:
             return 0.0
@@ -326,6 +326,14 @@ class ConfigurationService:
             print(f"[DEBUG] Price calculation successful: ${self.current_config.final_price}")
             print(f"[DEBUG] About to call _update_model_number()")
             print(f"[DEBUG] selected_options before _update_model_number: {self.current_config.selected_options}")
+            # --- TRAN-EX H MATERIAL ADDER FIX ---
+            if self.current_config.product_family_name == "TRAN-EX":
+                material = self.current_config.selected_options.get("Material")
+                if material == "H":
+                    print(f"[DEBUG] Applying TRAN-EX H material base adder: $110")
+                    self.current_config.final_price += 110  # base adder
+                    print(f"[DEBUG] New final price after H base adder: ${self.current_config.final_price}")
+            # --- END FIX ---
         except Exception as e:
             print(f"[DEBUG] Error in calculate_product_price: {e}")
             print(f"[DEBUG] Error type: {type(e)}")
@@ -419,168 +427,192 @@ class ConfigurationService:
         return "-".join([str(p) for p in part_number_parts if p])
 
     def _get_process_connection_code(self, selected_options: dict) -> str:
-        """Extract process connection code from selected options."""
-        # Check for connection type and related options
+        """Extract process connection code from selected options, only if non-base."""
+        print(f"[DEBUG] _get_process_connection_code - selected_options: {selected_options}")
+        
         connection_type = selected_options.get("Connection Type")
+        print(f"[DEBUG] Connection Type: {connection_type}")
+        
         if not connection_type:
+            print(f"[DEBUG] No connection type found, returning empty string")
             return ""
-
+        
+        # Get base model defaults for comparison
+        from src.core.config.base_models import get_base_model
+        product_family = getattr(self.current_config, 'product_family_name', 'LS2000')
+        base_model = get_base_model(product_family)
+        base_connection_type = base_model.get("process_connection_type")
+        base_connection_size = base_model.get("process_connection_size")
+        
+        print(f"[DEBUG] Base model defaults - type: {base_connection_type}, size: {base_connection_size}")
+        
+        # Check if current selection matches base defaults
+        if connection_type == base_connection_type:
+            if connection_type == "NPT":
+                npt_size = selected_options.get("NPT Size", "3/4")
+                # Normalize both values for comparison
+                npt_size_norm = str(npt_size).replace('"', '').strip()
+                base_size_norm = str(base_connection_size).replace('"', '').strip()
+                print(f"[DEBUG] Comparing NPT sizes: user='{npt_size_norm}' base='{base_size_norm}'")
+                if npt_size_norm == base_size_norm:
+                    print(f"[DEBUG] NPT selection matches base defaults ({npt_size_norm}), returning empty string")
+                    return ""
+            
+        # If we get here, the selection is different from base defaults
         if connection_type == "NPT":
             npt_size = selected_options.get("NPT Size", "3/4")
-            return f'{npt_size}"NPT'
+            code = f'{npt_size}"NPT'
+            print(f"[DEBUG] NPT connection code (non-base): {code}")
+            return code
         elif connection_type == "Flange":
             flange_size = selected_options.get("Flange Size", "2")
             flange_rating = selected_options.get("Flange Rating", "150#")
-            return f'{flange_size}"{flange_rating}'
+            code = f'{flange_size}"{flange_rating}'
+            print(f"[DEBUG] Flange connection code (non-base): {code}")
+            return code
         elif connection_type == "Tri-clamp":
-            tri_clamp_option = selected_options.get("Tri-clamp", "")
-            if "1-1/2" in tri_clamp_option:
-                if "Spud" in tri_clamp_option:
-                    return "TC1-1/2\"SPD"
+            tri_clamp = selected_options.get("Tri-clamp", "")
+            print(f"[DEBUG] Tri-clamp value: {tri_clamp}")
+            
+            if "Spud" in tri_clamp:
+                if "1-1/2" in tri_clamp:
+                    code = 'TC1-1/2"SPD'
+                elif "2" in tri_clamp:
+                    code = 'TC2"SPD'
                 else:
-                    return "TC1-1/2\""
-            elif "2" in tri_clamp_option:
-                if "Spud" in tri_clamp_option:
-                    return "TC2\"SPD"
-                else:
-                    return "TC2\""
+                    code = "TC"
             else:
-                return "TC"
-        
-        return ""
+                if "1-1/2" in tri_clamp:
+                    code = 'TC1-1/2"'
+                elif "2" in tri_clamp:
+                    code = 'TC2"'
+                else:
+                    code = "TC"
+            
+            print(f"[DEBUG] Tri-clamp connection code (non-base): {code}")
+            return code
+        else:
+            print(f"[DEBUG] Unknown connection type: {connection_type}")
+            return ""
 
     def _get_additional_option_codes(self, selected_options: dict) -> list:
         """Extract codes for all additional options, preserving order and skipping empty/defaults."""
         codes = []
-        seen = set()
         
-        # Debug: Print all selected options
+        # Debug the selected options
         print(f"[DEBUG] _get_additional_option_codes - selected_options: {selected_options}")
         
-        # Handle special cases first
-        # Extra Static Protection - xsp code
+        # Extra Static Protection - handle both "Yes" and True
         extra_static = selected_options.get("Extra Static Protection")
-        print(f"[DEBUG] Extra Static Protection value: {extra_static}")
-        if extra_static == "Yes":
-            codes.append("xsp")
-            seen.add("xsp")
-            print(f"[DEBUG] Added xsp code")
+        if extra_static == "Yes" or extra_static is True:
+            codes.append("XSP")
+            print(f"[DEBUG] Added XSP code")
         
-        # Bent Probe with degree - 45DEG format
-        if selected_options.get("Bent Probe") == "Yes":
-            degree = selected_options.get("Bent Probe Degree", 90)
-            if degree:
-                codes.append(f"{degree}DEG")
-                seen.add(f"{degree}DEG")
+        # Stainless Steel Tag - handle both "Yes" and True
+        stainless_tag = selected_options.get("Stainless Steel Tag")
+        if stainless_tag == "Yes" or stainless_tag is True:
+            codes.append("SSTAG")
+            print(f"[DEBUG] Added SSTAG code")
         
-        # 3/4" Diameter Probe - 3/4OD code
-        if selected_options.get('3/4" Diameter Probe') == "Yes":
+        # Vibration Resistance - handle both "Yes" and True
+        vibration_resistance = selected_options.get("Vibration Resistance")
+        if vibration_resistance == "Yes" or vibration_resistance is True:
+            codes.append("VR")
+            print(f"[DEBUG] Added VR code")
+        
+        # Epoxy House - handle both "Yes" and True
+        epoxy_house = selected_options.get("Epoxy House")
+        if epoxy_house == "Yes" or epoxy_house is True:
+            codes.append("EPOX")
+            print(f"[DEBUG] Added EPOX code")
+        
+        # Bent Probe - handle both "Yes" and True
+        bent_probe = selected_options.get("Bent Probe")
+        if bent_probe == "Yes" or bent_probe is True:
+            deg = selected_options.get("Bent Probe Degree")
+            if deg:
+                codes.append(f"{deg}DEG")
+                print(f"[DEBUG] Added {deg}DEG code")
+        
+        # 3/4" Diameter Probe - handle both "Yes" and True
+        probe_3_4 = selected_options.get('3/4" Diameter Probe')
+        if probe_3_4 == "Yes" or probe_3_4 is True:
             codes.append("3/4OD")
-            seen.add("3/4OD")
+            print(f"[DEBUG] Added 3/4OD code")
         
-        # Handle insulator materials with length and material codes
-        insulator_material = selected_options.get("Insulator Material")
-        if insulator_material and insulator_material != "Standard":
-            # Get the length if non-standard
-            length = selected_options.get("Probe Length")
-            base_length = selected_options.get("base_length", 10)  # Default base length
-            
-            # Check if length is non-standard
-            is_non_standard_length = False
-            if length and base_length:
-                try:
-                    length_val = float(length)
-                    base_length_val = float(base_length)
-                    is_non_standard_length = length_val != base_length_val
-                except (ValueError, TypeError):
-                    pass
-            
-            # Map insulator materials to codes
-            insulator_codes = {
-                "Teflon Upgrade": "TEF",
-                "PEEK": "PEEK", 
-                "Ceramic": "CER",
-                "Delrin": "DEL"
-            }
-            
-            insulator_code = insulator_codes.get(insulator_material, "")
-            if insulator_code:
-                if is_non_standard_length and length:
-                    try:
-                        length_str = f'{int(float(length))}"' if float(length).is_integer() else f'{float(length)}"'
-                        codes.append(f"{length_str}{insulator_code}INS")
-                    except (ValueError, TypeError):
-                        codes.append(f"{insulator_code}INS")
-                else:
-                    codes.append(f"{insulator_code}INS")
-                seen.add(f"{insulator_code}INS")
+        # Insulator Material - handle actual codes from database
+        # Only add insulator material if it's explicitly selected (not base setup)
+        ins_mat = selected_options.get("Insulator Material")
+        ins_len = selected_options.get("Insulator Length")
         
-        # Standard option codes for other options
-        option_codes = {
-            "Insulator Type": {
-                "SS": "",
-                "CS": "CSINS"
-            },
-            "O-Rings": {
-                "Viton": "",
-                "Silicon": "SILOR",
-                "Buna-N": "BUNAOR",
-                "EPDM": "EPDMOR",
-                "PTFE": "PTFEOR",
-                "Kalrez": "KALOR"
-            },
-            "Exotic Metal": {
-                "None": "",
-                "Alloy 20": "AL20",
-                "Hastelloy-C-276": "HC276",
-                "Hastelloy-B": "HB",
-                "Titanium": "TI"
-            },
-            "Stainless Steel Tag": {
-                "Yes": "SSTAG",
-                "No": ""
-            },
-            "Cable Probe": {
-                "Yes": "CABLE",
-                "No": ""
-            },
-            "Mounting": {
-                "Standard": "",
-                "Flanged": "FLANGED",
-                "Tri-Clamp": "TRICLAMP"
-            },
-            "Receiver Enclosure": {
-                "None": "",
-                "NEMA 4 Metal": "NEMA4",
-                "Explosion Proof": "EXPROOF"
-            },
-            "Additional Coaxial Cable": {
-                "Yes": "COAX",
-                "No": ""
-            },
-            "GRK Exp Proof Enclosure": {
-                "Yes": "GRKEXP",
-                "No": ""
-            }
+        # Map database codes to part number codes
+        ins_mat_map = {
+            "TEF": "TEFINS",  # Teflon Upgrade
+            "PK": "PEEKINS",  # PEEK
+            "CER": "CERINS",  # Ceramic
+            "DEL": "DELINS",  # Delrin
+            "Teflon Upgrade": "TEFINS",
+            "PEEK": "PEEKINS", 
+            "Ceramic": "CERINS",
+            "Delrin": "DELINS",
         }
         
-        skip_keys = {"Voltage", "Material", "Probe Length", "Connection Type", "NPT Size", "Flange Size", "Flange Rating", "Tri-clamp", "Extra Static Protection", "Bent Probe", "Bent Probe Degree", '3/4" Diameter Probe', "Insulator Material", "base_length"}
-        
-        for option_name, value in selected_options.items():
-            if option_name in skip_keys:
-                continue
-            code = None
-            if option_name in option_codes:
-                code = option_codes[option_name].get(value, "")
-            if code is None:
-                # For unmapped options, skip if value is empty/None/No/Standard/None
-                if value and value not in ["No", "None", "Standard"]:
-                    code = f"{option_name[:3].upper()}{str(value)[:3].upper()}"
+        # Only add insulator material code if it's explicitly selected and not the base/default
+        if ins_mat and ins_mat in ins_mat_map:
+            # Define base insulator materials for each product family
+            # These are the default/standard insulator materials that should NOT add codes
+            base_insulator_materials = {
+                "LS2000": ["Standard", "Default", "", "S"],  # S material is base for LS2000
+                "LS2100": ["Standard", "Default", "", "S"],
+                "LS6000": ["Standard", "Default", "", "S"],
+                "LS7000": ["Standard", "Default", "", "S"],
+                "LS7500": ["Standard", "Default", "", "S"],
+                "LS8000": ["Standard", "Default", "", "S"],
+                "LS8500": ["Standard", "Default", "", "S"],
+                "LT9000": ["Standard", "Default", "", "S"],
+                "FS10000": ["Standard", "Default", "", "S"],
+                "LS1000": ["Standard", "Default", "", "S"],
+                "TRAN-EX": ["Standard", "Default", "", "S"],
+            }
+            
+            # Get the current product family
+            product_family = getattr(self.current_config, 'product_family_name', 'LS2000')
+            base_insulators = base_insulator_materials.get(product_family, ["Standard", "Default", ""])
+            
+            # Check if this is a non-base insulator material selection
+            # For LS2000 and LS6000, when H material is selected, TEF is automatically set
+            # But if user manually changes insulator back to S, we should remove the code
+            current_material = selected_options.get("Material", "S")
+            
+            # Special handling for H material with automatic TEF insulator
+            if product_family in ["LS2000", "LS6000"] and current_material == "H":
+                # If user has manually set insulator to S (base), don't add TEFINS code
+                if str(ins_mat).strip() in base_insulators:
+                    print(f"[DEBUG] Skipping insulator material code for {ins_mat} (user manually set to base for H material)")
                 else:
-                    code = ""
-            if code and code not in seen:
-                codes.append(code)
-                seen.add(code)
+                    # Auto-selected TEF for H material, add the code
+                    if ins_len and str(ins_len).strip() not in ("", "Standard"):
+                        clean_ins_len = str(ins_len).rstrip('"')
+                        codes.append(f'{clean_ins_len}"{ins_mat_map[ins_mat]}')
+                        print(f"[DEBUG] Added {clean_ins_len}\"{ins_mat_map[ins_mat]} code for {product_family} (auto-selected for H material)")
+                    else:
+                        codes.append(ins_mat_map[ins_mat])
+                        print(f"[DEBUG] Added {ins_mat_map[ins_mat]} code for {product_family} (auto-selected for H material)")
+            else:
+                # Normal logic for other cases
+                if str(ins_mat).strip() not in base_insulators:
+                    if ins_len and str(ins_len).strip() not in ("", "Standard"):
+                        # Remove any trailing quote from ins_len
+                        clean_ins_len = str(ins_len).rstrip('"')
+                        codes.append(f'{clean_ins_len}"{ins_mat_map[ins_mat]}')
+                        print(f"[DEBUG] Added {clean_ins_len}\"{ins_mat_map[ins_mat]} code for {product_family}")
+                    else:
+                        codes.append(ins_mat_map[ins_mat])
+                        print(f"[DEBUG] Added {ins_mat_map[ins_mat]} code for {product_family}")
+                else:
+                    print(f"[DEBUG] Skipping insulator material code for {ins_mat} (base material for {product_family})")
+        
+        print(f"[DEBUG] Final codes: {codes}")
         return codes
 
     def calculate_price(self) -> float:

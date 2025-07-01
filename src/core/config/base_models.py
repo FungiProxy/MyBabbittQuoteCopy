@@ -13,6 +13,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "115VAC",
         "material": "S",
+        "process_connection_type": "NPT",
+        "process_connection_size": '3/4"',
     },
     "LS2100": {
         "model_number": 'LS2100-24VDC-S-10"',
@@ -21,6 +23,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "24VDC",
         "material": "S",
+        "process_connection_type": "NPT",
+        "process_connection_size": '3/4"',
     },
     "LS6000": {
         "model_number": 'LS6000-115VAC-S-10"',
@@ -29,6 +33,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "115VAC",
         "material": "S",
+        "process_connection_type": "NPT",
+        "process_connection_size": '1"',
     },
     "LS7000": {
         "model_number": 'LS7000-115VAC-S-10"',
@@ -37,6 +43,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "115VAC",
         "material": "S",
+        "process_connection_type": "NPT",
+        "process_connection_size": '1"',
     },
     "LS7000/2": {
         "model_number": 'LS7000/2-115VAC-H-10"',
@@ -45,6 +53,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "115VAC",
         "material": "H",
+        "process_connection_type": "NPT",
+        "process_connection_size": '1"',
     },
     "LS8000": {
         "model_number": 'LS8000-115VAC-S-10"',
@@ -53,6 +63,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "115VAC",
         "material": "S",
+        "process_connection_type": "NPT",
+        "process_connection_size": '3/4"',
     },
     "LS8000/2": {
         "model_number": 'LS8000/2-115VAC-H-10"',
@@ -61,6 +73,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "115VAC",
         "material": "H",
+        "process_connection_type": "NPT",
+        "process_connection_size": '3/4"',
     },
     "LT9000": {
         "model_number": 'LT9000-115VAC-H-10"',
@@ -69,6 +83,8 @@ BASE_MODELS = {
         "base_length": 10.0,
         "voltage": "115VAC",
         "material": "H",
+        "process_connection_type": "NPT",
+        "process_connection_size": '1"',
     },
     "FS10000": {
         "model_number": 'FS10000-115VAC-S-6"',
@@ -77,6 +93,8 @@ BASE_MODELS = {
         "base_length": 6.0,
         "voltage": "115VAC",
         "material": "S",
+        "process_connection_type": "NPT",
+        "process_connection_size": '3/4"',
     },
     # Presence/Absence switches - to be configured later
     "LS7500": {

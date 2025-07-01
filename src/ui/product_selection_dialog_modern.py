@@ -580,23 +580,35 @@ class ModernProductSelectionDialog(QDialog):
                 # print(f"[DEBUG] Skipping voltage for TRAN-EX - no voltage options")
                 pass
             # Material
-            materials = self.product_service.get_available_materials_for_product(self.db, product.get('name', ''))
-            # print(f"[DEBUG] Materials for {product.get('name', '')}: {materials}")
-            if materials:
-                material_option = materials[0]
-                # Set default to first available material code if present
-                choices = material_option.get('choices', [])
-                if choices and isinstance(choices[0], dict) and 'code' in choices[0]:
-                    material_option['default'] = choices[0]['code']
-                elif choices and isinstance(choices[0], str):
-                    material_option['default'] = choices[0]
-                material_option['category'] = 'Material'
-                if product.get('name') == 'TRAN-EX':
-                    material_option['type'] = 'dropdown'
-                core_options.append(material_option)
+            if product.get('name') == 'TRAN-EX':
+                # Always force Material to be a dropdown for TRAN-EX
+                core_options.append({
+                    'name': 'Material',
+                    'choices': [
+                        {'code': 'S', 'display_name': 'S - 316 Stainless Steel'},
+                        {'code': 'H', 'display_name': 'H - Halar'}
+                    ],
+                    'adders': {},
+                    'category': 'Material',
+                    'default': 'S',
+                    'type': 'dropdown',
+                })
                 seen_option_names.add('Material')
+            else:
+                materials = self.product_service.get_available_materials_for_product(self.db, product.get('name', ''))
+                if materials:
+                    material_option = materials[0]
+                    # Set default to first available material code if present
+                    choices = material_option.get('choices', [])
+                    if choices and isinstance(choices[0], dict) and 'code' in choices[0]:
+                        material_option['default'] = choices[0]['code']
+                    elif choices and isinstance(choices[0], str):
+                        material_option['default'] = choices[0]
+                    material_option['category'] = 'Material'
+                    core_options.append(material_option)
+                    seen_option_names.add('Material')
             # Special handling for TRAN-EX (fixed material)
-            elif product.get('name') == 'TRAN-EX':
+            # elif product.get('name') == 'TRAN-EX':
                 core_options.append({
                     'name': 'Material',
                     'choices': ['S', 'H'],
@@ -944,6 +956,10 @@ class ModernProductSelectionDialog(QDialog):
                         form.addRow(label, combo)
                         # Store both label and combo together
                         sub_option_widgets[name] = (label, combo)
+                        # Connect the combo box to update configuration
+                        combo.currentIndexChanged.connect(
+                            lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
+                        )
                         label.hide()
                         combo.hide()
                     # Add any other sub-options not in sub_option_map (fallback, rare)
@@ -982,12 +998,20 @@ class ModernProductSelectionDialog(QDialog):
                             """)
                             form.addRow(label, combo)
                             sub_option_widgets[name] = (label, combo)
+                            # Connect the combo box to update configuration
+                            combo.currentIndexChanged.connect(
+                                lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
+                            )
                             label.hide()
                             combo.hide()
                     def on_conn_type_changed(idx):
                         selected_type = conn_type_combo.currentData() if conn_type_combo else ''
                         if not isinstance(selected_type, str):
                             selected_type = str(selected_type) if selected_type is not None else ''
+                        
+                        # Update the configuration service with the new connection type
+                        self._on_option_changed("Connection Type", selected_type)
+                        
                         # Hide all sub-options first
                         for label, w in sub_option_widgets.values():
                             if label:
@@ -1294,6 +1318,23 @@ class ModernProductSelectionDialog(QDialog):
             combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
             self.option_widgets[name] = combo
             return combo
+        # Always use QComboBox if type is 'dropdown'
+        if opt_type == 'dropdown' and choices:
+            combo = QComboBox()
+            combo.setFixedWidth(200)
+            combo.setMinimumHeight(32)
+            combo.setStyleSheet(combo_style)
+            if isinstance(choices[0], dict):
+                for choice in choices:
+                    code = str(choice.get('code', str(choice)))
+                    display_name = choice.get('display_name', code)
+                    combo.addItem(f"{code} - {display_name}", code)
+            else:
+                for choice in choices:
+                    combo.addItem(str(choice), str(choice))
+            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
+            self.option_widgets[name] = combo
+            return combo
         # Boolean (checkbox)
         if choices and all(isinstance(c, bool) for c in choices) and set(choices) == {True, False}:
             cb = QCheckBox()
@@ -1373,15 +1414,15 @@ class ModernProductSelectionDialog(QDialog):
     def _on_option_changed(self, option_name: str, value):
         """Handle option change."""
         try:
-            # print(f"[DEBUG] UI _on_option_changed: {option_name} = {value} (type: {type(value)})")
+            print(f"[DEBUG] UI _on_option_changed: {option_name} = {value} (type: {type(value)})")
             
             # Check if this is a material change
             if option_name == 'Material':
-                # print(f"[DEBUG] Material changed to: {value}")
+                print(f"[DEBUG] Material changed to: {value}")
                 
                 # Get the default length for this material
                 material_default_length = get_material_default_length(value)
-                # print(f"[DEBUG] Material default length for {value}: {material_default_length}")
+                print(f"[DEBUG] Material default length for {value}: {material_default_length}")
                 
                 # Immediately reset the probe length to the material's default
                 self._reset_probe_length_to_material_default(material_default_length)
@@ -1391,13 +1432,18 @@ class ModernProductSelectionDialog(QDialog):
                     self._auto_set_insulator_to_teflon()
             
             self.config_service.set_option(option_name, value)
-            # print(f"[DEBUG] UI _on_option_changed: selected_options after set: {self.config_service.current_config.selected_options if self.config_service.current_config else None}")
+            print(f"[DEBUG] UI _on_option_changed: selected_options after set: {self.config_service.current_config.selected_options if self.config_service.current_config else None}")
+            
+            # Generate and display the new part number
+            new_part_number = self.config_service.generate_model_number()
+            print(f"[DEBUG] New part number: {new_part_number}")
+            
             self._update_total_price()
             self._update_model_number_label()
         except Exception as e:
             import traceback
-            # print(f"[DEBUG] Exception in _on_option_changed: {e}")
-            # print(traceback.format_exc())
+            print(f"[DEBUG] Exception in _on_option_changed: {e}")
+            print(traceback.format_exc())
             logger.error(f"Error updating option {option_name}: {e}")
     
     def _handle_deferred_changes(self):
@@ -1530,6 +1576,11 @@ class ModernProductSelectionDialog(QDialog):
     def _set_default_values(self, family_name: str):
         """Set default values for the product family, only if valid for the current product."""
         # print(f"[DEBUG] UI _set_default_values called for family: {family_name}")
+        
+        # Get base model configuration including process connection defaults
+        from src.core.config.base_models import get_base_model
+        base_model = get_base_model(family_name)
+        
         default_configs = {
             "LS2000": {"Voltage": "115VAC", "Material": "S"},
             "LS2100": {"Voltage": "115VAC", "Material": "S"},
@@ -1544,6 +1595,13 @@ class ModernProductSelectionDialog(QDialog):
             "FS10000": {"Voltage": "115VAC", "Material": "S"},
         }
         defaults = default_configs.get(family_name, {})
+        
+        # Add process connection defaults from base model if available
+        if base_model.get("process_connection_type") and base_model.get("process_connection_size"):
+            if base_model["process_connection_type"] == "NPT":
+                defaults["Connection Type"] = "NPT"
+                defaults["NPT Size"] = base_model["process_connection_size"]
+        
         for option_name, default_value in defaults.items():
             widget = self.option_widgets.get(option_name)
             # print(f"[DEBUG] UI _set_default_values: {option_name} = {default_value} (type: {type(default_value)})")

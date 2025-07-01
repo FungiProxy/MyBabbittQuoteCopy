@@ -36,6 +36,8 @@ def populate_base_models():
                 base_length=config["base_length"],
                 voltage=config["voltage"],
                 material=config["material"],
+                process_connection_type=config.get("process_connection_type"),
+                process_connection_size=config.get("process_connection_size"),
             )
             db.add(base_model)
             print(

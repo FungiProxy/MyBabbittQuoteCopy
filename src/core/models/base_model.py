@@ -64,7 +64,8 @@ class BaseModel(Base):
     insulator_material = Column(Text, nullable=True)
     insulator_length = Column(Float, nullable=True)
     insulator_temp_rating = Column(Text, nullable=True)
-    process_connection = Column(Text, nullable=True)
+    process_connection_type = Column(Text, nullable=True)  # e.g., NPT, Flange, Tri-clamp
+    process_connection_size = Column(Text, nullable=True)  # e.g., 3/4", 1", 2"
     max_pressure = Column(Text, nullable=True)
     housing_type = Column(Text, nullable=True)
     housing_ratings = Column(Text, nullable=True)
