@@ -9,7 +9,7 @@ import logging
 from typing import Dict, List, Optional, Any
 import os
 
-from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QEvent, QSize
+from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QEvent, QSize, QTimer
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QGridLayout,
     QLabel, QComboBox, QSpinBox, QLineEdit, QPushButton, QFrame,
@@ -30,25 +30,42 @@ from src.ui.theme.babbitt_theme import BabbittTheme
 logger = logging.getLogger(__name__)
 
 
-class ConnectionOptionsWidget(QFrame):
+class ConnectionOptionsWidget(QGroupBox):
     """A dedicated widget to handle the complexity of connection options."""
     
     option_changed = Signal(str, object)  # Emits option name and selected value
     
     def __init__(self, family_name: str, product_service: ProductService, parent=None):
-        super().__init__(parent)
+        super().__init__("Connections", parent)
         self.family_name = family_name
         self.product_service = product_service
         self.sub_option_widgets: Dict[str, QWidget] = {}
         
-        self.setFrameStyle(QFrame.Shape.NoFrame)
+        # Apply uniform styling like other group boxes
+        self.setStyleSheet("""
+            QGroupBox {
+                font-weight: 600;
+                font-size: 14px;
+                border: 2px solid #e0e4e7;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background-color: #ffffff;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: #2C3E50;
+            }
+        """)
         
         self._setup_ui()
     
     def _setup_ui(self):
         """Build the UI for connection options."""
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(16, 20, 16, 16)
         self.main_layout.setSpacing(10)
         
         # Fetch all connection-related options for this product family
@@ -105,7 +122,11 @@ class ConnectionOptionsWidget(QFrame):
             for name in sub_names:
                 option_data = next((opt for opt in options if opt['name'] == name), None)
                 if option_data:
-                    widget = self._create_option_widget(name, option_data)
+                    if name == "Tri-clamp":
+                        # Create custom tri-clamp widget
+                        widget = self._create_tri_clamp_widget(option_data)
+                    else:
+                        widget = self._create_option_widget(name, option_data)
                     self.sub_options_layout.addWidget(widget)
                     widget.hide()
                     self.sub_option_widgets[name] = widget
@@ -159,6 +180,176 @@ class ConnectionOptionsWidget(QFrame):
                         config[name] = widget.get_current_value()
                     
         return config
+
+    def _create_tri_clamp_widget(self, option_data: Dict) -> "TriClampWidget":
+        """Create a custom tri-clamp widget with size dropdown and spud checkbox."""
+        widget = TriClampWidget(option_data)
+        widget.option_changed.connect(
+            lambda opt_name, value: self.option_changed.emit(opt_name, value)
+        )
+        return widget
+
+
+class TriClampWidget(QFrame):
+    """Custom widget for tri-clamp selection with size dropdown and spud checkbox."""
+    
+    option_changed = Signal(str, str)  # option_name, value
+    
+    def __init__(self, option_data: Dict, parent=None):
+        super().__init__(parent)
+        self.option_data = option_data
+        self.choices = option_data.get("choices", [])
+        self.adders = option_data.get("adders", {})
+        
+        self.setFrameStyle(QFrame.Shape.NoFrame)
+        self.setStyleSheet("""
+            TriClampWidget {
+                background-color: transparent;
+                border: none;
+                margin: 0px;
+                padding: 0px;
+            }
+        """)
+        
+        self._setup_ui()
+    
+    def _setup_ui(self):
+        """Setup the tri-clamp UI with size dropdown and spud checkbox."""
+        layout = QVBoxLayout(self)
+        layout.setSpacing(8)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Title
+        title_label = QLabel("Tri-clamp")
+        title_font = QFont()
+        title_font.setWeight(QFont.Weight.Medium)
+        title_font.setPointSize(11)
+        title_label.setFont(title_font)
+        title_label.setStyleSheet("color: #2C3E50; margin-bottom: 4px;")
+        layout.addWidget(title_label)
+        
+        # Size dropdown
+        size_layout = QHBoxLayout()
+        size_label = QLabel("Size:")
+        size_label.setStyleSheet("color: #6C757D; font-size: 10px; font-weight: 500;")
+        size_layout.addWidget(size_label)
+        
+        self.size_combo = QComboBox()
+        self.size_combo.addItems(["1-1/2\"", "2\""])
+        self.size_combo.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 6px 8px;
+                min-height: 24px;
+                background-color: white;
+                font-size: 10px;
+            }
+            QComboBox:focus {
+                border-color: #2C3E50;
+            }
+        """)
+        self.size_combo.currentTextChanged.connect(self._on_size_changed)
+        size_layout.addWidget(self.size_combo)
+        size_layout.addStretch()
+        layout.addLayout(size_layout)
+        
+        # Spud checkbox
+        self.spud_checkbox = QCheckBox("Spud")
+        self.spud_checkbox.setStyleSheet("""
+            QCheckBox {
+                color: #6C757D;
+                font-size: 10px;
+                font-weight: 500;
+                spacing: 6px;
+            }
+            QCheckBox::indicator {
+                width: 16px;
+                height: 16px;
+            }
+            QCheckBox::indicator:unchecked {
+                border: 1px solid #ced4da;
+                border-radius: 3px;
+                background-color: white;
+            }
+            QCheckBox::indicator:checked {
+                border: 1px solid #2C3E50;
+                border-radius: 3px;
+                background-color: #2C3E50;
+            }
+        """)
+        self.spud_checkbox.toggled.connect(self._on_spud_toggled)
+        layout.addWidget(self.spud_checkbox)
+        
+        # Price indicator
+        self.price_label = QLabel("")
+        self.price_label.setStyleSheet("""
+            color: #28A745; 
+            font-weight: 600; 
+            font-size: 10px;
+            margin-top: 4px;
+        """)
+        layout.addWidget(self.price_label)
+        
+        # Initialize with default values
+        self._update_selection()
+    
+    def _on_size_changed(self, size: str):
+        """Handle size dropdown change."""
+        self._update_selection()
+    
+    def _on_spud_toggled(self, checked: bool):
+        """Handle spud checkbox toggle."""
+        self._update_selection()
+    
+    def _update_selection(self):
+        """Update the selection and emit the change."""
+        size = self.size_combo.currentText()
+        is_spud = self.spud_checkbox.isChecked()
+        
+        # Create the selection string
+        if is_spud:
+            selection = f"{size} Tri-clamp Spud"
+        else:
+            selection = f"{size} Tri-clamp Process Connection"
+        
+        # Update price display
+        self._update_price_display(selection)
+        
+        # Emit the change
+        self.option_changed.emit("Tri-clamp", selection)
+    
+    def _update_price_display(self, selection: str):
+        """Update the price display based on selection."""
+        if selection in self.adders:
+            price = self.adders[selection]
+            if price > 0:
+                self.price_label.setText(f"+${price:.0f}")
+                self.price_label.show()
+            else:
+                self.price_label.setText("")
+                self.price_label.hide()
+        else:
+            self.price_label.setText("")
+            self.price_label.hide()
+    
+    def get_current_value(self) -> str:
+        """Get the current tri-clamp selection value."""
+        size = self.size_combo.currentText()
+        is_spud = self.spud_checkbox.isChecked()
+        
+        if is_spud:
+            return f"{size} Tri-clamp Spud"
+        else:
+            return f"{size} Tri-clamp Process Connection"
+    
+    def hide(self):
+        """Override hide to also hide the widget."""
+        super().hide()
+    
+    def show(self):
+        """Override show to also show the widget."""
+        super().show()
 
 
 class ModernOptionWidget(QFrame):
@@ -918,34 +1109,13 @@ class ImprovedProductSelectionDialog(QDialog):
             if not options:
                 return None
 
-            # Render Connections in grid format like other options
+            # Render Connections using the dedicated ConnectionOptionsWidget
             if category_name == "Connections":
-                widgets = []
-                for option in options:
-                    option_name = option.get("name")
-                    choices = option.get("choices", [])
-                    adders = option.get("adders", {})
-                    if not choices or not isinstance(choices, list):
-                        continue
-                    option_widget = ModernOptionWidget(option_name, choices, adders)
-                    option_widget.option_changed.connect(self._on_option_changed)
-                    self.option_widgets[option_name] = option_widget
-                    self.selected_options[option_name] = option_widget.get_current_value()
-                    widgets.append(option_widget)
-                # Return a QWidget containing all connection widgets in a grid
-                group = QWidget()
-                grid = QGridLayout(group)
-                grid.setSpacing(16)
-                grid.setContentsMargins(16, 20, 16, 16)
-                row, col = 0, 0
-                for w in widgets:
-                    grid.addWidget(w, row, col)
-                    col += 1
-                    if col >= 2:
-                        col = 0
-                        row += 1
-                group.setLayout(grid)
-                return group
+                connection_widget = ConnectionOptionsWidget(self.family_name, self.product_service)
+                connection_widget.option_changed.connect(self._on_option_changed)
+                # Store the connection widget for later access
+                self.connection_widget = connection_widget
+                return connection_widget
 
             # Generic categories get a standard group box
             group_box = QGroupBox(category_name)
@@ -1194,7 +1364,28 @@ class ImprovedProductSelectionDialog(QDialog):
                     spin_widget.setValue(int(updated_probe_length))
                     edit_widget.setText(str(int(updated_probe_length)))
                     self.selected_options["Probe Length"] = updated_probe_length
+                
+                # Auto-switch insulator material to Teflon when Halar is selected
+                if new_material_code == 'H':  # Halar material
+                    self._auto_set_insulator_to_teflon()
         self._update_total_price()
+    
+    def _auto_set_insulator_to_teflon(self):
+        """Automatically set insulator material to Teflon when Halar is selected."""
+        try:
+            # Find the insulator material widget
+            insulator_widget = self.option_widgets.get('Insulator Material')
+            if insulator_widget and isinstance(insulator_widget, ModernOptionWidget):
+                # Update the selected options to Teflon
+                self.selected_options['Insulator Material'] = 'TEF'
+                print(f"[DEBUG] Auto-set insulator material to Teflon for Halar material")
+                # Note: The widget will update automatically when _update_total_price is called
+            else:
+                print(f"[DEBUG] Insulator material widget not found")
+        except Exception as e:
+            print(f"[DEBUG] Error auto-setting insulator to Teflon: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _on_quantity_changed(self, quantity: int):
         """Handle quantity change."""
@@ -1349,6 +1540,14 @@ class ImprovedProductSelectionDialog(QDialog):
             "selected_options": self.selected_options,
             "base_price": self.current_product.base_model.base_price if self.current_product.base_model else 0.0,
         }
+        
+        # Generate dynamic part number for configured products
+        if hasattr(self, 'configuration_service') and self.configuration_service.current_config:
+            final_config["model_number"] = self.configuration_service.generate_model_number()
+        else:
+            # Fallback to base model number if no configuration service
+            base_model = getattr(self.current_product, 'base_model', None)
+            final_config["model_number"] = base_model.model_number if base_model else self.current_product.name
 
         # Add spare parts to configuration
         if hasattr(self, 'selected_spare_parts') and self.selected_spare_parts:
@@ -1418,9 +1617,157 @@ class ImprovedProductSelectionDialog(QDialog):
     
     def _load_product_for_editing(self):
         """Load product for editing."""
-        if self.product_to_edit:
-            # Implementation for editing existing product
-            pass
+        if not self.product_to_edit:
+            return
+            
+        try:
+            logger.info(f"Loading product for editing: {self.product_to_edit}")
+            
+            # Check if this is a spare part
+            if self.product_to_edit.get("is_spare_part"):
+                self._load_spare_part_for_editing()
+                return
+            
+            # Get the product family name from the quote item
+            product_family_name = self.product_to_edit.get("product_family", "")
+            
+            if not product_family_name:
+                logger.warning("No product family name found in product_to_edit")
+                return
+            
+            # Find the product family in the product list
+            product_found = False
+            for i in range(self.product_list.count()):
+                item = self.product_list.item(i)
+                product_data = item.data(Qt.ItemDataRole.UserRole)
+                
+                if product_data and product_data.get('name') == product_family_name:
+                    # Select this product
+                    self.product_list.setCurrentItem(item)
+                    product_found = True
+                    logger.info(f"Found and selected product family: {product_family_name}")
+                    break
+            
+            if not product_found:
+                logger.warning(f"Product family '{product_family_name}' not found in product list")
+                return
+            
+            # Wait a moment for the product selection to process, then load the configuration
+            QTimer.singleShot(100, self._load_saved_configuration)
+            
+        except Exception as e:
+            logger.error(f"Error loading product for editing: {e}", exc_info=True)
+    
+    def _load_spare_part_for_editing(self):
+        """Load spare part for editing."""
+        try:
+            logger.info("Loading spare part for editing")
+            
+            # Find and select "Spare Parts" in the product list
+            spare_parts_found = False
+            for i in range(self.product_list.count()):
+                item = self.product_list.item(i)
+                product_data = item.data(Qt.ItemDataRole.UserRole)
+                
+                if product_data and product_data.get('is_spare_parts'):
+                    # Select Spare Parts
+                    self.product_list.setCurrentItem(item)
+                    spare_parts_found = True
+                    logger.info("Found and selected Spare Parts")
+                    break
+            
+            if not spare_parts_found:
+                logger.warning("Spare Parts not found in product list")
+                return
+            
+            # Wait a moment for the spare parts interface to load, then select the specific part
+            QTimer.singleShot(200, self._load_saved_spare_part)
+            
+        except Exception as e:
+            logger.error(f"Error loading spare part for editing: {e}", exc_info=True)
+    
+    def _load_saved_spare_part(self):
+        """Load the saved spare part selection."""
+        try:
+            if not self.product_to_edit:
+                return
+            
+            # Get the spare part data
+            spare_part_data = self.product_to_edit.get("spare_part_data", {})
+            part_number = spare_part_data.get("part_number", "")
+            
+            if not part_number:
+                logger.warning("No part number found in spare part data")
+                return
+            
+            # Find and select the specific spare part
+            if hasattr(self, 'spare_parts_list'):
+                for i in range(self.spare_parts_list.count()):
+                    item = self.spare_parts_list.item(i)
+                    part = item.data(Qt.ItemDataRole.UserRole)
+                    
+                    if part and part.part_number == part_number:
+                        # Select this spare part
+                        self.spare_parts_list.setCurrentItem(item)
+                        logger.info(f"Found and selected spare part: {part_number}")
+                        
+                        # Set the quantity
+                        saved_quantity = self.product_to_edit.get("quantity", 1)
+                        if hasattr(self, 'quantity_spinner'):
+                            self.quantity_spinner.setValue(saved_quantity)
+                            self.quantity = saved_quantity
+                        
+                        break
+                else:
+                    logger.warning(f"Spare part '{part_number}' not found in spare parts list")
+            
+        except Exception as e:
+            logger.error(f"Error loading saved spare part: {e}", exc_info=True)
+    
+    def _load_saved_configuration(self):
+        """Load the saved configuration options."""
+        try:
+            if not self.product_to_edit or not self.configuration_service.current_config:
+                return
+            
+            logger.info("Loading saved configuration options")
+            
+            # Get the saved configuration data
+            saved_config = self.product_to_edit.get("config_data", {})
+            saved_options = self.product_to_edit.get("options", [])
+            
+            # Set the quantity
+            saved_quantity = self.product_to_edit.get("quantity", 1)
+            if hasattr(self, 'quantity_spinner'):
+                self.quantity_spinner.setValue(saved_quantity)
+                self.quantity = saved_quantity
+            
+            # Apply saved configuration options
+            for option_name, option_value in saved_config.items():
+                if option_name in self.option_widgets:
+                    widget = self.option_widgets[option_name]
+                    
+                    # Set the option value based on widget type
+                    if hasattr(widget, 'setCurrentText'):
+                        # For combo boxes
+                        widget.setCurrentText(str(option_value))
+                    elif hasattr(widget, 'setValue'):
+                        # For spin boxes
+                        widget.setValue(float(option_value))
+                    elif hasattr(widget, 'setChecked'):
+                        # For check boxes
+                        widget.setChecked(bool(option_value))
+                    
+                    # Update the configuration service
+                    self.configuration_service.set_option(option_name, option_value)
+            
+            # Update the total price
+            self._update_total_price()
+            
+            logger.info("Successfully loaded saved configuration")
+            
+        except Exception as e:
+            logger.error(f"Error loading saved configuration: {e}", exc_info=True)
     
     def closeEvent(self, event):
         """Clean up resources on close."""

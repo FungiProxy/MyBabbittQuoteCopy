@@ -33,6 +33,7 @@ from src.core.database import SessionLocal
 from src.core.services.product_service import ProductService
 from src.core.services.configuration_service import ConfigurationService
 from src.ui.theme.babbitt_theme import BabbittTheme
+from src.ui.theme.modern_styles import get_button_style
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,7 @@ class ProductConfigurationWidget(QWidget):
         
         # Add to Quote button
         self.add_button = QPushButton("Add to Quote")
-        self.add_button.setStyleSheet(BabbittTheme.get_button_style())
+        self.add_button.setStyleSheet(get_button_style())
         self.add_button.clicked.connect(self._on_add_to_quote)
         self.add_button.setMinimumHeight(45)
         main_layout.addWidget(self.add_button)
@@ -220,6 +221,21 @@ class ProductConfigurationWidget(QWidget):
         layout = QFormLayout(group)
         layout.setSpacing(16)
         layout.setContentsMargins(16, 20, 16, 16)
+        layout.setLabelAlignment(Qt.AlignmentFlag.AlignVCenter)
+        # Set stylesheet for all labels and value widgets in this form
+        group.setStyleSheet(group.styleSheet() + """
+            QLabel {
+                min-height: 20px;
+                max-height: 20px;
+                font-size: 14px;
+                padding: 0 4px;
+            }
+            QComboBox, QLineEdit, QSpinBox, QRadioButton, QCheckBox {
+                min-height: 20px;
+                max-height: 20px;
+                font-size: 14px;
+            }
+        """)
         
         # Material selection
         material_options = [opt for opt in self.available_options if opt.get('category') == 'Material']
@@ -324,6 +340,17 @@ class ProductConfigurationWidget(QWidget):
                     left: 12px;
                     padding: 0 8px;
                     background-color: white;
+                }
+                QLabel {
+                    min-height: 20px;
+                    max-height: 20px;
+                    font-size: 14px;
+                    padding: 0 4px;
+                }
+                QComboBox, QLineEdit, QSpinBox, QRadioButton, QCheckBox {
+                    min-height: 20px;
+                    max-height: 20px;
+                    font-size: 14px;
                 }
             """)
             
@@ -507,12 +534,12 @@ class ProductConfigurationWidget(QWidget):
         """Update the price display with current configuration."""
         try:
             # Get current configuration
-            config = self.config_service.get_current_configuration()
+            config = self.config_service.current_config
             if not config:
                 return
             
             # Calculate pricing
-            unit_price = config.get('final_price', self.base_price)
+            unit_price = getattr(config, 'final_price', self.base_price)
             quantity = self.quantity_spin.value()
             total_price = unit_price * quantity
             
@@ -520,7 +547,7 @@ class ProductConfigurationWidget(QWidget):
             breakdown = [f"Base Price: ${self.base_price:.2f}"]
             
             # Add option costs
-            selected_options = config.get('selected_options', {})
+            selected_options = getattr(config, 'selected_options', {})
             for option_name, value in selected_options.items():
                 if option_name in ['Material', 'Voltage']:
                     # Get price adder for this option
@@ -558,14 +585,14 @@ class ProductConfigurationWidget(QWidget):
     
     def get_configuration_summary(self) -> Dict:
         """Get configuration summary for quote generation."""
-        config = self.config_service.get_current_configuration()
+        config = self.config_service.current_config
         if not config:
             return {}
         
         # Build readable configuration description
         description_parts = [self.product_data.get('name', 'Product')]
         
-        selected_options = config.get('selected_options', {})
+        selected_options = getattr(config, 'selected_options', {})
         for option_name, value in selected_options.items():
             if option_name in ['Material', 'Voltage']:
                 description_parts.append(f"{option_name}: {value}")

@@ -870,6 +870,7 @@ class ProductService:
             "base_length": base_model.base_length,
             "voltage": base_model.voltage,
             "material": base_model.material,
+            "insulator_material": base_model.insulator_material,
             "family_id": family.id,
             "name": family.name,  # Include family name for consistency
         }

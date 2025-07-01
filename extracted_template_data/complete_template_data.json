@@ -1,0 +1,327 @@
+{
+  "product_family_descriptions": [
+    {
+      "name": "FS10000",
+      "base_insulator_description": "Standard ceramic insulator, rated to 450°F, designed for harsh industrial environments",
+      "base_housing_description": "NEMA 4X, IP65 rated aluminum enclosure with corrosion-resistant coating"
+    },
+    {
+      "name": "LS2000",
+      "base_insulator_description": "High-temperature ceramic insulator, rated to 500°F, with chemical resistance",
+      "base_housing_description": "NEMA 4X, IP65 rated 316 Stainless Steel or HALAR coated enclosure"
+    },
+    {
+      "name": "LS2100",
+      "base_insulator_description": "Enhanced ceramic insulator with improved thermal characteristics, rated to 550°F",
+      "base_housing_description": "NEMA 4X, IP67 rated enclosure with enhanced sealing for extreme environments"
+    },
+    {
+      "name": "LS6000",
+      "base_insulator_description": "Continuous service ceramic insulator, rated to 600°F, with superior electrical isolation",
+      "base_housing_description": "NEMA 4X, IP68 rated enclosure designed for continuous operation"
+    },
+    {
+      "name": "LS7000",
+      "base_insulator_description": "Advanced ceramic insulator with extended temperature range, rated to 650°F",
+      "base_housing_description": "NEMA 7, explosion-proof enclosure for hazardous locations"
+    },
+    {
+      "name": "LS7000-2",
+      "base_insulator_description": "Enhanced Version 2 ceramic insulator with improved chemical resistance",
+      "base_housing_description": "NEMA 7, Class I Div 1 explosion-proof enclosure with enhanced safety features"
+    },
+    {
+      "name": "LS7500",
+      "base_insulator_description": "Ring-type ceramic insulator designed for full or partial ring configurations",
+      "base_housing_description": "Modular NEMA 4X enclosure accommodating ring sensor configurations"
+    },
+    {
+      "name": "LS8000",
+      "base_insulator_description": "Industrial transmitter ceramic insulator, rated to 700°F with superior stability",
+      "base_housing_description": "NEMA 4X/7 dual-rated enclosure for versatile installation requirements"
+    },
+    {
+      "name": "LS8000-2",
+      "base_insulator_description": "Version 2 enhanced insulator with improved thermal shock resistance",
+      "base_housing_description": "Next-generation NEMA 7 enclosure with advanced diagnostic capabilities"
+    },
+    {
+      "name": "LS8500",
+      "base_insulator_description": "Advanced ring-type insulator for high-precision applications",
+      "base_housing_description": "Precision-engineered NEMA 4X enclosure for ring sensor mounting"
+    },
+    {
+      "name": "LT9000",
+      "base_insulator_description": "Level transmitter ceramic insulator optimized for 4-20mA output applications",
+      "base_housing_description": "Compact NEMA 4X enclosure designed for space-constrained installations"
+    }
+  ],
+  "housing_options": [
+    {
+      "name": "NEMA 4X Aluminum",
+      "description": "Standard aluminum enclosure with corrosion-resistant coating",
+      "applicable_families": [
+        "FS10000",
+        "LS2000",
+        "LS2100",
+        "LS6000",
+        "LS7500",
+        "LS8500",
+        "LT9000"
+      ],
+      "price_modifier": 0,
+      "category": "Housing"
+    },
+    {
+      "name": "NEMA 4X Stainless Steel",
+      "description": "316 Stainless Steel enclosure for corrosive environments",
+      "applicable_families": [
+        "LS2000",
+        "LS2100",
+        "LS6000",
+        "LS7500",
+        "LS8000",
+        "LS8500",
+        "LT9000"
+      ],
+      "price_modifier": 150,
+      "category": "Housing"
+    },
+    {
+      "name": "NEMA 7 Explosion-Proof",
+      "description": "Class I Div 1 explosion-proof enclosure for hazardous locations",
+      "applicable_families": [
+        "LS7000",
+        "LS7000-2",
+        "LS8000",
+        "LS8000-2"
+      ],
+      "price_modifier": 300,
+      "category": "Housing"
+    },
+    {
+      "name": "NEMA 4X/7 Dual-Rated",
+      "description": "Versatile enclosure meeting both NEMA 4X and NEMA 7 requirements",
+      "applicable_families": [
+        "LS8000",
+        "LS8000-2"
+      ],
+      "price_modifier": 250,
+      "category": "Housing"
+    }
+  ],
+  "export_text_rules": [
+    {
+      "category": "material_note",
+      "option_name": "Material",
+      "option_value": "Stainless Steel",
+      "text_block": "316 Stainless Steel construction provides excellent corrosion resistance for most industrial applications. Suitable for temperatures up to 750°F and pressures up to 3000 PSI. Not recommended for applications involving hydrofluoric acid or other fluorinated compounds.",
+      "product_families": [
+        "*"
+      ]
+    },
+    {
+      "category": "material_note",
+      "option_name": "Material",
+      "option_value": "HALAR",
+      "text_block": "HALAR (ECTFE) coating provides superior chemical resistance to acids, bases, and organic solvents. Temperature range: -100°F to 350°F. Pressure rating: 1500 PSI maximum. Excellent for chemical processing applications where stainless steel may be attacked.",
+      "product_families": [
+        "*"
+      ]
+    },
+    {
+      "category": "material_note",
+      "option_name": "Material",
+      "option_value": "Teflon Sleeve",
+      "text_block": "Teflon (PTFE) sleeve provides exceptional chemical inertness and non-stick properties. Temperature range: -450°F to 500°F. Suitable for ultra-pure applications and where contamination prevention is critical. FDA compliant for food and pharmaceutical use.",
+      "product_families": [
+        "LT9000"
+      ]
+    },
+    {
+      "category": "material_note",
+      "option_name": "Material",
+      "option_value": "Ceramic Insulator",
+      "text_block": "High-purity ceramic insulator provides excellent electrical isolation and thermal stability. Temperature range: -100°F to 800°F. Chemically inert to most process fluids. Ideal for high-temperature applications where metallic components may fail.",
+      "product_families": [
+        "LS8000"
+      ]
+    },
+    {
+      "category": "pressure_rating",
+      "option_name": "Pressure",
+      "option_value": "1500PSI",
+      "text_block": "All wetted parts are certified for continuous operation up to 1500 PSI. Hydrostatic test pressure: 2250 PSI. Burst pressure: 6000 PSI minimum. Pressure connections available in NPT, BSP, or flanged configurations.",
+      "product_families": [
+        "*"
+      ]
+    },
+    {
+      "category": "pressure_rating",
+      "option_name": "Pressure",
+      "option_value": "3000PSI",
+      "text_block": "High-pressure design certified for continuous operation up to 3000 PSI. Hydrostatic test pressure: 4500 PSI. Burst pressure: 12000 PSI minimum. Special high-pressure fittings and gaskets included. Not suitable for vacuum applications.",
+      "product_families": [
+        "LS2000",
+        "LS2100",
+        "LS6000",
+        "LS7000",
+        "LS8000"
+      ]
+    },
+    {
+      "category": "application_note",
+      "option_name": "Application",
+      "option_value": "Chemical Processing",
+      "text_block": "Designed for chemical processing applications with aggressive media. All wetted components selected for chemical compatibility. Consult factory for specific chemical compatibility data. Special cleaning and passivation procedures available.",
+      "product_families": [
+        "*"
+      ]
+    },
+    {
+      "category": "application_note",
+      "option_name": "Application",
+      "option_value": "Food & Beverage",
+      "text_block": "FDA compliant materials and construction. 3-A sanitary standards compliance available. CIP/SIP compatible design. Electro-polished surfaces available for easy cleaning. NSF listing available upon request.",
+      "product_families": [
+        "LS2000",
+        "LS2100",
+        "LT9000"
+      ]
+    },
+    {
+      "category": "application_note",
+      "option_name": "Application",
+      "option_value": "Hazardous Locations",
+      "text_block": "Certified for use in Class I Div 1 and Div 2 hazardous locations. FM and CSA approved. Explosion-proof conduit connections included. Special grounding provisions for static electricity prevention. Intrinsically safe versions available.",
+      "product_families": [
+        "LS7000",
+        "LS7000-2",
+        "LS8000",
+        "LS8000-2"
+      ]
+    },
+    {
+      "category": "warranty",
+      "option_name": "Warranty",
+      "option_value": "Standard",
+      "text_block": "2-Year Warranty: All components are warranted against defects in materials and workmanship for 24 months from date of shipment. Warranty covers repair or replacement at manufacturer's discretion. Excludes damage from misuse, normal wear, or chemical attack.",
+      "product_families": [
+        "*"
+      ]
+    },
+    {
+      "category": "calibration",
+      "option_name": "Calibration",
+      "option_value": "Factory",
+      "text_block": "Factory Calibration: Unit is calibrated using NIST-traceable standards. Calibration certificate included. Calibration performed at 70°F ±2°F. Field recalibration procedures included in manual. Recommended calibration interval: 12 months.",
+      "product_families": [
+        "LT9000",
+        "LS8000",
+        "LS8000-2"
+      ]
+    }
+  ],
+  "document_templates": [
+    {
+      "product_family": "FS10000",
+      "material": null,
+      "filename": "FS10000 Template.docx"
+    },
+    {
+      "product_family": "LS2000",
+      "material": "Stainless Steel",
+      "filename": "LS2000 Stainless Steel Quote Template.docx"
+    },
+    {
+      "product_family": "LS2000",
+      "material": "HALAR",
+      "filename": "LS2000 HALAR Quote Template.docx"
+    },
+    {
+      "product_family": "LS2100",
+      "material": "Stainless Steel",
+      "filename": "LS2100 Stainless Steel Quote Template.docx"
+    },
+    {
+      "product_family": "LS2100",
+      "material": "HALAR",
+      "filename": "LS2100 HALAR Quote Template.docx"
+    },
+    {
+      "product_family": "LS6000",
+      "material": "Stainless Steel",
+      "filename": "LS6000 Stainless Steel Quote Template.docx"
+    },
+    {
+      "product_family": "LS6000",
+      "material": "HALAR",
+      "filename": "LS6000 HALAR Quote Template.docx"
+    },
+    {
+      "product_family": "LS7000",
+      "material": "Stainless Steel",
+      "filename": "LS7000 Stainless Steel Quote Template.docx"
+    },
+    {
+      "product_family": "LS7000",
+      "material": "HALAR",
+      "filename": "LS7000 HALAR Quote Template.docx"
+    },
+    {
+      "product_family": "LS7000-2",
+      "material": "HALAR",
+      "filename": "LS7000 -2 HALAR Quote Template.docx"
+    },
+    {
+      "product_family": "LS7500",
+      "variant": "Full Ring",
+      "filename": "LS7500 Full Ring Quote Template.docx"
+    },
+    {
+      "product_family": "LS7500",
+      "variant": "Partial Ring",
+      "filename": "LS7500 Partial Ring Quote Template.docx"
+    },
+    {
+      "product_family": "LS8000",
+      "material": "Stainless Steel",
+      "filename": "LS8000 Stainless Steel Quote Template.docx"
+    },
+    {
+      "product_family": "LS8000",
+      "material": "HALAR",
+      "filename": "LS8000 HALAR Quote Template.docx"
+    },
+    {
+      "product_family": "LS8000",
+      "material": "Ceramic Insulator",
+      "filename": "LS8000 Ceramic Insulator Quote Template.docx"
+    },
+    {
+      "product_family": "LS8000-2",
+      "material": "HALAR",
+      "filename": "LS8000-2 Halar Quote Template.docx"
+    },
+    {
+      "product_family": "LS8500",
+      "variant": "Full Ring",
+      "filename": "LS8500 Full Ring Quote Template.docx"
+    },
+    {
+      "product_family": "LS8500",
+      "variant": "Partial Ring",
+      "filename": "LS8500 Partial Ring Quote Template.docx"
+    },
+    {
+      "product_family": "LT9000",
+      "material": "HALAR",
+      "filename": "LT9000 HALAR Quote Template.docx"
+    },
+    {
+      "product_family": "LT9000",
+      "material": "Teflon Sleeve",
+      "filename": "LT9000 Teflon Sleeve Quote Template.docx"
+    }
+  ]
+}

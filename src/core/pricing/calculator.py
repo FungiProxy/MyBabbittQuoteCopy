@@ -20,6 +20,7 @@ from src.core.pricing.strategies import (
     PricingStrategy,
     AccessoryOptionStrategy,
     InsulatorOptionStrategy,
+    ExoticMetalAdderStrategy,
 )
 
 
@@ -75,6 +76,7 @@ def calculate_product_price(context: PricingContext) -> float:
         MaterialAvailabilityStrategy(),
         BasePriceStrategy(),
         MaterialPremiumStrategy(),
+        ExoticMetalAdderStrategy(),
         InsulatorOptionStrategy(),
         AccessoryOptionStrategy(),
         ExtraLengthStrategy(),

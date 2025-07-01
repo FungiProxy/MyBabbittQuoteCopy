@@ -741,6 +741,29 @@ class BabbittTheme:
             font-size: 14px;
             color: {cls.GRAY_400};
         }}
+
+        /* === GLOBAL: Product Configuration Label & Value Box Height Fix === */
+        QGroupBox QFormLayout > QLabel {{
+            min-height: 20px;
+            max-height: 20px;
+            font-size: 14px;
+            padding: 0 4px;
+        }}
+        QGroupBox QFormLayout > QComboBox,
+        QGroupBox QFormLayout > QLineEdit,
+        QGroupBox QFormLayout > QSpinBox,
+        QGroupBox QFormLayout > QRadioButton,
+        QGroupBox QFormLayout > QCheckBox {{
+            min-height: 20px;
+            max-height: 20px;
+            font-size: 14px;
+        }}
+
+        /* === GLOBAL: Remove focus rectangle everywhere === */
+        QWidget:focus, QListWidget::item:focus, QPushButton:focus {{
+            border: none !important;
+            outline: none !important;
+        }}
         """
 
     @classmethod

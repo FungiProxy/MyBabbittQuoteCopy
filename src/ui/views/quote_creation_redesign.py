@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QStackedWidget,
     QFileDialog,
+    QMenu,
 )
 from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 
@@ -82,6 +83,9 @@ class QuoteCreationPageRedesign(QWidget):
             "quote_number": None,
             "status": "Draft"
         }
+        
+        # Add flag to prevent multiple product additions
+        self._processing_product_addition = False
         
         self._setup_ui()
         self._update_items_visibility()
@@ -260,21 +264,21 @@ class QuoteCreationPageRedesign(QWidget):
         
         # Items table
         self.items_table = QTableWidget()
-        self.items_table.setColumnCount(6)
+        self.items_table.setColumnCount(4)
         self.items_table.setHorizontalHeaderLabels([
-            "Product", "Configuration", "Quantity", "Unit Price", "Total", "Actions"
+            "Part Number", "Quantity", "Unit Price", "Total"
         ])
         
         header = self.items_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)  # Part Number column stretched
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
         
         self.items_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.items_table.setAlternatingRowColors(True)
+        self.items_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.items_table.customContextMenuRequested.connect(self._show_item_context_menu)
         
         size_policy = self.items_table.sizePolicy()
         size_policy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
@@ -402,6 +406,7 @@ class QuoteCreationPageRedesign(QWidget):
         try:
             # Use the modern dialog
             dialog = ModernProductSelectionDialog(product_service=self.product_service, parent=self)
+            # Connect the signal - no need to disconnect since this is a new dialog instance
             dialog.product_added.connect(self._on_product_configured)
             dialog.exec()
         except Exception as e:
@@ -410,12 +415,30 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _on_product_configured(self, config_data: Dict):
         """Handle completed product configuration from the new widget."""
+        # Prevent multiple calls
+        if self._processing_product_addition:
+            logger.warning("_on_product_configured called while already processing - ignoring")
+            return
+        
+        self._processing_product_addition = True
+        
         try:
+            # Add debug logging to track if this method is called multiple times
+            logger.info(f"_on_product_configured called with config_data: {config_data}")
+            
+            # Determine the correct part number based on item type
+            if config_data.get("is_spare_part"):
+                # For spare parts, use the full part number
+                part_number = config_data.get("model_number", "N/A")
+            else:
+                # For configured products, use the dynamic part number
+                part_number = config_data.get("model_number", config_data.get("product", "N/A"))
+            
             # The new widget returns a summary with all the data we need.
             quote_item = {
                 "product_id": config_data.get("product_id"), # Make sure this is passed
                 "product_family": config_data.get("product", "N/A"),
-                "model_number": config_data.get("product", "N/A"), # Use the base product name
+                "model_number": part_number, # Use the correct part number based on item type
                 "configuration": config_data.get("description", "Standard Configuration"),
                 "quantity": config_data.get("quantity", 1),
                 "unit_price": config_data.get("unit_price", 0),
@@ -424,15 +447,19 @@ class QuoteCreationPageRedesign(QWidget):
                 "options": config_data.get("options", []) # Make sure this is passed
             }
             
+            logger.info(f"Adding quote_item to current_quote: {quote_item}")
             self.current_quote["items"].append(quote_item)
             self._update_items_table()
             self._update_quote_totals()
             
-            logger.info(f"Added product to quote: {quote_item['model_number']}")
+            logger.info(f"Successfully added product to quote: {quote_item['model_number']}")
             
         except Exception as e:
             logger.error(f"Error adding configured product: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Failed to add product to quote: {str(e)}")
+        finally:
+            # Reset the flag
+            self._processing_product_addition = False
 
     def _format_configuration(self, selected_options: Dict) -> str:
         """Format configuration options for display."""
@@ -469,7 +496,6 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _update_items_table(self):
         """Update the items table with current quote items."""
-        # Safety check: ensure current_quote exists and has items
         if not hasattr(self, 'current_quote') or not self.current_quote:
             self.current_quote = {
                 "items": [],
@@ -478,45 +504,29 @@ class QuoteCreationPageRedesign(QWidget):
                 "quote_number": None,
                 "status": "Draft"
             }
-        
         items = self.current_quote.get("items", [])
         self.items_table.setRowCount(len(items))
-        
         for row, item in enumerate(items):
-            # Product name
-            product_item = QTableWidgetItem(item.get("product_family", "N/A"))
-            product_item.setFlags(product_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            self.items_table.setItem(row, 0, product_item)
-            
-            # Configuration
-            config_item = QTableWidgetItem(item.get("configuration", "Standard Configuration"))
-            config_item.setFlags(config_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            self.items_table.setItem(row, 1, config_item)
-            
-            # Quantity (editable)
+            # Part Number (model number)
+            part_number = QTableWidgetItem(item.get("model_number", "N/A"))
+            part_number.setFlags(part_number.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            part_number.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            self.items_table.setItem(row, 0, part_number)
+            # Quantity
             quantity_item = QTableWidgetItem(str(item.get("quantity", 1)))
             quantity_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.items_table.setItem(row, 2, quantity_item)
-            
+            self.items_table.setItem(row, 1, quantity_item)
             # Unit price
             unit_price_item = QTableWidgetItem(f"${item.get('unit_price', 0):,.2f}")
             unit_price_item.setFlags(unit_price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             unit_price_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
-            self.items_table.setItem(row, 3, unit_price_item)
-            
+            self.items_table.setItem(row, 2, unit_price_item)
             # Total price
             total_price_item = QTableWidgetItem(f"${item.get('total_price', 0):,.2f}")
             total_price_item.setFlags(total_price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             total_price_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
-            self.items_table.setItem(row, 4, total_price_item)
-            
-            # Actions
-            actions_widget = self._create_actions_widget(row)
-            self.items_table.setCellWidget(row, 5, actions_widget)
-        
-        # Connect quantity change signal
+            self.items_table.setItem(row, 3, total_price_item)
         self.items_table.itemChanged.connect(self._on_item_changed)
-        
         self._update_items_visibility()
 
     def _create_actions_widget(self, row: int) -> QWidget:
@@ -559,7 +569,7 @@ class QuoteCreationPageRedesign(QWidget):
 
     def _on_item_changed(self, item: QTableWidgetItem):
         """Handle changes to table items (e.g., quantity)."""
-        if item.column() == 2:  # Quantity column
+        if item.column() == 1:  # Quantity column
             try:
                 row = item.row()
                 new_quantity = int(item.text())
@@ -576,7 +586,7 @@ class QuoteCreationPageRedesign(QWidget):
                 total_item = QTableWidgetItem(f"${quote_item['total_price']:,.2f}")
                 total_item.setFlags(total_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 total_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
-                self.items_table.setItem(row, 4, total_item)
+                self.items_table.setItem(row, 3, total_item)
                 
                 self._update_quote_totals()
                 
@@ -1124,3 +1134,18 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
                 "Quote Deleted", 
                 "The quote you were editing has been deleted. The form has been reset."
             )
+
+    def _show_item_context_menu(self, pos):
+        """Show context menu for edit/delete on right-click."""
+        index = self.items_table.indexAt(pos)
+        row = index.row()
+        if row < 0:
+            return
+        menu = QMenu(self)
+        edit_action = menu.addAction("Edit Item")
+        delete_action = menu.addAction("Delete Item")
+        action = menu.exec(self.items_table.viewport().mapToGlobal(pos))
+        if action == edit_action:
+            self._edit_item(row)
+        elif action == delete_action:
+            self._remove_item(row)

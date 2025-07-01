@@ -1,0 +1,33 @@
+id,product_family_id,model_number,description,base_price,base_length,voltage,material
+1,1,"LS2000-115VAC-S-10""",LS2000 Level Switch - Base Configuration,425.0,10.0,115VAC,S
+2,2,"LS2100-24VDC-S-10""",LS2100 Level Switch - Base Configuration,460.0,10.0,24VDC,S
+3,3,"LS6000-115VAC-S-10""",LS6000 Level Switch - Base Configuration,550.0,10.0,115VAC,S
+4,4,"LS7000-115VAC-S-10""",LS7000 Level Switch - Base Configuration,680.0,10.0,115VAC,S
+5,5,"LS7000/2-115VAC-H-10""",LS7000/2 Level Switch - Base Configuration,770.0,10.0,115VAC,H
+6,6,"LS8000-115VAC-S-10""",LS8000 Level Switch - Base Configuration,715.0,10.0,115VAC,S
+7,7,"LS8000/2-115VAC-H-10""",LS8000/2 Level Switch - Base Configuration,850.0,10.0,115VAC,H
+8,8,"LT9000-115VAC-H-10""",LT9000 Level Transmitter - Base Configuration,855.0,10.0,115VAC,H
+9,9,"FS10000-115VAC-S-6""",FS10000 Flow Switch - Base Configuration,1885.0,6.0,115VAC,S
+10,10,LS7500-BASE,LS7500 Presence/Absence Switch - Base Configuration,0.0,10.0,115VAC,S
+11,11,LS8500-BASE,LS8500 Presence/Absence Switch - Base Configuration,0.0,10.0,115VAC,S
+81,12,LS8000/2-TRAN-EX-S-10,"TRAN-EX base product for LS8000/2 family (fixed 115VAC, S/H material only)",540.0,10.0,115VAC,S
+82,9,FS10000-XX,FS10000 specification from RTF template,0.0,10.0,115VAC Electronics mounted in a non-metallic 10 x 8 x 5 NEMA 4X enclosure w/ clear acrylic window. {,S
+83,1,LS2000-H-XX,LS2000 HALAR specification from RTF template,0.0,4.0,{,HALAR
+84,1,LS2000-S-XX,LS2000 Stainless Steel specification from RTF template,0.0,4.0,{,Stainless Steel
+85,2,LS2100-H-XX,LS2100 HALAR specification from RTF template,0.0,4.0,{,HALAR
+86,2,LS2100-S-XX,LS2100 Stainless Steel specification from RTF template,0.0,10.0,16 TO 32 VDC {,Stainless Steel
+87,3,LS6000-H-XX,LS6000 HALAR specification from RTF template,0.0,4.0,{,HALAR
+88,3,LS6000-S-XX,LS6000 Stainless Steel specification from RTF template,0.0,4.0,{,Stainless Steel
+90,4,LS7000-H-XX,LS7000 HALAR specification from RTF template,0.0,4.0,{,HALAR
+91,4,LS7000-S-XX,LS7000 Stainless Steel specification from RTF template,0.0,4.0,{,Stainless Steel
+92,10,LS7500-F-XX,LS7500 Full Ring specification from RTF template,0.0,10.0,{,S
+93,10,LS7500-P-XX,LS7500 Partial Ring specification from RTF template,0.0,10.0,{,S
+95,6,LS8000-C-XX,LS8000 Ceramic Insulator specification from RTF template,0.0,10.0,{,Ceramic Insulator
+96,6,LS8000-H-XX,LS8000 HALAR specification from RTF template,0.0,4.0,{,HALAR
+97,6,LS8000-S-XX,LS8000 Stainless Steel specification from RTF template,0.0,4.0,xxx {,Stainless Steel
+98,11,LS8500-F-XX,LS8500 Full Ring specification from RTF template,0.0,10.0,{,S
+99,11,LS8500-P-XX,LS8500 Partial Ring specification from RTF template,0.0,10.0,{,S
+100,8,LT9000-H-XX,LT9000 HALAR specification from RTF template,0.0,4.0,{,HALAR
+101,8,LT9000-T-XX,LT9000 Teflon Sleeve specification from RTF template,0.0,4.0,{,Teflon Sleeve
+102,5,LS7000/2-H-XX,LS7000/2 HALAR specification from RTF template,0.0,4.0,{,HALAR
+103,7,LS8000/2-H-XX,LS8000/2 HALAR specification from RTF template,0.0,4.0,{,HALAR

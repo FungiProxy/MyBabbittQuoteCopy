@@ -381,6 +381,28 @@ class OringMaterialStrategy(PricingStrategy):
         return context.price
 
 
+class ExoticMetalAdderStrategy(PricingStrategy):
+    def calculate(self, context: PricingContext) -> float:
+        """Add manual price adder for exotic metals (A, HB, HC, TT)."""
+        material_code = context.material.code
+        exotic_metals = ['A', 'HB', 'HC', 'TT']
+        
+        # Only apply adder for exotic metals
+        if material_code in exotic_metals:
+            # Get the exotic metal adder from the configuration specs
+            exotic_metal_adder = context.specs.get('ExoticMetalAdder', 0.0)
+            if exotic_metal_adder:
+                try:
+                    adder_value = float(exotic_metal_adder)
+                    if adder_value > 0:
+                        print(f"[DEBUG] ExoticMetalAdderStrategy: Adding ${adder_value:.2f} for {material_code}")
+                        context.price += adder_value
+                except (ValueError, TypeError):
+                    print(f"[DEBUG] ExoticMetalAdderStrategy: Invalid adder value: {exotic_metal_adder}")
+        
+        return context.price
+
+
 class InsulatorOptionStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
         # Print all option names and categories for the product family
@@ -417,6 +439,20 @@ class InsulatorOptionStrategy(PricingStrategy):
                         break
                 if not found:
                     print(f"[WARNING] No adder found for {ins_opt} value: {value} (tried keys: {keys_to_try})")
+                
+                # Special handling: Nullify Teflon price adder when Halar material is selected
+                if ins_opt == "Insulator Material" and context.material.code == "H":
+                    # Check if the selected insulator is Teflon
+                    is_teflon = False
+                    if isinstance(value, dict) and value.get('code') == 'TEF':
+                        is_teflon = True
+                    elif isinstance(value, str) and value == 'TEF':
+                        is_teflon = True
+                    
+                    if is_teflon:
+                        print(f"[DEBUG] Halar material detected - nullifying Teflon insulator price adder")
+                        adder_value = 0.0  # Force no adder for Teflon when Halar is selected
+                
                 if adder_value:
                     print(f"[DEBUG] Insulator adder applied: {ins_opt} = {adder_value}")
                     context.price += float(adder_value)

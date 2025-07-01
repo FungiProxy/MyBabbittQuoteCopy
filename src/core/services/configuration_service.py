@@ -343,16 +343,11 @@ class ConfigurationService:
 
         # Special handling for TRAN-EX
         if family == "TRAN-EX":
-            # Get values from selected options, with proper fallbacks
             material = config.selected_options.get("Material")
             length = config.selected_options.get("Probe Length", config.base_product.get("base_length", 10))
-
-            # If material is not set, set a default
             if not material:
-                material = "S"  # Default to S material
+                material = "S"
                 config.selected_options["Material"] = material
-
-            # Map material names to their single-letter codes
             material_map = {
                 "316SS": "S",
                 "304SS": "S",
@@ -361,15 +356,9 @@ class ConfigurationService:
                 "Titanium": "T",
                 "Inconel": "I",
             }
-
-            # Get the single-letter material code
             material_code = (
-                material
-                if len(str(material)) == 1
-                else material_map.get(str(material), material)
+                material if len(str(material)) == 1 else material_map.get(str(material), material)
             )
-
-            # Format the length to remove decimals if it's a whole number
             try:
                 length_val = float(length)
                 length_str = (
@@ -377,21 +366,15 @@ class ConfigurationService:
                 )
             except (ValueError, TypeError):
                 length_str = f'{length}"' if length else 'LENGTH"'
-
             return f"LS8000/2-TRAN-EX-{material_code}-{length_str}"
 
-        # Standard model number generation for other products
-        # Get values from selected options, with proper fallbacks
         voltage = config.selected_options.get("Voltage")
         material = config.selected_options.get("Material")
         length = config.selected_options.get("Probe Length", config.base_product.get("base_length", 10))
-
-        # If voltage is not set, try to get it from the product family defaults
         if not voltage:
-            # Set default voltage based on product family
             family_defaults = {
                 "LS2000": "115VAC",
-                "LS2100": "115VAC", 
+                "LS2100": "115VAC",
                 "LS7000": "115VAC",
                 "LS7500": "115VAC",
                 "LS8500": "115VAC",
@@ -402,15 +385,10 @@ class ConfigurationService:
                 "LS8000": "115VAC",
             }
             voltage = family_defaults.get(family, "115VAC")
-            # Set the voltage in the configuration
             config.selected_options["Voltage"] = voltage
-
-        # If material is not set, set a default
         if not material:
-            material = "S"  # Default to S material
+            material = "S"
             config.selected_options["Material"] = material
-
-        # Map material names to their single-letter codes
         material_map = {
             "316SS": "S",
             "304SS": "S",
@@ -419,17 +397,9 @@ class ConfigurationService:
             "Titanium": "T",
             "Inconel": "I",
         }
-
-        # Get the single-letter material code
-        # If material is already a single letter, use it directly
-        # Otherwise, look it up in the material map
         material_code = (
-            material
-            if len(str(material)) == 1
-            else material_map.get(str(material), material)
+            material if len(str(material)) == 1 else material_map.get(str(material), material)
         )
-
-        # Format the length to remove decimals if it's a whole number
         try:
             length_val = float(length)
             length_str = (
@@ -438,7 +408,180 @@ class ConfigurationService:
         except (ValueError, TypeError):
             length_str = f'{length}"' if length else 'LENGTH"'
 
-        return f"{family}-{voltage}-{material_code}-{length_str}"
+        part_number_parts = [family, voltage, material_code, length_str]
+        process_connection = self._get_process_connection_code(config.selected_options)
+        if process_connection:
+            part_number_parts.append(process_connection)
+        additional_codes = self._get_additional_option_codes(config.selected_options)
+        part_number_parts.extend(additional_codes)
+        # Debug output
+        print("[DEBUG] Part number components:", part_number_parts)
+        return "-".join([str(p) for p in part_number_parts if p])
+
+    def _get_process_connection_code(self, selected_options: dict) -> str:
+        """Extract process connection code from selected options."""
+        # Check for connection type and related options
+        connection_type = selected_options.get("Connection Type")
+        if not connection_type:
+            return ""
+
+        if connection_type == "NPT":
+            npt_size = selected_options.get("NPT Size", "3/4")
+            return f'{npt_size}"NPT'
+        elif connection_type == "Flange":
+            flange_size = selected_options.get("Flange Size", "2")
+            flange_rating = selected_options.get("Flange Rating", "150#")
+            return f'{flange_size}"{flange_rating}'
+        elif connection_type == "Tri-clamp":
+            tri_clamp_option = selected_options.get("Tri-clamp", "")
+            if "1-1/2" in tri_clamp_option:
+                if "Spud" in tri_clamp_option:
+                    return "TC1-1/2\"SPD"
+                else:
+                    return "TC1-1/2\""
+            elif "2" in tri_clamp_option:
+                if "Spud" in tri_clamp_option:
+                    return "TC2\"SPD"
+                else:
+                    return "TC2\""
+            else:
+                return "TC"
+        
+        return ""
+
+    def _get_additional_option_codes(self, selected_options: dict) -> list:
+        """Extract codes for all additional options, preserving order and skipping empty/defaults."""
+        codes = []
+        seen = set()
+        
+        # Debug: Print all selected options
+        print(f"[DEBUG] _get_additional_option_codes - selected_options: {selected_options}")
+        
+        # Handle special cases first
+        # Extra Static Protection - xsp code
+        extra_static = selected_options.get("Extra Static Protection")
+        print(f"[DEBUG] Extra Static Protection value: {extra_static}")
+        if extra_static == "Yes":
+            codes.append("xsp")
+            seen.add("xsp")
+            print(f"[DEBUG] Added xsp code")
+        
+        # Bent Probe with degree - 45DEG format
+        if selected_options.get("Bent Probe") == "Yes":
+            degree = selected_options.get("Bent Probe Degree", 90)
+            if degree:
+                codes.append(f"{degree}DEG")
+                seen.add(f"{degree}DEG")
+        
+        # 3/4" Diameter Probe - 3/4OD code
+        if selected_options.get('3/4" Diameter Probe') == "Yes":
+            codes.append("3/4OD")
+            seen.add("3/4OD")
+        
+        # Handle insulator materials with length and material codes
+        insulator_material = selected_options.get("Insulator Material")
+        if insulator_material and insulator_material != "Standard":
+            # Get the length if non-standard
+            length = selected_options.get("Probe Length")
+            base_length = selected_options.get("base_length", 10)  # Default base length
+            
+            # Check if length is non-standard
+            is_non_standard_length = False
+            if length and base_length:
+                try:
+                    length_val = float(length)
+                    base_length_val = float(base_length)
+                    is_non_standard_length = length_val != base_length_val
+                except (ValueError, TypeError):
+                    pass
+            
+            # Map insulator materials to codes
+            insulator_codes = {
+                "Teflon Upgrade": "TEF",
+                "PEEK": "PEEK", 
+                "Ceramic": "CER",
+                "Delrin": "DEL"
+            }
+            
+            insulator_code = insulator_codes.get(insulator_material, "")
+            if insulator_code:
+                if is_non_standard_length and length:
+                    try:
+                        length_str = f'{int(float(length))}"' if float(length).is_integer() else f'{float(length)}"'
+                        codes.append(f"{length_str}{insulator_code}INS")
+                    except (ValueError, TypeError):
+                        codes.append(f"{insulator_code}INS")
+                else:
+                    codes.append(f"{insulator_code}INS")
+                seen.add(f"{insulator_code}INS")
+        
+        # Standard option codes for other options
+        option_codes = {
+            "Insulator Type": {
+                "SS": "",
+                "CS": "CSINS"
+            },
+            "O-Rings": {
+                "Viton": "",
+                "Silicon": "SILOR",
+                "Buna-N": "BUNAOR",
+                "EPDM": "EPDMOR",
+                "PTFE": "PTFEOR",
+                "Kalrez": "KALOR"
+            },
+            "Exotic Metal": {
+                "None": "",
+                "Alloy 20": "AL20",
+                "Hastelloy-C-276": "HC276",
+                "Hastelloy-B": "HB",
+                "Titanium": "TI"
+            },
+            "Stainless Steel Tag": {
+                "Yes": "SSTAG",
+                "No": ""
+            },
+            "Cable Probe": {
+                "Yes": "CABLE",
+                "No": ""
+            },
+            "Mounting": {
+                "Standard": "",
+                "Flanged": "FLANGED",
+                "Tri-Clamp": "TRICLAMP"
+            },
+            "Receiver Enclosure": {
+                "None": "",
+                "NEMA 4 Metal": "NEMA4",
+                "Explosion Proof": "EXPROOF"
+            },
+            "Additional Coaxial Cable": {
+                "Yes": "COAX",
+                "No": ""
+            },
+            "GRK Exp Proof Enclosure": {
+                "Yes": "GRKEXP",
+                "No": ""
+            }
+        }
+        
+        skip_keys = {"Voltage", "Material", "Probe Length", "Connection Type", "NPT Size", "Flange Size", "Flange Rating", "Tri-clamp", "Extra Static Protection", "Bent Probe", "Bent Probe Degree", '3/4" Diameter Probe', "Insulator Material", "base_length"}
+        
+        for option_name, value in selected_options.items():
+            if option_name in skip_keys:
+                continue
+            code = None
+            if option_name in option_codes:
+                code = option_codes[option_name].get(value, "")
+            if code is None:
+                # For unmapped options, skip if value is empty/None/No/Standard/None
+                if value and value not in ["No", "None", "Standard"]:
+                    code = f"{option_name[:3].upper()}{str(value)[:3].upper()}"
+                else:
+                    code = ""
+            if code and code not in seen:
+                codes.append(code)
+                seen.add(code)
+        return codes
 
     def calculate_price(self) -> float:
         """Calculate the current price based on selected options."""

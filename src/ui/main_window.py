@@ -41,6 +41,14 @@ from src.core.services.quote_service import QuoteService
 from src.core.database import SessionLocal
 from src.ui.theme import COLORS, FONTS, SPACING, RADIUS, get_button_style
 
+# Import Phase 7 features
+from src.ui.components import (
+    ModernThemeToggle,
+    ResponsiveManager,
+    theme_manager,
+    Breakpoint
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,6 +68,9 @@ class MainWindow(QMainWindow):
         # Initialize services
         self.quote_service = QuoteService()
 
+        # Initialize Phase 7 features
+        self.responsive_manager = ResponsiveManager()
+        
         # Store reference to self for theme switching
         self._main_window_instance = self
         
@@ -71,6 +82,9 @@ class MainWindow(QMainWindow):
         
         self._setup_ui()
         self._connect_signals()
+        
+        # Start responsive monitoring
+        self.responsive_manager.update_breakpoint()
         
         # Start with quote creator
         self._show_quote_creation()
@@ -352,17 +366,23 @@ class MainWindow(QMainWindow):
         return placeholder
         
     def _connect_signals(self):
-        """Connect UI element signals to slots."""
+        """Connect all signal handlers."""
+        # Navigation
         self.nav_list.currentRowChanged.connect(self._on_nav_item_selected)
         self.settings_button.clicked.connect(self._show_settings)
         self.action_button.clicked.connect(self._on_action_button_clicked)
         
-        # Connect settings theme changes
-        if hasattr(self.settings_page, 'theme_changed'):
-            self.settings_page.theme_changed.connect(self._apply_theme)
+        # Phase 7: Connect theme system
+        theme_manager.theme_changed.connect(self._on_theme_changed)
+        
+        # Connect quote service signals
+        if hasattr(self.quote_creation_page, 'quote_created'):
+            self.quote_creation_page.quote_created.connect(self._on_quote_created)
+        
+        if hasattr(self.quotes_page, 'edit_quote_requested'):
+            self.quotes_page.edit_quote_requested.connect(self._edit_quote)
         
         # Connect quotes page signals
-        self.quotes_page.edit_quote_requested.connect(self._edit_quote)
         self.quotes_page.quote_deleted.connect(self.quote_creation_page.clear_if_quote_matches)
 
     @Slot(int)
@@ -468,10 +488,26 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", 
                                f"An error occurred while loading the quote: {str(e)}")
 
+    def _on_theme_changed(self, theme_name):
+        """Handle theme changes from Phase 7."""
+        print(f"Main window theme changed to: {theme_name}")
+        # Re-apply styling when theme changes
+        self._apply_modern_window_styling()
+    
+    def _on_quote_created(self, quote_id):
+        """Handle quote creation."""
+        print(f"Quote created with ID: {quote_id}")
+        # Switch to quotes page to show the new quote
+        self._show_quotes()
+    
     def _apply_theme(self, theme_name: str):
-        """Apply the selected theme with enhanced styling."""
-        ThemeManager.apply_theme(theme_name, self)
-        logger.info(f"Applied theme: {theme_name}")
+        """Apply theme to the application."""
+        try:
+            # Use the theme manager instance
+            theme_manager.switch_theme(theme_name, animate=True)
+            logger.info(f"Applied theme: {theme_name}")
+        except Exception as e:
+            logger.error(f"Error applying theme {theme_name}: {e}")
 
     def closeEvent(self, event):
         """Handle widget close event with proper cleanup."""

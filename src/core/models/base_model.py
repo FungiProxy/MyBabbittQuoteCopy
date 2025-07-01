@@ -60,6 +60,17 @@ class BaseModel(Base):
     voltage = Column(String, nullable=False)  # e.g., "115VAC", "24VDC"
     material = Column(String, nullable=False)  # e.g., "S", "H"
 
+    # RTF template data
+    insulator_material = Column(Text, nullable=True)
+    insulator_length = Column(Float, nullable=True)
+    insulator_temp_rating = Column(Text, nullable=True)
+    process_connection = Column(Text, nullable=True)
+    max_pressure = Column(Text, nullable=True)
+    housing_type = Column(Text, nullable=True)
+    housing_ratings = Column(Text, nullable=True)
+    application_notes = Column(Text, nullable=True)
+    special_notes = Column(Text, nullable=True)
+
     # Relationships
     product_family = relationship("ProductFamily", back_populates="base_model")
 
