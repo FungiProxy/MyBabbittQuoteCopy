@@ -864,6 +864,7 @@ class ModernProductSelectionDialog(QDialog):
             # --- CONNECTIONS SECTION ---
             if 'Connections' in options_by_category:
                 opts = [opt for opt in options_by_category['Connections'] if opt.get('name') not in ['Voltage', 'Material', 'Probe Length', 'Insulator Material', 'Insulator Length']]
+
                 if opts:
                     group = QGroupBox('Connections')
                     group.setStyleSheet(f"""
@@ -892,9 +893,9 @@ class ModernProductSelectionDialog(QDialog):
                     # Find the Connection Type option
                     connection_type_option = next((o for o in opts if o.get('name') == 'Connection Type'), None)
                     sub_option_map = {
-                        'NPT': ['NPT Size'],
-                        'Flange': ['Flange Type', 'Flange Rating', 'Flange Size'],
-                        'Tri-clamp': ['Tri-clamp']
+                        'NPT': ['NPT Size', 'Connection Material'],
+                        'Flange': ['Flange Type', 'Flange Rating', 'Flange Size', 'Connection Material'],
+                        'Tri-clamp': ['Connection Material']
                     }
                     # Create Connection Type dropdown
                     if connection_type_option:
@@ -922,7 +923,9 @@ class ModernProductSelectionDialog(QDialog):
                     sub_option_widgets = {}
                     # Build a lookup for options by name
                     opts_by_name = {opt.get('name'): opt for opt in opts if opt.get('name') != 'Connection Type'}
+
                     # Add widgets in the order specified by sub_option_map
+                    # Handle Flange options
                     for name in sub_option_map.get('Flange', []):
                         opt = opts_by_name.get(name)
                         if not opt:
@@ -939,6 +942,12 @@ class ModernProductSelectionDialog(QDialog):
                             for choice in choices:
                                 display = label_map.get(choice, str(choice))
                                 combo.addItem(display, choice)
+                        # Special handling for Connection Material with code-display_name format
+                        elif name == 'Connection Material' and choices and isinstance(choices[0], dict):
+                            for choice in choices:
+                                display_name = choice.get('display_name', choice.get('code', str(choice)))
+                                code = choice.get('code', str(choice))
+                                combo.addItem(display_name, code)
                         elif choices and isinstance(choices[0], dict):
                             for choice in choices:
                                 display_name = choice.get('display_name', choice.get('code', str(choice)))
@@ -962,18 +971,102 @@ class ModernProductSelectionDialog(QDialog):
                         )
                         label.hide()
                         combo.hide()
+                    
+                    # Handle NPT options
+                    for name in sub_option_map.get('NPT', []):
+                        opt = opts_by_name.get(name)
+                        if not opt:
+                            continue
+                        choices = opt.get('choices', [])
+                        adders = opt.get('adders', {})
+                        combo = QComboBox()
+                        combo.setFixedWidth(200)
+                        combo.setMinimumHeight(32)
+                        combo.setStyleSheet(combo_style)
+                        # Special handling for Connection Material with code-display_name format
+                        if name == 'Connection Material' and choices and isinstance(choices[0], dict):
+                            for choice in choices:
+                                display_name = choice.get('display_name', choice.get('code', str(choice)))
+                                code = choice.get('code', str(choice))
+                                combo.addItem(display_name, code)
+                        elif choices and isinstance(choices[0], dict):
+                            for choice in choices:
+                                display_name = choice.get('display_name', choice.get('code', str(choice)))
+                                code = choice.get('code', str(choice))
+                                combo.addItem(display_name, code)
+                        elif choices:
+                            for choice in choices:
+                                combo.addItem(str(choice), str(choice))
+                        label = QLabel(name)
+                        label.setStyleSheet(f"""
+                            font-weight: {FONTS['weights']['semibold']};
+                            color: {COLORS['text_primary']};
+                            font-size: {FONTS['sizes']['base']}px;
+                        """)
+                        form.addRow(label, combo)
+                        sub_option_widgets[name] = (label, combo)
+                        combo.currentIndexChanged.connect(
+                            lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
+                        )
+                        label.hide()
+                        combo.hide()
+                    
+                    # Handle Tri-clamp options (only Connection Material for now)
+                    for name in sub_option_map.get('Tri-clamp', []):
+                        opt = opts_by_name.get(name)
+                        if not opt:
+                            continue
+                        choices = opt.get('choices', [])
+                        adders = opt.get('adders', {})
+                        combo = QComboBox()
+                        combo.setFixedWidth(200)
+                        combo.setMinimumHeight(32)
+                        combo.setStyleSheet(combo_style)
+                        # Special handling for Connection Material with code-display_name format
+                        if name == 'Connection Material' and choices and isinstance(choices[0], dict):
+                            for choice in choices:
+                                display_name = choice.get('display_name', choice.get('code', str(choice)))
+                                code = choice.get('code', str(choice))
+                                combo.addItem(display_name, code)
+                        elif choices and isinstance(choices[0], dict):
+                            for choice in choices:
+                                display_name = choice.get('display_name', choice.get('code', str(choice)))
+                                code = choice.get('code', str(choice))
+                                combo.addItem(display_name, code)
+                        elif choices:
+                            for choice in choices:
+                                combo.addItem(str(choice), str(choice))
+                        label = QLabel(name)
+                        label.setStyleSheet(f"""
+                            font-weight: {FONTS['weights']['semibold']};
+                            color: {COLORS['text_primary']};
+                            font-size: {FONTS['sizes']['base']}px;
+                        """)
+                        form.addRow(label, combo)
+                        sub_option_widgets[name] = (label, combo)
+                        combo.currentIndexChanged.connect(
+                            lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
+                        )
+                        label.hide()
+                        combo.hide()
+                    
                     # Add any other sub-options not in sub_option_map (fallback, rare)
+                    print(f"[DEBUG] Processing sub-options: {[opt.get('name') for opt in opts]}")
                     for sub_opt in opts:
                         name = sub_opt.get('name')
+                        print(f"[DEBUG] Processing sub-option: {name}")
                         if name == 'Connection Type' or name in sub_option_widgets:
+                            print(f"[DEBUG] Skipping {name} - already processed or is Connection Type")
                             continue
                         
                         if name == 'Tri-clamp':
                             # Create custom tri-clamp widget
+                            print(f"[DEBUG] Creating custom Tri-clamp widget for {name}")
                             tri_clamp_widget = self._create_tri_clamp_widget(sub_opt)
                             form.addRow(tri_clamp_widget)
                             sub_option_widgets[name] = (None, tri_clamp_widget)  # No label needed
                             tri_clamp_widget.hide()
+                            print(f"[DEBUG] Tri-clamp widget created and hidden")
                         else:
                             # Regular dropdown option
                             choices = sub_opt.get('choices', [])
@@ -1009,6 +1102,8 @@ class ModernProductSelectionDialog(QDialog):
                         if not isinstance(selected_type, str):
                             selected_type = str(selected_type) if selected_type is not None else ''
                         
+                        print(f"[DEBUG] Connection type changed to: {selected_type}")
+                        
                         # Update the configuration service with the new connection type
                         self._on_option_changed("Connection Type", selected_type)
                         
@@ -1017,14 +1112,28 @@ class ModernProductSelectionDialog(QDialog):
                             if label:
                                 label.hide()
                             w.hide()
+                        
                         # Show only relevant sub-options
                         if selected_type in sub_option_map:
+                            print(f"[DEBUG] Showing options for {selected_type}: {sub_option_map[selected_type]}")
                             for name in sub_option_map[selected_type]:
                                 if name in sub_option_widgets:
                                     label, w = sub_option_widgets[name]
+                                    print(f"[DEBUG] Showing {name}")
                                     if label:
                                         label.show()
                                     w.show()
+                                else:
+                                    print(f"[DEBUG] {name} not found in sub_option_widgets")
+                        
+                        # Special handling for Tri-clamp widget
+                        print(f"[DEBUG] Available sub_option_widgets: {list(sub_option_widgets.keys())}")
+                        if selected_type == 'Tri-clamp' and 'Tri-clamp' in sub_option_widgets:
+                            print(f"[DEBUG] Showing Tri-clamp widget")
+                            _, tri_clamp_widget = sub_option_widgets['Tri-clamp']
+                            tri_clamp_widget.show()
+                        elif selected_type == 'Tri-clamp':
+                            print(f"[DEBUG] Tri-clamp selected but widget not found in sub_option_widgets")
                     if conn_type_combo:
                         conn_type_combo.currentIndexChanged.connect(on_conn_type_changed)
                         # Show sub-options for default selection
@@ -2341,20 +2450,21 @@ class ModernTriClampWidget(QFrame):
     def _setup_ui(self):
         """Setup the tri-clamp UI with size dropdown and spud checkbox."""
         layout = QVBoxLayout(self)
-        layout.setSpacing(8)
+        layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         
+        # Use QFormLayout for uniform styling
+        form_layout = QFormLayout()
+        form_layout.setSpacing(SPACING['md'])
+        form_layout.setContentsMargins(0, 0, 0, 0)
+        
         # Size dropdown row
-        size_layout = QHBoxLayout()
-        size_label = QLabel("Size:")
+        size_label = QLabel("Tri-clamp Size")
         size_label.setStyleSheet(f"""
-            font-family: {FONTS['family']};
             font-weight: {FONTS['weights']['semibold']};
-            font-size: {FONTS['sizes']['base']}px;
             color: {COLORS['text_primary']};
-            min-width: 60px;
+            font-size: {FONTS['sizes']['base']}px;
         """)
-        size_layout.addWidget(size_label)
         
         self.size_combo = QComboBox()
         self.size_combo.addItems(["1-1/2\"", "2\""])
@@ -2376,14 +2486,18 @@ class ModernTriClampWidget(QFrame):
             }}
         """)
         self.size_combo.currentTextChanged.connect(self._on_size_changed)
-        size_layout.addWidget(self.size_combo)
-        size_layout.addStretch()
-        layout.addLayout(size_layout)
+        
+        form_layout.addRow(size_label, self.size_combo)
         
         # Spud checkbox row
-        spud_layout = QHBoxLayout()
-        spud_layout.addSpacing(60)  # Align with dropdown
-        self.spud_checkbox = QCheckBox("Spud")
+        spud_label = QLabel("Spud")
+        spud_label.setStyleSheet(f"""
+            font-weight: {FONTS['weights']['semibold']};
+            color: {COLORS['text_primary']};
+            font-size: {FONTS['sizes']['base']}px;
+        """)
+        
+        self.spud_checkbox = QCheckBox()
         self.spud_checkbox.setStyleSheet("""
             QCheckBox {
                 color: #2C3E50;
@@ -2407,9 +2521,10 @@ class ModernTriClampWidget(QFrame):
             }
         """)
         self.spud_checkbox.toggled.connect(self._on_spud_toggled)
-        spud_layout.addWidget(self.spud_checkbox)
-        spud_layout.addStretch()
-        layout.addLayout(spud_layout)
+        
+        form_layout.addRow(spud_label, self.spud_checkbox)
+        
+        layout.addLayout(form_layout)
         
         # Initialize with default values
         self._update_selection()
