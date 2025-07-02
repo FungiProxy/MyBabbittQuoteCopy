@@ -55,13 +55,11 @@ class ConfigurationService:
             base_product_info (dict): Information about the base product.
             selected_options (dict, optional): Initial selected options (e.g., {'material': 'H'})
         """
-        print(f"[DEBUG] start_configuration() called")
-        print(f"[DEBUG] product_family_id: {product_family_id}")
-        print(f"[DEBUG] product_family_name: {product_family_name}")
-        print(f"[DEBUG] base_product_info: {base_product_info}")
-        print(f"[DEBUG] base_product_info type: {type(base_product_info)}")
-        print(f"[DEBUG] selected_options: {selected_options}")
         try:
+            # Get the correct base model for this product family
+            from src.core.config.base_models import get_base_model
+            base_model = get_base_model(product_family_name)
+            
             # Normalize selected_options to use 'Material' as the key
             normalized_options = {}
             if selected_options:
@@ -72,6 +70,7 @@ class ConfigurationService:
                         normalized_options['Voltage'] = v
                     else:
                         normalized_options[k] = v
+                        
             # Create a new configuration
             self.current_config = Configuration(
                 db=self.db,
@@ -86,47 +85,80 @@ class ConfigurationService:
                 is_valid=False,
                 validation_errors=[],
             )
-            print(f"[DEBUG] Configuration created successfully")
-            print(f"[DEBUG] Current config selected_options: {self.current_config.selected_options}")
-            # Set default material and voltage from base product ONLY if not already set
-            if (not normalized_options or 'Material' not in normalized_options) and "material" in base_product_info:
-                print(f"[DEBUG] set_option Material: {base_product_info['material']} (type: {type(base_product_info['material'])})")
-                self.set_option("Material", base_product_info["material"])
-            # Skip voltage for TRAN-EX since it has no voltage options
+            
+            # Set default material from base model (not base_product_info)
+            if (not normalized_options or 'Material' not in normalized_options) and base_model and "material" in base_model:
+                self.set_option("Material", base_model["material"])
+            # Set voltage from base model
             if (product_family_name != "TRAN-EX" and 
                 (not normalized_options or 'Voltage' not in normalized_options) and 
-                "voltage" in base_product_info):
-                print(f"[DEBUG] set_option Voltage: {base_product_info['voltage']} (type: {type(base_product_info['voltage'])})")
-                self.set_option("Voltage", base_product_info["voltage"])
+                base_model and "voltage" in base_model):
+                self.set_option("Voltage", base_model["voltage"])
             elif product_family_name == "TRAN-EX":
-                print(f"[DEBUG] Skipping voltage for TRAN-EX - no voltage options")
-            print(f"[DEBUG] About to call _update_price()")
+                pass
+                
+            self._set_all_default_values()
             self._update_price()
-            print(f"[DEBUG] About to call _update_model_number()")
             self._update_model_number()
-            print(f"[DEBUG] start_configuration completed successfully")
         except Exception as e:
-            print(f"[DEBUG] Error creating configuration: {e}")
-            print(f"[DEBUG] Error type: {type(e)}")
-            import traceback
-            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+            logger.error(f"Error creating configuration: {e}", exc_info=True)
             raise
+
+    def _set_all_default_values(self):
+        """Set default values for all available options for the current product family."""
+        if not self._current_config:
+            return
+            
+        try:
+            # Get all available options for this product family
+            all_options = self.product_service.get_additional_options(
+                self.db, self._current_config.product_family_name
+            )
+            
+            # Define default values for each option type
+            default_values = {
+                "Connection Type": "NPT",
+                "NPT Size": "1\"",
+                "Flange Type": "SS",
+                "Flange Rating": "150#",
+                "Flange Size": "1\"",
+                "Insulator Material": "TEF",
+                "Insulator Length": "4",
+                "Probe Length": str(self._current_config.base_product.get("base_length", 10)),
+                "Extra Static Protection": "No",
+                "Bent Probe": "No",
+                "Stainless Steel Tag": "No",
+                "Explosion Proof": "No",
+                "NEMA 4X": "No",
+                "Extended Probe": "No",
+            }
+            
+            # Set Probe Length explicitly if not already set
+            if "Probe Length" not in self._current_config.selected_options:
+                probe_length = str(self._current_config.base_product.get("base_length", 10))
+                self._current_config.set_option("Probe Length", probe_length)
+            
+            # Set defaults for each available option if not already set
+            for option in all_options:
+                option_name = option.get("name")
+                if option_name and option_name not in self._current_config.selected_options:
+                    default_value = default_values.get(option_name)
+                    if default_value:
+                        self._current_config.set_option(option_name, default_value)
+                        
+        except Exception as e:
+            logger.error(f"Error setting default values: {e}", exc_info=True)
 
     def set_option(self, option_name: str, value: Any):
         """Set an option in the current configuration."""
-        print(f"[DEBUG] set_option called: {option_name} = {value} (type: {type(value)})")
         if self._current_config:
             # Defensive: If value is a dict, extract 'code' if present
             if isinstance(value, dict):
-                print(f"[DEBUG] set_option received dict for {option_name}: {value}")
                 if 'code' in value:
                     value = value['code']
-                    print(f"[DEBUG] Extracted code: {value}")
                 else:
                     value = str(value)
-                    print(f"[DEBUG] Converted to string: {value}")
             self._current_config.set_option(option_name, value)
-            print(f"[DEBUG] After set_option, selected_options: {self._current_config.selected_options}")
             self._update_price()
             self._update_model_number()
 
@@ -138,10 +170,7 @@ class ConfigurationService:
             option_name (str): The name of the option (e.g., "Material", "Length").
             value (any): The selected value for the option.
         """
-        print(f"DEBUG: select_option called with {option_name}={value}")
-
         if not self.current_config:
-            print("DEBUG: No current configuration")
             return
 
         # Store the current material before updating options
@@ -151,42 +180,24 @@ class ConfigurationService:
 
         # Update the selected option
         if option_name == "Material":
-            print(f"DEBUG: Processing material selection: {value}")
             # If the value is a number (like a length), don't update it
             if str(value).isdigit():
-                print(
-                    f"DEBUG: Material value {value} is numeric, keeping current material: {current_material}"
-                )
                 self.current_config.selected_options["Material"] = current_material
             else:
-                print(f"DEBUG: Updating material to: {value}")
                 self.current_config.selected_options["Material"] = value
         else:
-            print(f"DEBUG: Updating option {option_name} to: {value}")
             self.current_config.selected_options[option_name] = value
 
-        print("DEBUG: About to call _update_price()")
         # Update the model number and price
         self._update_model_number()
         self._update_price()
-        print("DEBUG: Finished _update_price()")
-        print(f"DEBUG: Final configuration: {self.current_config.selected_options}")
 
     def _update_model_number(self):
         """Update the model number based on selected options."""
-        print(f"[DEBUG] _update_model_number() called")
         if not self.current_config:
-            print(f"[DEBUG] No current configuration in _update_model_number")
             return
 
-        print(f"[DEBUG] _update_model_number - selected_options: {self.current_config.selected_options}")
-        print(f"[DEBUG] _update_model_number - selected_options types:")
-        for k, v in self.current_config.selected_options.items():
-            print(f"  {k}: {v} (type: {type(v)})")
-        
-        # logger.debug("Updating model number")
         # Implementation details...
-        print(f"[DEBUG] _update_model_number completed")
 
     def _get_current_variant(self):
         """Get the current product variant based on selected options."""
@@ -194,37 +205,23 @@ class ConfigurationService:
             # logger.warning("No current configuration when trying to get variant")
             return None
 
-        print(f"[DEBUG] _get_current_variant() called")
-        print(f"[DEBUG] product_family_id: {self.current_config.product_family_id}")
-        print(f"[DEBUG] selected_options: {self.current_config.selected_options}")
-        print(f"[DEBUG] selected_options types:")
-        for k, v in self.current_config.selected_options.items():
-            print(f"  {k}: {v} (type: {type(v)})")
-
         try:
             # Find the specific variant that matches the current selection
-            print(f"[DEBUG] About to call product_service.find_variant()")
             variant = self.product_service.find_variant(
                 self.db,
                 self.current_config.product_family_id,
                 self.current_config.selected_options,
             )
-            print(f"[DEBUG] find_variant returned: {variant}")
 
             if not variant:
                 # logger.warning(
                 #     f"No matching variant found for options: {self.current_config.selected_options}"
                 # )
-                print(f"[DEBUG] No matching variant found")
                 return None
 
             return variant
 
         except Exception as e:
-            print(f"[DEBUG] Error in _get_current_variant: {e}")
-            print(f"[DEBUG] Error type: {type(e)}")
-            import traceback
-            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
             logger.error(f"Error getting current variant: {e!s}", exc_info=True)
             return None
 
@@ -289,25 +286,13 @@ class ConfigurationService:
         if not self.current_config:
             return
 
-        print(f"[DEBUG] _update_price() called")
-        print(f"[DEBUG] Current selected_options: {self.current_config.selected_options}")
-        print(f"[DEBUG] Selected options types:")
-        for k, v in self.current_config.selected_options.items():
-            print(f"  {k}: {v} (type: {type(v)})")
-
         effective_length = self.current_config.get_effective_length()
         material_code = self.current_config.get_selected_material_code()
-
-        print(f"[DEBUG] effective_length: {effective_length} (type: {type(effective_length)})")
-        print(f"[DEBUG] material_code: {material_code} (type: {type(material_code)})")
 
         base_product = self.current_config.base_product
         if not base_product or "id" not in base_product:
             logger.error("Base product not found or missing ID in configuration.")
             return
-
-        print(f"[DEBUG] base_product: {base_product}")
-        print(f"[DEBUG] Creating PricingContext with specs: {self.current_config.selected_options}")
 
         # Create a pricing context
         context = PricingContext(
@@ -318,28 +303,17 @@ class ConfigurationService:
             specs=self.current_config.selected_options,
         )
 
-        print(f"[DEBUG] PricingContext created successfully")
-        print(f"[DEBUG] About to call calculate_product_price()")
-
         # Calculate price using the pricing engine
         try:
             self.current_config.final_price = calculate_product_price(context)
-            print(f"[DEBUG] Price calculation successful: ${self.current_config.final_price}")
-            print(f"[DEBUG] About to call _update_model_number()")
-            print(f"[DEBUG] selected_options before _update_model_number: {self.current_config.selected_options}")
             # --- TRAN-EX H MATERIAL ADDER FIX ---
             if self.current_config.product_family_name == "TRAN-EX":
                 material = self.current_config.selected_options.get("Material")
                 if material == "H":
-                    print(f"[DEBUG] Applying TRAN-EX H material base adder: $110")
                     self.current_config.final_price += 110  # base adder
-                    print(f"[DEBUG] New final price after H base adder: ${self.current_config.final_price}")
             # --- END FIX ---
         except Exception as e:
-            print(f"[DEBUG] Error in calculate_product_price: {e}")
-            print(f"[DEBUG] Error type: {type(e)}")
-            import traceback
-            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+            logger.error(f"Error in calculate_product_price: {e}", exc_info=True)
             raise
 
     def generate_model_number(self) -> str:
@@ -377,13 +351,24 @@ class ConfigurationService:
                 length_str = f'{length}"' if length else 'LENGTH"'
             return f"LS8000/2-TRAN-EX-{material_code}-{length_str}"
 
+        # Get base model number from configuration
+        from src.core.config.base_models import get_base_model
+        base_model = get_base_model(family)
+        base_model_number = base_model.get("model_number", "")
+        
+        # If all options match base defaults, return the base model number
+        if self._all_options_match_base_defaults(config.selected_options, base_model):
+            return base_model_number
+        
+        # Otherwise, generate the full model number with modifications
         voltage = config.selected_options.get("Voltage")
         material = config.selected_options.get("Material")
         length = config.selected_options.get("Probe Length", config.base_product.get("base_length", 10))
+        
         if not voltage:
             family_defaults = {
                 "LS2000": "115VAC",
-                "LS2100": "115VAC",
+                "LS2100": "24VDC",  # Fixed: LS2100 default is 24VDC
                 "LS7000": "115VAC",
                 "LS7500": "115VAC",
                 "LS8500": "115VAC",
@@ -424,18 +409,65 @@ class ConfigurationService:
         additional_codes = self._get_additional_option_codes(config.selected_options)
         part_number_parts.extend(additional_codes)
         # Debug output
-        print("[DEBUG] Part number components:", part_number_parts)
         return "-".join([str(p) for p in part_number_parts if p])
+
+    def _all_options_match_base_defaults(self, selected_options: dict, base_model: dict) -> bool:
+        """Check if all selected options match the base model defaults."""
+        # Check voltage
+        base_voltage = base_model.get("voltage")
+        selected_voltage = selected_options.get("Voltage")
+        if base_voltage and selected_voltage and selected_voltage != base_voltage:
+            return False
+        
+        # Check material
+        base_material = base_model.get("material")
+        selected_material = selected_options.get("Material")
+        if base_material and selected_material and selected_material != base_material:
+            return False
+        
+        # Check probe length
+        base_length = base_model.get("base_length")
+        selected_length = selected_options.get("Probe Length")
+        if base_length and selected_length and abs(float(selected_length) - float(base_length)) > 0.01:
+            return False
+        
+        # Check process connection
+        base_connection_type = base_model.get("process_connection_type")
+        base_connection_size = base_model.get("process_connection_size")
+        selected_connection_type = selected_options.get("Connection Type")
+        
+        if base_connection_type and selected_connection_type:
+            # Check NPT size matching for NPT connections
+            if base_connection_type == "NPT" and selected_connection_type == "NPT":
+                selected_npt_size = selected_options.get("NPT Size")
+                if selected_npt_size and base_connection_size:
+                    selected_norm = str(selected_npt_size).replace('"', '').strip()
+                    base_norm = str(base_connection_size).replace('"', '').strip()
+                    if selected_norm != base_norm:
+                        return False
+            if selected_connection_type != base_connection_type:
+                return False
+        
+        # Check for any additional options that are set to non-default values
+        additional_options_to_check = [
+            "Extra Static Protection", "Stainless Steel Tag", "Vibration Resistance",
+            "Epoxy House", "Bent Probe", '3/4" Diameter Probe', "Extended Insulator"
+        ]
+        
+        for option in additional_options_to_check:
+            if option in selected_options:
+                value = selected_options[option]
+                # If any additional option is set to "Yes" or True, it's not default
+                if value == "Yes" or value is True:
+                    return False
+        
+        return True
 
     def _get_process_connection_code(self, selected_options: dict) -> str:
         """Extract process connection code from selected options, only if non-base."""
-        print(f"[DEBUG] _get_process_connection_code - selected_options: {selected_options}")
-        
         connection_type = selected_options.get("Connection Type")
-        print(f"[DEBUG] Connection Type: {connection_type}")
         
         if not connection_type:
-            print(f"[DEBUG] No connection type found, returning empty string")
             return ""
         
         # Get base model defaults for comparison
@@ -445,25 +477,28 @@ class ConfigurationService:
         base_connection_type = base_model.get("process_connection_type")
         base_connection_size = base_model.get("process_connection_size")
         
-        print(f"[DEBUG] Base model defaults - type: {base_connection_type}, size: {base_connection_size}")
-        
         # Check if current selection matches base defaults
         if connection_type == base_connection_type:
             if connection_type == "NPT":
-                npt_size = selected_options.get("NPT Size", "3/4")
+                npt_size = selected_options.get("NPT Size")
+                if not npt_size and product_family in ["LS2000", "LS2100", "LS8000", "LS8000/2"]:
+                    npt_size = '3/4"'
+                elif not npt_size:
+                    npt_size = str(base_connection_size or "3/4")
                 # Normalize both values for comparison
                 npt_size_norm = str(npt_size).replace('"', '').strip()
                 base_size_norm = str(base_connection_size).replace('"', '').strip()
-                print(f"[DEBUG] Comparing NPT sizes: user='{npt_size_norm}' base='{base_size_norm}'")
                 if npt_size_norm == base_size_norm:
-                    print(f"[DEBUG] NPT selection matches base defaults ({npt_size_norm}), returning empty string")
                     return ""
-            
+        
         # If we get here, the selection is different from base defaults
         if connection_type == "NPT":
-            npt_size = selected_options.get("NPT Size", "3/4")
+            npt_size = selected_options.get("NPT Size")
+            if not npt_size and product_family in ["LS2000", "LS2100", "LS8000", "LS8000/2"]:
+                npt_size = '3/4"'
+            elif not npt_size:
+                npt_size = str(base_connection_size or "3/4")
             code = f'{npt_size}"NPT'
-            print(f"[DEBUG] NPT connection code (non-base): {code}")
             return code
         elif connection_type == "Flange":
             flange_size = selected_options.get("Flange Size", "2")
@@ -472,11 +507,9 @@ class ConfigurationService:
             if not str(flange_size).endswith('"'):
                 flange_size = str(flange_size) + '"'
             code = f'{flange_size}{flange_rating}FLANGE'
-            print(f"[DEBUG] Flange connection code (non-base): {code}")
             return code
         elif connection_type == "Tri-clamp":
             tri_clamp = selected_options.get("Tri-clamp", "")
-            print(f"[DEBUG] Tri-clamp value: {tri_clamp}")
 
             # Extract the size (e.g., 1.5" or 2") from the tri_clamp string
             size_match = re.search(r'(\d+(?:\.\d+)?)\"', tri_clamp)
@@ -487,42 +520,33 @@ class ConfigurationService:
             else:
                 code = f'{size_str}TC'
 
-            print(f"[DEBUG] Tri-clamp connection code (non-base): {code}")
             return code
         else:
-            print(f"[DEBUG] Unknown connection type: {connection_type}")
             return ""
 
     def _get_additional_option_codes(self, selected_options: dict) -> list:
         """Extract codes for all additional options, preserving order and skipping empty/defaults."""
         codes = []
         
-        # Debug the selected options
-        print(f"[DEBUG] _get_additional_option_codes - selected_options: {selected_options}")
-        
         # Extra Static Protection - handle both "Yes" and True
         extra_static = selected_options.get("Extra Static Protection")
         if extra_static == "Yes" or extra_static is True:
             codes.append("XSP")
-            print(f"[DEBUG] Added XSP code")
         
         # Stainless Steel Tag - handle both "Yes" and True
         stainless_tag = selected_options.get("Stainless Steel Tag")
         if stainless_tag == "Yes" or stainless_tag is True:
             codes.append("SSTAG")
-            print(f"[DEBUG] Added SSTAG code")
         
         # Vibration Resistance - handle both "Yes" and True
         vibration_resistance = selected_options.get("Vibration Resistance")
         if vibration_resistance == "Yes" or vibration_resistance is True:
             codes.append("VR")
-            print(f"[DEBUG] Added VR code")
         
         # Epoxy House - handle both "Yes" and True
         epoxy_house = selected_options.get("Epoxy House")
         if epoxy_house == "Yes" or epoxy_house is True:
             codes.append("EPOX")
-            print(f"[DEBUG] Added EPOX code")
         
         # Bent Probe - handle both "Yes" and True
         bent_probe = selected_options.get("Bent Probe")
@@ -530,13 +554,11 @@ class ConfigurationService:
             deg = selected_options.get("Bent Probe Degree")
             if deg:
                 codes.append(f"{deg}DEG")
-                print(f"[DEBUG] Added {deg}DEG code")
         
         # 3/4" Diameter Probe - handle both "Yes" and True
         probe_3_4 = selected_options.get('3/4" Diameter Probe')
         if probe_3_4 == "Yes" or probe_3_4 is True:
             codes.append("3/4OD")
-            print(f"[DEBUG] Added 3/4OD code")
         
         # Insulator Material - handle actual codes from database
         # Only add insulator material if it's explicitly selected (not base setup)
@@ -586,16 +608,12 @@ class ConfigurationService:
             if product_family in ["LS2000", "LS6000"] and current_material == "H":
                 # If user has manually set insulator to U (base), don't add TEFINS code
                 if str(ins_mat).strip() in base_insulators:
-                    print(f"[DEBUG] Skipping insulator material code for {ins_mat} (user manually set to base for H material)")
+                    pass
                 else:
                     # Auto-selected TEF for H material, add the code
                     if ins_len and str(ins_len).strip() not in ("", "Standard"):
                         clean_ins_len = str(ins_len).rstrip('"')
                         codes.append(f'{clean_ins_len}"{ins_mat_map[ins_mat]}')
-                        print(f"[DEBUG] Added {clean_ins_len}\"{ins_mat_map[ins_mat]} code for {product_family} (auto-selected for H material)")
-                    else:
-                        codes.append(ins_mat_map[ins_mat])
-                        print(f"[DEBUG] Added {ins_mat_map[ins_mat]} code for {product_family} (auto-selected for H material)")
             else:
                 # Normal logic for other cases
                 if str(ins_mat).strip() not in base_insulators:
@@ -603,14 +621,9 @@ class ConfigurationService:
                         # Remove any trailing quote from ins_len
                         clean_ins_len = str(ins_len).rstrip('"')
                         codes.append(f'{clean_ins_len}"{ins_mat_map[ins_mat]}')
-                        print(f"[DEBUG] Added {clean_ins_len}\"{ins_mat_map[ins_mat]} code for {product_family}")
                     else:
                         codes.append(ins_mat_map[ins_mat])
-                        print(f"[DEBUG] Added {ins_mat_map[ins_mat]} code for {product_family}")
-                else:
-                    print(f"[DEBUG] Skipping insulator material code for {ins_mat} (base material for {product_family})")
         
-        print(f"[DEBUG] Final codes: {codes}")
         return codes
 
     def calculate_price(self) -> float:
@@ -619,18 +632,12 @@ class ConfigurationService:
             return 0.0
 
         try:
-            print(f"[DEBUG] ConfigurationService.calculate_price() called")
-            print(f"[DEBUG] Selected options: {self.current_config.selected_options}")
-            
             # Check for U or T materials specifically
             material = self.current_config.selected_options.get('Material')
             length = self.current_config.selected_options.get('Length')
             if material in ['U', 'T'] and material and length:
-                print(f"[DEBUG] U/T MATERIAL DETECTED in calculate_price - Material: {material}, Length: {length}")
-                
                 # Get product family for length adder calculation
                 product_family = self.current_config.product_family_name
-                print(f"[DEBUG] Product family for length adder: {product_family}")
                 
                 # Calculate length adder manually to verify
                 if product_family:
@@ -638,9 +645,8 @@ class ConfigurationService:
                         length_adder = self.product_service.calculate_length_price(
                             product_family, str(material), float(length)
                         )
-                        print(f"[DEBUG] Manual length adder calculation in calculate_price: ${length_adder:.2f}")
                     except Exception as e:
-                        print(f"[DEBUG] Error calculating length adder in calculate_price: {e}")
+                        pass
 
             self._update_price()
             return self.current_config.final_price
@@ -697,10 +703,8 @@ class ConfigurationService:
         Returns:
             list: A list of dictionaries, where each dictionary represents an option.
         """
-        # logger.debug(f"Fetching available options for product family: {product_family_name}")
         try:
             options = self.product_service.get_additional_options(self.db, product_family_name)
-            # logger.debug(f"Found {len(options)} options for {product_family_name}")
             return options
         except Exception as e:
             logger.error(f"Error fetching available options for {product_family_name}: {e!s}", exc_info=True)

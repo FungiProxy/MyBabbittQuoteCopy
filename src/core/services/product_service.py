@@ -152,12 +152,25 @@ class ProductService:
     def get_additional_options(self, db: Session, family_name: str) -> List[Dict[str, Any]]:
         """Get all additional options for a product family, excluding core."""
         try:
+            # Get all options that might match the family name
             options_query = db.query(Option).filter(
                 Option.product_families.contains(family_name)
             ).all()
 
-            additional_options = []
+            # Filter options to only include those where the family name is a complete match
+            # in the comma-separated product_families field
+            filtered_options = []
             for option in options_query:
+                if not option.product_families:
+                    continue
+                
+                # Split the product_families string and check for exact match
+                families_list = [f.strip() for f in option.product_families.split(',')]
+                if family_name in families_list:
+                    filtered_options.append(option)
+
+            additional_options = []
+            for option in filtered_options:
                 # Basic validation
                 if not option.name or not option.category:
                     logger.warning(f"Skipping option id {option.id} due to missing name or category.")
@@ -251,6 +264,18 @@ class ProductService:
             query = query.filter(Option.product_families.contains(family_name))
         
         materials = query.all()
+        
+        # Filter materials to only include those where the family name is a complete match
+        # in the comma-separated product_families field
+        if family_name:
+            filtered_materials = []
+            for material in materials:
+                if material.product_families:
+                    families_list = [f.strip() for f in material.product_families.split(',')]
+                    if family_name in families_list:
+                        filtered_materials.append(material)
+            materials = filtered_materials
+        
         result = []
         for o in materials:
             try:
@@ -594,7 +619,6 @@ class ProductService:
         """
         from src.core.database import SessionLocal
 
-        print(f'DEBUG: calculate_length_price called with product_family={product_family}, material_code={material_code}, length={length}')
         with SessionLocal() as session:
             # Query for length adder rules
             query = text(
@@ -611,26 +635,19 @@ class ProductService:
                 {"product_family": product_family, "material_code": material_code},
             ).fetchone()
 
-            print(f'DEBUG: length adder rule query result = {result}')
-
             if not result:
-                print('DEBUG: No length adder rule found, returning 0.0')
                 return 0.0
 
             adder_type = result.adder_type
             first_threshold = result.first_threshold
             adder_amount = result.adder_amount
 
-            print(f'DEBUG: adder_type={adder_type}, first_threshold={first_threshold}, adder_amount={adder_amount}')
-
             # Handle per-inch adders (U, T, CPVC materials)
             if adder_type == "per_inch":
                 if length > first_threshold:
                     extra_length = length - first_threshold
                     adder = extra_length * adder_amount
-                    print(f'DEBUG: per_inch adder calculated = {adder}')
                     return adder
-                print('DEBUG: per_inch, length not above threshold, returning 0.0')
                 return 0.0
 
             # Handle per-foot adders (S, H, TS, C materials)
@@ -638,12 +655,9 @@ class ProductService:
                 if length >= first_threshold:
                     adder_count = math.floor((length - first_threshold) / 12) + 1
                     adder = adder_count * adder_amount
-                    print(f'DEBUG: per_foot adder calculated = {adder}')
                     return adder
-                print('DEBUG: per_foot, length not above threshold, returning 0.0')
                 return 0.0
 
-            print('DEBUG: Unknown adder_type or no adder, returning 0.0')
             return 0.0
 
     def get_length_adder_rules(
@@ -699,30 +713,19 @@ class ProductService:
         Returns:
             The matching ProductVariant object, or None if not found.
         """
-        print(f"[DEBUG] find_variant called with family_id={family_id}")
-        print(f"[DEBUG] options: {options}")
-        print(f"[DEBUG] options type: {type(options)}")
-        
         # Check each option for dict values
         dict_options = []
         for k, v in options.items():
-            print(f"[DEBUG] Option: {k} = {v} (type: {type(v)})")
             if isinstance(v, dict):
-                print(f"[DEBUG] ERROR: Option value for {k} is a dict! This will cause unhashable errors.")
-                print(f"[DEBUG] Dict contents: {v}")
                 dict_options.append((k, v))
         
         if dict_options:
-            print(f"[DEBUG] Found {len(dict_options)} dict options that will cause errors:")
-            for k, v in dict_options:
-                print(f"[DEBUG]   {k}: {v}")
             # Convert dicts to strings to prevent the error
             for k, v in dict_options:
                 if isinstance(v, dict) and 'code' in v:
                     options[k] = v['code']
                 else:
                     options[k] = str(v)
-            print(f"[DEBUG] Converted options: {options}")
         
         # Get the product family name
         family = db.query(ProductFamily).filter_by(id=family_id).first()

@@ -1,0 +1,60 @@
+id,product_family_id,model_number,description,base_price,base_length,voltage,material,insulator_material,insulator_length,insulator_temp_rating,max_pressure,housing_type,housing_ratings,application_notes,special_notes,process_connection_type,process_connection_size,process_connection_material,output_type
+1,1,"LS2000-115VAC-S-10""",LS2000 Level Switch - Base Configuration,455.0,10.0,115VAC,S,U,4.0,180 F,300,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,"1. LS2000 has limited static protection, and is not recommended for plastic pellets or resins with static charges unless extra static option is specified. For extra static protection, ADD $30.00.
+2. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 96"", USE TEFLON SLEEVE.",,NPT,"3/4""",S,10 Amp SPDT Relay
+2,2,"LS2100-24VDC-S-10""",LS2100 Level Switch - Base Configuration,480.0,10.0,24VDC,S,TEF,4.0,450 F,300,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,"1. The LS2100 is a loop powered switch that operates between 8mA and 16mA.
+2. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 96"", USE TEFLON SLEEVE.",,NPT,"3/4""",S,Normal 8mA; Alarm 16mA
+3,3,"LS6000-115VAC-S-10""",LS6000 Level Switch - Base Configuration,580.0,10.0,115VAC,S,DEL,4.0,250 F Max,1500,"Cast Aluminum, Explosion Proof - Class I, Groups C & D; Class II, Groups E, F & G",7,"1. Delrin insulators are standard for SS probes. Teflon insulators are standard for Halar and Teflon Sleeve probes as well as other baked coatings.
+2. Max Temperatures are: Delrin insulator 250F; Teflon insulator 450F; PEEK insulator 550F
+3. Do not use Delrin in applications with STEAM.
+4. Cable probes and special materials of construction available.
+5. 3⁄4"" NPT process connection is optional at no extra charge ( 3⁄4"" NPT Max 300 psi @ 75F)
+6. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 96"", USE TEFLON SLEEVE.",,NPT,"1""",S,5 Amp DPDT Relay
+4,4,"LS7000-115VAC-S-10""",LS7000 Level Switch - Base Configuration,715.0,10.0,115VAC,S,TEF,4.0,450 F,1500,"Cast Aluminum, NEMA 7, D; NEMA 9, E, F, & G",7,"1. Cable probes and special materials of construction available.
+2. 3⁄4"" NPT process connection is optional at no extra charge ( 3⁄4"" NPT Max 300 psi @ 75F)
+3. Max Temp for Teflon Insulator 450F, PEEK Insulator 550F.
+4. On board timer often used to pump down sumps or avoid nuisance alarms due to splashing.
+5. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 72"", USE TEFLON SLEEVE.",,NPT,"1""",S,2 Form C contacts 5 Amp DPDT Relay
+5,5,"LS7000/2-115VAC-H-10""",LS7000/2 Level Switch - Base Configuration,800.0,10.0,115VAC,H,TEF,4.0,450 F,1500,"Cast Aluminum, NEMA 7, D; NEMA 9, E, F, & G",7,"1. VERY IMPORTANT LS 7000/2 IS DESIGNED TO AUTOMATICALLY FILL OR AUTOMATICALLY EMPTY A VESSEL. LS 7000/2 HAS ONLY ONE RELAY, AND THIS RELAY IS DEDICATED TO THE AUTO FILL OR AUTO EMPTYING APPLICATION. It will not give two discrete outputs as is needed to turn on two lights.
+2. LS 7000/2 IS DESIGNED TO WORK IN HOMOGENEOUS LIQUIDS. Liquids that change in conductivity or applications where various materials may be in the vessel at different times are undesirable applications. If this is the case, please use two probes.
+3. LS 7000/2 MUST HAVE A HALAR COATED PROBE IN ELECTRICALLY CONDUCTIVE LIQUIDS. Water and water based liquids are electrically conductive.
+4. LS 7000/2 MUST BE GROUNDED TO THE LIQUID FOR BEST REPEATABILITY. If the unit is screwed into the top of a metal tank, the unit will be properly grounded. If the tank is made of fiberglass, or other non-metallic material, special grounding provisions may be necessary.
+5. MATERIAL STICKING ON PROBE WILL AFFECT SETPOINT REPEATABILITY. If this will be a problem, please use two probes instead of LS 7000/2.
+6. FOR CRITICAL FILLING APPLICATIONS, A SEPARATE INDEPENDEDNT HIGH LEVEL SWITCH IS RECOMMENDED FOR POSITIVE ALARM AND/OR SHUT DOWN. Changes in the liquid composition could cause the upper set-point to drift. Please be safe by using a back-up level switch for positive shut off in critical applications.
+7. DOES NOT WORK WELL IN DRY MATERIALS!
+8. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 96"", USE TEFLON SLEEVE.",,NPT,"1""",S,2 Form C contacts 5 Amp DPDT Relay
+6,6,"LS8000-115VAC-S-10""",LS8000 Level Switch - Base Configuration,750.0,10.0,115VAC,S,TEF,4.0,450 F,300,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,"1. Remote mounted LS 8000 receiver is normally sold without an enclosure. Enclosures can be purchased as an option.
+2. Transmitters for LS 8000 come in several sensitivities. The factory normally matches the sensitivity to the application and probe length. Please specify sensitivity or serial number when ordering replacement transmitters.
+3. Transmitter sensitivities are noted in the upper right-hand corner of the transmitter. The designation is as follows:
+HI....................................HIGH
+M/H..................................MEDIUM HIGH
+MED.................................MEDIUM
+LO....................................LOW
+LLLO.................................TRIPLE LOW
+XLO..................................EXTRA LOW
+4. Transmitters come in two sizes, one for the standard LS 8000 housing (3/4""NPT process connection), and one for the LS7000 housing (1""NPT process connection). The transmitters for the LS 8000 housing we call ""small"", and the ones for the LS 7000 housing we call ""big"". The ""big"" style transmitters have a blue wire connecting the banana plug to the transmitter.
+5. Cable probes and special materials of construction available.
+6. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 96"", USE TEFLON SLEEVE.",,NPT,"3/4""",S,5 Amp DPDT Relay
+7,7,"LS8000/2-115VAC-H-10""",LS8000/2 Level Switch - Base Configuration,900.0,10.0,115VAC,H,TEF,4.0,450 F,300,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,"1. With two receiver cards you can get 4 set points in an LS 8000/2 system on one probe. As this system can have a central point of failure (the transmitter), it is good engineering practice to use a separate independent high level switch for emergency shut-down in critical applications.
+2. When using a system with 2 or 4 set points on one probe, please keep in mind that these systems are designed for homogeneous liquids that do not change in their make-up or conductivity. If these conditions exist, please consider using 2 separate probes.
+3. For multiple points on one probe, the fluid must be grounded to the mounting nipple. Special consideration should be taken for non-metallic tanks.
+4. Applications with water based or electrically conductive liquids must have a Halar coated probe.
+5. Material sticking on the probe will affect the repeatability of set points in multiple-point-on-one-probe applications. If such a condition is expected, please use one probe for each set-point.
+6. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 96"", USE TEFLON SLEEVE.",,NPT,"3/4""",S,10 Amp SPDT Relay
+8,8,"LT9000-115VAC-H-10""",LT9000 Level Transmitter - Base Configuration,920.0,10.0,115VAC,H,TEF,4.0,350 F,1500,"Cast Aluminum, NEMA 7, D; NEMA 9, E, F, & G",7,"1. It is always good engineering practice to provide a separate, independent high level alarm. 
+2. THE LT 9000 IS DESIGNED TO BE USED IN ELECTRICALLY CONDUCTIVE LIQUIDS THAT DO NOT LEAVE A RESIDUE ON THE PROBE. A wet electrically conductive coating will give an indication of level at the highest point that there is a continuous coating from the surface of the fluid.
+3. The LT 9000 will give a varying output, if the conductivity of the material changes.
+4. For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic tanks, extra grounding provisions may be necessary.
+5. LONGEST PROBE WITH HALAR COATING IS 96"" (8 FEET). FOR PROBES OVER 96"", USE TEFLON SLEEVE.
+6. For high temperatures or harsh acids, please check with the factory to see if the epoxy will be compatible with the application.",,NPT,"1""",S,4 to 20mA
+9,9,"FS10000-115VAC-S-6""",FS10000 Flow Switch - Base Configuration,1980.0,6.0,115VAC,S,TEF,1.0,-30F to 450F,300,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,"Max. -probe length recommended is 24"".
+For detecting emissions before they are visible, we recommend air velocities in excess of 2000 feet per minute.
+
+                                                                          CFM
+VELOCITY IN FEET PER MINUTE = _______________________________________
+                                                                            2
+                                                           (Duct Dia. In Feet) X .78",,NPT,"3/4""",S,5 Amp DPDT Relay
+10,10,LS7500-BASE,LS7500 Presence/Absence Switch - Base Configuration,0.0,10.0,115VAC,S,DEL,1.0,-30F to 450F,,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,"1. These units are replacement units for Princo P/N's L3515 and L3545. The LS7500 replaces L3515 and the LS8500 replaces L3545.
+2. Standard flanges are 316SS Flat Face Flanges.",,,,,2 Form C Contacts; 5 Amp DPDT Relay
+11,11,LS8500-BASE,LS8500 Presence/Absence Switch - Base Configuration,0.0,10.0,115VAC,S,DEL,1.0,-30F to 450F,,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,"1. These units are replacement units for Princo P/N's L3515 and L3545. The LS7500 replaces L3515 and the LS8500 replaces L3545.
+2. Standard flanges are 316SS Flat Face Flanges.",,,,,2 Form C Contacts; 5 Amp DPDT Relay
+81,12,LS8000/2-TRAN-EX-S-10,"TRAN-EX base product for LS8000/2 family (fixed 115VAC, S/H material only)",570.0,10.0,115VAC,S,TEF,4.0,450F,300,"Cast Aluminum, NEMA 7, C, D; NEMA 9, E, F, & G",7,TRAN-EX application notes to be determined based on specific requirements.,,NPT,"3/4""",S,5 Amp DPDT Relay

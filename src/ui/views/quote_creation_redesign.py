@@ -811,7 +811,8 @@ class QuoteCreationPageRedesign(QWidget):
         
         # Get customer info
         customer_data = {
-            'name': self.company_name_edit.text() or 'N/A',
+            'name': self.contact_person_edit.text() or 'N/A',
+            'company': self.company_name_edit.text() or 'N/A',
             'contact_person': self.contact_person_edit.text() or 'N/A',
             'email': self.email_edit.text() or 'N/A',
             'phone': self.phone_edit.text() or 'N/A',
@@ -821,15 +822,39 @@ class QuoteCreationPageRedesign(QWidget):
         # Get quote items
         items = []
         total_price = 0.0
-        
         for item in self.current_quote.get("items", []):
-            items.append({
+            # Use config_data as the main configuration dict
+            config = item.get("config_data", {})
+            # Fallback to legacy configuration if needed
+            if not config:
+                config = item.get("configuration", {})
+            # Flatten config for easy access
+            connection_type = config.get("Connection Type", "")
+            connection_material = config.get("Connection Material", "")
+            voltage = config.get("Voltage", item.get("voltage", ""))
+            material = config.get("Material", item.get("material", ""))
+            length = config.get("Probe Length", item.get("length", ""))
+            model_number = item.get("model_number", "")
+            description = item.get("description", "")
+            # Compose the export item
+            export_item = {
                 'product': item.get("product_family", "N/A"),
-                'configuration': item.get("config_data", {}),  # Use config_data instead of configuration string
+                'product_family': item.get("product_family", "N/A"),
+                'model_number': model_number,
+                'description': description,
+                'material': material,
+                'voltage': voltage,
+                'length': length,
                 'quantity': item.get("quantity", 1),
                 'unit_price': item.get("unit_price", 0.0),
-                'total': item.get("total_price", 0.0)
-            })
+                'total_price': item.get("total_price", 0.0),
+                'config_data': config,
+                'configuration': config,  # for legacy support
+                # For export_service compatibility
+                'connection_type': connection_type,
+                'connection_material': connection_material,
+            }
+            items.append(export_item)
             total_price += item.get("total_price", 0.0)
         
         # Generate quote number if not exists
@@ -841,8 +866,16 @@ class QuoteCreationPageRedesign(QWidget):
         # Prepare complete quote data
         quote_data = {
             'quote_number': quote_number,
-            'date': datetime.now().strftime('%Y-%m-%d'),
+            'quote_date': datetime.now().strftime('%Y-%m-%d'),
+            'customer': {
+                'name': customer_data['name'],
+                'company': customer_data['company'],  # Use company name field for company
+                'contact_name': customer_data['contact_person'],
+                'email': customer_data['email'],
+                'phone': customer_data['phone'],
+            },
             'customer_name': customer_data['name'],
+            'customer_company': customer_data['company'],  # Add this for export service
             'contact_person': customer_data['contact_person'],
             'subject': f"{items[0]['product']} Level Transmitter" if items else "Quote",
             'items': items,
@@ -880,8 +913,6 @@ For proper operation, the LT 9000 must be grounded to the fluid. In non-metallic
         
         # Default notes for other products
         return "Please refer to product manual for detailed application notes and installation instructions."
-
-
 
     def _save_quote_to_database(self, quote_data: Dict) -> Optional['Quote']:
         """Save quote to database and return the full Quote object."""

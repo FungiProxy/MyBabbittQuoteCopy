@@ -18,29 +18,13 @@ class PricingStrategy(ABC):
 
 class MaterialAvailabilityStrategy(PricingStrategy):
     def calculate(self, context: PricingContext) -> float:
-        print(f"[DEBUG] MaterialAvailabilityStrategy.calculate() called")
         if not context.product:
-            print(f"[DEBUG] Context product is None")
             return context.price
             
-        print(f"[DEBUG] Product model number: {context.product.model_number}")
-        
-        # Special handling for TRAN-EX products
-        if "TRAN-EX" in context.product.model_number:
-            # TRAN-EX allows S and H materials only
-            allowed_materials = ['S', 'H']
-            if context.material_override_code not in allowed_materials:
-                raise ValueError(
-                    f"Material {context.material_override_code} is not available for TRAN-EX. Available materials: {allowed_materials}"
-                )
-            print(f"[DEBUG] TRAN-EX material availability check passed")
-            return context.price
-
         # Determine product type from model number
         product_type = context.product.model_number.split("-")[0]
         if product_type == "LS7000" and "/2" in context.product.model_number:
             product_type = "LS7000/2"
-        print(f"[DEBUG] Product type: {product_type}")
 
         # Get material option for this product type
         material_option = (
@@ -58,35 +42,23 @@ class MaterialAvailabilityStrategy(PricingStrategy):
                 f"No material options found for product type {product_type}"
             )
 
-        print(f"[DEBUG] Found material option: {material_option.name}")
-        print(f"[DEBUG] Material option choices: {material_option.choices}")
-        print(f"[DEBUG] Material option choices type: {type(material_option.choices)}")
-
         # Handle different choice formats
         available_materials = []
         if material_option.choices and isinstance(material_option.choices, list):
-            print(f"[DEBUG] Processing {len(material_option.choices)} choices")
             for i, choice in enumerate(material_option.choices):
-                print(f"[DEBUG] Choice {i}: {choice} (type: {type(choice)})")
                 if isinstance(choice, dict):
                     # New format: {'code': 'S', 'display_name': 'S - 316 Stainless Steel'}
                     code = choice.get('code', '')
-                    print(f"[DEBUG] Dict choice, extracted code: {code}")
                     available_materials.append(code)
                 else:
                     # Old format: simple string
-                    print(f"[DEBUG] String choice: {choice}")
                     available_materials.append(str(choice))
-
-        print(f"[DEBUG] Available materials: {available_materials}")
-        print(f"[DEBUG] Material override code: {context.material_override_code}")
 
         if context.material_override_code not in available_materials:
             raise ValueError(
                 f"Material {context.material_override_code} is not available for product type {product_type}. Available materials: {available_materials}"
             )
 
-        print(f"[DEBUG] Material availability check passed")
         return context.price
 
 
@@ -176,7 +148,6 @@ class AccessoryOptionStrategy(PricingStrategy):
                 .first()
             )
             if option and option.adders:
-                print(f"[DEBUG] Accessory: {option_name}, value: {value}, adders: {option.adders}")
                 adder_value = 0.0
                 # Normalize lookup
                 keys_to_try = [
@@ -186,9 +157,10 @@ class AccessoryOptionStrategy(PricingStrategy):
                     if key in option.adders:
                         adder_value = option.adders[key]
                         break
-                if adder_value:
-                    print(f"[DEBUG] Accessory adder applied: {option_name} = {adder_value}")
+                # Only add non-zero adders
+                if adder_value and float(adder_value) > 0:
                     context.price += float(adder_value)
+
         return context.price
 
 
@@ -380,7 +352,6 @@ class OringMaterialStrategy(PricingStrategy):
 
         if adder_value:
             context.price += float(adder_value)
-            print(f"[DEBUG] O-ring material {o_ring_material} adder: ${adder_value}")
 
         return context.price
 
@@ -399,10 +370,9 @@ class ExoticMetalAdderStrategy(PricingStrategy):
                 try:
                     adder_value = float(exotic_metal_adder)
                     if adder_value > 0:
-                        print(f"[DEBUG] ExoticMetalAdderStrategy: Adding ${adder_value:.2f} for {material_code}")
                         context.price += adder_value
                 except (ValueError, TypeError):
-                    print(f"[DEBUG] ExoticMetalAdderStrategy: Invalid adder value: {exotic_metal_adder}")
+                    pass
         
         return context.price
 
@@ -413,9 +383,6 @@ class InsulatorOptionStrategy(PricingStrategy):
         all_options = context.db.query(Option).filter(
             Option.product_families.like(f"%{context.product.model_number.split('-')[0]}%")
         ).all()
-        print("[DEBUG] All options for product family:")
-        for opt in all_options:
-            print(f"  Option: {opt.name}, Category: {opt.category}")
         for ins_opt in ["Insulator Material", "Insulator Length"]:
             value = context.specs.get(ins_opt)
             if not value or value == "Standard":
@@ -428,11 +395,14 @@ class InsulatorOptionStrategy(PricingStrategy):
             )
             option = option_query.first()
             if not option:
-                print(f"[WARNING] Insulator option not found: {ins_opt}")
                 continue
             if option and option.adders:
-                print(f"[DEBUG] Insulator: {ins_opt}, value: {value}, adders: {option.adders}")
                 adder_value = 0.0
+                
+                # Special handling for Insulator Length: map "4" to "Standard"
+                if ins_opt == "Insulator Length" and value == "4":
+                    value = "Standard"
+                
                 # Try direct value, and lowercased string
                 keys_to_try = [value, str(value).lower()]
                 found = False
@@ -442,7 +412,7 @@ class InsulatorOptionStrategy(PricingStrategy):
                         found = True
                         break
                 if not found:
-                    print(f"[WARNING] No adder found for {ins_opt} value: {value} (tried keys: {keys_to_try})")
+                    pass
                 
                 # Special handling: Nullify Teflon price adder when Halar material is selected
                 if ins_opt == "Insulator Material" and context.material.code == "H":
@@ -454,10 +424,8 @@ class InsulatorOptionStrategy(PricingStrategy):
                         is_teflon = True
                     
                     if is_teflon:
-                        print(f"[DEBUG] Halar material detected - nullifying Teflon insulator price adder")
                         adder_value = 0.0  # Force no adder for Teflon when Halar is selected
                 
                 if adder_value:
-                    print(f"[DEBUG] Insulator adder applied: {ins_opt} = {adder_value}")
                     context.price += float(adder_value)
         return context.price

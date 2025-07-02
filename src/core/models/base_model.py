@@ -69,6 +69,7 @@ class BaseModel(Base):
     max_pressure = Column(Text, nullable=True)
     housing_type = Column(Text, nullable=True)
     housing_ratings = Column(Text, nullable=True)
+    output_type = Column(Text, nullable=True)  # e.g., "10 Amp SPDT Relay", "4 to 20mA"
     application_notes = Column(Text, nullable=True)
     special_notes = Column(Text, nullable=True)
 

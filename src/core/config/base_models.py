@@ -113,6 +113,16 @@ BASE_MODELS = {
         "voltage": "115VAC",
         "material": "S",
     },
+    "TRAN-EX": {
+        "model_number": "LS8000/2-TRAN-EX-S-10\"",
+        "description": "TRAN-EX Level Switch - Base Configuration",
+        "base_price": 850.0,
+        "base_length": 10.0,
+        "voltage": "115VAC",
+        "material": "S",
+        "process_connection_type": "NPT",
+        "process_connection_size": '3/4"',
+    },
 }
 
 

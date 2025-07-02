@@ -359,10 +359,22 @@ class ModernProductSelectionDialog(QDialog):
         # Model number label (dynamic)
         self.model_number_label = QLabel("")
         self.model_number_label.setStyleSheet(f"""
-            font-size: {FONTS['sizes']['2xl']}px;
+            font-size: {FONTS['sizes']['xl']}px;
             font-weight: {FONTS['weights']['bold']};
             color: {COLORS['text_primary']};
+            background-color: {COLORS['bg_primary']};
+            border: 2px solid {COLORS['border_light']};
+            border-radius: {RADIUS['md']}px;
+            padding: {SPACING['md']}px {SPACING['lg']}px;
+            margin-bottom: {SPACING['md']}px;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         """)
+        self.model_number_label.setWordWrap(True)
+        self.model_number_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header_layout.addWidget(self.model_number_label)
         
         header_layout.addStretch()
@@ -476,21 +488,17 @@ class ModernProductSelectionDialog(QDialog):
         if not items:
             return
         product_data = items[0].data(Qt.ItemDataRole.UserRole)
-        # #  Product selected: {product_data}")
         selected_name = product_data.get('name', '')
 
-        # Check if this is the special "Spare Parts" selection
-        if product_data.get('is_spare_parts'):
+        # Special handling for Spare Parts
+        if selected_name == "Spare Parts":
             self._show_spare_parts_interface()
             return
 
         # PATCH: Special handling for TRAN-EX family
         if selected_name == "TRAN-EX":
-            # Hardcode the correct model number for TRAN-EX
             base_product_info = self.db.query(Product).filter(Product.model_number == "LS8000/2-TRAN-EX-S-10").first()
             if base_product_info:
-                # print(f"[PATCH] Using TRAN-EX base product: {base_product_info.model_number} (ID: {base_product_info.id})")
-                # Convert SQLAlchemy object to dict for compatibility
                 product_data = {
                     'id': base_product_info.id,
                     'name': selected_name,
@@ -502,23 +510,14 @@ class ModernProductSelectionDialog(QDialog):
                     'voltage': getattr(base_product_info, 'voltage', '115VAC'),
                     'material': getattr(base_product_info, 'material', 'S'),
                 }
-            else:
-                # print("[PATCH] TRAN-EX base product not found!")
-                pass
         else:
             base_product_info = self.product_service.get_base_product_for_family(self.db, selected_name)
             if base_product_info:
-                #  Base product info: {base_product_info}")
                 product_data = base_product_info
-                pass
-            else:
-                # print(f"[WARNING] No base product found for {selected_name}, using family info")
-                pass
 
         # Set flag for model change and store the base length
         self._model_changed_during_setup = True
         self._pending_model_base_length = product_data.get('base_length', 10)
-        #  Model changed, base length will be reset to: {self._pending_model_base_length}")
 
         try:
             # Get the first valid material code for this product
@@ -531,10 +530,18 @@ class ModernProductSelectionDialog(QDialog):
                 elif isinstance(choices[0], str):
                     first_material = choices[0]
             else:
-                first_material = None
+                # Fallback: get available materials from product service
+                try:
+                    available_materials = self.product_service.get_material_choices_for_family(selected_name)
+                    if available_materials:
+                        first_material = available_materials[0]
+                    else:
+                        first_material = None
+                except:
+                    first_material = None
             selected_options = {'material': first_material} if first_material else {}
-            #  Passing selected_options to start_configuration: {selected_options}")
-            pass
+            # DEBUG: Print selected_options before configuration
+
             self.config_service.start_configuration(
                 product_family_id=product_data.get('id', 1),
                 product_family_name=selected_name,
@@ -544,1156 +551,95 @@ class ModernProductSelectionDialog(QDialog):
             self._show_product_config(product_data)
         except Exception as e:
             import traceback
-            #  Exception in _on_product_selected: {e}")
-            # print(traceback.format_exc())
-            logger.error(f"Error starting configuration: {e}")
-            raise  # Ensure the exception is not swallowed
-            QMessageBox.critical(self, "Error", f"Failed to configure product: {e}")
-    
-    def _show_product_config(self, product):
-        """Show configuration options for the selected product."""
-        logger.debug(f"Showing config for: {product.get('name', '')}")
-        # Clear existing config
-        while self.config_layout.count():
-            child = self.config_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-        self.option_widgets.clear()
-        self._update_model_number_label()
-        core_options = []
-        seen_option_names = set()
-        try:
-            #  Gathering core options for: {product.get('name', '')}")
-            # Voltage - skip for TRAN-EX since it has no voltage options
-            if product.get('name') != 'TRAN-EX':
-                voltages = self.product_service.get_available_voltages(self.db, product.get('name', ''))
-                #  Voltages for {product.get('name', '')}: {voltages}")
-                if voltages:
-                    core_options.append({
-                        'name': 'Voltage',
-                        'choices': voltages,
-                        'adders': {},
-                        'category': 'Electrical',
-                    })
-                    seen_option_names.add('Voltage')
-            else:
-                #  Skipping voltage for TRAN-EX - no voltage options")
-                pass
-            # Material
-            if product.get('name') == 'TRAN-EX':
-                # Always force Material to be a dropdown for TRAN-EX
-                core_options.append({
-                    'name': 'Material',
-                    'choices': [
-                        {'code': 'S', 'display_name': 'S - 316 Stainless Steel'},
-                        {'code': 'H', 'display_name': 'H - Halar'}
-                    ],
-                    'adders': {},
-                    'category': 'Material',
-                    'default': 'S',
-                    'type': 'dropdown',
-                })
-                seen_option_names.add('Material')
-            else:
-                materials = self.product_service.get_available_materials_for_product(self.db, product.get('name', ''))
-                if materials:
-                    material_option = materials[0]
-                    # Set default to first available material code if present
-                    choices = material_option.get('choices', [])
-                    if choices and isinstance(choices[0], dict) and 'code' in choices[0]:
-                        material_option['default'] = choices[0]['code']
-                    elif choices and isinstance(choices[0], str):
-                        material_option['default'] = choices[0]
-                    material_option['category'] = 'Material'
-                    core_options.append(material_option)
-                    seen_option_names.add('Material')
-            # Special handling for TRAN-EX (fixed material)
-            # elif product.get('name') == 'TRAN-EX':
-                core_options.append({
-                    'name': 'Material',
-                    'choices': ['S', 'H'],
-                    'adders': {},
-                    'category': 'Material',
-                    'default': 'S',
-                    'type': 'dropdown',
-                })
-                seen_option_names.add('Material')
-            # Probe Length (always present unless already in options)
-            if 'Probe Length' not in seen_option_names:
-                base_length = product.get('base_length', 10)
-                core_options.append({
-                    'name': 'Probe Length',
-                    'type': 'numeric',
-                    'default': base_length,
-                    'category': 'Mechanical',
-                    'min': 1,
-                    'max': 200,
-                })
-                seen_option_names.add('Probe Length')
-        except Exception as e:
-            # print(f"[ERROR] Exception gathering core options for {product.get('name', '')}: {e}")
-            import traceback
-            # print(traceback.format_exc())
+            print(traceback.format_exc())
             self._show_error_message(f"Error gathering core options: {e}")
             return
-        # Additional options
-        try:
-            #  Gathering additional options for: {product.get('name', '')}")
-            additional_options = self.product_service.get_additional_options(self.db, product.get('name', ''))
-            #  Additional options: {additional_options}")
-        except Exception as e:
-            # print(f"[ERROR] Exception gathering additional options for {product.get('name', '')}: {e}")
-            import traceback
-            # print(traceback.format_exc())
-            self._show_error_message(f"Error gathering additional options: {e}")
-            additional_options = []
-        quantity_option = {'name': 'Quantity', 'choices': None, 'type': 'numeric', 'category': 'General'}
-        all_options = core_options[:]
-        for opt in additional_options:
-            if opt.get('name') not in seen_option_names:
-                all_options.append(opt)
-                seen_option_names.add(opt.get('name'))
-        all_options.append(quantity_option)
-        ordered_core_names = ['Voltage', 'Material', 'Probe Length']
-        ordered_core = [opt for name in ordered_core_names for opt in all_options if opt.get('name') == name]
-        rest = [opt for opt in all_options if opt.get('name') not in ordered_core_names]
-        all_options = ordered_core + rest
-        options_by_category = {}
-        for option in all_options:
-            cat = option.get('category', 'Other') or 'Other'
-            if cat not in options_by_category:
-                options_by_category[cat] = []
-            options_by_category[cat].append(option)
-        
-
-        try:
-            scroll = QScrollArea()
-            scroll.setWidgetResizable(True)
-            container = QWidget()
-            vbox = QVBoxLayout(container)
-            vbox.setSpacing(SPACING['lg'])
-            vbox.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-            default_values_to_set = []
-            # --- VOLTAGE SECTION FIRST ---
-            voltage_opt = next((o for o in ordered_core if o.get('name') == 'Voltage'), None)
-            if voltage_opt:
-                voltage_form = QFormLayout()
-                voltage_form.setSpacing(SPACING['md'])
-                voltage_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-                widget = self._create_dynamic_option_widget(voltage_opt, force_dropdown=False)
-                if widget:
-                    label = QLabel(voltage_opt.get('name', ''))
-                    label.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['semibold']};
-                        color: {COLORS['text_primary']};
-                    """)
-                    voltage_form.addRow(label, widget)
-                    default_val = voltage_opt.get('default')
-                    if default_val is not None:
-                        default_values_to_set.append((voltage_opt.get('name'), default_val, widget))
-                voltage_group = QGroupBox('Electrical')
-                voltage_group.setStyleSheet(f"""
-                    font-weight: {FONTS['weights']['bold']};
-                    font-size: {FONTS['sizes']['base']}px;
-                """)
-                voltage_group.setLayout(voltage_form)
-                vbox.addWidget(voltage_group)
-            # --- PROBE SECTION: Material + Probe Length together ---
-            probe_form = QFormLayout()
-            probe_form.setSpacing(SPACING['md'])
-            probe_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-            
-            # Handle Material with potential exotic metal adder
-            material_opt = next((o for o in ordered_core if o.get('name') == 'Material'), None)
-            if material_opt:
-                material_widget = self._create_dynamic_option_widget(material_opt, force_dropdown=False)
-                if material_widget:
-                    material_label = QLabel(material_opt.get('name', ''))
-                    material_label.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['semibold']};
-                        color: {COLORS['text_primary']};
-                    """)
-
-                    # Create a container widget for the right side
-                    right_side_widget = QWidget()
-                    right_layout = QHBoxLayout()
-                    right_layout.setSpacing(SPACING['md'])
-                    right_layout.setContentsMargins(0, 0, 0, 0)
-                    right_layout.addWidget(material_widget)
-
-                    # Exotic metal price adder field
-                    self.exotic_metal_adder_label = QLabel('Price Adder ($)')
-                    self.exotic_metal_adder_label.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['semibold']};
-                        color: {COLORS['text_primary']};
-                    """)
-                    self.exotic_metal_adder_spin = ExoticMetalAdderSpinBox()
-                    self.exotic_metal_adder_spin.setFixedWidth(120)
-                    self.exotic_metal_adder_spin.setMinimumHeight(32)
-                    self.exotic_metal_adder_spin.setMinimum(0.0)
-                    self.exotic_metal_adder_spin.setMaximum(9999.99)
-                    self.exotic_metal_adder_spin.setDecimals(2)
-                    self.exotic_metal_adder_spin.setSingleStep(10.0)
-                    self.exotic_metal_adder_spin.setStyleSheet(f"""
-                        QDoubleSpinBox {{
-                            border: 1px solid {COLORS['border_light']};
-                            border-radius: {RADIUS['md']}px;
-                            padding: {SPACING['md']}px;
-                            background-color: {COLORS['bg_primary']};
-                            font-size: {FONTS['sizes']['base']}px;
-                        }}
-                        QDoubleSpinBox:focus {{
-                            border-color: {COLORS['primary']};
-                        }}
-                    """)
-
-                    # Initially hide the adder field
-                    self.exotic_metal_adder_label.hide()
-                    self.exotic_metal_adder_spin.hide()
-
-                    # Connect the material change to show/hide adder field
-                    if hasattr(material_widget, 'currentIndexChanged'):
-                        material_widget.currentIndexChanged.connect(self._on_material_changed)
-
-                    # Connect the adder value change
-                    self.exotic_metal_adder_spin.valueChanged.connect(self._on_exotic_metal_adder_changed)
-
-                    right_layout.addWidget(self.exotic_metal_adder_label)
-                    right_layout.addWidget(self.exotic_metal_adder_spin)
-                    right_layout.addStretch()
-                    right_side_widget.setLayout(right_layout)
-
-                    # Add the material row to the form (label, right_side_widget)
-                    probe_form.addRow(material_label, right_side_widget)
-
-                    default_val = material_opt.get('default')
-                    if default_val is not None:
-                        default_values_to_set.append((material_opt.get('name'), default_val, material_widget))
-            
-            # Handle Probe Length
-            probe_length_opt = next((o for o in ordered_core if o.get('name') == 'Probe Length'), None)
-            if probe_length_opt:
-                widget = self._create_dynamic_option_widget(probe_length_opt, force_dropdown=False)
-                if widget:
-                    label = QLabel(probe_length_opt.get('name', ''))
-                    label.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['semibold']};
-                        color: {COLORS['text_primary']};
-                    """)
-                    probe_form.addRow(label, widget)
-                    default_val = probe_length_opt.get('default')
-                    if default_val is not None:
-                        default_values_to_set.append((probe_length_opt.get('name'), default_val, widget))
-            
-            probe_group = QGroupBox('Probe')
-            probe_group.setStyleSheet(f"""
-                font-weight: {FONTS['weights']['bold']};
-                font-size: {FONTS['sizes']['base']}px;
-            """)
-            probe_group.setLayout(probe_form)
-            vbox.addWidget(probe_group)
-            
-            # --- INSULATOR SECTION: Insulator Material + Insulator Length ---
-            insulator_material_option = None
-            insulator_length_option = None
-            if 'Connections' in options_by_category:
-                new_conn_opts = []
-                for opt in options_by_category['Connections']:
-                    if opt.get('name') == 'Insulator Material':
-                        insulator_material_option = opt
-                    elif opt.get('name') == 'Insulator Length':
-                        insulator_length_option = opt
-                    else:
-                        new_conn_opts.append(opt)
-                    pass
-                options_by_category['Connections'] = new_conn_opts
-            
-            # Render the Insulator section right after Probe section
-            if insulator_material_option or insulator_length_option:
-                ins_group = QGroupBox('Insulator')
-                ins_group.setStyleSheet(f"""
-                    font-weight: {FONTS['weights']['bold']};
-                    font-size: {FONTS['sizes']['base']}px;
-                """)
-                ins_form = QFormLayout()
-                ins_form.setSpacing(SPACING['md'])
-                ins_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-                if insulator_material_option:
-                    widget = self._create_dynamic_option_widget(insulator_material_option, force_dropdown=True)
-                    if widget:
-                        label = QLabel(insulator_material_option.get('name', ''))
-                        label.setStyleSheet(f"""
-                            font-weight: {FONTS['weights']['semibold']};
-                            color: {COLORS['text_primary']};
-                        """)
-                        ins_form.addRow(label, widget)
-                        # Set default to base model's insulator_material if present
-                        if self.config_service.current_config and hasattr(self.config_service.current_config, 'base_product') and self.config_service.current_config.base_product:
-                            base_insulator = self.config_service.current_config.base_product.get('insulator_material')
-                        if base_insulator:
-                            base_insulator_code = base_insulator.strip().upper()
-                            found = False
-                            for i in range(widget.count()):
-                                item_code = str(widget.itemData(i)).strip().upper()
-                                if item_code == base_insulator_code:
-                                    widget.setCurrentIndex(i)
-                                    found = True
-                                    break
-                            if not found:
-                                widget.setCurrentIndex(0)
-                if insulator_length_option:
-                    widget = self._create_dynamic_option_widget(insulator_length_option, force_dropdown=True)
-                    if widget:
-                        label = QLabel(insulator_length_option.get('name', ''))
-                        label.setStyleSheet(f"""
-                            font-weight: {FONTS['weights']['semibold']};
-                            color: {COLORS['text_primary']};
-                        """)
-                        ins_form.addRow(label, widget)
-                ins_group.setLayout(ins_form)
-                vbox.addWidget(ins_group)
-            # --- CONNECTIONS SECTION ---
-            if 'Connections' in options_by_category:
-                opts = [opt for opt in options_by_category['Connections'] if opt.get('name') not in ['Voltage', 'Material', 'Probe Length', 'Insulator Material', 'Insulator Length']]
-
-                if opts:
-                    group = QGroupBox('Connections')
-                    group.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['bold']};
-                        font-size: {FONTS['sizes']['base']}px;
-                    """)
-                    combo_style = f"""
-                        QComboBox {{
-                            border: 1px solid {COLORS['border_light']};
-                            border-radius: {RADIUS['md']}px;
-                            padding: {SPACING['md']}px;
-                            min-height: 32px;
-                            background-color: {COLORS['bg_primary']};
-                            font-family: {FONTS['family']};
-                            font-weight: {FONTS['weights']['semibold']};
-                            font-size: {FONTS['sizes']['base']}px;
-                            color: {COLORS['text_primary']};
-                        }}
-                        QComboBox:focus {{
-                            border-color: {COLORS['primary']};
-                        }}
-                    """
-                    form = QFormLayout()
-                    form.setSpacing(SPACING['md'])
-                    form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-                    # Find the Connection Type option
-                    connection_type_option = next((o for o in opts if o.get('name') == 'Connection Type'), None)
-                    sub_option_map = {
-                        'NPT': ['NPT Size', 'Connection Material'],
-                        'Flange': ['Flange Type', 'Flange Rating', 'Flange Size', 'Connection Material'],
-                        'Tri-clamp': ['Connection Material']
-                    }
-                    # Create Connection Type dropdown
-                    if connection_type_option:
-                        conn_type_combo = QComboBox()
-                        conn_type_combo.setFixedWidth(200)
-                        conn_type_combo.setMinimumHeight(32)
-                        conn_type_combo.setStyleSheet(combo_style)
-                        conn_type_choices = connection_type_option.get('choices', [])
-                        for choice in conn_type_choices:
-                            display_name = choice.get('display_name', choice.get('code', str(choice))) if isinstance(choice, dict) else str(choice)
-                            code = choice.get('code', str(choice)) if isinstance(choice, dict) else str(choice)
-                            conn_type_combo.addItem(display_name, code)
-                        # For 'Connection Type' label
-                        conn_type_label = QLabel('Connection Type')
-                        conn_type_label.setStyleSheet(f"""
-                            font-weight: {FONTS['weights']['semibold']};
-                            color: {COLORS['text_primary']};
-                            font-size: {FONTS['sizes']['base']}px;
-                        """)
-                        form.addRow(conn_type_label, conn_type_combo)
-                        # Store Connection Type widget in self.option_widgets so it can be restored during editing
-                        self.option_widgets['Connection Type'] = conn_type_combo
-                    else:
-                        conn_type_combo = None
-                    pass
-                    # Prepare sub-option widgets (all as dropdowns)
-                    sub_option_widgets = {}
-                    # Build a lookup for options by name
-                    opts_by_name = {opt.get('name'): opt for opt in opts if opt.get('name') != 'Connection Type'}
-
-                    # Add widgets in the order specified by sub_option_map
-                    # Handle Flange options
-                    for name in sub_option_map.get('Flange', []):
-                        opt = opts_by_name.get(name)
-                        if not opt:
-                            continue
-                        choices = opt.get('choices', [])
-                        adders = opt.get('adders', {})
-                        combo = QComboBox()
-                        combo.setFixedWidth(200)
-                        combo.setMinimumHeight(32)
-                        combo.setStyleSheet(combo_style)
-                        # Special handling for Flange Type descriptive labels
-                        if name == 'Flange Type' and choices:
-                            label_map = {'SS': 'SS - Stainless Steel', 'CS': 'CS - Carbon Steel'}
-                            for choice in choices:
-                                display = label_map.get(choice, str(choice))
-                                combo.addItem(display, choice)
-                        # Special handling for Connection Material with code-display_name format
-                        elif name == 'Connection Material' and choices and isinstance(choices[0], dict):
-                            for choice in choices:
-                                display_name = choice.get('display_name', choice.get('code', str(choice)))
-                                code = choice.get('code', str(choice))
-                                combo.addItem(display_name, code)
-                        elif choices and isinstance(choices[0], dict):
-                            for choice in choices:
-                                display_name = choice.get('display_name', choice.get('code', str(choice)))
-                                code = choice.get('code', str(choice))
-                                combo.addItem(display_name, code)
-                        elif choices:
-                            for choice in choices:
-                                combo.addItem(str(choice), str(choice))
-                        label = QLabel(name)
-                        label.setStyleSheet(f"""
-                            font-weight: {FONTS['weights']['semibold']};
-                            color: {COLORS['text_primary']};
-                            font-size: {FONTS['sizes']['base']}px;
-                        """)
-                        form.addRow(label, combo)
-                        # Store both label and combo together
-                        sub_option_widgets[name] = (label, combo)
-                        # Also store in self.option_widgets so it can be restored during editing
-                        self.option_widgets[name] = combo
-                        combo.currentIndexChanged.connect(
-                            lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
-                        )
-                        label.hide()
-                        combo.hide()
-                    
-                    # Handle NPT options
-                    for name in sub_option_map.get('NPT', []):
-                        opt = opts_by_name.get(name)
-                        if not opt:
-                            continue
-                        choices = opt.get('choices', [])
-                        adders = opt.get('adders', {})
-                        combo = QComboBox()
-                        combo.setFixedWidth(200)
-                        combo.setMinimumHeight(32)
-                        combo.setStyleSheet(combo_style)
-                        # Special handling for Connection Material with code-display_name format
-                        if name == 'Connection Material' and choices and isinstance(choices[0], dict):
-                            for choice in choices:
-                                display_name = choice.get('display_name', choice.get('code', str(choice)))
-                                code = choice.get('code', str(choice))
-                                combo.addItem(display_name, code)
-                        elif choices and isinstance(choices[0], dict):
-                            for choice in choices:
-                                display_name = choice.get('display_name', choice.get('code', str(choice)))
-                                code = choice.get('code', str(choice))
-                                combo.addItem(display_name, code)
-                        elif choices:
-                            for choice in choices:
-                                combo.addItem(str(choice), str(choice))
-                        label = QLabel(name)
-                        label.setStyleSheet(f"""
-                            font-weight: {FONTS['weights']['semibold']};
-                            color: {COLORS['text_primary']};
-                            font-size: {FONTS['sizes']['base']}px;
-                        """)
-                        form.addRow(label, combo)
-                        sub_option_widgets[name] = (label, combo)
-                        combo.currentIndexChanged.connect(
-                            lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
-                        )
-                        label.hide()
-                        combo.hide()
-                    
-                    # Handle Tri-clamp options (only Connection Material for now)
-                    tri_clamp_names = sub_option_map.get('Tri-clamp', [])
-                    tri_clamp_names_no_connmat = [n for n in tri_clamp_names if n != 'Connection Material']
-                    tri_clamp_names_ordered = tri_clamp_names_no_connmat + [n for n in tri_clamp_names if n == 'Connection Material']
-                    for name in tri_clamp_names_ordered:
-                        opt = opts_by_name.get(name)
-                        if not opt:
-                            continue
-                        choices = opt.get('choices', [])
-                        adders = opt.get('adders', {})
-                        combo = QComboBox()
-                        combo.setFixedWidth(200)
-                        combo.setMinimumHeight(32)
-                        combo.setStyleSheet(combo_style)
-                        # Special handling for Connection Material with code-display_name format
-                        if name == 'Connection Material' and choices and isinstance(choices[0], dict):
-                            for choice in choices:
-                                display_name = choice.get('display_name', choice.get('code', str(choice)))
-                                code = choice.get('code', str(choice))
-                                combo.addItem(display_name, code)
-                        elif choices and isinstance(choices[0], dict):
-                            for choice in choices:
-                                display_name = choice.get('display_name', choice.get('code', str(choice)))
-                                code = choice.get('code', str(choice))
-                                combo.addItem(display_name, code)
-                        elif choices:
-                            for choice in choices:
-                                combo.addItem(str(choice), str(choice))
-                        label = QLabel(name)
-                        label.setStyleSheet(f"""
-                            font-weight: {FONTS['weights']['semibold']};
-                            color: {COLORS['text_primary']};
-                            font-size: {FONTS['sizes']['base']}px;
-                        """)
-                        form.addRow(label, combo)
-                        sub_option_widgets[name] = (label, combo)
-                        combo.currentIndexChanged.connect(
-                            lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
-                        )
-                        label.hide()
-                        combo.hide()
-                    
-                    # Add any other sub-options not in sub_option_map (fallback, rare)
-                    for sub_opt in opts:
-                        name = sub_opt.get('name')
-                        if name == 'Connection Type' or name in sub_option_widgets:
-                            continue
-                        
-                        if name == 'Tri-clamp':
-                            # Create custom tri-clamp widget
-                            tri_clamp_widget = self._create_tri_clamp_widget(sub_opt)
-                            form.addRow(tri_clamp_widget)
-                            sub_option_widgets[name] = (None, tri_clamp_widget)  # No label needed
-                            # Also store in self.option_widgets so it can be restored during editing
-                            self.option_widgets[name] = tri_clamp_widget
-                            tri_clamp_widget.hide()
-                        else:
-                            # Regular dropdown option
-                            choices = sub_opt.get('choices', [])
-                            adders = sub_opt.get('adders', {})
-                            combo = QComboBox()
-                            combo.setFixedWidth(200)
-                            combo.setMinimumHeight(32)
-                            combo.setStyleSheet(combo_style)
-                            if choices and isinstance(choices[0], dict):
-                                for choice in choices:
-                                    display_name = choice.get('display_name', choice.get('code', str(choice)))
-                                    code = choice.get('code', str(choice))
-                                    combo.addItem(display_name, code)
-                            elif choices:
-                                for choice in choices:
-                                    combo.addItem(str(choice), str(choice))
-                            label = QLabel(name)
-                            label.setStyleSheet(f"""
-                                font-weight: {FONTS['weights']['semibold']};
-                                color: {COLORS['text_primary']};
-                                font-size: {FONTS['sizes']['base']}px;
-                            """)
-                            form.addRow(label, combo)
-                            sub_option_widgets[name] = (label, combo)
-                            # Also store in self.option_widgets so it can be restored during editing
-                            self.option_widgets[name] = combo
-                            # Connect the combo box to update configuration
-                            combo.currentIndexChanged.connect(
-                                lambda idx, n=name, c=combo: self._on_option_changed(n, c.currentData())
-                            )
-                            label.hide()
-                            combo.hide()
-                    def on_conn_type_changed(idx):
-                        selected_type = conn_type_combo.currentData() if conn_type_combo else ''
-                        if not isinstance(selected_type, str):
-                            selected_type = str(selected_type) if selected_type is not None else ''
-                        
-                        # Update the configuration service with the new connection type
-                        self._on_option_changed("Connection Type", selected_type)
-                        
-                        # Hide all sub-options first
-                        for label, w in sub_option_widgets.values():
-                            if label:
-                                label.hide()
-                            w.hide()
-                        
-                        # Show only relevant sub-options
-                        if selected_type in sub_option_map:
-                            for name in sub_option_map[selected_type]:
-                                if name in sub_option_widgets:
-                                    label, w = sub_option_widgets[name]
-                                    if label:
-                                        label.show()
-                                    w.show()
-                        
-                        # Special handling for Tri-clamp widget
-                        if selected_type == 'Tri-clamp' and 'Tri-clamp' in sub_option_widgets:
-                            _, tri_clamp_widget = sub_option_widgets['Tri-clamp']
-                            tri_clamp_widget.show()
-                    if conn_type_combo:
-                        conn_type_combo.currentIndexChanged.connect(on_conn_type_changed)
-                        # Show sub-options for default selection
-                        on_conn_type_changed(conn_type_combo.currentIndex())
-                    group.setLayout(form)
-                    vbox.addWidget(group)
-            # --- ACCESSORIES SECTION ---
-            if 'Accessories' in options_by_category:
-                opts = [opt for opt in options_by_category['Accessories'] if opt.get('name') not in ['O-Rings']]
-                if opts:
-                    group = QGroupBox('Accessories')
-                    group.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['bold']};
-                        font-size: {FONTS['sizes']['base']}px;
-                    """)
-                    form = QFormLayout()
-                    form.setSpacing(SPACING['md'])
-                    form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-                    
-                    for option in opts:
-                        name = option.get('name', '')
-                        
-                        if name == 'Bent Probe':
-                            # Create a horizontal layout for Bent Probe checkbox and degree input
-                            bent_row = QHBoxLayout()
-                            bent_row.setSpacing(SPACING['md'])
-                            
-                            # Bent Probe checkbox
-                            cb = QCheckBox()
-                            cb.setChecked(False)
-                            cb.stateChanged.connect(lambda state, n=name: self._on_option_changed(n, bool(state)))
-                            self.option_widgets[name] = cb
-                            
-                            label = QLabel(name)
-                            label.setStyleSheet(f"""
-                                font-weight: {FONTS['weights']['semibold']};
-                                color: {COLORS['text_primary']};
-                            """)
-                            
-                            bent_row.addWidget(label)
-                            bent_row.addWidget(cb)
-                            
-                            # Degree input field (initially hidden, NO label)
-                            bent_probe_degree_widget = ProtectedSpinBox()
-                            bent_probe_degree_widget.setFixedWidth(120)  # Set width back to 120px
-                            bent_probe_degree_widget.setMinimumHeight(32)
-                            bent_probe_degree_widget.setMinimum(1)
-                            bent_probe_degree_widget.setMaximum(180)
-                            bent_probe_degree_widget.setValue(90)  # Default to 90 degrees
-                            bent_probe_degree_widget.setAlignment(Qt.AlignmentFlag.AlignRight)
-                            bent_probe_degree_widget.setStyleSheet(f"""
-                                QSpinBox {{
-                                    border: 1px solid {COLORS['border_light']};
-                                    border-radius: {RADIUS['md']}px;
-                                    padding: 2px 8px;
-                                    background-color: {COLORS['bg_primary']};
-                                    font-size: 14px;
-                                }}
-                                QSpinBox:focus {{
-                                    border-color: {COLORS['primary']};
-                                }}
-                            """)
-                            
-                            # Initially hide the degree input
-                            bent_probe_degree_widget.hide()
-                            
-                            # Connect checkbox to show/hide degree input
-                            def on_bent_probe_changed(state):
-                                if state:
-                                    bent_probe_degree_widget.show()
-                                    # Set the degree value when checkbox is checked
-                                    self._on_option_changed('Bent Probe Degree', bent_probe_degree_widget.value())
-                                else:
-                                    bent_probe_degree_widget.hide()
-                                    # Clear the degree value when checkbox is unchecked
-                                    self._on_option_changed('Bent Probe Degree', None)
-                            
-                            cb.stateChanged.connect(on_bent_probe_changed)
-                            
-                            # Connect degree input to update configuration
-                            bent_probe_degree_widget.valueChanged.connect(
-                                lambda val: self._on_option_changed('Bent Probe Degree', val)
-                            )
-                            
-                            bent_row.addWidget(bent_probe_degree_widget)
-                            bent_row.addStretch()
-                            
-                            # Add the bent probe row to the form
-                            form.addRow(bent_row)
-                            
-                        else:
-                            # Regular accessory option (checkbox only)
-                            cb = QCheckBox()
-                            cb.setChecked(False)
-                            cb.stateChanged.connect(lambda state, n=name: self._on_option_changed(n, bool(state)))
-                            self.option_widgets[name] = cb
-                            label = QLabel(name)
-                            label.setStyleSheet(f"""
-                                font-weight: {FONTS['weights']['semibold']};
-                                color: {COLORS['text_primary']};
-                            """)
-                            form.addRow(label, cb)
-                    
-                    group.setLayout(form)
-                    vbox.addWidget(group)
-            
-            # --- HOUSING SECTION ---
-            if 'Housing' in options_by_category:
-                housing_opts = options_by_category['Housing']
-                if housing_opts:
-                    group = QGroupBox('Housing Configuration')
-                    group.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['bold']};
-                        font-size: {FONTS['sizes']['base']}px;
-                    """)
-                    form = QFormLayout()
-                    form.setSpacing(SPACING['md'])
-                    form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-                    for option in housing_opts:
-                        name = option.get('name', '')
-                        
-                        # Use _create_dynamic_option_widget with force_dropdown=True for housing options
-                        widget = self._create_dynamic_option_widget(option, force_dropdown=True)
-                        if widget:
-                            label = QLabel(name)
-                            label.setStyleSheet(f"""
-                                font-weight: {FONTS['weights']['semibold']};
-                                color: {COLORS['text_primary']};
-                            """)
-                            form.addRow(label, widget)
-                    
-                    group.setLayout(form)
-                    vbox.addWidget(group)
-            # --- O-RING MATERIAL SECTION AT THE END ---
-            o_ring_opt = None
-            if 'O-ring Material' in options_by_category:
-                for opt in options_by_category['O-ring Material']:
-                    if opt.get('name') == 'O-Rings':
-                        o_ring_opt = opt
-                        break
-            if o_ring_opt:
-                o_ring_form = QFormLayout()
-                o_ring_form.setSpacing(SPACING['md'])
-                o_ring_form.setContentsMargins(SPACING['md'], SPACING['md'], SPACING['md'], SPACING['md'])
-                widget = self._create_dynamic_option_widget(o_ring_opt, force_dropdown=False)
-                if widget:
-                    label = QLabel(o_ring_opt.get('name', ''))
-                    label.setStyleSheet(f"""
-                        font-weight: {FONTS['weights']['semibold']};
-                        color: {COLORS['text_primary']};
-                    """)
-                    o_ring_form.addRow(label, widget)
-                o_ring_group = QGroupBox('O-ring Material')
-                o_ring_group.setStyleSheet(f"""
-                    font-weight: {FONTS['weights']['bold']};
-                    font-size: {FONTS['sizes']['base']}px;
-                """)
-                o_ring_group.setLayout(o_ring_form)
-                vbox.addWidget(o_ring_group)
-            vbox.addStretch()
-            scroll.setWidget(container)
-            while self.config_layout.count():
-                child = self.config_layout.takeAt(0)
-                if child.widget():
-                    child.widget().deleteLater()
-            self.config_layout.addWidget(scroll)
-            self._set_default_values(product.get('name', ''))
-            for name, value, widget in default_values_to_set:
-                if hasattr(widget, 'setValue'):
-                    widget.setValue(value)
-                elif hasattr(widget, 'setCurrentIndex'):
-                    idx = widget.findData(value)
-                    if idx >= 0:
-                        widget.setCurrentIndex(idx)
-                self._on_option_changed(name, value)
-            self._update_total_price()
-            self.add_button.setEnabled(True)
-            
-            # Handle any deferred changes after all widgets are created
-            self._handle_deferred_changes()
-            
-        except Exception as e:
-            # print(f"[ERROR] Exception rendering config UI for {product.get('name', '')}: {e}")
-            import traceback
-            # print(traceback.format_exc())
-            self._show_error_message(f"Error rendering config UI: {e}")
-
-    def _create_dynamic_option_widget(self, option, force_dropdown=False):
-        """Create the appropriate widget for an option based on its data."""
-        #  _create_dynamic_option_widget called for option: {option.get('name')}")
-        #  Option dict: {option}")
-        #  opt_type: {option.get('type')}")
-        name = option.get('name', '')
-        choices = option.get('choices', None)
-        adders = option.get('adders', {})
-        opt_type = option.get('type', None)
-        combo_style = f"""
-            QComboBox {{
-                border: 1px solid {COLORS['border_light']};
-                border-radius: {RADIUS['md']}px;
-                padding: {SPACING['md']}px;
-                min-height: 32px;
-                background-color: {COLORS['bg_primary']};
-                font-family: {FONTS['family']};
-                font-weight: {FONTS['weights']['semibold']};
-                font-size: {FONTS['sizes']['base']}px;
-                color: {COLORS['text_primary']};
-            }}
-            QComboBox:focus {{
-                border-color: {COLORS['primary']};
-            }}
-        """
-        spin_style = f"""
-            QSpinBox {{
-                border: 1px solid {COLORS['border_light']};
-                border-radius: {RADIUS['md']}px;
-                padding: {SPACING['md']}px;
-                min-height: 32px;
-                background-color: {COLORS['bg_primary']};
-                font-size: {FONTS['sizes']['base']}px;
-            }}
-            QSpinBox:focus {{
-                border-color: {COLORS['primary']};
-            }}
-        """
-        # Force dropdown if force_dropdown is set, regardless of number of choices
-        if force_dropdown and choices:
-            combo = QComboBox()
-            combo.setFixedWidth(200)
-            combo.setMinimumHeight(32)
-            combo.setStyleSheet(combo_style)
-            if isinstance(choices[0], dict):
-                for choice in choices:
-                    code = str(choice.get('code', str(choice)))
-                    display_name = choice.get('display_name', code)
-                    combo.addItem(f"{code} - {display_name}", code)
-            else:
-                for choice in choices:
-                    combo.addItem(str(choice), str(choice))
-            # Debug print for all combo boxes
-            codes = [str(combo.itemData(i)) for i in range(combo.count())]
-            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
-            self.option_widgets[name] = combo
-            return combo
-        # Probe Length (always numeric input)
-        if name == 'Probe Length':
-            spin = ProtectedSpinBox()
-            spin.setFixedWidth(120)
-            spin.setMinimumHeight(32)
-            spin.setMaximumHeight(32)
-            spin.setStyleSheet(spin_style)
-            spin.setMinimum(option.get('min', 1))
-            spin.setMaximum(200)
-            spin.setSingleStep(1)
-            default = option.get('default', 10)
-            spin.setValue(default)
-            spin.valueChanged.connect(lambda val, n=name: self._on_option_changed(n, val))
-            # Store the widget in option_widgets so it can be found later
-            self.option_widgets[name] = spin
-            return spin
-        # Quantity (special case)
-        if name == 'Quantity':
-            spin = ProtectedSpinBox()
-            spin.setFixedWidth(120)
-            spin.setMinimumHeight(32)
-            spin.setMaximumHeight(32)
-            spin.setStyleSheet(spin_style)
-            spin.setMinimum(1)
-            spin.setMaximum(999)
-            spin.setSingleStep(1)
-            spin.setValue(self.quantity)
-            spin.valueChanged.connect(self._on_quantity_changed)
-            self.quantity_spin = spin
-            return spin
-        # Voltage: always render as dropdown
-        if name == 'Voltage' and choices:
-            combo = QComboBox()
-            combo.setFixedWidth(200)
-            combo.setMinimumHeight(32)
-            combo.setStyleSheet(combo_style)
-            if isinstance(choices[0], dict):
-                for choice in choices:
-                    display_name = choice.get('display_name', choice.get('code', str(choice)))
-                    code = str(choice.get('code', str(choice)))
-                    combo.addItem(display_name, code)
-            else:
-                for choice in choices:
-                    combo.addItem(str(choice), str(choice))
-            # Debug print for all combo boxes
-            codes = [str(combo.itemData(i)) for i in range(combo.count())]
-            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
-            self.option_widgets[name] = combo
-            return combo
-        # Always use QComboBox if type is 'dropdown'
-        if opt_type == 'dropdown' and choices:
-            combo = QComboBox()
-            combo.setFixedWidth(200)
-            combo.setMinimumHeight(32)
-            combo.setStyleSheet(combo_style)
-            if isinstance(choices[0], dict):
-                for choice in choices:
-                    code = str(choice.get('code', str(choice)))
-                    display_name = choice.get('display_name', code)
-                    combo.addItem(f"{code} - {display_name}", code)
-            else:
-                for choice in choices:
-                    combo.addItem(str(choice), str(choice))
-            # Debug print for all combo boxes
-            codes = [str(combo.itemData(i)) for i in range(combo.count())]
-            # print Combo for '{name}' codes: {codes}")
-            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
-            self.option_widgets[name] = combo
-            return combo
-        # Boolean (checkbox)
-        if choices and all(isinstance(c, bool) for c in choices) and set(choices) == {True, False}:
-            cb = QCheckBox()
-            cb.stateChanged.connect(lambda state, n=name: self._on_option_changed(n, bool(state)))
-            self.option_widgets[name] = cb
-            return cb
-        # Radio buttons (2-4 choices)
-        if choices and 2 <= len(choices) <= 4:
-            group = QWidget()
-            layout = QHBoxLayout(group)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.setSpacing(SPACING['md'])
-            button_group = QButtonGroup(group)
-            for i, choice in enumerate(choices):
-                if isinstance(choice, dict):
-                    display_name = choice.get('display_name', choice.get('code', str(choice)))
-                    code = str(choice.get('code', str(choice)))
-                else:
-                    display_name = str(choice)
-                    code = str(choice)
-                radio = QRadioButton(display_name)
-                radio.setProperty('choice_code', code)
-                button_group.addButton(radio, i)
-                layout.addWidget(radio)
-                if i == 0:
-                    radio.setChecked(True)
-            button_group.buttonClicked.connect(lambda btn, n=name: self._on_option_changed(n, str(btn.property('choice_code'))))
-            self.option_widgets[name] = button_group
-            return group
-        # Dropdown (more than 4 choices)
-        if choices and len(choices) > 4:
-            combo = QComboBox()
-            combo.setFixedWidth(200)
-            combo.setMinimumHeight(32)
-            combo.setStyleSheet(combo_style)
-            if isinstance(choices[0], dict):
-                for choice in choices:
-                    display_name = choice.get('display_name', choice.get('code', str(choice)))
-                    code = str(choice.get('code', str(choice)))
-                    combo.addItem(display_name, code)
-            else:
-                for choice in choices:
-                    combo.addItem(str(choice), str(choice))
-            # Debug print for all combo boxes
-            codes = [str(combo.itemData(i)) for i in range(combo.count())]
-            # print Combo for '{name}' codes: {codes}")
-            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
-            self.option_widgets[name] = combo
-            return combo
-        # Flange Type: show descriptive labels
-        if name == 'Flange Type' and choices:
-            combo = QComboBox()
-            combo.setFixedWidth(200)
-            combo.setMinimumHeight(32)
-            combo.setStyleSheet(combo_style)
-            label_map = {'SS': 'SS - Stainless Steel', 'CS': 'CS - Carbon Steel'}
-            for choice in choices:
-                display = label_map.get(choice, str(choice))
-                combo.addItem(display, choice)
-            # Debug print for all combo boxes
-            codes = [str(combo.itemData(i)) for i in range(combo.count())]
-            # print Combo for '{name}' codes: {codes}")
-            combo.currentIndexChanged.connect(lambda idx, n=name, c=combo: self._on_option_changed(n, str(c.currentData())))
-            self.option_widgets[name] = combo
-            return combo
-        # Freeform text (fallback)
-        if opt_type == 'text':
-            line = ProtectedLineEdit()
-            line.setMinimumHeight(32)
-            line.textChanged.connect(lambda text, n=name: self._on_option_changed(n, text))
-            self.option_widgets[name] = line
-            return line
-        return None
     
-    def _on_quantity_changed(self):
-        """Handle quantity selection change."""
-        if hasattr(self, 'quantity_spin'):
-            value = self.quantity_spin.value()
-            self.quantity = value
-            self._update_total_price()
+    def _show_product_config(self, product):
+        """Display configuration options for the selected product."""
+        if not product:
+            return
+
+        try:
+            product_family_id = product.get("id")
+            product_family_name = product.get("name")
+            
+            # Start a new configuration
+            self.config_service.start_configuration(
+                product_family_id=product_family_id,
+                product_family_name=product_family_name,
+                base_product_info=product
+            )
+            
+            # Clear the previous configuration
+            self._clear_config_layout()
+            
+            # Build options UI
+            self._build_dynamic_options(product_family_name)
+
+            # Set default values
+            self._set_default_values(product_family_name)
+            
+            # Generate model number
+            model_number = self.config_service.generate_model_number()
+            
+            # Update displays
             self._update_model_number_label()
-    
-    def _on_option_changed(self, option_name: str, value):
-        """Handle option change."""
-        try:
-            
-            # Check if this is a material change
-            if option_name == 'Material':
-                
-                # Get the default length for this material
-                material_default_length = get_material_default_length(value)
-                
-                # Immediately reset the probe length to the material's default
-                self._reset_probe_length_to_material_default(material_default_length)
-                
-                # Auto-switch insulator material to Teflon when Halar is selected
-                if value == 'H':  # Halar material
-                    self._auto_set_insulator_to_teflon()
-            
-            # Special handling for Tri-clamp: parse size and spud for pricing
-            if option_name == 'Tri-clamp' and isinstance(value, str):
-                import re
-                size_match = re.search(r'(\d+(?:\.\d+)?)\"', value)
-                size = size_match.group(0) if size_match else ''
-                spud = 'Spud' in value
-                self.config_service.set_option('connection_type', 'Tri-Clamp')
-                self.config_service.set_option('triclamp_size', size)
-                self.config_service.set_option('spud', spud)
-            
-            self.config_service.set_option(option_name, value)
-            
-            # Generate and display the new part number
-            new_part_number = self.config_service.generate_model_number()
-            # print New part number: {new_part_number}")
-            
             self._update_total_price()
-            self._update_model_number_label()
+            
         except Exception as e:
-            import traceback
-            # print Exception in _on_option_changed: {e}")
-            print(traceback.format_exc())
-            logger.error(f"Error updating option {option_name}: {e}")
-    
-    def _handle_deferred_changes(self):
-        """Handle material and model changes that were deferred during setup."""
-        # Process any deferred model change
-        if self._pending_model_base_length is not None and self._model_changed_during_setup:
-            self._reset_probe_length_to_specific_base(self._pending_model_base_length)
-            self._model_changed_during_setup = False
-            self._pending_model_base_length = None
-    
-    def _reset_probe_length_to_base(self):
-        """Reset the probe length to the base length for the selected product."""
-        try:
-            base_length = 10
-            if (
-                self.config_service.current_config
-                and getattr(self.config_service.current_config, "base_product", None)
-            ):
-                base_length = self.config_service.current_config.base_product.get('base_length', 10)
-
-            # Find the probe length widget and update it
-            probe_length_widget = self.option_widgets.get('Probe Length')
-            if probe_length_widget and hasattr(probe_length_widget, 'setValue'):
-                probe_length_widget.setValue(base_length)
-                self.config_service.set_option('Probe Length', base_length)
-            else:
-                pass
-        except Exception as e:
+            logger.error(f"Error showing product config: {e}")
             import traceback
             traceback.print_exc()
-
-    def _reset_probe_length_to_specific_base(self, base_length):
-        """Reset the probe length to a specific base length value."""
-        try:
-
-            # Find the probe length widget and update it
-            probe_length_widget = self.option_widgets.get('Probe Length')
-            if probe_length_widget and hasattr(probe_length_widget, 'setValue'):
-                probe_length_widget.setValue(base_length)
-                # Update the configuration service
-                self.config_service.set_option('Probe Length', base_length)
-            else:
-                pass
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-
-    def _reset_probe_length_to_material_default(self, material_default_length):
-        """Reset the probe length to the default length for the given material."""
-        try:
-
-            # Find the probe length widget and update it
-            probe_length_widget = self.option_widgets.get('Probe Length')
-
-            if probe_length_widget and hasattr(probe_length_widget, 'setValue'):
-                probe_length_widget.setValue(material_default_length)
-                # Update the configuration service
-                self.config_service.set_option('Probe Length', material_default_length)
-            else:
-                pass
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-    
-    def _auto_set_insulator_to_teflon(self):
-        """Automatically set insulator material to Teflon when Halar is selected."""
-        try:
-            # Find the insulator material widget
-            insulator_widget = self.option_widgets.get('Insulator Material')
-            if insulator_widget and hasattr(insulator_widget, 'setCurrentIndex'):
-                # Find the Teflon option in the dropdown
-                teflon_index = -1
-                for i in range(insulator_widget.count()):
-                    item_data = insulator_widget.itemData(i)
-                    if isinstance(item_data, dict) and item_data.get('code') == 'TEF':
-                        teflon_index = i
-                        break
-                    elif isinstance(item_data, str) and item_data == 'TEF':
-                        teflon_index = i
-                        break
-                
-                if teflon_index >= 0:
-                    # Set the insulator material to Teflon
-                    insulator_widget.setCurrentIndex(teflon_index)
-                    # Update the configuration service
-                    teflon_value = insulator_widget.itemData(teflon_index)
-                    self.config_service.set_option('Insulator Material', teflon_value)
-                else:
-                    pass
-            else:
-                pass
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-
-    def _create_tri_clamp_widget(self, option_data: dict) -> "ModernTriClampWidget":
-        """Create a custom tri-clamp widget with size dropdown and spud checkbox."""
-        widget = ModernTriClampWidget(option_data)
-        widget.option_changed.connect(
-            lambda opt_name, value: self._on_option_changed(opt_name, value)
-        )
-        return widget
-    
-    def _update_total_price(self):
-        """Update price display using modern PriceDisplay component in header only."""
-        try:
-            if self.config_service.current_config:
-                total_price = self.config_service.get_final_price() * self.quantity
-                self.total_price_display.setText(f"Total: ${total_price:.2f}")
-        except Exception as e:
-            logger.error(f"Error updating price: {e}")
+            self._show_error_message(f"Error loading product configuration: {str(e)}")
     
     def _set_default_values(self, family_name: str):
-        """Set default values for the product family, only if valid for the current product."""
+        """Set default values for the product family using base model configuration."""
         
-        # Get base model configuration including process connection defaults
+        # Get base model configuration
         from src.core.config.base_models import get_base_model
         base_model = get_base_model(family_name)
         
-        default_configs = {
-            "LS2000": {"Voltage": "115VAC", "Material": "S"},
-            "LS2100": {"Voltage": "115VAC", "Material": "S"},
-            "LS1000": {"Voltage": "24VDC", "Material": "S"},
-            "LS6000": {"Voltage": "115VAC", "Material": "S"},
-            "LS7000": {"Voltage": "115VAC", "Material": "S"},
-            "LS7000/2": {"Voltage": "115VAC", "Material": "S"},
-            "LS7500": {"Voltage": "115VAC", "Material": "S"},
-            "LS8000": {"Voltage": "115VAC", "Material": "S"},
-            "LS8500": {"Voltage": "115VAC", "Material": "S"},
-            "LT9000": {"Voltage": "115VAC", "Material": "S"},
-            "FS10000": {"Voltage": "115VAC", "Material": "S"},
-        }
-        defaults = default_configs.get(family_name, {})
+        if not base_model:
+            logger.warning(f"No base model found for family: {family_name}")
+            return
+        
+        # Set defaults from base model
+        defaults = {}
+        
+        # Set voltage from base model
+        if base_model.get("voltage"):
+            defaults["Voltage"] = base_model["voltage"]
+        
+        # Set material from base model
+        if base_model.get("material"):
+            # Check if the material is actually available for this product family
+            try:
+                available_materials = self.product_service.get_material_choices_for_family(family_name)
+                if base_model["material"] in available_materials:
+                    defaults["Material"] = base_model["material"]
+                elif available_materials:
+                    # Use first available material if base model material is not available
+                    defaults["Material"] = available_materials[0]
+            except:
+                # Fallback to base model material if we can't check availability
+                defaults["Material"] = base_model["material"]
+        
+        # Set probe length from base model
+        if base_model.get("base_length"):
+            defaults["Probe Length"] = base_model["base_length"]
         
         # Add process connection defaults from base model if available
         if base_model.get("process_connection_type") and base_model.get("process_connection_size"):
             if base_model["process_connection_type"] == "NPT":
                 defaults["Connection Type"] = "NPT"
-                defaults["NPT Size"] = base_model["process_connection_size"]
+                # Force LS2000, LS2100, LS8000, and LS8000/2 to always use 3/4" NPT
+                if family_name in ["LS2000", "LS2100", "LS8000", "LS8000/2"]:
+                    defaults["NPT Size"] = '3/4"'
+                else:
+                    defaults["NPT Size"] = base_model["process_connection_size"]
         
+        # Set all default values
         for option_name, default_value in defaults.items():
             widget = self.option_widgets.get(option_name)
             if widget:
@@ -1710,6 +656,10 @@ class ModernProductSelectionDialog(QDialog):
                             btn.setChecked(True)
                             self._on_option_changed(option_name, default_value)
                             break
+                # For spin boxes (like Probe Length)
+                elif hasattr(widget, 'setValue'):
+                    widget.setValue(default_value)
+                    self._on_option_changed(option_name, default_value)
     
     def _on_add_to_quote(self):
         #  _on_add_to_quote called (instance {self._instance_id})")
@@ -1851,10 +801,7 @@ class ModernProductSelectionDialog(QDialog):
             self.config_service = ConfigurationService(self.db, self.product_service)
             
             # Clear the configuration layout
-            while self.config_layout.count():
-                child = self.config_layout.takeAt(0)
-                if child.widget():
-                    child.widget().deleteLater()
+            self._clear_config_layout()
             
             # Reset the model number label
             if hasattr(self, 'model_number_label'):
@@ -2035,7 +982,12 @@ class ModernProductSelectionDialog(QDialog):
             # Parse model number if available
             parsed_from_model = self._parse_model_number_to_options(model_number, product_family) if model_number else {}
             logger.info(f"Parsed from model: {parsed_from_model}")
-            
+
+            # PATCH: Force NPT Size for LS2000/LS2100/LS8000/LS8000/2 if not set
+            if product_family in ["LS2000", "LS2100", "LS8000", "LS8000/2"]:
+                if parsed_from_model.get('Connection Type') == 'NPT' and not parsed_from_model.get('NPT Size'):
+                    parsed_from_model['NPT Size'] = '3/4"'
+
             # Set the quantity
             saved_quantity = self.product_to_edit.get("quantity", 1)
             if hasattr(self, 'quantity_spin'):
@@ -2075,10 +1027,7 @@ class ModernProductSelectionDialog(QDialog):
                 # Debug for Material combo box
                 if option_name == 'Material':
                     if widget and hasattr(widget, 'setCurrentIndex'):
-                        print(f"[DEBUG] _load_saved_configuration: Material widget type: {type(widget)}")
                         codes = [str(widget.itemData(i)) for i in range(widget.count())]
-                        print(f"[DEBUG] _load_saved_configuration: Material combo codes at set: {codes}")
-                        print(f"[DEBUG] _load_saved_configuration: Material value to set: {value}")
                 
                 # Handle mapping from short codes to full names for accessories
                 if value is None and saved_config:
@@ -2337,17 +1286,17 @@ class ModernProductSelectionDialog(QDialog):
                 # Determine if it's a spud connection
                 is_spud = 'SPUD' in tc_match.group(0) or (tc_match.group(2) and tc_match.group(2) == 'SPUD')
                 if is_spud:
-                    options['Tri-clamp'] = f"{size}\" Tri-clamp Spud"
+                    options['Tri-clamp'] = f"{size} Tri-clamp Spud"
                 else:
-                    options['Tri-clamp'] = f"{size}\" Tri-clamp Process Connection"
+                    options['Tri-clamp'] = f"{size} Tri-clamp Process Connection"
                 logger.info(f"Found tri-clamp: {options['Tri-clamp']}")
                 break
         
         # Parse NPT connections if present - enhanced patterns
         npt_patterns = [
-            r'(\d+(?:\.\d+)?)\"NPT',  # Standard NPT pattern
-            r'NPT(\d+(?:\.\d+)?)\"',  # NPT prefix pattern
-            r'(\d+(?:\.\d+)?)\"NPT',  # Alternative pattern
+            r'(\d+(?:\.\d+)?)"NPT',  # Standard NPT pattern
+            r'NPT(\d+(?:\.\d+)?)"',  # NPT prefix pattern
+            r'(\d+(?:\.\d+)?)"NPT',  # Alternative pattern
         ]
         
         for pattern in npt_patterns:
@@ -2356,6 +1305,11 @@ class ModernProductSelectionDialog(QDialog):
                 options['Connection Type'] = 'NPT'
                 options['NPT Size'] = npt_match.group(1) + '"'
                 break
+
+        # PATCH: For LS2000, LS2100, LS8000, and LS8000/2, if NPT and no explicit NPT Size, force 3/4"
+        if (product_family in ["LS2000", "LS2100", "LS8000", "LS8000/2"] or (product_family is None and model_number.startswith(("LS2000", "LS2100", "LS8000")))):
+            if options.get('Connection Type') == 'NPT' and 'NPT Size' not in options:
+                options['NPT Size'] = '3/4"'
         
         # Parse flange connections if present - enhanced patterns
         flange_patterns = [
@@ -2508,19 +1462,21 @@ class ModernProductSelectionDialog(QDialog):
         else:
             self.model_number_label.setText("")
 
-    def _show_error_message(self, message):
-        # Clear the config layout and show an error message
+    def _clear_config_layout(self):
+        """Remove all widgets from the config layout."""
         while self.config_layout.count():
             child = self.config_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
-        error_label = QLabel(message)
-        error_label.setStyleSheet(f"""
-            color: {COLORS['error']};
-            font-weight: {FONTS['weights']['bold']};
-            font-size: {FONTS['sizes']['base']}px;
-        """)
-        self.config_layout.addWidget(error_label)
+
+    def _show_error_message(self, message):
+        # Clear the config layout and show an error message
+        self._clear_config_layout()
+        label = QLabel(message)
+        # Use a valid color for error (fallback to red if COLORS['danger'] not present)
+        error_color = COLORS.get('danger', '#d32f2f')
+        label.setStyleSheet(f"font-size: 16px; color: {error_color}; font-weight: bold; padding: 16px;")
+        self.config_layout.addWidget(label)
 
     def _update_price(self):
         """Update the total price based on current selections."""
@@ -2629,10 +1585,7 @@ class ModernProductSelectionDialog(QDialog):
     def _show_spare_parts_interface(self):
         """Show the spare parts browsing and selection interface."""
         # Clear the current configuration area
-        while self.config_layout.count():
-            child = self.config_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+        self._clear_config_layout()
         
         # Update the title
         self.model_number_label.setText("Spare Parts")
@@ -2853,6 +1806,207 @@ class ModernProductSelectionDialog(QDialog):
         except Exception as e:
             logger.error(f"Error adding spare part to quote: {e}")
             QMessageBox.critical(self, "Error", f"Failed to add spare part to quote: {e}")
+
+    def _build_dynamic_options(self, product_family_name):
+        """Dynamically build option widgets for the selected product family."""
+        # Clear any existing widgets
+        while self.config_layout.count():
+            child = self.config_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        self.option_widgets.clear()
+
+        # Fetch all available options for this product family
+        all_options = self.product_service.get_additional_options(self.db, product_family_name)
+        print(f"[DEBUG] all_options for {product_family_name}: {all_options}")
+
+        if not all_options or not isinstance(all_options, list):
+            label = QLabel("No configurable options available for this product.")
+            label.setStyleSheet(f"""
+                font-size: {FONTS['sizes']['lg']}px;
+                color: {COLORS['text_secondary']};
+                padding: {SPACING['xl']}px;
+                text-align: center;
+            """)
+            self.config_layout.addWidget(label)
+            return
+
+        # Group options by category
+        options_by_category = {}
+        for option in all_options:
+            category = option.get('category', 'Other')
+            if category not in options_by_category:
+                options_by_category[category] = []
+            options_by_category[category].append(option)
+
+        # Create sections for each category
+        for category, options in options_by_category.items():
+            # Create group box for category
+            group_box = QGroupBox(category)
+            group_box.setStyleSheet(f"""
+                QGroupBox {{
+                    font-weight: {FONTS['weights']['bold']};
+                    color: {COLORS['text_primary']};
+                    border: 2px solid {COLORS['border_light']};
+                    border-radius: {RADIUS['lg']}px;
+                    margin-top: {SPACING['lg']}px;
+                    padding-top: {SPACING['md']}px;
+                    background-color: {COLORS['bg_primary']};
+                }}
+                QGroupBox::title {{
+                    subcontrol-origin: margin;
+                    left: {SPACING['lg']}px;
+                    padding: 0 {SPACING['md']}px;
+                    background-color: {COLORS['bg_primary']};
+                }}
+            """)
+            
+            category_layout = QVBoxLayout(group_box)
+            category_layout.setSpacing(SPACING['md'])
+            category_layout.setContentsMargins(SPACING['lg'], SPACING['lg'], SPACING['lg'], SPACING['lg'])
+
+            for option in options:
+                name = option.get('name')
+                choices = option.get('choices', [])
+                adders = option.get('adders', {})
+                
+                # Only render if choices is a valid, non-empty list
+                if not isinstance(choices, list) or not choices:
+                    continue
+
+                # Create option label
+                option_label = QLabel(name)
+                option_label.setStyleSheet(f"""
+                    font-weight: {FONTS['weights']['semibold']};
+                    color: {COLORS['text_primary']};
+                    font-size: {FONTS['sizes']['base']}px;
+                    margin-bottom: {SPACING['xs']}px;
+                """)
+                category_layout.addWidget(option_label)
+
+                # Create widget based on number of choices
+                if len(choices) <= 4:
+                    widget = self._create_radio_group(name, choices, adders)
+                else:
+                    widget = self._create_dropdown(name, choices, adders)
+                
+                category_layout.addWidget(widget)
+                self.option_widgets[name] = widget
+
+            self.config_layout.addWidget(group_box)
+
+    def _create_radio_group(self, option_name, choices, adders):
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setSpacing(SPACING['sm'])
+        layout.setContentsMargins(0, 0, 0, 0)
+        button_group = QButtonGroup(container)
+        
+        for i, choice in enumerate(choices):
+            code = choice.get('code') if isinstance(choice, dict) else str(choice)
+            display = choice.get('display_name', code) if isinstance(choice, dict) else str(choice)
+            price_adder = adders.get(code, 0)
+            if price_adder:
+                display += f" (+${price_adder:.2f})"
+            
+            radio = QRadioButton(display)
+            radio.setStyleSheet(f"""
+                QRadioButton {{
+                    font-size: {FONTS['sizes']['base']}px;
+                    color: {COLORS['text_primary']};
+                    padding: {SPACING['sm']}px;
+                    spacing: {SPACING['sm']}px;
+                }}
+                QRadioButton:checked {{
+                    color: {COLORS['primary']};
+                    font-weight: {FONTS['weights']['semibold']};
+                }}
+                QRadioButton:hover {{
+                    color: {COLORS['primary']};
+                }}
+            """)
+            radio.setProperty('choice_code', code)
+            radio.setProperty('option_name', option_name)
+            button_group.addButton(radio, i)
+            layout.addWidget(radio)
+            if i == 0:
+                radio.setChecked(True)
+        
+        button_group.buttonClicked.connect(self._on_option_changed_radio)
+        return container
+
+    def _create_dropdown(self, option_name, choices, adders):
+        combo = QComboBox()
+        combo.setStyleSheet(f"""
+            QComboBox {{
+                border: 1px solid {COLORS['border_light']};
+                border-radius: {RADIUS['md']}px;
+                padding: {SPACING['md']}px;
+                background-color: {COLORS['bg_primary']};
+                font-family: {FONTS['family']};
+                font-weight: {FONTS['weights']['semibold']};
+                font-size: {FONTS['sizes']['base']}px;
+                color: {COLORS['text_primary']};
+                min-height: 32px;
+            }}
+            QComboBox:focus {{
+                border-color: {COLORS['primary']};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox::down-arrow {{
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid {COLORS['text_secondary']};
+            }}
+        """)
+        
+        for choice in choices:
+            code = choice.get('code') if isinstance(choice, dict) else str(choice)
+            display = choice.get('display_name', code) if isinstance(choice, dict) else str(choice)
+            price_adder = adders.get(code, 0)
+            if price_adder:
+                display += f" (+${price_adder:.2f})"
+            combo.addItem(display, code)
+        
+        combo.setProperty('option_name', option_name)
+        combo.currentIndexChanged.connect(self._on_option_changed_dropdown)
+        return combo
+
+    def _on_option_changed_radio(self, button):
+        option_name = button.property('option_name')
+        value = button.property('choice_code')
+        self.config_service.set_option(option_name, value)
+        self._update_total_price()
+        self._update_model_number_label()
+
+    def _on_option_changed_dropdown(self):
+        sender = self.sender()
+        if sender:
+            option_name = sender.property('option_name')
+            value = sender.currentData()
+            self.config_service.set_option(option_name, value)
+            self._update_total_price()
+            self._update_model_number_label()
+
+    def _on_option_changed(self, option_name, value):
+        """Handle option changes and update configuration."""
+        self.config_service.set_option(option_name, value)
+        self._update_total_price()
+        self._update_model_number_label()
+
+    def _update_total_price(self):
+        """Update the total price display."""
+        try:
+            if self.config_service.current_config:
+                price = self.config_service.get_final_price()
+                self.total_price_display.setText(f"Total: ${price:.2f}")
+        except Exception as e:
+            logger.error(f"Error updating total price: {e}")
+            self.total_price_display.setText("Total: $0.00")
 
 
 class ModernTriClampWidget(QFrame):
